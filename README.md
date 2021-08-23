@@ -15,5 +15,5 @@ code flow. This is done via intra-procedural passes each designed to mingle the 
 neither the space complexity suffers from a great loss. To achieve the such, we have modeled a couple of well known tricks to 
 add a significant strength to the obfuscation whilst at the same time retaining a stable enough execution time.
 
-This project is **not completed**. This is a proof of concept I've been working on for a while. As far as I could tell, there are
+This project is **___not completed___**. This is a proof of concept I've been working on for a while. As far as I could tell, there are
 some serious flaws with parameter injection. 
