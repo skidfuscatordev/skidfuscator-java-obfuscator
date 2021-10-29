@@ -52,7 +52,7 @@ public class SkidMethod {
         seed.renderPublic(methodNodes);
 
         for (MethodNode methodNode : methodNodes) {
-            methodNode.node.desc = parameter.getDesc();
+            //methodNode.node.desc = parameter.getDesc();
         }
     }
 

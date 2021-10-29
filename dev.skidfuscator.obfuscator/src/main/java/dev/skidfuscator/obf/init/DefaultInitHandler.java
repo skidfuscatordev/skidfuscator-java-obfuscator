@@ -47,14 +47,6 @@ public class DefaultInitHandler implements InitHandler {
 
         System.out.println("Evaluating classes...");
 
-        final EntryPoint entryPoint = new ApplicationEntryPoint();
-
-        session.addEntryPoints(entryPoint.getEntryPoints(
-                session,
-                classSource
-        ));
-
-        session.getEntryPoints().forEach(e -> System.out.println(e.owner.node.name + "#" + e.node.name));
 
         for(Map.Entry<MethodNode, ControlFlowGraph> e : session.getCxt().getIRCache().entrySet()) {
             MethodNode mn = e.getKey();
@@ -76,6 +68,16 @@ public class DefaultInitHandler implements InitHandler {
             }
 
         }
+
+        final EntryPoint entryPoint = new ApplicationEntryPoint();
+
+        session.addEntryPoints(entryPoint.getEntryPoints(
+                session,
+                classSource
+        ));
+
+        session.getEntryPoints().forEach(e -> System.out.println(e.owner.node.name + "#" + e.node.name));
+
 
         //final ParameterResolver parameterResolver = new ZelixParameterTransformer().transform(session);
         new MethodRepository().render(session);

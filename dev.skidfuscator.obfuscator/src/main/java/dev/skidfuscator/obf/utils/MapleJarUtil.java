@@ -76,10 +76,8 @@ public class MapleJarUtil {
                 JarEntry entry = new JarEntry(cn.getName() + ".class");
                 out.putNextEntry(entry);
                 ClassTree tree = app.getClassTree();
-                Iterator var6 = cn.getMethods().iterator();
 
-                while(var6.hasNext()) {
-                    MethodNode m = (MethodNode)var6.next();
+                for (MethodNode m : cn.getMethods()) {
                     if (m.node.instructions.size() > 10000) {
                         System.out.println("large method: " + m + " @" + m.node.instructions.size());
                     }
@@ -87,7 +85,7 @@ public class MapleJarUtil {
 
                 try {
                     try {
-                        ClassWriter writer = this.buildClassWriter(tree, 2);
+                        ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
                         cn.node.accept(writer);
                         out.write(writer.toByteArray());
                     } catch (Exception var8) {

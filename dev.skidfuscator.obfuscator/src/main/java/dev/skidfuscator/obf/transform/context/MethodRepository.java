@@ -3,6 +3,8 @@ package dev.skidfuscator.obf.transform.context;
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.caller.CallerType;
+import dev.skidfuscator.obf.transform.flow.FakeJumpFlowPass;
+import dev.skidfuscator.obf.transform.flow.FlowPass;
 import dev.skidfuscator.obf.transform.seed.IntegerBasedSeed;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidInvocation;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
@@ -120,7 +122,16 @@ public class MethodRepository {
             );
         }
 
+        final FlowPass[] flowPasses = new FlowPass[] {
+                new FakeJumpFlowPass()
+        };
+
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
         skidMethods.forEach(e -> e.renderPublic(skidSession));
+        skidMethods.forEach(e -> {
+            for (FlowPass flowPass : flowPasses) {
+                flowPass.pass(skidSession, e);
+            }
+        });
     }
 }

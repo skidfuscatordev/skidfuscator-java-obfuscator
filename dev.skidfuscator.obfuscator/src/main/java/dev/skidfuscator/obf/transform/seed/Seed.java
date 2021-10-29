@@ -13,5 +13,6 @@ public interface Seed<T> {
     void renderPublic(final List<MethodNode> methodNodes);
 
     T getPublic();
-    Expr getPrivate();
+    T getPrivate();
+    Expr getPrivateLoader();
 }

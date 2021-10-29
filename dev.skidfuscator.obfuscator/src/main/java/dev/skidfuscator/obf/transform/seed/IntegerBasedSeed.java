@@ -33,10 +33,10 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
     public void renderPrivate(final MethodNode methodNode, final ControlFlowGraph cfg) {
         final boolean free = parent.getCallerType() == CallerType.APPLICATION;
 
-        if (free) {
+        if (free && false) {
             final BasicLocal local = cfg.getLocals().getNextFreeLocal(false);
 
-            int stackHeight = Type.getArgumentTypes(this.parent.getParameter().getDesc()).length;
+            int stackHeight = OpcodeUtil.getArgumentsSizes(this.parent.getParameter().getDesc());
             if (!this.parent.isStatic()) stackHeight += 1;
 
             final Map<String, Local> localMap = new HashMap<>();
@@ -81,7 +81,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
         }
 
         else {
-            final BasicLocal local =/* cfg.getLocals().get(*/cfg.getLocals().getNextFreeLocal(false)/*.getIndex(), false)*/;
+            final BasicLocal local =/* cfg.getLocals().get(*/cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2)/*.getIndex(), false)*/;
 
             /*
              * Here we initialize the private seed as a root factor. This is the sensitive part of the application
@@ -90,7 +90,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
             final ConstantExpr privateSeed = new ConstantExpr(this.privateSeed, Type.INT_TYPE);
             final VarExpr privateSeedLoader = new VarExpr(local, Type.INT_TYPE);
             final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, privateSeed);
-            cfg.verticesInOrder().get(0).add(privateSeedSetter);
+            cfg.verticesInOrder().get(0).add(0, privateSeedSetter);
 
             this.local = local;
         }
@@ -100,7 +100,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
     public void renderPublic(List<MethodNode> methodNodes) {
         final boolean free = parent.getCallerType() == CallerType.APPLICATION;
 
-        if (!free)
+        if (!free || true)
             return;
 
         parent.getParameter().addParameter(Type.INT_TYPE);
@@ -150,7 +150,12 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
     }
 
     @Override
-    public Expr getPrivate() {
+    public Integer getPrivate() {
+        return privateSeed;
+    }
+
+    @Override
+    public Expr getPrivateLoader() {
         return new VarExpr(local, Type.INT_TYPE);
     }
 }
