@@ -1,0 +1,384 @@
+package dev.skidfuscator.obf.transform.flow.gen3;
+
+import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
+import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
+import dev.skidfuscator.obf.transform_legacy.number.NumberManager;
+import dev.skidfuscator.obf.utils.Blocks;
+import dev.skidfuscator.obf.utils.RandomUtil;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.mapleir.asm.MethodNode;
+import org.mapleir.flowgraph.ExceptionRange;
+import org.mapleir.flowgraph.edges.*;
+import org.mapleir.ir.cfg.BasicBlock;
+import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Stmt;
+import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
+import org.mapleir.ir.code.stmt.PopStmt;
+import org.mapleir.ir.code.stmt.SwitchStmt;
+import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
+import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
+import org.mapleir.ir.locals.Local;
+import org.mapleir.stdlib.collections.graph.FastGraphEdge;
+import org.objectweb.asm.Type;
+
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+public class SkidGraph {
+    @Getter
+    private final MethodNode node;
+    private final SkidMethod method;
+
+    @Setter
+    @Getter
+    private Local local;
+    private final Map<BasicBlock, SeededBlock> cache = new HashMap<>();
+    private final Set<LinearLink> linearLinks = new HashSet<>();
+
+    public SkidGraph(MethodNode node, SkidMethod method) {
+        this.node = node;
+        this.method = method;
+    }
+
+    public void render(final ControlFlowGraph cfg) {
+        if (cfg == null)
+            return;
+
+        // Phase 1: populate
+        populate(cfg);
+
+        // Phase 2
+        linearize(cfg);
+    }
+
+    private void populate(final ControlFlowGraph cfg) {
+        for (BasicBlock entry : cfg.getEntries()) {
+            cache.put(entry, new SeededBlock(RandomUtil.nextInt(), entry));
+        }
+    }
+
+    public void postlinearize(final ControlFlowGraph cfg) {
+        if (cfg == null || cfg.vertices().size() == 0 || local == null)
+            return;
+
+        final Set<BasicBlock> toVisit = cfg.vertices()
+                .stream()
+                .filter(e -> cfg.getIncomingImmediate(e) == null)
+                .collect(Collectors.toSet());
+
+        range(cfg, local);
+        linkage(cfg, local);
+
+        /*BasicBlock next = cfg.verticesInOrder().iterator().next();
+        while (true) {
+            final BasicBlock immediate = cfg.getImmediate(next);
+
+            if (immediate == null)
+                break;
+
+            final LinearLink linearLink = new LinearLink(next, immediate);
+
+            if (linearLinks.contains(linearLink))
+                continue;
+
+            linearLinks.add(linearLink);
+
+            // Add immediate seed translation
+            addSeedToImmediate(local, next, immediate);
+
+            next = immediate;
+        }*/
+
+        for (BasicBlock block : toVisit) {
+            final Stack<BasicBlock> blocks = new Stack<>();
+            blocks.add(block);
+
+            while (!blocks.isEmpty()) {
+                final BasicBlock stack = blocks.pop();
+
+                if (stack == null || cfg.getEdges(stack).size() == 0)
+                    continue;
+
+                final BasicBlock immediate = cfg.getImmediate(stack);
+
+                if (immediate == null)
+                    continue;
+
+                final LinearLink linearLink = new LinearLink(stack, immediate);
+
+                if (linearLinks.contains(linearLink))
+                    continue;
+
+                linearLinks.add(linearLink);
+                blocks.add(immediate);
+
+                // Add immediate seed translation
+                addSeedToImmediate(local, stack, immediate);
+            }
+        }
+
+        }
+
+    private void linearize(final ControlFlowGraph cfg) {
+        final BasicBlock entry = cfg.verticesInOrder().iterator().next();
+        final SeededBlock seedEntry = getBlock(entry);
+        final Local local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+        final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */NumberManager.transform(
+                seedEntry.getSeed(),
+                method.getSeed().getPrivate(),
+                method.getSeed().getPrivateLoader()
+        );
+        final CopyVarStmt copyVarStmt = new CopyVarStmt(new VarExpr(local, Type.INT_TYPE), loadedChanged);
+        entry.add(1, copyVarStmt);
+
+        setLocal(local);
+
+    }
+
+    private void linkage(final ControlFlowGraph cfg, final Local local) {
+        for (BasicBlock entry : cfg.vertices()) {
+            new HashSet<>(entry).forEach(e -> {
+                if (e instanceof UnconditionalJumpStmt) {
+                    addSeedToUncJump(local, entry, (UnconditionalJumpStmt) e);
+                } else if (e instanceof ConditionalJumpStmt && !(e instanceof FakeConditionalJumpStmt)) {
+                    addSeedToCondJump(local, entry, (ConditionalJumpStmt) e);
+                } if (e instanceof SwitchStmt) {
+                    addSeedToSwitch(local, entry, (SwitchStmt) e);
+                }
+            });
+        }
+    }
+
+    private void range(final ControlFlowGraph cfg, final Local local) {
+        for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
+            addSeedToRange(local, new VarExpr(local, Type.INT_TYPE), cfg, range);
+        }
+    }
+
+    private void reset() {
+        cache.clear();
+    }
+
+    private static class LinearLink {
+        private final BasicBlock in;
+        private final BasicBlock out;
+
+        public LinearLink(BasicBlock in, BasicBlock out) {
+            this.in = in;
+            this.out = out;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            LinearLink that = (LinearLink) o;
+
+            if (in != null ? !in.equals(that.in) : that.in != null) return false;
+            return out != null ? out.equals(that.out) : that.out == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = in != null ? in.hashCode() : 0;
+            result = 31 * result + (out != null ? out.hashCode() : 0);
+            return result;
+        }
+    }
+
+    public SeededBlock getBlock(final BasicBlock block) {
+        SeededBlock seededBlock  = cache.get(block);
+        if (seededBlock == null) {
+            seededBlock = new SeededBlock(RandomUtil.nextInt(), block);
+            cache.put(block, seededBlock);
+        }
+
+        return seededBlock;
+    }
+
+    private void addSeedToImmediate(final Local local, final BasicBlock block, final BasicBlock immediate) {
+        final SeededBlock seededBlock = getBlock(block);
+        final SeededBlock targetSeededBlock = getBlock(immediate);
+        seededBlock.addSeedLoader(-1, local, seededBlock.getSeed(), targetSeededBlock.getSeed());
+
+        // Ignore, this is for debugging
+        /*
+        final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+        block.add(new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                new ConstantExpr(block.getDisplayName() +" : Ivar: " + seededBlock.getSeed())));
+        immediate.add(new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                new ConstantExpr(immediate.getDisplayName() +" : Ivar 2: " + targetSeededBlock.getSeed())));
+                */
+    }
+
+    private void addSeedToUncJump(final Local local, final BasicBlock block, final UnconditionalJumpStmt stmt) {
+        final int index = block.indexOf(stmt);
+        final SeededBlock seededBlock = getBlock(block);
+        final SeededBlock targetSeededBlock = getBlock(stmt.getTarget());
+        seededBlock.addSeedLoader(index, local, seededBlock.getSeed(), targetSeededBlock.getSeed());
+        /*
+        final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+        block.add(new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                new ConstantExpr(block.getDisplayName() +" : unc-var: " + targetSeededBlock.getSeed())));
+                */
+    }
+
+    private void addSeedToCondJump(final Local local, final BasicBlock block, final ConditionalJumpStmt stmt) {
+        //  Todo    Add support for various different types of conditional jumps
+        //          support such as block splitting and shit to mess with reversers
+        if (true) {
+            final SeededBlock seededBlock = getBlock(block);
+            final SeededBlock targetSeededBlock = getBlock(stmt.getTrueSuccessor());
+
+            if (block.indexOf(stmt) < 0) {
+                System.out.println("ISSUEEEEEE");
+            }
+            //final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+            seededBlock.addSeedLoader(block.indexOf(stmt), local, seededBlock.getSeed(), targetSeededBlock.getSeed());
+            seededBlock.addSeedLoader(block.indexOf(stmt) + 1, local, targetSeededBlock.getSeed(), seededBlock.getSeed());
+            /*block.add(block.indexOf(stmt), new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                    new ConstantExpr(block.getDisplayName() +" : c-var: " + targetSeededBlock.getSeed())));
+            block.add(block.indexOf(stmt) + 1, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                    new ConstantExpr(block.getDisplayName() +" : c-var: " + seededBlock.getSeed())));*/
+            return;
+        }
+
+        final ConditionalJumpEdge<BasicBlock> edge = block.cfg.getEdges(block).stream()
+                .filter(e -> !(e instanceof ImmediateEdge))
+                .map(e -> (ConditionalJumpEdge<BasicBlock>) e)
+                .filter(e -> e.dst().equals(stmt.getTrueSuccessor()) && e.opcode == stmt.getOpcode())
+                .findFirst()
+                .orElse(null);
+
+        block.cfg.removeEdge(edge);
+
+        final SeededBlock seededBlock = getBlock(block);
+        final BasicBlock target = stmt.getTrueSuccessor();
+        final SeededBlock targetSeeded = getBlock(target);
+
+        // Add jump and seed
+        final BasicBlock basicBlock = new BasicBlock(block.cfg);
+        final SeededBlock intraSeededBlock = getBlock(basicBlock);
+        intraSeededBlock.addSeedLoader(0, local, seededBlock.getSeed(), targetSeeded.getSeed());
+        basicBlock.add(new UnconditionalJumpStmt(target));
+
+        // Add edge
+        basicBlock.cfg.addVertex(basicBlock);
+        basicBlock.cfg.addEdge(new UnconditionalJumpEdge<>(basicBlock, target));
+
+        // Replace successor
+        stmt.setTrueSuccessor(basicBlock);
+        block.cfg.addEdge(new ConditionalJumpEdge<>(block, basicBlock, stmt.getOpcode()));
+        //seededBlock.addSeedLoader(index + 2, local, targetSeededBlock.getSeed(), seededBlock.getSeed());
+    }
+
+    private void addSeedToSwitch(final Local local, final BasicBlock block, final SwitchStmt stmt) {
+        final SeededBlock seededBlock = getBlock(block);
+
+        for (BasicBlock value : stmt.getTargets().values()) {
+            final SeededBlock target = getBlock(value);
+            target.addSeedLoader(0, local, seededBlock.getSeed(), target.getSeed());
+        }
+
+        final SeededBlock dflt = getBlock(stmt.getDefaultTarget());
+        dflt.addSeedLoader(0, local, seededBlock.getSeed(), dflt.getSeed());
+    }
+
+    private void addSeedToRange(final Local local, final Expr localLoad, final ControlFlowGraph cfg, final ExceptionRange<BasicBlock> blockRange) {
+        LinkedHashMap<Integer, BasicBlock> basicBlockMap = new LinkedHashMap<>();
+        List<Integer> sortedList = new ArrayList<>();
+
+        // Save current handler
+        final BasicBlock basicHandler = blockRange.getHandler();
+        final SeededBlock handler = getBlock(blockRange.getHandler());
+
+        // Create new block handle
+        final BasicBlock toppleHandler = new BasicBlock(cfg);
+        cfg.addVertex(toppleHandler);
+        blockRange.setHandler(toppleHandler);
+
+        // For all block being read
+        for (BasicBlock node : blockRange.getNodes()) {
+            // Get their internal seed and add it to the list
+            final SeededBlock internal = getBlock(node);
+            sortedList.add(internal.getSeed());
+
+            // Create a new switch block and get it's seeded variant
+            final BasicBlock block = new BasicBlock(cfg);
+            cfg.addVertex(block);
+            final SeededBlock seededBlock = getBlock(block);
+
+            // Add a seed loader for the incoming block and convert it to the handler's
+            seededBlock.addSeedLoader(-1, local, internal.getSeed(), handler.getSeed());
+
+            // Jump to handler
+            block.add(new UnconditionalJumpStmt(basicHandler));
+            cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
+
+            // Add to switch
+            basicBlockMap.put(internal.getSeed(), block);
+            cfg.addEdge(new SwitchEdge<>(toppleHandler, block, internal.getSeed()));
+
+            // Find egde and transform
+            cfg.getEdges(node)
+                    .stream()
+                    .filter(e -> e instanceof TryCatchEdge)
+                    .map(e -> (TryCatchEdge<BasicBlock>) e)
+                    .filter(e -> e.erange == blockRange)
+                    .findFirst()
+                    .ifPresent(cfg::removeEdge);
+
+            // Add new edge
+            cfg.addEdge(new TryCatchEdge<>(node, blockRange));
+        }
+
+        // Haha get fucked
+        // Todo     Fix the other shit to re-enable this; this is for the lil shits
+        //          (love y'all tho) that are gonna try reversing this
+        /*for (int i = 0; i < 10; i++) {
+            // Generate random seed + prevent conflict
+            final int seed = RandomUtil.nextInt();
+            if (sortedList.contains(seed))
+                continue;
+
+            // Add seed to list
+            sortedList.add(seed);
+
+            // Create new switch block
+            final BasicBlock block = new BasicBlock(cfg);
+            cfg.addVertex(block);
+
+            // Get seeded version and add seed loader
+            final SeededBlock seededBlock = getBlock(block);
+            seededBlock.addSeedLoader(-1, local, seed, RandomUtil.nextInt());
+            block.add(new UnconditionalJumpStmt(basicHandler));
+            cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
+
+            basicBlockMap.put(seed, block);
+            cfg.addEdge(new SwitchEdge<>(handler.getBlock(), block, seed));
+        }*/
+
+        // Default switch edge
+        final BasicBlock defaultBlock = Blocks.exception(cfg);
+        cfg.addEdge(new DefaultSwitchEdge<>(toppleHandler, defaultBlock));
+
+        // Add switch
+        // Todo     Add hashing to prevent dumb bs reversing
+        final SwitchStmt stmt = new SwitchStmt(localLoad, basicBlockMap, defaultBlock);
+        toppleHandler.add(stmt);
+
+        // Add unconditional jump edge
+        cfg.addEdge(new UnconditionalJumpEdge<>(toppleHandler, basicHandler));
+    }
+
+    public void cache(final BasicBlock basicBlock) {
+        cache.put(basicBlock, new SeededBlock(RandomUtil.nextInt(), basicBlock));
+    }
+}

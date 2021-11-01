@@ -5,6 +5,8 @@ import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.caller.CallerType;
 import dev.skidfuscator.obf.transform.flow.FakeJumpFlowPass;
 import dev.skidfuscator.obf.transform.flow.FlowPass;
+import dev.skidfuscator.obf.transform.flow.gen3.SeedFlowPass;
+import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
 import dev.skidfuscator.obf.transform.seed.IntegerBasedSeed;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidInvocation;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
@@ -123,7 +125,8 @@ public class MethodRepository {
         }
 
         final FlowPass[] flowPasses = new FlowPass[] {
-                new FakeJumpFlowPass()
+                new FakeJumpFlowPass(),
+                new SeedFlowPass()
         };
 
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
@@ -131,6 +134,12 @@ public class MethodRepository {
         skidMethods.forEach(e -> {
             for (FlowPass flowPass : flowPasses) {
                 flowPass.pass(skidSession, e);
+            }
+        });
+
+        skidMethods.forEach(e -> {
+            for (SkidGraph methodNode : e.getMethodNodes()) {
+                methodNode.postlinearize(skidSession.getCxt().getIRCache().get(methodNode.getNode()));
             }
         });
     }

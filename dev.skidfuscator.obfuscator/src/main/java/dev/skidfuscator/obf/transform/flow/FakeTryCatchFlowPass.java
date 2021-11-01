@@ -2,6 +2,7 @@ package dev.skidfuscator.obf.transform.flow;
 
 
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.dot4j.model.Edge;
@@ -29,11 +30,11 @@ import java.util.stream.Collectors;
 public class FakeTryCatchFlowPass implements FlowPass {
     @Override
     public void pass(SkidSession session, SkidMethod method) {
-        for (MethodNode methodNode : method.getMethodNodes()) {
-            if (methodNode.isAbstract())
+        for (SkidGraph methodNode : method.getMethodNodes()) {
+            if (methodNode.getNode().isAbstract())
                 continue;
 
-            final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode);
+            final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode.getNode());
 
             if (cfg == null)
                 continue;
@@ -44,7 +45,7 @@ public class FakeTryCatchFlowPass implements FlowPass {
                 if (edgeList.stream().noneMatch(e -> e instanceof ConditionalJumpEdge))
                     continue;
 
-                final List<ConditionalJumpEdge<BasicBlock>> conditionalJumpEdges = edgeList
+                final List<ConditionalJumpEdge> conditionalJumpEdges = edgeList
                         .stream()
                         .filter(e -> e instanceof ConditionalJumpEdge)
                         .map(e -> (ConditionalJumpEdge) e)
@@ -76,8 +77,8 @@ public class FakeTryCatchFlowPass implements FlowPass {
                     final BasicBlock handler_block = new BasicBlock(cfg);
                     final ConditionalJumpStmt jump_expr = new ConditionalJumpStmt(stmt.getLeft(), stmt.getRight(), stmt.getTrueSuccessor(), stmt.getComparisonType());
                     handler_block.add(jump_expr);
-                    final ConditionalJumpEdge<BasicBlock> successor
-                    cfg
+                    //final ConditionalJumpEdge<BasicBlock> successor
+                    //cfg
 
                     final ExceptionRange<BasicBlock> exception_range = new ExceptionRange<>();
                     exception_range.addVertex(try_block);

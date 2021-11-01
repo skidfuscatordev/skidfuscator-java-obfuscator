@@ -3,6 +3,7 @@ package dev.skidfuscator.obf.transform.yggdrasil;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.caller.CallerType;
 import dev.skidfuscator.obf.transform.context.InvocationModal;
+import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
 import dev.skidfuscator.obf.transform.seed.Seed;
 import dev.skidfuscator.obf.transform_legacy.parameter.Parameter;
 import dev.skidfuscator.obf.utils.OpcodeUtil;
@@ -15,13 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Data
 public class SkidMethod {
-    private final List<MethodNode> methodNodes;
+    private final List<SkidGraph> methodNodes;
     private final CallerType callerType;
     private final Set<SkidInvocation> invocationModal;
-    private Seed<?> seed;
+    private Seed<Integer> seed;
 
     private MethodNode modal;
     private boolean classStatic;
@@ -29,30 +31,34 @@ public class SkidMethod {
     private UUID uuid;
 
     public SkidMethod(Set<MethodNode> methodNodes, CallerType callerType, Set<SkidInvocation> invocationModal) {
-        this.methodNodes = new ArrayList<>(methodNodes);
+        this.methodNodes = methodNodes.stream().map(e -> new SkidGraph(e, this)).collect(Collectors.toList());
         this.callerType = callerType;
         this.invocationModal = invocationModal;
-        this.modal = this.methodNodes.get(0);
+        this.modal = this.methodNodes.get(0).getNode();
         this.parameter = new Parameter(modal.getDesc());
         this.classStatic = OpcodeUtil.isStatic(modal);
         this.uuid = UUID.randomUUID();
     }
 
     public void renderPrivate(final SkidSession skidSession) {
-        for (MethodNode methodNode : methodNodes) {
-            final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode);
+        for (SkidGraph methodNode : methodNodes) {
+            final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
             if (cfg == null)
                 continue;
 
-            seed.renderPrivate(methodNode, cfg);
+            seed.renderPrivate(methodNode.getNode(), cfg);
+
+            if (methodNode.getNode().isAbstract())
+                continue;
+            methodNode.render(cfg);
         }
     }
 
     public void renderPublic(final SkidSession skidSession) {
         seed.renderPublic(methodNodes);
 
-        for (MethodNode methodNode : methodNodes) {
-            //methodNode.node.desc = parameter.getDesc();
+        for (SkidGraph methodNode : methodNodes) {
+            methodNode.getNode().node.desc = parameter.getDesc();
         }
     }
 

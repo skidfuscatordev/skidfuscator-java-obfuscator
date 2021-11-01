@@ -1,6 +1,7 @@
 package dev.skidfuscator.obf.transform.seed;
 
 import dev.skidfuscator.obf.transform.caller.CallerType;
+import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidInvocation;
 import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
 import dev.skidfuscator.obf.transform_legacy.number.NumberManager;
@@ -31,13 +32,16 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
 
     @Override
     public void renderPrivate(final MethodNode methodNode, final ControlFlowGraph cfg) {
+        if (methodNode.isAbstract())
+            return;
+
         final boolean free = parent.getCallerType() == CallerType.APPLICATION;
 
-        if (free && false) {
-            final BasicLocal local = cfg.getLocals().getNextFreeLocal(false);
+        if (free) {
+            final BasicLocal local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
 
             int stackHeight = OpcodeUtil.getArgumentsSizes(this.parent.getParameter().getDesc());
-            if (!this.parent.isStatic()) stackHeight += 1;
+            if (this.parent.isStatic()) stackHeight -= 1;
 
             final Map<String, Local> localMap = new HashMap<>();
 
@@ -52,7 +56,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
                 }
                 final int newId = oldId + 1;
 
-                final String newVar = old.replace(oldStringId, Integer.toString(newId));
+                final String newVar = old.replace("var" + oldStringId, "var" + Integer.toString(newId));
                 stringLocalEntry.getValue().setIndex(stringLocalEntry.getValue().getIndex() + 1);
                 localMap.put(newVar, stringLocalEntry.getValue());
             }
@@ -75,7 +79,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
              */
             final VarExpr privateSeedLoader = new VarExpr(local, Type.INT_TYPE);
             final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, seedExpr);
-            cfg.verticesInOrder().get(0).add(privateSeedSetter);
+            cfg.verticesInOrder().iterator().next().add(0, privateSeedSetter);
 
             this.local = local;
         }
@@ -90,31 +94,31 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
             final ConstantExpr privateSeed = new ConstantExpr(this.privateSeed, Type.INT_TYPE);
             final VarExpr privateSeedLoader = new VarExpr(local, Type.INT_TYPE);
             final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, privateSeed);
-            cfg.verticesInOrder().get(0).add(0, privateSeedSetter);
+            cfg.verticesInOrder().iterator().next().add(0, privateSeedSetter);
 
             this.local = local;
         }
     }
 
     @Override
-    public void renderPublic(List<MethodNode> methodNodes) {
+    public void renderPublic(List<SkidGraph> methodNodes) {
         final boolean free = parent.getCallerType() == CallerType.APPLICATION;
 
-        if (!free || true)
+        if (!free)
             return;
 
         parent.getParameter().addParameter(Type.INT_TYPE);
-        for (MethodNode methodNode : methodNodes) {
-            if (methodNode.node.localVariables == null)
-                methodNode.node.localVariables = new ArrayList<>();
+        /*for (SkidGraph methodNode : methodNodes) {
+            if (methodNode.getNode().node.localVariables == null)
+                methodNode.getNode().node.localVariables = new ArrayList<>();
 
-            for (LocalVariableNode localVariable : methodNode.node.localVariables) {
+            for (LocalVariableNode localVariable : methodNode.getNode().node.localVariables) {
                 if (localVariable.index >= local.getIndex()) {
                     localVariable.index++;
                 }
             }
 
-            methodNode.node.localVariables.add(new LocalVariableNode(
+            methodNode.getNode().node.localVariables.add(new LocalVariableNode(
                     "hash",
                     Type.INT_TYPE.getDescriptor(),
                     "",
@@ -122,7 +126,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
                     new LabelNode(),
                     local.getIndex()
             ));
-        }
+        }*/
 
         final String desc = parent.getParameter().getDesc();
 
