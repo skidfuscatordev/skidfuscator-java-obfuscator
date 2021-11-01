@@ -1,4 +1,4 @@
-package dev.skidfuscator.obf.transform_legacy.parameter;
+package dev.skidfuscator.obf.utils;
 
 import lombok.Setter;
 import org.objectweb.asm.Type;

@@ -1,6 +1,6 @@
-package dev.skidfuscator.obf.transform.flow.gen3;
+package dev.skidfuscator.obf.skidasm;
 
-import dev.skidfuscator.obf.transform_legacy.number.NumberManager;
+import dev.skidfuscator.obf.number.NumberManager;
 import lombok.Data;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.Expr;
@@ -11,11 +11,11 @@ import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Type;
 
 @Data
-public class SeededBlock {
+public class SkidBlock {
     private final int seed;
     private final BasicBlock block;
 
-    public SeededBlock(int publicSeed, BasicBlock block) {
+    public SkidBlock(int publicSeed, BasicBlock block) {
         this.seed = publicSeed;
         this.block = block;
     }

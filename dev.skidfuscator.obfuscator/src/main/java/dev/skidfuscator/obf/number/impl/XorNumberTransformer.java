@@ -1,6 +1,6 @@
-package dev.skidfuscator.obf.transform_legacy.number.impl;
+package dev.skidfuscator.obf.number.impl;
 
-import dev.skidfuscator.obf.transform_legacy.number.NumberTransformer;
+import dev.skidfuscator.obf.number.NumberTransformer;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;

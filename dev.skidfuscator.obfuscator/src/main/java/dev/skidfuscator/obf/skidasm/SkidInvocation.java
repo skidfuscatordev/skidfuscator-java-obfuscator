@@ -1,8 +1,7 @@
-package dev.skidfuscator.obf.transform.yggdrasil;
+package dev.skidfuscator.obf.skidasm;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 
 @Data

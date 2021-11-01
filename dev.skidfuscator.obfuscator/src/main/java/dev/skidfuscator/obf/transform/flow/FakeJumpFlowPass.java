@@ -1,33 +1,38 @@
 package dev.skidfuscator.obf.transform.flow;
 
-
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
-import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
-import org.mapleir.asm.MethodNode;
+import dev.skidfuscator.obf.skidasm.SkidGraph;
+import dev.skidfuscator.obf.skidasm.SkidMethod;
+import dev.skidfuscator.obf.utils.Blocks;
 import org.mapleir.flowgraph.edges.ConditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.Stmt;
-import org.mapleir.ir.code.expr.AllocObjectExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
-import org.mapleir.ir.code.expr.invoke.InvocationExpr;
-import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
-import org.mapleir.ir.code.stmt.PopStmt;
-import org.mapleir.ir.code.stmt.ThrowStmt;
-import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
-import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Type;
 
 import java.util.HashSet;
 
-
+/**
+ * Simple fake jump flow pass.
+ *
+ * >> Scoring (/10, higher is better):
+ * [*] Decompiler: 3
+ * [*] Weight: 8
+ * [*] Difficult: 5 (with seed), 1 (without seed)
+ * [*] Efficiency: 6
+ * [=] Total: 5.5
+ *
+ * >> Complexity (n = number of blocks)
+ * C = O(n)
+ *
+ * >> Space complexity (n = number of blocks)
+ * C = O(1)
+ */
 public class FakeJumpFlowPass implements FlowPass {
-    private static final Type EXCEPTION = Type.getType(IllegalStateException.class);
 
     @Override
     public void pass(SkidSession session, SkidMethod method) {
@@ -44,40 +49,23 @@ public class FakeJumpFlowPass implements FlowPass {
                 if (entry.size() == 0)
                     continue;
 
+                // Todo add hashing to amplify difficulty and remove key exposure
+                // Todo make this a better system
                 final Expr var_load = new VarExpr(methodNode.getLocal(), Type.INT_TYPE);
                 final ConstantExpr var_const = new ConstantExpr(methodNode.getBlock(entry).getSeed());
 
-                final BasicBlock fuckup = new BasicBlock(cfg);
-                final Expr alloc_exception = new AllocObjectExpr(EXCEPTION);
-                final Local local = cfg.getLocals().get(cfg.getEntries().size() + 2, true);
+                // Todo add more boilerplates + add exception rotation
+                final BasicBlock fuckup = Blocks.exception(cfg);
 
-                final VarExpr dup_save = new VarExpr(local, EXCEPTION);
-                final Stmt dup_stmt = new CopyVarStmt(dup_save, alloc_exception, true);
-                fuckup.add(dup_stmt);
-
-                final VarExpr fuck = new VarExpr(local, EXCEPTION);
-                final Expr init_alloc = new VirtualInvocationExpr(
-                        InvocationExpr.CallType.SPECIAL,
-                        new Expr[]{fuck},
-                        EXCEPTION.getClassName().replace(".", "/"),
-                        "<init>",
-                        "()V"
-                );
-                final PopStmt popStmt = new PopStmt(init_alloc);
-                fuckup.add(popStmt);
-
-                final VarExpr returnFuck = new VarExpr(local, EXCEPTION);
-                final Stmt exception_stmt = new ThrowStmt(returnFuck);
-                fuckup.add(exception_stmt);
-
-                cfg.addVertex(fuckup);
-
+                // Todo change blocks to be skiddedblocks to add method to directly add these
                 final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(var_load, var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
                 final ConditionalJumpEdge<BasicBlock> jump_edge = new ConditionalJumpEdge<>(entry, fuckup, jump_stmt.getOpcode());
                 entry.add(jump_stmt);
                 cfg.addEdge(jump_edge);
 
-                /*final Local local1 = entry.cfg.getLocals().get(entry.cfg.getLocals().getMaxLocals() + 2);
+                // Regular debug
+                /*
+                final Local local1 = entry.cfg.getLocals().get(entry.cfg.getLocals().getMaxLocals() + 2);
                 entry.add(new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
                         new ConstantExpr(entry.getDisplayName() +" : var expect: " + var_const.getConstant())));
                 */

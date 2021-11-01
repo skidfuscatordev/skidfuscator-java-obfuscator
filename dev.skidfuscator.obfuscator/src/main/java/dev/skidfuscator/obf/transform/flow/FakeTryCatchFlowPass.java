@@ -2,14 +2,11 @@ package dev.skidfuscator.obf.transform.flow;
 
 
 import dev.skidfuscator.obf.init.SkidSession;
-import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
-import org.mapleir.asm.MethodNode;
-import org.mapleir.dot4j.model.Edge;
+import dev.skidfuscator.obf.skidasm.SkidGraph;
+import dev.skidfuscator.obf.skidasm.SkidMethod;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.ConditionalJumpEdge;
 import org.mapleir.flowgraph.edges.FlowEdge;
-import org.mapleir.flowgraph.edges.JumpEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -27,6 +24,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * WIP
+ */
 public class FakeTryCatchFlowPass implements FlowPass {
     @Override
     public void pass(SkidSession session, SkidMethod method) {

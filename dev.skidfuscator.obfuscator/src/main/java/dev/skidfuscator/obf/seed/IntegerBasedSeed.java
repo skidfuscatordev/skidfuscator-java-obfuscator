@@ -1,25 +1,20 @@
-package dev.skidfuscator.obf.transform.seed;
+package dev.skidfuscator.obf.seed;
 
 import dev.skidfuscator.obf.transform.caller.CallerType;
-import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidInvocation;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
-import dev.skidfuscator.obf.transform_legacy.number.NumberManager;
-import dev.skidfuscator.obf.transform_legacy.parameter.Parameter;
+import dev.skidfuscator.obf.skidasm.SkidGraph;
+import dev.skidfuscator.obf.skidasm.SkidInvocation;
+import dev.skidfuscator.obf.skidasm.SkidMethod;
+import dev.skidfuscator.obf.number.NumberManager;
 import dev.skidfuscator.obf.utils.OpcodeUtil;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
-import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
 import org.mapleir.ir.locals.impl.BasicLocal;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LocalVariableNode;
 
 import java.util.*;
 

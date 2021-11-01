@@ -1,4 +1,4 @@
-package dev.skidfuscator.obf.transform_legacy.number;
+package dev.skidfuscator.obf.number;
 
 import org.mapleir.ir.code.Expr;
 

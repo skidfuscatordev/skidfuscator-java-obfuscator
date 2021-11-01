@@ -1,6 +1,6 @@
-package dev.skidfuscator.obf.transform.seed;
+package dev.skidfuscator.obf.seed;
 
-import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
+import dev.skidfuscator.obf.skidasm.SkidMethod;
 
 public abstract class AbstractSeed<T> implements Seed<T> {
     protected final SkidMethod parent;

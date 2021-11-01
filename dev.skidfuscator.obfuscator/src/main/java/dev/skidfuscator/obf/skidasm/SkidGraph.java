@@ -1,11 +1,9 @@
-package dev.skidfuscator.obf.transform.flow.gen3;
+package dev.skidfuscator.obf.skidasm;
 
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
-import dev.skidfuscator.obf.transform_legacy.number.NumberManager;
+import dev.skidfuscator.obf.number.NumberManager;
 import dev.skidfuscator.obf.utils.Blocks;
 import dev.skidfuscator.obf.utils.RandomUtil;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.mapleir.asm.MethodNode;
@@ -14,20 +12,15 @@ import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.Stmt;
-import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
-import org.mapleir.ir.code.stmt.PopStmt;
 import org.mapleir.ir.code.stmt.SwitchStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.stdlib.collections.graph.FastGraphEdge;
 import org.objectweb.asm.Type;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SkidGraph {
@@ -38,7 +31,7 @@ public class SkidGraph {
     @Setter
     @Getter
     private Local local;
-    private final Map<BasicBlock, SeededBlock> cache = new HashMap<>();
+    private final Map<BasicBlock, SkidBlock> cache = new HashMap<>();
     private final Set<LinearLink> linearLinks = new HashSet<>();
 
     public SkidGraph(MethodNode node, SkidMethod method) {
@@ -59,7 +52,7 @@ public class SkidGraph {
 
     private void populate(final ControlFlowGraph cfg) {
         for (BasicBlock entry : cfg.getEntries()) {
-            cache.put(entry, new SeededBlock(RandomUtil.nextInt(), entry));
+            cache.put(entry, new SkidBlock(RandomUtil.nextInt(), entry));
         }
     }
 
@@ -127,7 +120,7 @@ public class SkidGraph {
 
     private void linearize(final ControlFlowGraph cfg) {
         final BasicBlock entry = cfg.verticesInOrder().iterator().next();
-        final SeededBlock seedEntry = getBlock(entry);
+        final SkidBlock seedEntry = getBlock(entry);
         final Local local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
         final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */NumberManager.transform(
                 seedEntry.getSeed(),
@@ -193,10 +186,10 @@ public class SkidGraph {
         }
     }
 
-    public SeededBlock getBlock(final BasicBlock block) {
-        SeededBlock seededBlock  = cache.get(block);
+    public SkidBlock getBlock(final BasicBlock block) {
+        SkidBlock seededBlock  = cache.get(block);
         if (seededBlock == null) {
-            seededBlock = new SeededBlock(RandomUtil.nextInt(), block);
+            seededBlock = new SkidBlock(RandomUtil.nextInt(), block);
             cache.put(block, seededBlock);
         }
 
@@ -204,8 +197,8 @@ public class SkidGraph {
     }
 
     private void addSeedToImmediate(final Local local, final BasicBlock block, final BasicBlock immediate) {
-        final SeededBlock seededBlock = getBlock(block);
-        final SeededBlock targetSeededBlock = getBlock(immediate);
+        final SkidBlock seededBlock = getBlock(block);
+        final SkidBlock targetSeededBlock = getBlock(immediate);
         seededBlock.addSeedLoader(-1, local, seededBlock.getSeed(), targetSeededBlock.getSeed());
 
         // Ignore, this is for debugging
@@ -220,8 +213,8 @@ public class SkidGraph {
 
     private void addSeedToUncJump(final Local local, final BasicBlock block, final UnconditionalJumpStmt stmt) {
         final int index = block.indexOf(stmt);
-        final SeededBlock seededBlock = getBlock(block);
-        final SeededBlock targetSeededBlock = getBlock(stmt.getTarget());
+        final SkidBlock seededBlock = getBlock(block);
+        final SkidBlock targetSeededBlock = getBlock(stmt.getTarget());
         seededBlock.addSeedLoader(index, local, seededBlock.getSeed(), targetSeededBlock.getSeed());
         /*
         final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
@@ -234,8 +227,8 @@ public class SkidGraph {
         //  Todo    Add support for various different types of conditional jumps
         //          support such as block splitting and shit to mess with reversers
         if (true) {
-            final SeededBlock seededBlock = getBlock(block);
-            final SeededBlock targetSeededBlock = getBlock(stmt.getTrueSuccessor());
+            final SkidBlock seededBlock = getBlock(block);
+            final SkidBlock targetSeededBlock = getBlock(stmt.getTrueSuccessor());
 
             if (block.indexOf(stmt) < 0) {
                 System.out.println("ISSUEEEEEE");
@@ -259,13 +252,13 @@ public class SkidGraph {
 
         block.cfg.removeEdge(edge);
 
-        final SeededBlock seededBlock = getBlock(block);
+        final SkidBlock seededBlock = getBlock(block);
         final BasicBlock target = stmt.getTrueSuccessor();
-        final SeededBlock targetSeeded = getBlock(target);
+        final SkidBlock targetSeeded = getBlock(target);
 
         // Add jump and seed
         final BasicBlock basicBlock = new BasicBlock(block.cfg);
-        final SeededBlock intraSeededBlock = getBlock(basicBlock);
+        final SkidBlock intraSeededBlock = getBlock(basicBlock);
         intraSeededBlock.addSeedLoader(0, local, seededBlock.getSeed(), targetSeeded.getSeed());
         basicBlock.add(new UnconditionalJumpStmt(target));
 
@@ -280,14 +273,14 @@ public class SkidGraph {
     }
 
     private void addSeedToSwitch(final Local local, final BasicBlock block, final SwitchStmt stmt) {
-        final SeededBlock seededBlock = getBlock(block);
+        final SkidBlock seededBlock = getBlock(block);
 
         for (BasicBlock value : stmt.getTargets().values()) {
-            final SeededBlock target = getBlock(value);
+            final SkidBlock target = getBlock(value);
             target.addSeedLoader(0, local, seededBlock.getSeed(), target.getSeed());
         }
 
-        final SeededBlock dflt = getBlock(stmt.getDefaultTarget());
+        final SkidBlock dflt = getBlock(stmt.getDefaultTarget());
         dflt.addSeedLoader(0, local, seededBlock.getSeed(), dflt.getSeed());
     }
 
@@ -297,7 +290,7 @@ public class SkidGraph {
 
         // Save current handler
         final BasicBlock basicHandler = blockRange.getHandler();
-        final SeededBlock handler = getBlock(blockRange.getHandler());
+        final SkidBlock handler = getBlock(blockRange.getHandler());
 
         // Create new block handle
         final BasicBlock toppleHandler = new BasicBlock(cfg);
@@ -307,13 +300,13 @@ public class SkidGraph {
         // For all block being read
         for (BasicBlock node : blockRange.getNodes()) {
             // Get their internal seed and add it to the list
-            final SeededBlock internal = getBlock(node);
+            final SkidBlock internal = getBlock(node);
             sortedList.add(internal.getSeed());
 
             // Create a new switch block and get it's seeded variant
             final BasicBlock block = new BasicBlock(cfg);
             cfg.addVertex(block);
-            final SeededBlock seededBlock = getBlock(block);
+            final SkidBlock seededBlock = getBlock(block);
 
             // Add a seed loader for the incoming block and convert it to the handler's
             seededBlock.addSeedLoader(-1, local, internal.getSeed(), handler.getSeed());
@@ -379,6 +372,6 @@ public class SkidGraph {
     }
 
     public void cache(final BasicBlock basicBlock) {
-        cache.put(basicBlock, new SeededBlock(RandomUtil.nextInt(), basicBlock));
+        cache.put(basicBlock, new SkidBlock(RandomUtil.nextInt(), basicBlock));
     }
 }

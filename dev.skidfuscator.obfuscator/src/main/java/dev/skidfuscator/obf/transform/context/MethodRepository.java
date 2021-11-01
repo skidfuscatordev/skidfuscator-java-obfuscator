@@ -6,10 +6,10 @@ import dev.skidfuscator.obf.transform.caller.CallerType;
 import dev.skidfuscator.obf.transform.flow.FakeJumpFlowPass;
 import dev.skidfuscator.obf.transform.flow.FlowPass;
 import dev.skidfuscator.obf.transform.flow.gen3.SeedFlowPass;
-import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
-import dev.skidfuscator.obf.transform.seed.IntegerBasedSeed;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidInvocation;
-import dev.skidfuscator.obf.transform.yggdrasil.SkidMethod;
+import dev.skidfuscator.obf.skidasm.SkidGraph;
+import dev.skidfuscator.obf.seed.IntegerBasedSeed;
+import dev.skidfuscator.obf.skidasm.SkidInvocation;
+import dev.skidfuscator.obf.skidasm.SkidMethod;
 import dev.skidfuscator.obf.utils.OpcodeUtil;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 public class MethodRepository {
     private final Set<MethodNode> methodNodes = new HashSet<>();
-    private final Map<InvocationExpr, InvocationModal> reader = new HashMap<>();
     private final Map<MethodNode, SkidMethod> skidMethodMap = new HashMap<>();
 
     public void render(final SkidSession skidSession) {
@@ -90,9 +89,6 @@ public class MethodRepository {
 
                             if (skidMethod == null)
                                 return;
-
-                            final InvocationModal modal = new InvocationModal(type, codeUnit, targets);
-                            reader.put(codeUnit, modal);
 
                             for (MethodNode target : targets) {
                                 if (skidMethodMap.containsKey(target)) {

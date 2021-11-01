@@ -1,18 +1,14 @@
-package dev.skidfuscator.obf.transform.yggdrasil;
+package dev.skidfuscator.obf.skidasm;
 
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.caller.CallerType;
-import dev.skidfuscator.obf.transform.context.InvocationModal;
-import dev.skidfuscator.obf.transform.flow.gen3.SkidGraph;
-import dev.skidfuscator.obf.transform.seed.Seed;
-import dev.skidfuscator.obf.transform_legacy.parameter.Parameter;
+import dev.skidfuscator.obf.seed.Seed;
+import dev.skidfuscator.obf.utils.Parameter;
 import dev.skidfuscator.obf.utils.OpcodeUtil;
 import lombok.Data;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
