@@ -1,4 +1,4 @@
-package dev.skidfuscator.obf.transform.flow;
+package dev.skidfuscator.obf.transform.impl.flow;
 
 
 import dev.skidfuscator.obf.init.SkidSession;

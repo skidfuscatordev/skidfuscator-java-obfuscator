@@ -1,6 +1,7 @@
 package dev.skidfuscator.obf.init;
 
 import com.google.common.collect.Streams;
+import dev.skidfuscator.obf.utils.Counter;
 import dev.skidfuscator.obf.yggdrasil.method.DefaultMethodInvokerResolver;
 import dev.skidfuscator.obf.yggdrasil.method.MethodInvokerResolver;
 import lombok.Getter;
@@ -45,6 +46,7 @@ public class SkidSession {
 
     private final List<MethodNode> entryPoints = new ArrayList<>();
 
+    private final Counter counter = new Counter();
 
     public SkidSession(ApplicationClassSource classSource, SingleJarDownloader<ClassNode> jarDownloader, File outputFile) {
         this.classSource = classSource;
@@ -83,4 +85,7 @@ public class SkidSession {
         this.entryPoints.addAll(nodes);
     }
 
+    public void count() {
+        this.counter.tick();
+    }
 }

@@ -1,9 +1,9 @@
-package dev.skidfuscator.obf.transform.flow.gen3;
+package dev.skidfuscator.obf.transform.impl.flow.gen3;
 
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.skidasm.SkidBlock;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
-import dev.skidfuscator.obf.transform.flow.FlowPass;
+import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
 import dev.skidfuscator.obf.skidasm.SkidMethod;
 import org.mapleir.ir.cfg.BasicBlock;
 
