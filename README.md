@@ -17,3 +17,11 @@ add a significant strength to the obfuscation whilst at the same time retaining 
 
 This project is **___not completed___**. This is a proof of concept I've been working on for a while. As far as I could tell, there are
 some serious flaws with parameter injection. 
+
+# Features 
+
+Here are all the cool features I've been adding to Skidfuscator. It's a fun project hence don't expect too much from it. It's purpose is
+not to be commercial but to inspire some more clever approaches to code flow obfuscation, especially ones which make use of SSA and CFGs
+
+### Third Generation Flow
+![Graph](https://i.imgur.com/bJcTNHm.png)
