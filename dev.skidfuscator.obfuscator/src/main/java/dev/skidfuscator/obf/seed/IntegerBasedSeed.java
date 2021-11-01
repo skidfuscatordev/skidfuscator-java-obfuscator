@@ -1,6 +1,6 @@
 package dev.skidfuscator.obf.seed;
 
-import dev.skidfuscator.obf.transform.caller.CallerType;
+import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.skidasm.SkidInvocation;
 import dev.skidfuscator.obf.skidasm.SkidMethod;

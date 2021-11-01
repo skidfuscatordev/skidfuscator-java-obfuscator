@@ -1,8 +1,8 @@
-package dev.skidfuscator.obf.transform.context;
+package dev.skidfuscator.obf;
 
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
-import dev.skidfuscator.obf.transform.caller.CallerType;
+import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.transform.flow.FakeJumpFlowPass;
 import dev.skidfuscator.obf.transform.flow.FlowPass;
 import dev.skidfuscator.obf.transform.flow.gen3.SeedFlowPass;
@@ -20,7 +20,7 @@ import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MethodRepository {
+public class SkidMethodRenderer {
     private final Set<MethodNode> methodNodes = new HashSet<>();
     private final Map<MethodNode, SkidMethod> skidMethodMap = new HashMap<>();
 

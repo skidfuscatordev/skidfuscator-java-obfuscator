@@ -1,4 +1,4 @@
-package dev.skidfuscator.obf.transform.caller;
+package dev.skidfuscator.obf.yggdrasil.caller;
 
 public enum CallerType {
     ENTRY,

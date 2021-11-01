@@ -1,6 +1,6 @@
 package dev.skidfuscator.obf.init;
 
-import dev.skidfuscator.obf.transform.context.MethodRepository;
+import dev.skidfuscator.obf.SkidMethodRenderer;
 import dev.skidfuscator.obf.transform_legacy.parameter.ParameterResolver;
 import dev.skidfuscator.obf.transform_legacy.parameter.impl.ZelixParameterTransformer;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
@@ -80,7 +80,7 @@ public class DefaultInitHandler implements InitHandler {
 
 
         //final ParameterResolver parameterResolver = new ZelixParameterTransformer().transform(session);
-        new MethodRepository().render(session);
+        new SkidMethodRenderer().render(session);
 
         for(Map.Entry<MethodNode, ControlFlowGraph> e : session.getCxt().getIRCache().entrySet()) {
             MethodNode mn = e.getKey();

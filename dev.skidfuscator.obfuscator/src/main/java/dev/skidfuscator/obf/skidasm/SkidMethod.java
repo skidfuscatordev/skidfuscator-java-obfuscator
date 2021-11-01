@@ -1,7 +1,7 @@
 package dev.skidfuscator.obf.skidasm;
 
 import dev.skidfuscator.obf.init.SkidSession;
-import dev.skidfuscator.obf.transform.caller.CallerType;
+import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.seed.Seed;
 import dev.skidfuscator.obf.utils.Parameter;
 import dev.skidfuscator.obf.utils.OpcodeUtil;
