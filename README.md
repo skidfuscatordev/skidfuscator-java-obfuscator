@@ -24,4 +24,10 @@ Here are all the cool features I've been adding to Skidfuscator. It's a fun proj
 not to be commercial but to inspire some more clever approaches to code flow obfuscation, especially ones which make use of SSA and CFGs
 
 ### Third Generation Flow
+
+What is third generation flow obfuscation? Well, contrary to Zelix's [second generation flow obfuscation](https://www.zelix.com/klassmaster/featuresFlowObfuscation.html), we use an even more complex system with private and public seeds. Here's 
+how it works:
+
+
+
 ![Graph](https://i.imgur.com/bJcTNHm.png)
