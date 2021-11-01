@@ -28,9 +28,15 @@ not to be commercial but to inspire some more clever approaches to code flow obf
 What is third generation flow obfuscation? Well, contrary to Zelix's [second generation flow obfuscation](https://www.zelix.com/klassmaster/featuresFlowObfuscation.html), we use an even more complex system with private and public seeds. Here's 
 how it works:
 
+<br>
+<br>
 
 ![Exampel](https://i.imgur.com/j2tZavr.png)
-_Graph representing the two different approaches towards flow obfuscation between Zelix (17.0) and Skidfuscator (0.0.1)_
+
+<sub>_Graph representing the two different approaches towards flow obfuscation between Zelix (17.0) and Skidfuscator (0.0.1)_</sub>
+<br>
+<br>
+<br>
 
 We currently are working on a variety of ways to approach this system using various lightweight obfuscation methods. Here are the current ones
 to date:
