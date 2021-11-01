@@ -23,11 +23,26 @@ some serious flaws with parameter injection.
 Here are all the cool features I've been adding to Skidfuscator. It's a fun project hence don't expect too much from it. It's purpose is
 not to be commercial but to inspire some more clever approaches to code flow obfuscation, especially ones which make use of SSA and CFGs
 
-### Third Generation Flow
+## Third Generation Flow
 
 What is third generation flow obfuscation? Well, contrary to Zelix's [second generation flow obfuscation](https://www.zelix.com/klassmaster/featuresFlowObfuscation.html), we use an even more complex system with private and public seeds. Here's 
 how it works:
 
 
+![Exampel](https://i.imgur.com/j2tZavr.png)
+_Graph representing the two different approaches towards flow obfuscation between Zelix (17.0) and Skidfuscator (0.0.1)_
 
+We currently are working on a variety of ways to approach this system using various lightweight obfuscation methods. Here are the current ones
+to date:
+
+- [x] Fake Exception GEN3 Obfuscation
+- [ ] Block Mangling GEN3 Obfuscation
+- [ ] Fake Jump GEN3 Obfuscation
+- [ ] Switch Mangling GEN3 Obfuscation
+- [ ] Loop Mangling GEN3 Obfuscation
+- [ ] Arithmetic Obfuscation GEN3 Obfuscation
+- [ ] Exception Mangling GEN3 Obfuscation
+- [ ] Condition Mangling GEN3 Obfuscation
+
+### Fake exceptions
 ![Graph](https://i.imgur.com/bJcTNHm.png)
