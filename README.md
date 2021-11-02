@@ -57,4 +57,4 @@ to date:
 ![Graph](https://i.imgur.com/bJcTNHm.png)
 
 ### Fake jumps
-![Graph](https://i.imgur.com/x3Ka8i5.png)
+![Graph](https://i.imgur.com/780UIIc.png)
