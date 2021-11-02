@@ -104,4 +104,9 @@ public class FakeTryCatchFlowPass implements FlowPass {
             }
         }
     }
+
+    @Override
+    public String getName() {
+        return "Fake Try Catch";
+    }
 }

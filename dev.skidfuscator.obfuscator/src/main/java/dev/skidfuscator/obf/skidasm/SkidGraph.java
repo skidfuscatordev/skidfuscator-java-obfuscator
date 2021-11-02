@@ -374,4 +374,8 @@ public class SkidGraph {
     public void cache(final BasicBlock basicBlock) {
         cache.put(basicBlock, new SkidBlock(RandomUtil.nextInt(), basicBlock));
     }
+
+    public boolean isInit() {
+        return node.node.name.equals("<init>");
+    }
 }

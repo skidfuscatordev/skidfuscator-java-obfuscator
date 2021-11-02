@@ -11,18 +11,38 @@ import dev.skidfuscator.obf.utils.RandomUtil;
 import org.mapleir.flowgraph.edges.ConditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
+import org.objectweb.asm.Type;
 
 import java.util.HashSet;
+import java.util.Random;
 
-public class FakeJumpFlowPass implements FlowPass {
+/**
+ * Simple fake jump flow pass.
+ *
+ * >> Scoring (/10, higher is better):
+ * [*] Decompiler: 3
+ * [*] Weight: 8
+ * [*] Difficult: 5 (with seed), 1 (without seed)
+ * [*] Efficiency: 6
+ * [=] Total: 5.5
+ *
+ * >> Complexity (n = number of blocks)
+ * C = O(n)
+ *
+ * >> Space complexity (n = number of blocks)
+ * C = O(1)
+ */
+public class FakeExceptionJumpFlowPass implements FlowPass {
 
     @Override
     public void pass(SkidSession session, SkidMethod method) {
         for (SkidGraph methodNode : method.getMethodNodes()) {
-            if (methodNode.getNode().isAbstract() || methodNode.isInit())
+            if (methodNode.getNode().isAbstract())
                 continue;
 
             final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode.getNode());
@@ -30,9 +50,8 @@ public class FakeJumpFlowPass implements FlowPass {
             if (cfg == null)
                 continue;
 
-
             for (BasicBlock entry : new HashSet<>(cfg.vertices())) {
-                if (entry.size() == 0 || entry.getStack() != null && !entry.getStack().isEmpty())
+                if (entry.size() == 0 || RandomUtil.nextInt(3) != 2)
                     continue;
 
                 // Todo add hashing to amplify difficulty and remove key exposure
@@ -44,7 +63,7 @@ public class FakeJumpFlowPass implements FlowPass {
                 final ConstantExpr var_const = new ConstantExpr(hash.getHash());
 
                 // Todo add more boilerplates + add exception rotation
-                final BasicBlock fuckup = entry;
+                final BasicBlock fuckup = Blocks.exception(cfg);
 
                 // Todo change blocks to be skiddedblocks to add method to directly add these
                 final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
@@ -54,7 +73,6 @@ public class FakeJumpFlowPass implements FlowPass {
                     entry.add(entry.size() - 1, jump_stmt);
                 else
                     entry.add(jump_stmt);
-
                 cfg.addEdge(jump_edge);
 
                 session.count();
@@ -71,6 +89,6 @@ public class FakeJumpFlowPass implements FlowPass {
 
     @Override
     public String getName() {
-        return "Fake Jump";
+        return "Fake Exception";
     }
 }

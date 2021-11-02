@@ -21,4 +21,9 @@ public class SeedFlowPass implements FlowPass {
             //run(session.getCxt().getIRCache().get(methodNode));
         }
     }
+
+    @Override
+    public String getName() {
+        return "Seed Flow";
+    }
 }

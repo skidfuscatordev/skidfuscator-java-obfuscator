@@ -5,4 +5,6 @@ import dev.skidfuscator.obf.skidasm.SkidMethod;
 
 public interface FlowPass {
     void pass(final SkidSession session, final SkidMethod method);
+
+    String getName();
 }

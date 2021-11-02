@@ -88,4 +88,10 @@ public class SkidSession {
     public void count() {
         this.counter.tick();
     }
+
+    public int popCount() {
+        final int count = counter.get();
+        counter.reset();
+        return count;
+    }
 }

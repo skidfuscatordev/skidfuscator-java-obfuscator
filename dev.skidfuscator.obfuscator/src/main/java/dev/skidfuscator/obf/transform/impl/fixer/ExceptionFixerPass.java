@@ -64,4 +64,9 @@ public class ExceptionFixerPass implements FlowPass {
             }
         }
     }
+
+    @Override
+    public String getName() {
+        return "Exception Fixer";
+    }
 }

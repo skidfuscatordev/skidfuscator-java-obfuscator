@@ -3,9 +3,10 @@ package dev.skidfuscator.obf;
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
+import dev.skidfuscator.obf.transform.impl.flow.FakeJumpFlowPass;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
-import dev.skidfuscator.obf.transform.impl.flow.FakeJumpFlowPass;
+import dev.skidfuscator.obf.transform.impl.flow.FakeExceptionJumpFlowPass;
 import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
 import dev.skidfuscator.obf.transform.impl.flow.gen3.SeedFlowPass;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
@@ -136,6 +137,7 @@ public class SkidMethodRenderer {
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
         final FlowPass[] flowPasses = new FlowPass[] {
+                new FakeExceptionJumpFlowPass(),
                 new FakeJumpFlowPass(),
                 new SeedFlowPass(),
         };
@@ -148,11 +150,14 @@ public class SkidMethodRenderer {
 
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
         skidMethods.forEach(e -> e.renderPublic(skidSession));
-        skidMethods.forEach(e -> {
-            for (FlowPass flowPass : flowPasses) {
-                flowPass.pass(skidSession, e);
-            }
-        });
+
+        for (FlowPass flowPass : flowPasses) {
+            skidMethods.forEach(e -> flowPass.pass(skidSession, e));
+            logger.log("     [@G3#flow] Finished running "
+                    + flowPass.getName()
+                    + " [Changed: " + skidSession.popCount()
+                    + "]");
+        }
 
         skidMethods.forEach(e -> {
             for (SkidGraph methodNode : e.getMethodNodes()) {
