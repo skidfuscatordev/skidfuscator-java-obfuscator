@@ -1,8 +1,6 @@
 package dev.skidfuscator.obf.init;
 
 import dev.skidfuscator.obf.SkidMethodRenderer;
-import dev.skidfuscator.obf.transform_legacy.parameter.ParameterResolver;
-import dev.skidfuscator.obf.transform_legacy.parameter.impl.ZelixParameterTransformer;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
 import dev.skidfuscator.obf.yggdrasil.EntryPoint;
 import dev.skidfuscator.obf.yggdrasil.app.ApplicationEntryPoint;

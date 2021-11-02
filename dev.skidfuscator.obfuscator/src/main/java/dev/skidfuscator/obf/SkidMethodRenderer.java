@@ -2,6 +2,7 @@ package dev.skidfuscator.obf;
 
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.transform.impl.flow.FakeJumpFlowPass;
 import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
@@ -122,8 +123,11 @@ public class SkidMethodRenderer {
 
         final FlowPass[] flowPasses = new FlowPass[] {
                 new FakeJumpFlowPass(),
-                new SeedFlowPass()
+                new SeedFlowPass(),
         };
+
+        // Fix retarded exceptions
+        new ExceptionFixerPass().accept(skidSession);
 
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
         skidMethods.forEach(e -> e.renderPublic(skidSession));
