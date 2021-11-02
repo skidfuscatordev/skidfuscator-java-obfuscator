@@ -20,13 +20,12 @@ import java.io.IOException;
 @UtilityClass
 public class Blocks {
     // A list of random exceptions
-    private final Class<?>[] exceptionClasses = new Class[] {
+    private final Class<?>[] exceptionClasses = new Class<?>[] {
             IllegalStateException.class,
             IllegalArgumentException.class,
             IllegalAccessException.class,
             IOException.class,
             RuntimeException.class,
-            ExceptionInInitializerError.class
     };
 
     public BasicBlock exception(final ControlFlowGraph cfg) {
