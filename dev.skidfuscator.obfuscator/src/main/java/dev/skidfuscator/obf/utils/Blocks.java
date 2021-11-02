@@ -15,31 +15,44 @@ import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Type;
 
+import java.io.IOException;
+
 @UtilityClass
 public class Blocks {
-    private static final Type EXCEPTION = Type.getType(IllegalStateException.class);
+    // A list of random exceptions
+    private final Class<?>[] exceptionClasses = new Class[] {
+            IllegalStateException.class,
+            IllegalArgumentException.class,
+            IllegalAccessException.class,
+            IOException.class,
+            RuntimeException.class,
+            ExceptionInInitializerError.class
+    };
 
     public BasicBlock exception(final ControlFlowGraph cfg) {
+        // Temporary fix for this
+        final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length - 1)]);
+
         final BasicBlock fuckup = new BasicBlock(cfg);
-        final Expr alloc_exception = new AllocObjectExpr(EXCEPTION);
+        final Expr alloc_exception = new AllocObjectExpr(exception);
         final Local local = cfg.getLocals().get(cfg.getEntries().size() + 2, true);
 
-        final VarExpr dup_save = new VarExpr(local, EXCEPTION);
+        final VarExpr dup_save = new VarExpr(local, exception);
         final Stmt dup_stmt = new CopyVarStmt(dup_save, alloc_exception, true);
         fuckup.add(dup_stmt);
 
-        final VarExpr fuck = new VarExpr(local, EXCEPTION);
+        final VarExpr fuck = new VarExpr(local, exception);
         final Expr init_alloc = new VirtualInvocationExpr(
                 InvocationExpr.CallType.SPECIAL,
                 new Expr[]{fuck},
-                EXCEPTION.getClassName().replace(".", "/"),
+                exception.getClassName().replace(".", "/"),
                 "<init>",
                 "()V"
         );
         final PopStmt popStmt = new PopStmt(init_alloc);
         fuckup.add(popStmt);
 
-        final VarExpr returnFuck = new VarExpr(local, EXCEPTION);
+        final VarExpr returnFuck = new VarExpr(local, exception);
         final Stmt exception_stmt = new ThrowStmt(returnFuck);
         fuckup.add(exception_stmt);
 
