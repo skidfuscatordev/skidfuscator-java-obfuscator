@@ -2,6 +2,8 @@ package dev.skidfuscator.obf.transform.impl.fixer;
 
 import com.google.common.collect.Lists;
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.skidasm.SkidGraph;
+import dev.skidfuscator.obf.skidasm.SkidMethod;
 import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
@@ -11,23 +13,26 @@ import org.objectweb.asm.Type;
 
 import java.util.*;
 
-public class ExceptionFixerPass {
-    public void accept(SkidSession cxt) {
-        for (ControlFlowGraph value : cxt.getCxt().getIRCache().values()) {
-            for (ExceptionRange<BasicBlock> range : value.getRanges()) {
+public class ExceptionFixerPass implements FlowPass {
+    @Override
+    public void pass(SkidSession session, SkidMethod method) {
+        for (SkidGraph methodNode : method.getMethodNodes()) {
+            final ControlFlowGraph cfg = session.getCxt().getIRCache().getFor(methodNode.getNode());
+
+            for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
                 if (range.getTypes().size() <= 1)
                     continue;
 
                 final Stack<ClassNode> stack = new Stack<>();
                 for (Type type : range.getTypes()) {
-                    final ClassNode classNode = cxt.getCxt().getApplication().findClassNode(type.getClassName().replace(".", "/"));
+                    final ClassNode classNode = session.getCxt().getApplication().findClassNode(type.getClassName().replace(".", "/"));
 
                     if (classNode == null) {
                         System.err.println("[fatal] Could not find exception of name " + type.getClassName().replace(".", "/") + "! Skipping...");
                         continue;
                     }
 
-                    final List<ClassNode> classNodeList = cxt.getCxt().getApplication().getClassTree().getAllParents(classNode);
+                    final List<ClassNode> classNodeList = session.getCxt().getApplication().getClassTree().getAllParents(classNode);
 
                     if (stack.isEmpty()) {
                         stack.add(classNode);

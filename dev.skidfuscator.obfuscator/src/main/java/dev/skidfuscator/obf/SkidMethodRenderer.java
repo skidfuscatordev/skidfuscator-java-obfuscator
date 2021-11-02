@@ -126,13 +126,22 @@ public class SkidMethodRenderer {
                 new SeedFlowPass(),
         };
 
+        final FlowPass[] fixers = new FlowPass[] {
+                new ExceptionFixerPass()
+        };
+
         // Fix retarded exceptions
-        new ExceptionFixerPass().accept(skidSession);
 
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
         skidMethods.forEach(e -> e.renderPublic(skidSession));
         skidMethods.forEach(e -> {
             for (FlowPass flowPass : flowPasses) {
+                flowPass.pass(skidSession, e);
+            }
+        });
+
+        skidMethods.forEach(e -> {
+            for (FlowPass flowPass : fixers) {
                 flowPass.pass(skidSession, e);
             }
         });
