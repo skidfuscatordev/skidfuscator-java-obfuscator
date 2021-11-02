@@ -1,4 +1,4 @@
-package dev.skidfuscator.obf.number;
+package dev.skidfuscator.obf.number.encrypt;
 
 import org.mapleir.ir.code.Expr;
 

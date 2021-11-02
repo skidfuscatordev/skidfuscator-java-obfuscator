@@ -74,7 +74,7 @@ public class DefaultInitHandler implements InitHandler {
                 classSource
         ));
 
-        session.getEntryPoints().forEach(e -> System.out.println(e.owner.node.name + "#" + e.node.name));
+        //session.getEntryPoints().forEach(e -> System.out.println(e.owner.node.name + "#" + e.node.name));
 
 
         //final ParameterResolver parameterResolver = new ZelixParameterTransformer().transform(session);

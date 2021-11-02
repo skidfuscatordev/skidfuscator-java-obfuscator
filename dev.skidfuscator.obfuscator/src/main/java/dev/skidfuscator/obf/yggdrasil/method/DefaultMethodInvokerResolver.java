@@ -55,7 +55,7 @@ public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
         LOGGER.info("Iterating through " + this.app.getClassSource().getClassTree().size() + " classes");
         this.app.getClassSource().iterate().forEach(clazz -> {
             clazz.getMethods().forEach(method -> {
-                LOGGER.info("Adding " + method.owner.getName() + "#" + method.getName() + method.getDesc());
+                //LOGGER.info("Adding " + method.owner.getName() + "#" + method.getName() + method.getDesc());
                 this.methodToInvokerMap.put(method, new ArrayList<>());
                 this.methodInvokers.put(method, new ArrayList<>());
             });
@@ -68,7 +68,7 @@ public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
                 } catch (Exception e){
                     LOGGER.error("Failed for class " + m.owner.getName() + "#" + m.getName() + m.getDesc(), e);
                 };
-                LOGGER.info("Added " + m.owner.getName() + "#" + m.getName() + m.getDesc());
+                //LOGGER.info("Added " + m.owner.getName() + "#" + m.getName() + m.getDesc());
             });
         });
     }

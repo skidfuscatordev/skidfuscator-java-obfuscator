@@ -36,10 +36,6 @@ public class Parameter {
         }
         builder.append(")");
         builder.append(returnArg.getDescriptor());
-
-        if (builder.toString().contains("1")) {
-            System.out.println(builder.toString());
-        }
         return builder.toString();
     }
 }

@@ -17,7 +17,10 @@ public class ExceptionFixerPass implements FlowPass {
     @Override
     public void pass(SkidSession session, SkidMethod method) {
         for (SkidGraph methodNode : method.getMethodNodes()) {
-            final ControlFlowGraph cfg = session.getCxt().getIRCache().getFor(methodNode.getNode());
+            final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode.getNode());
+
+            if (cfg == null)
+                continue;
 
             for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
                 if (range.getTypes().size() <= 1)

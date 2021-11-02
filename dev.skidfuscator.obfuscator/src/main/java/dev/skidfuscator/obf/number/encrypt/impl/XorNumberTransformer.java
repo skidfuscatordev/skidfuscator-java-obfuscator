@@ -1,6 +1,7 @@
-package dev.skidfuscator.obf.number.impl;
+package dev.skidfuscator.obf.number.encrypt.impl;
 
-import dev.skidfuscator.obf.number.NumberTransformer;
+import dev.skidfuscator.obf.maple.FakeArithmeticExpr;
+import dev.skidfuscator.obf.number.encrypt.NumberTransformer;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
@@ -15,6 +16,6 @@ public class XorNumberTransformer implements NumberTransformer {
     public Expr getNumber(final Number outcome, final Number starting, final Expr startingExpr) {
         final int xored = outcome.intValue() ^ starting.intValue();
         final Expr allocExpr = new ConstantExpr(xored);
-        return new ArithmeticExpr(allocExpr, startingExpr, ArithmeticExpr.Operator.XOR);
+        return new FakeArithmeticExpr(allocExpr, startingExpr, ArithmeticExpr.Operator.XOR);
     }
 }

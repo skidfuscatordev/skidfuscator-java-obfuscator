@@ -122,7 +122,7 @@ public class SkidGraph {
         final BasicBlock entry = cfg.verticesInOrder().iterator().next();
         final SkidBlock seedEntry = getBlock(entry);
         final Local local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
-        final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */NumberManager.transform(
+        final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */NumberManager.encrypt(
                 seedEntry.getSeed(),
                 method.getSeed().getPrivate(),
                 method.getSeed().getPrivateLoader()

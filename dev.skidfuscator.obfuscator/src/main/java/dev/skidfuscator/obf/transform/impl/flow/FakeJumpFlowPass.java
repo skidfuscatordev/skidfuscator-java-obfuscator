@@ -2,6 +2,8 @@ package dev.skidfuscator.obf.transform.impl.flow;
 
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
+import dev.skidfuscator.obf.number.NumberManager;
+import dev.skidfuscator.obf.number.hash.SkiddedHash;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.skidasm.SkidMethod;
 import dev.skidfuscator.obf.utils.Blocks;
@@ -51,14 +53,17 @@ public class FakeJumpFlowPass implements FlowPass {
 
                 // Todo add hashing to amplify difficulty and remove key exposure
                 // Todo make this a better system
-                final Expr var_load = new VarExpr(methodNode.getLocal(), Type.INT_TYPE);
-                final ConstantExpr var_const = new ConstantExpr(methodNode.getBlock(entry).getSeed());
+                final int seed = methodNode.getBlock(entry).getSeed();
+
+                // Create hash
+                final SkiddedHash hash = NumberManager.hash(seed, methodNode.getLocal());
+                final ConstantExpr var_const = new ConstantExpr(hash.getHash());
 
                 // Todo add more boilerplates + add exception rotation
                 final BasicBlock fuckup = Blocks.exception(cfg);
 
                 // Todo change blocks to be skiddedblocks to add method to directly add these
-                final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(var_load, var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
+                final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
                 final ConditionalJumpEdge<BasicBlock> jump_edge = new ConditionalJumpEdge<>(entry, fuckup, jump_stmt.getOpcode());
                 entry.add(jump_stmt);
                 cfg.addEdge(jump_edge);

@@ -67,7 +67,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
             /*
              * We then modify through arbitrary bitwise operations the public seed to the private seed
              */
-            final Expr seedExpr = NumberManager.transform(privateSeed, publicSeed, seed);
+            final Expr seedExpr = NumberManager.encrypt(privateSeed, publicSeed, seed);
 
             /*
              * We create a variable to store it then proceed to store it
