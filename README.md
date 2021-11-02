@@ -55,3 +55,6 @@ to date:
 
 ### Fake exceptions
 ![Graph](https://i.imgur.com/bJcTNHm.png)
+
+### Fake jumps
+![Graph](https://i.imgur.com/x3Ka8i5.png)
