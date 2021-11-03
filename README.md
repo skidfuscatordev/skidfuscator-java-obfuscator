@@ -58,3 +58,13 @@ to date:
 
 ### Fake jumps
 ![Graph](https://i.imgur.com/780UIIc.png)
+
+# Credits
+
+## Libraries used
+- [Maple IR and the Team](https://github.com/LLVM-but-worse/maple-ir)
+- [ASM](https://gitlab.ow2.org/asm/asm)
+
+## Inspired from
+- [Soot](https://github.com/soot-oss/soot)
+- [Zelix KlassMaster](https://zelix.com)
