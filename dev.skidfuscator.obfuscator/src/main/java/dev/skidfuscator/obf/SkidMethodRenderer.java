@@ -4,6 +4,7 @@ import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.FakeJumpFlowPass;
+import dev.skidfuscator.obf.transform.impl.flow.SwitchMutatorPass;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.transform.impl.flow.FakeExceptionJumpFlowPass;
@@ -137,6 +138,7 @@ public class SkidMethodRenderer {
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
         final FlowPass[] flowPasses = new FlowPass[] {
+                new SwitchMutatorPass(),
                 new FakeExceptionJumpFlowPass(),
                 new FakeJumpFlowPass(),
                 new SeedFlowPass(),
