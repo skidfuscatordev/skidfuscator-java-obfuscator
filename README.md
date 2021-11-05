@@ -46,7 +46,7 @@ to date:
 
 - [x] Fake Exception GEN3 Obfuscation
 - [ ] Block Mangling GEN3 Obfuscation
-- [ ] Fake Jump GEN3 Obfuscation
+- [x] Fake Jump GEN3 Obfuscation
 - [ ] Switch Mangling GEN3 Obfuscation
 - [ ] Loop Mangling GEN3 Obfuscation
 - [ ] Arithmetic Obfuscation GEN3 Obfuscation
@@ -55,3 +55,16 @@ to date:
 
 ### Fake exceptions
 ![Graph](https://i.imgur.com/bJcTNHm.png)
+
+### Fake jumps
+![Graph](https://i.imgur.com/780UIIc.png)
+
+# Credits
+
+## Libraries used
+- [Maple IR and the Team](https://github.com/LLVM-but-worse/maple-ir)
+- [ASM](https://gitlab.ow2.org/asm/asm)
+
+## Inspired from
+- [Soot](https://github.com/soot-oss/soot)
+- [Zelix KlassMaster](https://zelix.com)
