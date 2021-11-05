@@ -53,6 +53,9 @@ to date:
 - [ ] Exception Mangling GEN3 Obfuscation
 - [ ] Condition Mangling GEN3 Obfuscation
 
+### **NEW** Switch Mutation
+![Graph](https://i.imgur.com/yPjFC8k.png)
+
 ### Fake exceptions
 ![Graph](https://i.imgur.com/bJcTNHm.png)
 
