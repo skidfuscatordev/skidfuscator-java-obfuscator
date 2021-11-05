@@ -47,11 +47,14 @@ to date:
 - [x] Fake Exception GEN3 Obfuscation
 - [ ] Block Mangling GEN3 Obfuscation
 - [x] Fake Jump GEN3 Obfuscation
-- [ ] Switch Mangling GEN3 Obfuscation
+- [x] Switch Mangling GEN3 Obfuscation
 - [ ] Loop Mangling GEN3 Obfuscation
 - [ ] Arithmetic Obfuscation GEN3 Obfuscation
 - [ ] Exception Mangling GEN3 Obfuscation
 - [ ] Condition Mangling GEN3 Obfuscation
+
+### **NEW** Switch Mutation
+![Graph](https://i.imgur.com/yPjFC8k.png)
 
 ### Fake exceptions
 ![Graph](https://i.imgur.com/bJcTNHm.png)
