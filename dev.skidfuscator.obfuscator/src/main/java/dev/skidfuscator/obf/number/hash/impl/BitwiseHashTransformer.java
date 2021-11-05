@@ -13,7 +13,18 @@ import org.objectweb.asm.Type;
 public class BitwiseHashTransformer implements HashTransformer {
     @Override
     public SkiddedHash hash(int starting, Local caller) {
-        final int hashed = ((starting & (7 << 29)) >> 29) | (starting << 3);
+        final int hashed = hash(starting);
+        final Expr hash = hash(caller);
+        return new SkiddedHash(hash, hashed);
+    }
+
+    @Override
+    public int hash(int starting) {
+        return ((starting & (7 << 29)) >> 29) | (starting << 3);
+    }
+
+    @Override
+    public Expr hash(Local caller) {
         // (7 << 29)
         final Expr const7 = new ConstantExpr(7, Type.INT_TYPE);
         final Expr const29a = new ConstantExpr(29, Type.INT_TYPE);
@@ -33,6 +44,6 @@ public class BitwiseHashTransformer implements HashTransformer {
         // ((starting & (7 << 29)) >> 29) | (starting << 3);
         final Expr hash = new FakeArithmeticExpr(shiftedHashTto29, shiftedStartTo3, ArithmeticExpr.Operator.OR);
 
-        return new SkiddedHash(hash, hashed);
+        return hash;
     }
 }

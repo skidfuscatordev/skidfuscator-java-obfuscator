@@ -2,6 +2,9 @@ package dev.skidfuscator.obf.skidasm;
 
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
 import dev.skidfuscator.obf.number.NumberManager;
+import dev.skidfuscator.obf.number.hash.HashTransformer;
+import dev.skidfuscator.obf.number.hash.SkiddedHash;
+import dev.skidfuscator.obf.number.hash.impl.BitwiseHashTransformer;
 import dev.skidfuscator.obf.utils.Blocks;
 import dev.skidfuscator.obf.utils.RandomUtil;
 import lombok.Getter;
@@ -297,6 +300,9 @@ public class SkidGraph {
         cfg.addVertex(toppleHandler);
         blockRange.setHandler(toppleHandler);
 
+        // Hasher
+        final HashTransformer hashTransformer = new BitwiseHashTransformer();
+
         // For all block being read
         for (BasicBlock node : blockRange.getNodes()) {
             // Get their internal seed and add it to the list
@@ -315,9 +321,12 @@ public class SkidGraph {
             block.add(new UnconditionalJumpStmt(basicHandler));
             cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
 
+            // Final hashed
+            final int hashed = hashTransformer.hash(internal.getSeed());
+
             // Add to switch
-            basicBlockMap.put(internal.getSeed(), block);
-            cfg.addEdge(new SwitchEdge<>(toppleHandler, block, internal.getSeed()));
+            basicBlockMap.put(hashed, block);
+            cfg.addEdge(new SwitchEdge<>(toppleHandler, block, hashed));
 
             // Find egde and transform
             cfg.getEdges(node)
@@ -335,7 +344,7 @@ public class SkidGraph {
         // Haha get fucked
         // Todo     Fix the other shit to re-enable this; this is for the lil shits
         //          (love y'all tho) that are gonna try reversing this
-        /*for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             // Generate random seed + prevent conflict
             final int seed = RandomUtil.nextInt();
             if (sortedList.contains(seed))
@@ -349,14 +358,17 @@ public class SkidGraph {
             cfg.addVertex(block);
 
             // Get seeded version and add seed loader
-            final SeededBlock seededBlock = getBlock(block);
+            final SkidBlock seededBlock = getBlock(block);
             seededBlock.addSeedLoader(-1, local, seed, RandomUtil.nextInt());
             block.add(new UnconditionalJumpStmt(basicHandler));
             cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
 
             basicBlockMap.put(seed, block);
             cfg.addEdge(new SwitchEdge<>(handler.getBlock(), block, seed));
-        }*/
+        }
+
+        // Hash
+        final Expr hash = hashTransformer.hash(local);
 
         // Default switch edge
         final BasicBlock defaultBlock = Blocks.exception(cfg);
@@ -364,7 +376,7 @@ public class SkidGraph {
 
         // Add switch
         // Todo     Add hashing to prevent dumb bs reversing
-        final SwitchStmt stmt = new SwitchStmt(localLoad, basicBlockMap, defaultBlock);
+        final SwitchStmt stmt = new SwitchStmt(hash, basicBlockMap, defaultBlock);
         toppleHandler.add(stmt);
 
         // Add unconditional jump edge
