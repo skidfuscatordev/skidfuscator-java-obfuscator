@@ -47,7 +47,7 @@ to date:
 - [x] Fake Exception GEN3 Obfuscation
 - [ ] Block Mangling GEN3 Obfuscation
 - [x] Fake Jump GEN3 Obfuscation
-- [ ] Switch Mangling GEN3 Obfuscation
+- [x] Switch Mangling GEN3 Obfuscation
 - [ ] Loop Mangling GEN3 Obfuscation
 - [ ] Arithmetic Obfuscation GEN3 Obfuscation
 - [ ] Exception Mangling GEN3 Obfuscation
