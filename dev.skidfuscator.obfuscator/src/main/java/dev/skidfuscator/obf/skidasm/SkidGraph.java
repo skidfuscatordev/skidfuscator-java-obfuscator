@@ -128,10 +128,10 @@ public class SkidGraph {
         final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */NumberManager.encrypt(
                 seedEntry.getSeed(),
                 method.getSeed().getPrivate(),
-                method.getSeed().getPrivateLoader()
+                method.getSeed().getLocal()
         );
         final CopyVarStmt copyVarStmt = new CopyVarStmt(new VarExpr(local, Type.INT_TYPE), loadedChanged);
-        entry.add(1, copyVarStmt);
+        entry.add(0, copyVarStmt);
 
         setLocal(local);
 
@@ -249,7 +249,7 @@ public class SkidGraph {
         final ConditionalJumpEdge<BasicBlock> edge = block.cfg.getEdges(block).stream()
                 .filter(e -> !(e instanceof ImmediateEdge))
                 .map(e -> (ConditionalJumpEdge<BasicBlock>) e)
-                .filter(e -> e.dst().equals(stmt.getTrueSuccessor()) && e.opcode == stmt.getOpcode())
+                .filter(e -> e.dst().equals(stmt.getTrueSuccessor()))
                 .findFirst()
                 .orElse(null);
 

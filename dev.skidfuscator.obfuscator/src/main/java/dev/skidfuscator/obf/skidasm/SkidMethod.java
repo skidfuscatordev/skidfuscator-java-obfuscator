@@ -51,7 +51,7 @@ public class SkidMethod {
     }
 
     public void renderPublic(final SkidSession skidSession) {
-        seed.renderPublic(methodNodes);
+        seed.renderPublic(methodNodes, skidSession);
 
         for (SkidGraph methodNode : methodNodes) {
             methodNode.getNode().node.desc = parameter.getDesc();
