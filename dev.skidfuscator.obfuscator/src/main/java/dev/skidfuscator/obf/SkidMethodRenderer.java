@@ -3,12 +3,9 @@ package dev.skidfuscator.obf;
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
-import dev.skidfuscator.obf.transform.impl.flow.FakeJumpFlowPass;
-import dev.skidfuscator.obf.transform.impl.flow.SwitchMutatorPass;
+import dev.skidfuscator.obf.transform.impl.flow.*;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
-import dev.skidfuscator.obf.transform.impl.flow.FakeExceptionJumpFlowPass;
-import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
 import dev.skidfuscator.obf.transform.impl.flow.gen3.SeedFlowPass;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.seed.IntegerBasedSeed;
@@ -29,8 +26,6 @@ public class SkidMethodRenderer {
     private final Set<MethodNode> methodNodes = new HashSet<>();
     private final Map<MethodNode, SkidMethod> skidMethodMap = new HashMap<>();
     private final TimedLogger logger = new TimedLogger(LogManager.getLogger(this.getClass()));
-
-
 
     public void render(final SkidSession skidSession) {
         logger.log("Beginning Skidfuscator 1.0.1...");
@@ -138,7 +133,9 @@ public class SkidMethodRenderer {
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
         final FlowPass[] flowPasses = new FlowPass[] {
+                //new NumberMutatorPass(),
                 new SwitchMutatorPass(),
+                //new ConditionMutatorPass(),
                 new FakeExceptionJumpFlowPass(),
                 new FakeJumpFlowPass(),
                 new SeedFlowPass(),
@@ -149,10 +146,18 @@ public class SkidMethodRenderer {
         };
 
         // Fix retarded exceptions
-
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
-        skidMethods.forEach(e -> e.renderPublic(skidSession));
+        skidMethods.forEach(e -> {
+            for (SkidGraph methodNode : e.getMethodNodes()) {
+                if (methodNode.getNode().isAbstract())
+                    continue;
+                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
+                if (cfg == null)
+                    continue;
 
+                methodNode.render(cfg);
+            }
+        });
         for (FlowPass flowPass : flowPasses) {
             skidMethods.forEach(e -> flowPass.pass(skidSession, e));
             logger.log("     [@G3#flow] Finished running "
@@ -163,7 +168,12 @@ public class SkidMethodRenderer {
 
         skidMethods.forEach(e -> {
             for (SkidGraph methodNode : e.getMethodNodes()) {
-                methodNode.postlinearize(skidSession.getCxt().getIRCache().get(methodNode.getNode()));
+                if (methodNode.getNode().isAbstract())
+                    continue;
+                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
+                if (cfg == null)
+                    continue;
+                methodNode.postlinearize(cfg);
             }
         });
 
@@ -172,9 +182,10 @@ public class SkidMethodRenderer {
                 flowPass.pass(skidSession, e);
             }
         });
+
+        skidMethods.forEach(e -> e.renderPublic(skidSession));
         logger.log("[*] Finished Gen3 flow obfuscation");
 
     }
-
 
 }

@@ -55,6 +55,8 @@ public class SwitchMutatorPass implements FlowPass {
                 for (Map.Entry<Integer, BasicBlock> entry : entrySet) {
                     switchStmt.getTargets().put(entry.getKey() ^ skidBlock.getSeed(), entry.getValue());
                 }
+
+                session.count();
             }
         }
     }

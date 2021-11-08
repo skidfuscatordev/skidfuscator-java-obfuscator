@@ -2,6 +2,7 @@ package dev.skidfuscator.obf.skidasm;
 
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
 import dev.skidfuscator.obf.number.NumberManager;
+import dev.skidfuscator.obf.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obf.number.hash.HashTransformer;
 import dev.skidfuscator.obf.number.hash.SkiddedHash;
 import dev.skidfuscator.obf.number.hash.impl.BitwiseHashTransformer;
@@ -43,14 +44,14 @@ public class SkidGraph {
     }
 
     public void render(final ControlFlowGraph cfg) {
-        if (cfg == null)
+        if (cfg == null || cfg.vertices().size() == 0)
             return;
 
         // Phase 1: populate
         populate(cfg);
 
-        // Phase 2
-        linearize(cfg);
+        final Local local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+        setLocal(local);
     }
 
     private void populate(final ControlFlowGraph cfg) {
@@ -67,6 +68,9 @@ public class SkidGraph {
                 .stream()
                 .filter(e -> cfg.getIncomingImmediate(e) == null)
                 .collect(Collectors.toSet());
+
+        // Phase 2
+        linearize(cfg);
 
         range(cfg, local);
         linkage(cfg, local);
@@ -122,19 +126,16 @@ public class SkidGraph {
         }
 
     private void linearize(final ControlFlowGraph cfg) {
-        final BasicBlock entry = cfg.verticesInOrder().iterator().next();
+        final BasicBlock entry = cfg.getEntries().iterator().next();
         final SkidBlock seedEntry = getBlock(entry);
-        final Local local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
-        final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */NumberManager.encrypt(
+        final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */
+                new XorNumberTransformer().getNumber(
                 seedEntry.getSeed(),
                 method.getSeed().getPrivate(),
-                method.getSeed().getPrivateLoader()
+                method.getSeed().getLocal()
         );
         final CopyVarStmt copyVarStmt = new CopyVarStmt(new VarExpr(local, Type.INT_TYPE), loadedChanged);
-        entry.add(1, copyVarStmt);
-
-        setLocal(local);
-
+        entry.add(0, copyVarStmt);
     }
 
     private void linkage(final ControlFlowGraph cfg, final Local local) {
@@ -249,7 +250,7 @@ public class SkidGraph {
         final ConditionalJumpEdge<BasicBlock> edge = block.cfg.getEdges(block).stream()
                 .filter(e -> !(e instanceof ImmediateEdge))
                 .map(e -> (ConditionalJumpEdge<BasicBlock>) e)
-                .filter(e -> e.dst().equals(stmt.getTrueSuccessor()) && e.opcode == stmt.getOpcode())
+                .filter(e -> e.dst().equals(stmt.getTrueSuccessor()))
                 .findFirst()
                 .orElse(null);
 

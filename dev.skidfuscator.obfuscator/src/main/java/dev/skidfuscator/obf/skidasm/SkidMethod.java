@@ -26,6 +26,8 @@ public class SkidMethod {
     private Parameter parameter;
     private UUID uuid;
 
+    private int stackHeight;
+
     public SkidMethod(Set<MethodNode> methodNodes, CallerType callerType, Set<SkidInvocation> invocationModal) {
         this.methodNodes = methodNodes.stream().map(e -> new SkidGraph(e, this)).collect(Collectors.toList());
         this.callerType = callerType;
@@ -37,21 +39,20 @@ public class SkidMethod {
     }
 
     public void renderPrivate(final SkidSession skidSession) {
+        stackHeight = OpcodeUtil.getArgumentsSizes(this.getParameter().getDesc());
+        if (this.isStatic()) stackHeight -= 1;
+
         for (SkidGraph methodNode : methodNodes) {
             final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
             if (cfg == null)
                 continue;
 
             seed.renderPrivate(methodNode.getNode(), cfg);
-
-            if (methodNode.getNode().isAbstract())
-                continue;
-            methodNode.render(cfg);
         }
     }
 
     public void renderPublic(final SkidSession skidSession) {
-        seed.renderPublic(methodNodes);
+        seed.renderPublic(methodNodes, skidSession);
 
         for (SkidGraph methodNode : methodNodes) {
             methodNode.getNode().node.desc = parameter.getDesc();

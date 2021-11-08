@@ -51,7 +51,7 @@ public class FakeExceptionJumpFlowPass implements FlowPass {
                 continue;
 
             for (BasicBlock entry : new HashSet<>(cfg.vertices())) {
-                if (entry.size() == 0 || RandomUtil.nextInt(3) != 2)
+                if (entry.size() == 0)
                     continue;
 
                 // Todo add hashing to amplify difficulty and remove key exposure
