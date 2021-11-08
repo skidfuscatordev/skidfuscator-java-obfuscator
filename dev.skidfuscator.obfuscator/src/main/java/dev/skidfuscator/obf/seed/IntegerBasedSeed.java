@@ -1,6 +1,7 @@
 package dev.skidfuscator.obf.seed;
 
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.skidasm.SkidInvocation;
@@ -27,13 +28,38 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
     private Local local;
 
     @Override
-    public void renderPrivate(final MethodNode methodNode, final ControlFlowGraph cfg) {
-        if (methodNode.isAbstract())
+    public void renderPrivate(final MethodNode methodNodes, final ControlFlowGraph cfg) {
+        if (methodNodes.isAbstract())
             return;
 
         final boolean free = parent.getCallerType() == CallerType.APPLICATION;
 
-        this.local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+        if (free) {
+            final Map<String, Local> localMap = new HashMap<>();
+
+            for (Map.Entry<String, Local> stringLocalEntry : cfg.getLocals().getCache().entrySet()) {
+                final String old = stringLocalEntry.getKey();
+                final String oldStringId = old.split("var")[1].split("_")[0];
+                final int oldId = Integer.parseInt(oldStringId);
+
+                if (oldId < parent.getStackHeight()) {
+                    localMap.put(old, stringLocalEntry.getValue());
+                    continue;
+                }
+                final int newId = oldId + 1;
+
+                final String newVar = old.replace("var" + oldStringId, "var" + Integer.toString(newId));
+                stringLocalEntry.getValue().setIndex(stringLocalEntry.getValue().getIndex() + 1);
+                localMap.put(newVar, stringLocalEntry.getValue());
+            }
+
+            cfg.getLocals().getCache().clear();
+            cfg.getLocals().getCache().putAll(localMap);
+            //cfg.getLocals().get(cfg.getLocals().getMaxLocals());
+            //cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 1);
+        }
+
+        this.local = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2, false);
     }
 
     @Override
@@ -49,30 +75,6 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
                 continue;
 
             if (free) {
-                int stackHeight = OpcodeUtil.getArgumentsSizes(this.parent.getParameter().getDesc());
-                if (this.parent.isStatic()) stackHeight -= 1;
-
-                final Map<String, Local> localMap = new HashMap<>();
-
-                for (Map.Entry<String, Local> stringLocalEntry : cfg.getLocals().getCache().entrySet()) {
-                    final String old = stringLocalEntry.getKey();
-                    final String oldStringId = old.split("var")[1].split("_")[0];
-                    final int oldId = Integer.parseInt(oldStringId);
-
-                    if (oldId < stackHeight) {
-                        localMap.put(old, stringLocalEntry.getValue());
-                        continue;
-                    }
-                    final int newId = oldId + 1;
-
-                    final String newVar = old.replace("var" + oldStringId, "var" + Integer.toString(newId));
-                    stringLocalEntry.getValue().setIndex(stringLocalEntry.getValue().getIndex() + 1);
-                    localMap.put(newVar, stringLocalEntry.getValue());
-                }
-
-                cfg.getLocals().getCache().clear();
-                cfg.getLocals().getCache().putAll(localMap);
-
                 /*
                  * We will always place the long local as the final one, hence we load the last parameter
                  */
@@ -81,14 +83,15 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
                 /*
                  * We then modify through arbitrary bitwise operations the public seed to the private seed
                  */
-                final Expr seedExpr = NumberManager.encrypt(privateSeed, publicSeed, cfg.getLocals().get(stackHeight, false));
+                final Expr seedExpr = new XorNumberTransformer().getNumber(privateSeed, publicSeed,
+                        cfg.getLocals().get(parent.getStackHeight(), false));
 
                 /*
                  * We create a variable to store it then proceed to store it
                  */
                 final VarExpr privateSeedLoader = new VarExpr(local, Type.INT_TYPE);
                 final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, seedExpr);
-                cfg.verticesInOrder().iterator().next().add(0, privateSeedSetter);
+                cfg.getEntries().iterator().next().add(0, privateSeedSetter);
             }
 
             else {
@@ -99,7 +102,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
                 final ConstantExpr privateSeed = new ConstantExpr(this.privateSeed, Type.INT_TYPE);
                 final VarExpr privateSeedLoader = new VarExpr(local, Type.INT_TYPE);
                 final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, privateSeed);
-                cfg.verticesInOrder().iterator().next().add(0, privateSeedSetter);
+                cfg.getEntries().iterator().next().add(0, privateSeedSetter);
             }
         }
 

@@ -12,9 +12,18 @@ import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.objectweb.asm.Type;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class NumberMutatorPass implements FlowPass {
+    private static final Set<Type> types = new HashSet<>(Arrays.asList(
+            Type.INT_TYPE,
+            Type.SHORT_TYPE,
+            Type.BYTE_TYPE
+    ));
+
     @Override
     public void pass(SkidSession session, SkidMethod method) {
         for (SkidGraph methodNode : method.getMethodNodes()) {
@@ -35,7 +44,7 @@ public class NumberMutatorPass implements FlowPass {
                     continue;
 
                 final ConstantExpr constantExpr = (ConstantExpr) expr;
-                if (!constantExpr.getType().equals(Type.INT_TYPE))
+                if (!types.contains(constantExpr.getType()))
                     continue;
 
                 final CodeUnit parent = expr.getParent();

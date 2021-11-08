@@ -53,7 +53,9 @@ public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
     private void computeVStructure() {
         this.methodToInvokerMap.clear();
         LOGGER.info("Iterating through " + this.app.getClassSource().getClassTree().size() + " classes");
-        this.app.getClassSource().iterate().forEach(clazz -> {
+        this.app.getClassSource().getClassTree().vertices().stream()
+                .filter(e -> app.getClassSource().isApplicationClass(e.getName()))
+                .forEach(clazz -> {
             clazz.getMethods().forEach(method -> {
                 //LOGGER.info("Adding " + method.owner.getName() + "#" + method.getName() + method.getDesc());
                 this.methodToInvokerMap.put(method, new ArrayList<>());
@@ -61,7 +63,9 @@ public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
             });
         });
 
-        this.app.getClassSource().iterate().forEach(clazz -> {
+        this.app.getClassSource().getClassTree().vertices().stream()
+                .filter(e -> app.getClassSource().isApplicationClass(e.getName()))
+                .forEach(clazz -> {
             clazz.getMethods().forEach(m -> {
                 try {
                     computeVTable(m);

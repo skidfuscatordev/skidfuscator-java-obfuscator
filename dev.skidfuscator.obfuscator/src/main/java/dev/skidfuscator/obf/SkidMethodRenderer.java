@@ -133,7 +133,7 @@ public class SkidMethodRenderer {
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
         final FlowPass[] flowPasses = new FlowPass[] {
-                new NumberMutatorPass(),
+                //new NumberMutatorPass(),
                 new SwitchMutatorPass(),
                 //new ConditionMutatorPass(),
                 new FakeExceptionJumpFlowPass(),
@@ -146,9 +146,18 @@ public class SkidMethodRenderer {
         };
 
         // Fix retarded exceptions
-
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
+        skidMethods.forEach(e -> {
+            for (SkidGraph methodNode : e.getMethodNodes()) {
+                if (methodNode.getNode().isAbstract())
+                    continue;
+                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
+                if (cfg == null)
+                    continue;
 
+                methodNode.render(cfg);
+            }
+        });
         for (FlowPass flowPass : flowPasses) {
             skidMethods.forEach(e -> flowPass.pass(skidSession, e));
             logger.log("     [@G3#flow] Finished running "
@@ -159,7 +168,12 @@ public class SkidMethodRenderer {
 
         skidMethods.forEach(e -> {
             for (SkidGraph methodNode : e.getMethodNodes()) {
-                methodNode.postlinearize(skidSession.getCxt().getIRCache().get(methodNode.getNode()));
+                if (methodNode.getNode().isAbstract())
+                    continue;
+                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
+                if (cfg == null)
+                    continue;
+                methodNode.postlinearize(cfg);
             }
         });
 
