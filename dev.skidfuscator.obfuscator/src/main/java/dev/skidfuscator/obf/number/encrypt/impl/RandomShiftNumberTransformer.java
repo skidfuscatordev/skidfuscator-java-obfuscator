@@ -12,9 +12,9 @@ import org.objectweb.asm.Type;
 
 public class RandomShiftNumberTransformer implements NumberTransformer {
     @Override
-    public Expr getNumber(Number outcome, Number starting, Local startingExpr) {
+    public Expr getNumber(int outcome, int starting, Local startingExpr) {
         Expr expr = new VarExpr(startingExpr, Type.INT_TYPE);
-        int firstSeed = starting.intValue();
+        int firstSeed = starting;
 
         boolean switcher = false;
 
@@ -22,7 +22,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
             switch (RandomUtil.nextInt(3)) {
                 case 0: {
                     if (switcher) {
-                        firstSeed = firstSeed >> starting.intValue();
+                        firstSeed = firstSeed >> starting;
                         expr = new FakeArithmeticExpr(expr, new VarExpr(startingExpr, Type.INT_TYPE), ArithmeticExpr.Operator.SHR);
                     } else {
                         final byte seed = (byte) (RandomUtil.nextInt(127) + 1);
@@ -34,7 +34,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
                 }
                 case 1: {
                     if (switcher) {
-                        firstSeed = firstSeed << starting.intValue();
+                        firstSeed = firstSeed << starting;
                         expr = new FakeArithmeticExpr(expr, new VarExpr(startingExpr, Type.INT_TYPE), ArithmeticExpr.Operator.SHL);
                     } else {
                         final byte seed = (byte) (RandomUtil.nextInt(127) + 1);
@@ -45,7 +45,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
                 }
                 case 2: {
                     if (switcher) {
-                        firstSeed = firstSeed & starting.intValue();
+                        firstSeed = firstSeed & starting;
                         expr = new FakeArithmeticExpr(expr, new VarExpr(startingExpr, Type.INT_TYPE), ArithmeticExpr.Operator.AND);
                     } else {
                         final byte seed = (byte) (RandomUtil.nextInt(254) + 1);
@@ -59,7 +59,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
             switcher = !switcher;
         }
 
-        int xor = outcome.intValue() ^ firstSeed;
+        int xor = outcome ^ firstSeed;
         expr = new FakeArithmeticExpr(new ConstantExpr(xor, Type.INT_TYPE), expr, ArithmeticExpr.Operator.XOR);
 
         return expr;

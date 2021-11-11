@@ -53,11 +53,11 @@ public class ConditionMutatorPass implements FlowPass {
                 }
 
                 final ConditionalJumpEdge<BasicBlock> edge = cfg
-                        .getEdges(stmt.getBlock())
+                        .getEdges(parent)
                         .stream()
                         .filter(e -> e instanceof ConditionalJumpEdge)
                         .map(e -> (ConditionalJumpEdge) e)
-                        .filter(e -> e.src() == parent && e.dst() == ((ConditionalJumpStmt) stmt).getTrueSuccessor())
+                        .filter(e -> e.dst() == ((ConditionalJumpStmt) stmt).getTrueSuccessor())
                         .findFirst()
                         .orElse(null);
 

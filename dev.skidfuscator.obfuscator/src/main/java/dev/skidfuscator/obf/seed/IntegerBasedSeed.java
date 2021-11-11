@@ -32,7 +32,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
         if (methodNodes.isAbstract())
             return;
 
-        final boolean free = parent.getCallerType() == CallerType.APPLICATION;
+        final boolean free = false && parent.getCallerType() == CallerType.APPLICATION;
 
         if (free) {
             final Map<String, Local> localMap = new HashMap<>();
@@ -64,7 +64,7 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
 
     @Override
     public void renderPublic(List<SkidGraph> methodNodes, final SkidSession session) {
-        final boolean free = parent.getCallerType() == CallerType.APPLICATION;
+        final boolean free = false && parent.getCallerType() == CallerType.APPLICATION;
 
         for (SkidGraph methodNode : methodNodes) {
             if (methodNode.getNode().isAbstract())

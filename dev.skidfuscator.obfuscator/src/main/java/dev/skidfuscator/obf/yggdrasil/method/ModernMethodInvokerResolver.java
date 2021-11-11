@@ -1,11 +1,12 @@
 package dev.skidfuscator.obf.yggdrasil.method;
 
 import dev.skidfuscator.obf.init.SkidSession;
-import dev.skidfuscator.obf.yggdrasil.method.hash.ClassMethodHash;
 import dev.skidfuscator.obf.yggdrasil.method.hash.InvokerHash;
 import org.apache.log4j.Logger;
+import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 
 import java.util.ArrayList;
@@ -21,15 +22,16 @@ import java.util.stream.Collectors;
  * SkidfuscatorV2 © 2021
  */
 
-public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
-    private static final Logger LOGGER = Logger.getLogger(DefaultMethodInvokerResolver.class);
+public class ModernMethodInvokerResolver implements MethodInvokerResolver {
+    private static final Logger LOGGER = Logger.getLogger(ModernMethodInvokerResolver.class);
     private final SkidSession app;
 
-    public DefaultMethodInvokerResolver(SkidSession app) {
+    public ModernMethodInvokerResolver(SkidSession app) {
         this.app = app;
         this.computeVStructure();
     }
 
+    private final Map<MethodNode, Set<MethodNode>> heredityMap = new ConcurrentHashMap<>();
     private final Map<MethodNode, List<InvokerHash>> methodToInvokerMap = new ConcurrentHashMap<>();
     private final Map<MethodNode, List<InvokerHash>> methodInvokers = new ConcurrentHashMap<>();
 
@@ -60,6 +62,12 @@ public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
                 //LOGGER.info("Adding " + method.owner.getName() + "#" + method.getName() + method.getDesc());
                 this.methodToInvokerMap.put(method, new ArrayList<>());
                 this.methodInvokers.put(method, new ArrayList<>());
+
+                final Set<MethodNode> callers = app.getCxt()
+                        .getInvocationResolver()
+                        .getHierarchyMethodChain(clazz, method.getName(), method.getDesc(), false);
+
+                this.heredityMap.put(method, callers);
             });
         });
 
@@ -82,31 +90,14 @@ public class DefaultMethodInvokerResolver implements MethodInvokerResolver {
 
         controlFlowGraph.allExprStream().parallel()
                 .filter(e -> e instanceof InvocationExpr)
-                .map(e -> (InvocationExpr) e).forEach(ex -> {
+                .filter(e -> !(e instanceof DynamicInvocationExpr))
+                .map(e -> (InvocationExpr) e)
+                .forEach(ex -> {
+                    final ClassNode classNode = app.getCxt().getApplication().findClassNode(ex.getOwner());
+                    if (classNode == null)
+                        return;
 
-                    try {
-                        ex.resolveTargets(app.getCxt().getInvocationResolver()).forEach(target -> {
-                            if (target == null)
-                                return;
 
-                            final Set<MethodNode> callers = app.getCxt().getInvocationResolver()
-                                    .getHierarchyMethodChain(target.owner, target.getName(), target.getDesc(), false);
-
-                            for (MethodNode caller : callers) {
-                                final InvokerHash invokerHash = new InvokerHash(methodNode, ex);
-
-                                if (methodToInvokerMap.containsKey(caller)) {
-                                    this.methodToInvokerMap.get(caller).add(invokerHash);
-                                }
-
-                                final InvokerHash callerHash = new InvokerHash(caller, ex);
-                                this.methodInvokers.get(methodNode).add(callerHash);
-                            }
-                        });
-                    } catch (Throwable e) {
-                        LOGGER.error("Failed for class " + methodNode.owner.getName() + "#" + methodNode.getName() + methodNode.getDesc()
-                                + ":" + ex.toString(), e);
-                    }
         });
 
 

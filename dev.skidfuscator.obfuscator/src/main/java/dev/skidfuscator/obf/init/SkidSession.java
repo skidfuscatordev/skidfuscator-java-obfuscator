@@ -39,7 +39,7 @@ public class SkidSession {
     private final SingleJarDownloader<ClassNode> jarDownloader;
     private final IRCache irFactory;
     private final AnalysisContext cxt;
-    private final MethodInvokerResolver methodInvokerResolver;
+    //private final MethodInvokerResolver methodInvokerResolver;
 
     private final File outputFile;
     private final List<PassGroup> passes = new ArrayList<>();
@@ -74,7 +74,7 @@ public class SkidSession {
                 ;
             });
         });
-        this.methodInvokerResolver = new DefaultMethodInvokerResolver(this);
+        //this.methodInvokerResolver = new DefaultMethodInvokerResolver(this);
     }
 
     public void addPass(PassGroup pass) {
