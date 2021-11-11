@@ -32,6 +32,9 @@ public class SkidMethod {
         this.methodNodes = methodNodes.stream().map(e -> new SkidGraph(e, this)).collect(Collectors.toList());
         this.callerType = callerType;
         this.invocationModal = invocationModal;
+
+        if (methodNodes.isEmpty())
+            return;
         this.modal = this.methodNodes.get(0).getNode();
         this.parameter = new Parameter(modal.getDesc());
         this.classStatic = OpcodeUtil.isStatic(modal);
