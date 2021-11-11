@@ -16,6 +16,7 @@ import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.SwitchStmt;
@@ -95,7 +96,15 @@ public class SkidGraph {
             next = immediate;
         }*/
 
-        for (BasicBlock block : toVisit) {
+        for (BasicBlock vertex : cfg.vertices()) {
+            cfg.getEdges(vertex).stream()
+                    .filter(e -> e instanceof ImmediateEdge)
+                    .forEach(e -> {
+                        addSeedToImmediate(local, e.src(), e.dst());
+                    });
+        }
+
+        /*for (BasicBlock block : toVisit) {
             final Stack<BasicBlock> blocks = new Stack<>();
             blocks.add(block);
 
@@ -121,9 +130,20 @@ public class SkidGraph {
                 // Add immediate seed translation
                 addSeedToImmediate(local, stack, immediate);
             }
+        }*/
+
+        for (BasicBlock block : cfg.vertices()) {
+            final SkidBlock targetSeededBlock = getBlock(block);
+            /*final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+            block.add(0, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                    new ConstantExpr(block.getDisplayName() +" : c-var - begin : " + targetSeededBlock.getSeed())));
+            final Local local2 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+            block.add(block.size() - 1, new CopyVarStmt(new VarExpr(local2, Type.getType(String.class)),
+                    new ConstantExpr(block.getDisplayName() +" : c-var - end : " + targetSeededBlock.getSeed())));
+            */
         }
 
-        }
+    }
 
     private void linearize(final ControlFlowGraph cfg) {
         final BasicBlock entry = cfg.getEntries().iterator().next();
@@ -139,14 +159,18 @@ public class SkidGraph {
     }
 
     private void linkage(final ControlFlowGraph cfg, final Local local) {
+        for (BasicBlock vertex : cfg.vertices()) {
+            new HashSet<>(vertex).stream().filter(e -> e instanceof SwitchStmt).forEach(e -> {
+                addSeedToSwitch(local, vertex, (SwitchStmt) e);
+            });
+        }
+
         for (BasicBlock entry : cfg.vertices()) {
             new HashSet<>(entry).forEach(e -> {
                 if (e instanceof UnconditionalJumpStmt) {
                     addSeedToUncJump(local, entry, (UnconditionalJumpStmt) e);
                 } else if (e instanceof ConditionalJumpStmt && !(e instanceof FakeConditionalJumpStmt)) {
                     addSeedToCondJump(local, entry, (ConditionalJumpStmt) e);
-                } if (e instanceof SwitchStmt) {
-                    addSeedToSwitch(local, entry, (SwitchStmt) e);
                 }
             });
         }
@@ -154,7 +178,7 @@ public class SkidGraph {
 
     private void range(final ControlFlowGraph cfg, final Local local) {
         for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
-            addSeedToRange(local, new VarExpr(local, Type.INT_TYPE), cfg, range);
+            addSeedToRange(local, cfg, range);
         }
     }
 
@@ -204,7 +228,10 @@ public class SkidGraph {
         final SkidBlock seededBlock = getBlock(block);
         final SkidBlock targetSeededBlock = getBlock(immediate);
         seededBlock.addSeedLoader(-1, local, seededBlock.getSeed(), targetSeededBlock.getSeed());
-
+        /*final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+        block.add(block.size(), new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                new ConstantExpr(block.getDisplayName() +" : c-loc - immediate : " + targetSeededBlock.getSeed())));
+        */
         // Ignore, this is for debugging
         /*
         final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
@@ -220,6 +247,11 @@ public class SkidGraph {
         final SkidBlock seededBlock = getBlock(block);
         final SkidBlock targetSeededBlock = getBlock(stmt.getTarget());
         seededBlock.addSeedLoader(index, local, seededBlock.getSeed(), targetSeededBlock.getSeed());
+
+        /*final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+        block.add(index, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                new ConstantExpr(block.getDisplayName() +" : c-loc - uncond : " + targetSeededBlock.getSeed())));
+        */
         /*
         final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
         block.add(new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
@@ -240,6 +272,12 @@ public class SkidGraph {
             //final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
             seededBlock.addSeedLoader(block.indexOf(stmt), local, seededBlock.getSeed(), targetSeededBlock.getSeed());
             seededBlock.addSeedLoader(block.indexOf(stmt) + 1, local, targetSeededBlock.getSeed(), seededBlock.getSeed());
+
+            /*final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+            block.add(block.indexOf(stmt) + 1, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                    new ConstantExpr(block.getDisplayName() +" : c-loc - cond : " + targetSeededBlock.getSeed())));
+            */
+
             /*block.add(block.indexOf(stmt), new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
                     new ConstantExpr(block.getDisplayName() +" : c-var: " + targetSeededBlock.getSeed())));
             block.add(block.indexOf(stmt) + 1, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
@@ -282,13 +320,21 @@ public class SkidGraph {
         for (BasicBlock value : stmt.getTargets().values()) {
             final SkidBlock target = getBlock(value);
             target.addSeedLoader(0, local, seededBlock.getSeed(), target.getSeed());
+
+            /*final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+            value.add(0, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
+                    new ConstantExpr(block.getDisplayName() +" : c-loc - switch : " + target.getSeed())));
+            */
         }
+
+        if (stmt.getDefaultTarget() == null || stmt.getDefaultTarget() == block)
+            return;
 
         final SkidBlock dflt = getBlock(stmt.getDefaultTarget());
         dflt.addSeedLoader(0, local, seededBlock.getSeed(), dflt.getSeed());
     }
 
-    private void addSeedToRange(final Local local, final Expr localLoad, final ControlFlowGraph cfg, final ExceptionRange<BasicBlock> blockRange) {
+    private void addSeedToRange(final Local local, final ControlFlowGraph cfg, final ExceptionRange<BasicBlock> blockRange) {
         LinkedHashMap<Integer, BasicBlock> basicBlockMap = new LinkedHashMap<>();
         List<Integer> sortedList = new ArrayList<>();
 
@@ -316,14 +362,14 @@ public class SkidGraph {
             final SkidBlock seededBlock = getBlock(block);
 
             // Add a seed loader for the incoming block and convert it to the handler's
-            seededBlock.addSeedLoader(-1, local, internal.getSeed(), handler.getSeed());
+            seededBlock.addSeedLoader(0, local, internal.getSeed(), handler.getSeed());
 
             // Jump to handler
             block.add(new UnconditionalJumpStmt(basicHandler));
             cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
 
             // Final hashed
-            final int hashed = hashTransformer.hash(internal.getSeed());
+            final int hashed = hashTransformer.hash(internal.getSeed(), local).getHash();
 
             // Add to switch
             basicBlockMap.put(hashed, block);
@@ -372,7 +418,7 @@ public class SkidGraph {
         final Expr hash = hashTransformer.hash(local);
 
         // Default switch edge
-        final BasicBlock defaultBlock = Blocks.exception(cfg);
+        final BasicBlock defaultBlock = Blocks.exception(cfg, "Error in hash");
         cfg.addEdge(new DefaultSwitchEdge<>(toppleHandler, defaultBlock));
 
         // Add switch

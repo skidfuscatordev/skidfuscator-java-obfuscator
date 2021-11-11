@@ -52,7 +52,7 @@ public class NumberMutatorPass implements FlowPass {
 
                 final SkidBlock skidBlock = methodNode.getBlock(codeUnit.getBlock());
 
-                final Expr modified = NumberManager.encrypt((Number) constantExpr.getConstant(), skidBlock.getSeed(), methodNode.getLocal());
+                final Expr modified = NumberManager.encrypt(((Number) constantExpr.getConstant()).intValue(), skidBlock.getSeed(), methodNode.getLocal());
                 parent.writeAt(modified, index);
             }
         }

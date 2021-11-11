@@ -4,5 +4,5 @@ import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.locals.Local;
 
 public interface NumberTransformer {
-    Expr getNumber(final Number outcome, final Number starting, final Local startingExpr);
+    Expr getNumber(final int outcome, final int starting, final Local startingExpr);
 }

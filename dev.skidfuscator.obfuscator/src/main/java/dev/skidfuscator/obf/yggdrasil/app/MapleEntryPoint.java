@@ -7,21 +7,21 @@ import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.InvocationResolver;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.context.AnalysisContext;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Ghast
  * @since 21/01/2021
  * SkidfuscatorV2 © 2021
  */
-public class ApplicationEntryPoint implements EntryPoint {
+public class MapleEntryPoint implements EntryPoint {
     public List<MethodNode> getEntryPoints(final SkidSession context, final ApplicationClassSource contents) {
         final AnalysisContext cxt = context.getCxt();
-        final InvocationResolver resolver = cxt.getInvocationResolver();
-        //final MethodInvokerResolver methodInvokerResolver = context.getMethodInvokerResolver();
-
-        //final List<MethodNode> free = methodInvokerResolver.getNeverCalled();
-        return new ArrayList<>();
+        final Set<MethodNode> free = context.getCxt().getApplicationContext().getEntryPoints();
+        return new ArrayList<>(free);
     }
 
 }

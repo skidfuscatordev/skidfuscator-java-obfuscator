@@ -3,7 +3,7 @@ package dev.skidfuscator.obf.init;
 import dev.skidfuscator.obf.SkidMethodRenderer;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
 import dev.skidfuscator.obf.yggdrasil.EntryPoint;
-import dev.skidfuscator.obf.yggdrasil.app.ApplicationEntryPoint;
+import dev.skidfuscator.obf.yggdrasil.app.MapleEntryPoint;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.LibraryClassSource;
@@ -67,7 +67,7 @@ public class DefaultInitHandler implements InitHandler {
 
         }
 
-        final EntryPoint entryPoint = new ApplicationEntryPoint();
+        final EntryPoint entryPoint = new MapleEntryPoint();
 
         session.addEntryPoints(entryPoint.getEntryPoints(
                 session,

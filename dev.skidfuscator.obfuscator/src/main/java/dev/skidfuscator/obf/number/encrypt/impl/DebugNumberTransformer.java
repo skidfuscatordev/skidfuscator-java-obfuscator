@@ -14,11 +14,9 @@ import org.objectweb.asm.Type;
  * @since 09/03/2021
  * SkidfuscatorV2 © 2021
  */
-public class XorNumberTransformer implements NumberTransformer {
+public class DebugNumberTransformer implements NumberTransformer {
     @Override
     public Expr getNumber(final int outcome, final int starting, final Local startingExpr) {
-        final int xored = outcome ^ starting;
-        final Expr allocExpr = new ConstantExpr(xored);
-        return new FakeArithmeticExpr(allocExpr, new VarExpr(startingExpr, Type.INT_TYPE), ArithmeticExpr.Operator.XOR);
+        return new ConstantExpr(outcome);
     }
 }

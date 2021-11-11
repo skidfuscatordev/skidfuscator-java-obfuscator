@@ -3,6 +3,7 @@ package dev.skidfuscator.obf;
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
+import dev.skidfuscator.obf.transform.impl.fixer.SwitchFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.*;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
@@ -40,7 +41,8 @@ public class SkidMethodRenderer {
         }
         logger.log("Finished initial load");
         logger.post("Beginning method load...");
-        for (MethodNode methodNode : methodNodes) {
+
+        methodNodes.stream().parallel().forEach(methodNode -> {
             final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
                     .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
 
@@ -48,7 +50,7 @@ public class SkidMethodRenderer {
 
             if (hierarchy.isEmpty()) {
                 System.out.println("/!\\ Method " + methodNode.getDisplayName() + " is empty!");
-                continue;
+                return;
             }
 
             SkidMethod method = null;
@@ -66,7 +68,7 @@ public class SkidMethodRenderer {
                 if (!contains || OpcodeUtil.isSynthetic(methodNode)) {
                     type = CallerType.LIBRARY;
                 } else {
-                    final boolean entry = hierarchy.stream().anyMatch(e -> skidSession.getEntryPoints().contains(e));
+                    final boolean entry = methodNode.getName().equals("<init>") || hierarchy.stream().anyMatch(e -> skidSession.getEntryPoints().contains(e));
 
                     type = entry ? CallerType.ENTRY : CallerType.APPLICATION;
                 }
@@ -75,7 +77,7 @@ public class SkidMethodRenderer {
             }
 
             skidMethodMap.put(methodNode, method);
-        }
+        });
 
         logger.log("Finished loading " + skidMethodMap.size() + " methods");
         logger.post("Beginning method mapping...");
@@ -142,8 +144,15 @@ public class SkidMethodRenderer {
         };
 
         final FlowPass[] fixers = new FlowPass[] {
-                new ExceptionFixerPass()
+                new ExceptionFixerPass(),
+                new SwitchFixerPass()
         };
+
+        skidMethods.forEach(e -> {
+            for (FlowPass flowPass : fixers) {
+                flowPass.pass(skidSession, e);
+            }
+        });
 
         // Fix retarded exceptions
         skidMethods.forEach(e -> e.renderPrivate(skidSession));
@@ -177,11 +186,7 @@ public class SkidMethodRenderer {
             }
         });
 
-        skidMethods.forEach(e -> {
-            for (FlowPass flowPass : fixers) {
-                flowPass.pass(skidSession, e);
-            }
-        });
+
 
         skidMethods.forEach(e -> e.renderPublic(skidSession));
         logger.log("[*] Finished Gen3 flow obfuscation");
