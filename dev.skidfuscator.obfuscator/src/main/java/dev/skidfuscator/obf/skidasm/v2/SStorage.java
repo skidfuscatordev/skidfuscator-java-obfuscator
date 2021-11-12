@@ -29,9 +29,17 @@ public class SStorage {
 
     public void cache(final SkidSession session) {
         logger.log("[#] Beginning cache...");
-        final List<ClassNode> nodes =  session.getClassSource().getClassTree().vertices().parallelStream()
-                .filter(e -> session.getClassSource().isApplicationClass(e.getName()))
-                .collect(Collectors.toList());
+        final List<ClassNode> nodes;
+
+        try (ProgressBar progressBar = ProgressUtil.progress(session.getClassSource().size())){
+            nodes = session.getClassSource().getClassTree().vertices().parallelStream()
+                    .filter(e -> {
+                        progressBar.step();
+                        return session.getClassSource().isApplicationClass(e.getName());
+                    })
+                    .collect(Collectors.toList());
+        }
+
         logger.log("[#]     > Cached over " + nodes.size() + " classes!");
         logger.post("[#] Establishing inheritance...");
 

@@ -159,7 +159,7 @@ public class SkidGraph {
     }
 
     private void linkage(final ControlFlowGraph cfg, final Local local) {
-        for (BasicBlock vertex : cfg.vertices()) {
+        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
             new HashSet<>(vertex).stream().filter(e -> e instanceof SwitchStmt).forEach(e -> {
                 addSeedToSwitch(local, vertex, (SwitchStmt) e);
             });

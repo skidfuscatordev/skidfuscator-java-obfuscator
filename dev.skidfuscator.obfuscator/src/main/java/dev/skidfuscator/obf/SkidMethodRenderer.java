@@ -205,7 +205,7 @@ public class SkidMethodRenderer {
 
         try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())){
             skidMethods.parallelStream().forEach(e -> {
-                e.getMethodNodes().stream().parallel().forEach(methodNode -> {
+                e.getMethodNodes().forEach(methodNode -> {
                     if (methodNode.getNode().isAbstract())
                         return;
                     final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());

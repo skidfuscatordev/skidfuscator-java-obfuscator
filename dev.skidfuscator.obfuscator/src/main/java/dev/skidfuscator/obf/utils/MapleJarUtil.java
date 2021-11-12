@@ -1,5 +1,6 @@
 package dev.skidfuscator.obf.utils;
 
+import dev.skidfuscator.obf.phantom.PhantomJarDownloader;
 import lombok.SneakyThrows;
 import org.apache.log4j.Logger;
 import org.mapleir.app.service.ApplicationClassSource;
@@ -13,6 +14,7 @@ import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.passes.rename.ClassRenamerPass;
 import org.objectweb.asm.ClassWriter;
 import org.topdank.byteengineer.commons.data.JarInfo;
+import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
 
 import java.io.*;
@@ -28,7 +30,7 @@ import java.util.jar.JarOutputStream;
  * HideMySkewnessCheckObfuscator © 2020
  */
 public class MapleJarUtil {
-    public static void dumpJar(ApplicationClassSource app, SingleJarDownloader<ClassNode> dl, PassGroup masterGroup, String outputFile) throws IOException {
+    public static void dumpJar(ApplicationClassSource app, AbstractJarDownloader<ClassNode> dl, PassGroup masterGroup, String outputFile) throws IOException {
         (new CompleteResolvingJarDumper(dl.getJarContents(), app) {
             @Override
             public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
@@ -112,5 +114,12 @@ public class MapleJarUtil {
         return dl;
     }
 
+    @SneakyThrows
+    public static PhantomJarDownloader<ClassNode> importPhantomJar(File file) {
+        PhantomJarDownloader<ClassNode> dl = new PhantomJarDownloader<>(new JarInfo(file));
+        dl.download();
+
+        return dl;
+    }
 
 }

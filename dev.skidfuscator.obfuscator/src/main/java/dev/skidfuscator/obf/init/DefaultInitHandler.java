@@ -1,6 +1,7 @@
 package dev.skidfuscator.obf.init;
 
 import dev.skidfuscator.obf.SkidMethodRenderer;
+import dev.skidfuscator.obf.phantom.PhantomJarDownloader;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
 import dev.skidfuscator.obf.yggdrasil.EntryPoint;
 import dev.skidfuscator.obf.yggdrasil.app.MapleEntryPoint;
@@ -28,10 +29,15 @@ public class DefaultInitHandler implements InitHandler {
     @SneakyThrows
     public SkidSession init(final File jar, final File output) {
         System.out.println("Starting download of jar " + jar.getName() + "...");
-        final SingleJarDownloader<ClassNode> downloader = MapleJarUtil.importJar(jar);
+        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(jar);
         ApplicationClassSource classSource = new ApplicationClassSource(
                 jar.getName(), downloader.getJarContents().getClassContents()
         );
+
+        classSource.addLibraries(new LibraryClassSource(
+                classSource,
+                downloader.getPhantomContents().getClassContents()
+        ));
 
         System.out.println("Starting download of runtime jar...");
         final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(new File(System.getProperty("java.home"), "lib/rt.jar"));

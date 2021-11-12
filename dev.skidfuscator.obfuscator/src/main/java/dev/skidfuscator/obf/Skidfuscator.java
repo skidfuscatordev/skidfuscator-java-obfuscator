@@ -1,5 +1,6 @@
 package dev.skidfuscator.obf;
 
+import dev.skidfuscator.obf.directory.SkiddedDirectory;
 import dev.skidfuscator.obf.init.DefaultInitHandler;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
@@ -40,6 +41,8 @@ public class Skidfuscator {
             return;
         }
 
+        final SkiddedDirectory directory = new SkiddedDirectory(null);
+        directory.init();
         final File file = new File(args[0]);
 
         final SkidSession session = new DefaultInitHandler().init(file, new File(file.getPath() + "-out.jar"));

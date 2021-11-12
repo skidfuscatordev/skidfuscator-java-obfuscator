@@ -47,6 +47,13 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.mapleir</groupId>
@@ -70,7 +77,16 @@
             <artifactId>progressbar</artifactId>
             <version>0.9.2</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.Col-E</groupId>
+            <artifactId>jphantom</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.dirs</groupId>
+            <artifactId>directories</artifactId>
+            <version>26</version>
+        </dependency>
     </dependencies>
 
 </project>
