@@ -1,6 +1,7 @@
 package dev.skidfuscator.obf.utils;
 
 import dev.skidfuscator.obf.phantom.PhantomJarDownloader;
+import dev.skidfuscator.obf.phantom.PhantomResolvingJarDumper;
 import lombok.SneakyThrows;
 import org.apache.log4j.Logger;
 import org.mapleir.app.service.ApplicationClassSource;
@@ -31,7 +32,7 @@ import java.util.jar.JarOutputStream;
  */
 public class MapleJarUtil {
     public static void dumpJar(ApplicationClassSource app, AbstractJarDownloader<ClassNode> dl, PassGroup masterGroup, String outputFile) throws IOException {
-        (new CompleteResolvingJarDumper(dl.getJarContents(), app) {
+        (new PhantomResolvingJarDumper(dl.getJarContents(), app) {
             @Override
             public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
 //				if(name.startsWith("META-INF")) {

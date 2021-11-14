@@ -354,7 +354,6 @@ public class SkidGraph {
         for (BasicBlock node : blockRange.getNodes()) {
             // Get their internal seed and add it to the list
             final SkidBlock internal = getBlock(node);
-            sortedList.add(internal.getSeed());
 
             // Create a new switch block and get it's seeded variant
             final BasicBlock block = new BasicBlock(cfg);
@@ -374,6 +373,7 @@ public class SkidGraph {
             // Add to switch
             basicBlockMap.put(hashed, block);
             cfg.addEdge(new SwitchEdge<>(toppleHandler, block, hashed));
+            sortedList.add(hashed);
 
             // Find egde and transform
             cfg.getEdges(node)

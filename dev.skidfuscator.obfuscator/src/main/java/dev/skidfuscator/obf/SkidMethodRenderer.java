@@ -4,9 +4,11 @@ import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.skidasm.NoNoSkidMethod;
 import dev.skidfuscator.obf.skidasm.v2.SStorage;
+import dev.skidfuscator.obf.transform.impl.ProjectPass;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
 import dev.skidfuscator.obf.transform.impl.fixer.SwitchFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.*;
+import dev.skidfuscator.obf.transform.impl.kappa.SuperDuperAgentPass;
 import dev.skidfuscator.obf.utils.ProgressUtil;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
@@ -36,6 +38,17 @@ public class SkidMethodRenderer {
     public void render(final SkidSession skidSession) {
         logger.log("Beginning Skidfuscator 1.0.1...");
 
+        final ProjectPass[] projectPasses = new ProjectPass[]{
+                new SuperDuperAgentPass()
+        };
+
+        if (Skidfuscator.preventDump) {
+            logger.log("[*] Passing project passes...");
+            for (ProjectPass projectPass : projectPasses) {
+                projectPass.pass(skidSession);
+            }
+        }
+
         final List<ClassNode> nodeList = Streams.stream(skidSession.getClassSource().iterate())
                 .parallel()
                 .filter(e -> skidSession.getClassSource().isApplicationClass(e.getName()))
@@ -46,7 +59,8 @@ public class SkidMethodRenderer {
         storage.cache(skidSession);
         logger.post("Beginning method load...");
 
-        try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())){
+
+        try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())) {
             methodNodes.stream().parallel().forEach(methodNode -> {
                 final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
                         .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
@@ -102,35 +116,35 @@ public class SkidMethodRenderer {
 
         try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())) {
             methodNodes.parallelStream().forEach(method -> {
-            final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().getFor(method);
-            cfg.allExprStream()
-                    .filter(e -> e instanceof InvocationExpr)
-                    .filter(e -> !(e instanceof DynamicInvocationExpr))
-                    .map(e -> (InvocationExpr) e)
-                    .forEach(codeUnit -> {
-                        try {
-                            final Set<MethodNode> targets = codeUnit.resolveTargets(skidSession.getCxt().getInvocationResolver());
+                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().getFor(method);
+                cfg.allExprStream()
+                        .filter(e -> e instanceof InvocationExpr)
+                        .filter(e -> !(e instanceof DynamicInvocationExpr))
+                        .map(e -> (InvocationExpr) e)
+                        .forEach(codeUnit -> {
+                            try {
+                                final Set<MethodNode> targets = codeUnit.resolveTargets(skidSession.getCxt().getInvocationResolver());
 
-                            final CallerType type = methodNodes.containsAll(targets)
-                                    ? CallerType.APPLICATION
-                                    : CallerType.LIBRARY;
+                                final CallerType type = methodNodes.containsAll(targets)
+                                        ? CallerType.APPLICATION
+                                        : CallerType.LIBRARY;
 
-                            final SkidMethod skidMethod = skidMethodMap.get(method);
+                                final SkidMethod skidMethod = skidMethodMap.get(method);
 
-                            if (skidMethod == null)
-                                return;
+                                if (skidMethod == null)
+                                    return;
 
-                            for (MethodNode target : targets) {
-                                if (skidMethodMap.containsKey(target)) {
-                                    skidMethodMap.get(target).getInvocationModal().add(new SkidInvocation(skidMethod, codeUnit));
-                                    break;
+                                for (MethodNode target : targets) {
+                                    if (skidMethodMap.containsKey(target)) {
+                                        skidMethodMap.get(target).getInvocationModal().add(new SkidInvocation(skidMethod, codeUnit));
+                                        break;
+                                    }
                                 }
+                            } catch (Throwable e) {
+
                             }
-                        } catch (Throwable e) {
 
-                        }
-
-                    });
+                        });
                 bar.step();
             });
         }
@@ -160,16 +174,16 @@ public class SkidMethodRenderer {
 
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
-        final FlowPass[] flowPasses = new FlowPass[] {
+        final FlowPass[] flowPasses = new FlowPass[]{
                 //new NumberMutatorPass(),
-                new SwitchMutatorPass(),
+                //new SwitchMutatorPass(),
                 //new ConditionMutatorPass(),
-                new FakeExceptionJumpFlowPass(),
-                new FakeJumpFlowPass(),
+                //new FakeExceptionJumpFlowPass(),
+                //new FakeJumpFlowPass(),
                 new SeedFlowPass(),
         };
 
-        final FlowPass[] fixers = new FlowPass[] {
+        final FlowPass[] fixers = new FlowPass[]{
                 new ExceptionFixerPass(),
                 new SwitchFixerPass()
         };
@@ -201,9 +215,10 @@ public class SkidMethodRenderer {
                     + "]");
         }
 
+
         logger.log("[*] Linearizing GEN3...");
 
-        try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())){
+        try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())) {
             skidMethods.parallelStream().forEach(e -> {
                 e.getMethodNodes().forEach(methodNode -> {
                     if (methodNode.getNode().isAbstract())
@@ -217,14 +232,19 @@ public class SkidMethodRenderer {
                 progressBar.step();
             });
 
+            logger.log("[*] Linearizing GEN3...");
+
+            skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
+            logger.log("[*] Finished Gen3 flow obfuscation");
+
         }
 
-
-
-
-        skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
-        logger.log("[*] Finished Gen3 flow obfuscation");
-
+        skidMethods.forEach(e -> {
+            for (FlowPass flowPass : fixers) {
+                flowPass.pass(skidSession, e);
+            }
+        });
     }
+
 
 }

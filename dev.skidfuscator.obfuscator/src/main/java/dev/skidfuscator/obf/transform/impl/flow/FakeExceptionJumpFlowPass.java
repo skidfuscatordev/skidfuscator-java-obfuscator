@@ -42,7 +42,7 @@ public class FakeExceptionJumpFlowPass implements FlowPass {
     @Override
     public void pass(SkidSession session, SkidMethod method) {
         for (SkidGraph methodNode : method.getMethodNodes()) {
-            if (methodNode.getNode().isAbstract())
+            if (methodNode.getNode().isAbstract() || methodNode.getNode().node.instructions.size() > 10000)
                 continue;
 
             final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode.getNode());
