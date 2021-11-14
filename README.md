@@ -67,6 +67,7 @@ to date:
 ## Libraries used
 - [Maple IR and the Team](https://github.com/LLVM-but-worse/maple-ir)
 - [ASM](https://gitlab.ow2.org/asm/asm)
+- [AntiDumper by Sim0n](https://github.com/sim0n/anti-java-agent/)
 
 ## Inspired from
 - [Soot](https://github.com/soot-oss/soot)
