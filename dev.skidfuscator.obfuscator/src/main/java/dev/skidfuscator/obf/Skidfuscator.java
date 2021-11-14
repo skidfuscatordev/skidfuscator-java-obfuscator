@@ -33,12 +33,21 @@ public class Skidfuscator {
         this(new String[0]);
     }
 
+    // Temp workaround
+    public static boolean preventDump;
 
     public void init() {
         if (args.length < 1) {
             System.out.println("Not valid command bro");
             System.exit(1);
             return;
+        }
+
+        // Todo: Actually add an CLI
+        if (args.length > 1) {
+            if (args[1].equalsIgnoreCase("--antidump")) {
+                preventDump = true;
+            }
         }
 
         final SkiddedDirectory directory = new SkiddedDirectory(null);

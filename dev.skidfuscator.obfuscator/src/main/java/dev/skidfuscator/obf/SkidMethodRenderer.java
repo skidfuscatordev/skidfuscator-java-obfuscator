@@ -4,9 +4,11 @@ import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.skidasm.NoNoSkidMethod;
 import dev.skidfuscator.obf.skidasm.v2.SStorage;
+import dev.skidfuscator.obf.transform.impl.ProjectPass;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
 import dev.skidfuscator.obf.transform.impl.fixer.SwitchFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.*;
+import dev.skidfuscator.obf.transform.impl.kappa.SuperDuperAgentPass;
 import dev.skidfuscator.obf.utils.ProgressUtil;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
@@ -36,6 +38,17 @@ public class SkidMethodRenderer {
     public void render(final SkidSession skidSession) {
         logger.log("Beginning Skidfuscator 1.0.1...");
 
+        final ProjectPass[] projectPasses = new ProjectPass[] {
+                new SuperDuperAgentPass()
+        };
+
+        if (Skidfuscator.preventDump) {
+            logger.log("[*] Passing project passes...");
+            for (ProjectPass projectPass : projectPasses) {
+                projectPass.pass(skidSession);
+            }
+        }
+
         final List<ClassNode> nodeList = Streams.stream(skidSession.getClassSource().iterate())
                 .parallel()
                 .filter(e -> skidSession.getClassSource().isApplicationClass(e.getName()))
@@ -46,12 +59,13 @@ public class SkidMethodRenderer {
         storage.cache(skidSession);
         logger.post("Beginning method load...");
 
+
         try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())){
             methodNodes.stream().parallel().forEach(methodNode -> {
                 final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
                         .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
 
-                hierarchy.add(methodNode);
+            hierarchy.add(methodNode);
 
                 if (hierarchy.isEmpty()) {
                     System.out.println("/!\\ Method " + methodNode.getDisplayName() + " is empty!");
@@ -201,7 +215,6 @@ public class SkidMethodRenderer {
                     + "]");
         }
 
-        logger.log("[*] Linearizing GEN3...");
 
         try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())){
             skidMethods.parallelStream().forEach(e -> {
@@ -217,10 +230,11 @@ public class SkidMethodRenderer {
                 progressBar.step();
             });
 
+        logger.log("[*] Linearizing GEN3...");
+
+
+
         }
-
-
-
 
         skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
         logger.log("[*] Finished Gen3 flow obfuscation");

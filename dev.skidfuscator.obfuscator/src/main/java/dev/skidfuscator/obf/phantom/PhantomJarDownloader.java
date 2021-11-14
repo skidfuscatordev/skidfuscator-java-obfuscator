@@ -91,6 +91,28 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		Map<Type, org.objectweb.asm.tree.ClassNode> typeMap = new HashMap<>();
 
 		/*
+		 * Create all the classes necessary based on the data we cached.
+		 */
+		logger.info("[$] Generating classes...");
+		try (ProgressBar progressBar = ProgressUtil.progress(data.size())){
+			data.forEach((name, db) -> {
+				C cn;
+				try {
+					cn = factory.create(db, name);
+					if(!data.containsKey(cn.getName())) {
+						contents.getClassContents().add(cn);
+					} else {
+						throw new IllegalStateException("duplicate: " + cn.getName());
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				progressBar.step();
+			});
+		}
+
+		/*
 		 * Just like in Recaf, copy the file to a temporary file. Overwrite if necessary. This
 		 * I suppose is absolutely useless aside from trying not to fuck over the OG jar....
 		 * just in case...
@@ -161,9 +183,15 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 * class cache. This will be used as a library during obfuscation.
 		 */
 		logger.info("[$] Outputting phantom classes...");
+		final Map<String, C> namedMap = contents.getClassContents().namedMap();
+
 		try (ProgressBar progressBar = ProgressUtil.progress(phantom.getGenerated().size())){
 			phantom.getGenerated().forEach((k, v) -> {
 				final ClassNode classNode = ClassHelper.create(decorate(v));
+
+				if (namedMap.containsKey(classNode.getName()))
+					return;
+
 				phantomContents.getClassContents().add((C) classNode);
 				progressBar.step();
 			});
@@ -183,27 +211,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		MethodAccessStateMachine.refresh();
 		java.nio.file.Files.deleteIfExists(input.toPath());
 
-		/*
-		 * Create all the classes necessary based on the data we cached.
-		 */
-		logger.info("[$] Generating classes...");
-		try (ProgressBar progressBar = ProgressUtil.progress(phantom.getGenerated().size())){
-			data.forEach((name, db) -> {
-				C cn;
-				try {
-					cn = factory.create(db, name);
-					if(!data.containsKey(cn.getName())) {
-						contents.getClassContents().add(cn);
-					} else {
-						throw new IllegalStateException("duplicate: " + cn.getName());
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 
-				progressBar.step();
-			});
-		}
 	}
 
 	public JarContents<C> getPhantomContents() {

@@ -32,6 +32,10 @@ import java.util.jar.JarOutputStream;
 public class MapleJarUtil {
     public static void dumpJar(ApplicationClassSource app, AbstractJarDownloader<ClassNode> dl, PassGroup masterGroup, String outputFile) throws IOException {
         (new CompleteResolvingJarDumper(dl.getJarContents(), app) {
+=======
+    public static void dumpJar(ApplicationClassSource app, AbstractJarDownloader<ClassNode> dl, PassGroup masterGroup, String outputFile) throws IOException {
+        (new PhantomResolvingJarDumper(dl.getJarContents(), app) {
+>>>>>>> Stashed changes
             @Override
             public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
 //				if(name.startsWith("META-INF")) {
