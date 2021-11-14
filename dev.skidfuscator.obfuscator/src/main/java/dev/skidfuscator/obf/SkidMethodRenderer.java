@@ -38,7 +38,7 @@ public class SkidMethodRenderer {
     public void render(final SkidSession skidSession) {
         logger.log("Beginning Skidfuscator 1.0.1...");
 
-        final ProjectPass[] projectPasses = new ProjectPass[] {
+        final ProjectPass[] projectPasses = new ProjectPass[]{
                 new SuperDuperAgentPass()
         };
 
@@ -60,12 +60,12 @@ public class SkidMethodRenderer {
         logger.post("Beginning method load...");
 
 
-        try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())){
+        try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())) {
             methodNodes.stream().parallel().forEach(methodNode -> {
                 final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
                         .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
 
-            hierarchy.add(methodNode);
+                hierarchy.add(methodNode);
 
                 if (hierarchy.isEmpty()) {
                     System.out.println("/!\\ Method " + methodNode.getDisplayName() + " is empty!");
@@ -116,35 +116,35 @@ public class SkidMethodRenderer {
 
         try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())) {
             methodNodes.parallelStream().forEach(method -> {
-            final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().getFor(method);
-            cfg.allExprStream()
-                    .filter(e -> e instanceof InvocationExpr)
-                    .filter(e -> !(e instanceof DynamicInvocationExpr))
-                    .map(e -> (InvocationExpr) e)
-                    .forEach(codeUnit -> {
-                        try {
-                            final Set<MethodNode> targets = codeUnit.resolveTargets(skidSession.getCxt().getInvocationResolver());
+                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().getFor(method);
+                cfg.allExprStream()
+                        .filter(e -> e instanceof InvocationExpr)
+                        .filter(e -> !(e instanceof DynamicInvocationExpr))
+                        .map(e -> (InvocationExpr) e)
+                        .forEach(codeUnit -> {
+                            try {
+                                final Set<MethodNode> targets = codeUnit.resolveTargets(skidSession.getCxt().getInvocationResolver());
 
-                            final CallerType type = methodNodes.containsAll(targets)
-                                    ? CallerType.APPLICATION
-                                    : CallerType.LIBRARY;
+                                final CallerType type = methodNodes.containsAll(targets)
+                                        ? CallerType.APPLICATION
+                                        : CallerType.LIBRARY;
 
-                            final SkidMethod skidMethod = skidMethodMap.get(method);
+                                final SkidMethod skidMethod = skidMethodMap.get(method);
 
-                            if (skidMethod == null)
-                                return;
+                                if (skidMethod == null)
+                                    return;
 
-                            for (MethodNode target : targets) {
-                                if (skidMethodMap.containsKey(target)) {
-                                    skidMethodMap.get(target).getInvocationModal().add(new SkidInvocation(skidMethod, codeUnit));
-                                    break;
+                                for (MethodNode target : targets) {
+                                    if (skidMethodMap.containsKey(target)) {
+                                        skidMethodMap.get(target).getInvocationModal().add(new SkidInvocation(skidMethod, codeUnit));
+                                        break;
+                                    }
                                 }
+                            } catch (Throwable e) {
+
                             }
-                        } catch (Throwable e) {
 
-                        }
-
-                    });
+                        });
                 bar.step();
             });
         }
@@ -174,16 +174,16 @@ public class SkidMethodRenderer {
 
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
-        final FlowPass[] flowPasses = new FlowPass[] {
+        final FlowPass[] flowPasses = new FlowPass[]{
                 //new NumberMutatorPass(),
-                new SwitchMutatorPass(),
+                //new SwitchMutatorPass(),
                 //new ConditionMutatorPass(),
-                new FakeExceptionJumpFlowPass(),
-                new FakeJumpFlowPass(),
+                //new FakeExceptionJumpFlowPass(),
+                //new FakeJumpFlowPass(),
                 new SeedFlowPass(),
         };
 
-        final FlowPass[] fixers = new FlowPass[] {
+        final FlowPass[] fixers = new FlowPass[]{
                 new ExceptionFixerPass(),
                 new SwitchFixerPass()
         };
@@ -216,11 +216,9 @@ public class SkidMethodRenderer {
         }
 
 
-
-
         logger.log("[*] Linearizing GEN3...");
 
-        try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())){
+        try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())) {
             skidMethods.parallelStream().forEach(e -> {
                 e.getMethodNodes().forEach(methodNode -> {
                     if (methodNode.getNode().isAbstract())
@@ -234,11 +232,19 @@ public class SkidMethodRenderer {
                 progressBar.step();
             });
 
-        logger.log("[*] Linearizing GEN3...");
+            logger.log("[*] Linearizing GEN3...");
 
-        skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
-        logger.log("[*] Finished Gen3 flow obfuscation");
+            skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
+            logger.log("[*] Finished Gen3 flow obfuscation");
 
+        }
+
+        skidMethods.forEach(e -> {
+            for (FlowPass flowPass : fixers) {
+                flowPass.pass(skidSession, e);
+            }
+        });
     }
+
 
 }

@@ -16,10 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -112,6 +109,8 @@ public class PhantomResolvingJarDumper implements JarDumper {
 
 	public ClassWriter buildClassWriter(ClassTree tree, int flags) {
 		return new ClassWriter(flags) {
+
+
 			// this method in ClassWriter uses the systemclassloader as
 			// a stream location to load the super class, however, most of
 			// the time the class is loaded/read and parsed by us so it
@@ -162,27 +161,34 @@ public class PhantomResolvingJarDumper implements JarDumper {
 				Collection<ClassNode> c = tree.getAllParents(ccn);
 				Collection<ClassNode> d = tree.getAllParents(dcn);
 
-				if(c.contains(dcn))
-					return type1;
 
-				if(d.contains(ccn))
-					return type2;
-
+				final boolean poggers = type1.equalsIgnoreCase("me/tecnio/antihaxerman/packetevents/utils/netty/bytebuf/ByteBufUtil_8") ||
+						type2.equalsIgnoreCase("me/tecnio/antihaxerman/packetevents/utils/netty/bytebuf/ByteBufUtil_8");
+				if (poggers) {
+					System.out.println("YEEET");
+					System.out.println(type1);
+					System.out.println(type2);
+					System.out.println("--------");
+				}
 
 				final Stack<ClassNode> stack = new Stack<>();
-				final List<ClassNode> classNodeList = tree.getAllParents(ccn);
-				stack.addAll(Lists.reverse(classNodeList));
-				stack.add(ccn);
-				{
-					while (!stack.isEmpty()) {
-						for (ClassNode node : d) {
-							if (node.equals(stack.peek()))
-								return node.getName();
+				stack.addAll(Lists.reverse(tree.getAllParents(ccn)));
+
+				final Set<ClassNode> nodes = new HashSet<>(tree.getAllParents(dcn));
+				while (!stack.isEmpty()) {
+					if (nodes.contains(stack.peek())) {
+						if (poggers) {
+							System.out.println("POOOOOG " + stack.peek().getName());
 						}
 
-						stack.pop();
+						return stack.peek().getName();
 					}
 
+					stack.pop();
+				}
+
+
+				{
 					throw new IllegalStateException("Could not find common class type between " + Arrays.toString(new Object[]{ccn, dcn}));
 				}
 
