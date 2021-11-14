@@ -17,6 +17,7 @@ import org.mapleir.context.IRCache;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.builder.ControlFlowGraphBuilder;
+import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
 
 import java.io.File;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
 public class SkidSession {
     private static final Logger LOGGER = Logger.getLogger(SkidSession.class);
     private final ApplicationClassSource classSource;
-    private final SingleJarDownloader<ClassNode> jarDownloader;
+    private final AbstractJarDownloader<ClassNode> jarDownloader;
     private final IRCache irFactory;
     private final AnalysisContext cxt;
     //private final MethodInvokerResolver methodInvokerResolver;
@@ -48,7 +49,7 @@ public class SkidSession {
 
     private final Counter counter = new Counter();
 
-    public SkidSession(ApplicationClassSource classSource, SingleJarDownloader<ClassNode> jarDownloader, File outputFile) {
+    public SkidSession(ApplicationClassSource classSource, AbstractJarDownloader<ClassNode> jarDownloader, File outputFile) {
         this.classSource = classSource;
         this.jarDownloader = jarDownloader;
         this.outputFile = outputFile;

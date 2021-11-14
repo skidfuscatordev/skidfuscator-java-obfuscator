@@ -2,9 +2,12 @@ package dev.skidfuscator.obf;
 
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.skidasm.NoNoSkidMethod;
+import dev.skidfuscator.obf.skidasm.v2.SStorage;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
 import dev.skidfuscator.obf.transform.impl.fixer.SwitchFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.*;
+import dev.skidfuscator.obf.utils.ProgressUtil;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
 import dev.skidfuscator.obf.transform.impl.flow.gen3.SeedFlowPass;
@@ -13,6 +16,7 @@ import dev.skidfuscator.obf.seed.IntegerBasedSeed;
 import dev.skidfuscator.obf.skidasm.SkidInvocation;
 import dev.skidfuscator.obf.skidasm.SkidMethod;
 import dev.skidfuscator.obf.utils.OpcodeUtil;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.log4j.LogManager;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
@@ -25,6 +29,7 @@ import java.util.stream.Collectors;
 
 public class SkidMethodRenderer {
     private final Set<MethodNode> methodNodes = new HashSet<>();
+    private final SStorage storage = new SStorage();
     private final Map<MethodNode, SkidMethod> skidMethodMap = new HashMap<>();
     private final TimedLogger logger = new TimedLogger(LogManager.getLogger(this.getClass()));
 
@@ -36,52 +41,67 @@ public class SkidMethodRenderer {
                 .filter(e -> skidSession.getClassSource().isApplicationClass(e.getName()))
                 .collect(Collectors.toList());
 
-        for (ClassNode classNode : nodeList) {
-            methodNodes.addAll(classNode.getMethods());
-        }
+        nodeList.parallelStream().forEach(e -> methodNodes.addAll(e.getMethods()));
         logger.log("Finished initial load");
+        storage.cache(skidSession);
         logger.post("Beginning method load...");
 
-        methodNodes.stream().parallel().forEach(methodNode -> {
-            final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
-                    .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
+        try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())){
+            methodNodes.stream().parallel().forEach(methodNode -> {
+                final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
+                        .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
 
-            hierarchy.add(methodNode);
+                hierarchy.add(methodNode);
 
-            if (hierarchy.isEmpty()) {
-                System.out.println("/!\\ Method " + methodNode.getDisplayName() + " is empty!");
-                return;
-            }
-
-            SkidMethod method = null;
-
-            for (MethodNode node : hierarchy) {
-                if (skidMethodMap.containsKey(node)) {
-                    method = skidMethodMap.get(node);
-                    break;
-                }
-            }
-
-            if (method == null) {
-                final boolean contains = methodNodes.containsAll(hierarchy);
-                final CallerType type;
-                if (!contains || OpcodeUtil.isSynthetic(methodNode)) {
-                    type = CallerType.LIBRARY;
-                } else {
-                    final boolean entry = methodNode.getName().equals("<init>") || hierarchy.stream().anyMatch(e -> skidSession.getEntryPoints().contains(e));
-
-                    type = entry ? CallerType.ENTRY : CallerType.APPLICATION;
+                if (hierarchy.isEmpty()) {
+                    System.out.println("/!\\ Method " + methodNode.getDisplayName() + " is empty!");
+                    bar.step();
+                    return;
                 }
 
-                method = new SkidMethod(new HashSet<>(hierarchy), type, new HashSet<>());
-            }
+                SkidMethod method = null;
 
-            skidMethodMap.put(methodNode, method);
-        });
+                for (MethodNode node : hierarchy) {
+                    if (skidMethodMap.containsKey(node)) {
+                        method = skidMethodMap.get(node);
+                        break;
+                    }
+                    if (node.node.instructions.size() > 6000) {
+                        bar.step();
+
+                        for (MethodNode methodNode1 : hierarchy) {
+                            skidMethodMap.put(methodNode1, new NoNoSkidMethod());
+                        }
+
+                        return;
+                    }
+                }
+
+                if (method == null) {
+                    final boolean contains = methodNodes.containsAll(hierarchy);
+                    final CallerType type;
+                    if (!contains || OpcodeUtil.isSynthetic(methodNode)) {
+                        type = CallerType.LIBRARY;
+                    } else {
+                        final boolean entry = methodNode.getName().equals("<init>") || hierarchy.stream().anyMatch(e -> skidSession.getEntryPoints().contains(e));
+
+                        type = entry ? CallerType.ENTRY : CallerType.APPLICATION;
+                    }
+
+                    method = new SkidMethod(new HashSet<>(hierarchy), type, new HashSet<>());
+                }
+
+                skidMethodMap.put(methodNode, method);
+                bar.step();
+            });
+        }
+
 
         logger.log("Finished loading " + skidMethodMap.size() + " methods");
         logger.post("Beginning method mapping...");
-        for (MethodNode method : methodNodes) {
+
+        try (ProgressBar bar = ProgressUtil.progress(methodNodes.size())) {
+            methodNodes.parallelStream().forEach(method -> {
             final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().getFor(method);
             cfg.allExprStream()
                     .filter(e -> e instanceof InvocationExpr)
@@ -111,11 +131,17 @@ public class SkidMethodRenderer {
                         }
 
                     });
+                bar.step();
+            });
         }
 
         logger.log("Finished mapping " + skidMethodMap.size() + " methods");
         logger.post("[*] Gen3 bootstrapping... Beginning seeding...");
-        final List<SkidMethod> skidMethods = skidMethodMap.values().stream().distinct().collect(Collectors.toList());
+        final List<SkidMethod> skidMethods = skidMethodMap.values()
+                .stream()
+                .filter(e -> !(e instanceof NoNoSkidMethod))
+                .distinct()
+                .collect(Collectors.toList());
 
         /*skidMethods.forEach(e -> {
             System.out.println("(Repository) Added group of size " + e.getMethodNodes().size() + " of name " +  e.getModal().getName());
@@ -155,8 +181,8 @@ public class SkidMethodRenderer {
         });
 
         // Fix retarded exceptions
-        skidMethods.forEach(e -> e.renderPrivate(skidSession));
-        skidMethods.forEach(e -> {
+        skidMethods.parallelStream().forEach(e -> e.renderPrivate(skidSession));
+        skidMethods.parallelStream().forEach(e -> {
             for (SkidGraph methodNode : e.getMethodNodes()) {
                 if (methodNode.getNode().isAbstract())
                     continue;
@@ -175,20 +201,28 @@ public class SkidMethodRenderer {
                     + "]");
         }
 
-        skidMethods.forEach(e -> {
-            for (SkidGraph methodNode : e.getMethodNodes()) {
-                if (methodNode.getNode().isAbstract())
-                    continue;
-                final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
-                if (cfg == null)
-                    continue;
-                methodNode.postlinearize(cfg);
-            }
-        });
+        logger.log("[*] Linearizing GEN3...");
+
+        try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())){
+            skidMethods.parallelStream().forEach(e -> {
+                e.getMethodNodes().forEach(methodNode -> {
+                    if (methodNode.getNode().isAbstract())
+                        return;
+                    final ControlFlowGraph cfg = skidSession.getCxt().getIRCache().get(methodNode.getNode());
+                    if (cfg == null)
+                        return;
+                    methodNode.postlinearize(cfg);
+                });
+
+                progressBar.step();
+            });
+
+        }
 
 
 
-        skidMethods.forEach(e -> e.renderPublic(skidSession));
+
+        skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
         logger.log("[*] Finished Gen3 flow obfuscation");
 
     }
