@@ -216,6 +216,10 @@ public class SkidMethodRenderer {
         }
 
 
+
+
+        logger.log("[*] Linearizing GEN3...");
+
         try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())){
             skidMethods.parallelStream().forEach(e -> {
                 e.getMethodNodes().forEach(methodNode -> {
@@ -231,10 +235,6 @@ public class SkidMethodRenderer {
             });
 
         logger.log("[*] Linearizing GEN3...");
-
-
-
-        }
 
         skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
         logger.log("[*] Finished Gen3 flow obfuscation");
