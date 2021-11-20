@@ -8,6 +8,7 @@ import dev.skidfuscator.obf.transform.impl.ProjectPass;
 import dev.skidfuscator.obf.transform.impl.fixer.ExceptionFixerPass;
 import dev.skidfuscator.obf.transform.impl.fixer.SwitchFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.*;
+import dev.skidfuscator.obf.transform.impl.kappa.AhegaoPass;
 import dev.skidfuscator.obf.transform.impl.kappa.SuperDuperAgentPass;
 import dev.skidfuscator.obf.utils.ProgressUtil;
 import dev.skidfuscator.obf.utils.TimedLogger;
@@ -39,14 +40,18 @@ public class SkidMethodRenderer {
         logger.log("Beginning Skidfuscator 1.0.1...");
 
         final ProjectPass[] projectPasses = new ProjectPass[]{
-                new SuperDuperAgentPass()
+                new AhegaoPass()
         };
 
         if (Skidfuscator.preventDump) {
             logger.log("[*] Passing project passes...");
-            for (ProjectPass projectPass : projectPasses) {
-                projectPass.pass(skidSession);
-            }
+            final ProjectPass projectPass  = new SuperDuperAgentPass();
+            projectPass.pass(skidSession);
+        }
+
+        logger.log("[*] Passing fun passes...");
+        for (ProjectPass projectPass : projectPasses) {
+            projectPass.pass(skidSession);
         }
 
         final List<ClassNode> nodeList = Streams.stream(skidSession.getClassSource().iterate())
