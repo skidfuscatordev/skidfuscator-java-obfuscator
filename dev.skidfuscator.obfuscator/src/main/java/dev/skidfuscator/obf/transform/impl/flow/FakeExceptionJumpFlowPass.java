@@ -1,9 +1,11 @@
 package dev.skidfuscator.obf.transform.impl.flow;
 
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.maple.FakeConditionalJumpEdge;
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
 import dev.skidfuscator.obf.number.NumberManager;
 import dev.skidfuscator.obf.number.hash.SkiddedHash;
+import dev.skidfuscator.obf.number.hash.impl.BitwiseHashTransformer;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.skidasm.SkidMethod;
 import dev.skidfuscator.obf.utils.Blocks;
@@ -16,6 +18,7 @@ import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.HashSet;
@@ -59,15 +62,17 @@ public class FakeExceptionJumpFlowPass implements FlowPass {
                 final int seed = methodNode.getBlock(entry).getSeed();
 
                 // Create hash
-                final SkiddedHash hash = NumberManager.hash(seed, methodNode.getLocal());
+                final SkiddedHash hash = new BitwiseHashTransformer().hash(seed, methodNode.getLocal());
                 final ConstantExpr var_const = new ConstantExpr(hash.getHash());
 
                 // Todo add more boilerplates + add exception rotation
-                final BasicBlock fuckup = Blocks.exception(cfg);
+                final BasicBlock fuckup = SkidGraph.DEBUG
+                        ? Blocks.exception(cfg, "hash=" + hash.getHash() + " seed=" + seed)
+                        : Blocks.exception(cfg);
 
                 // Todo change blocks to be skiddedblocks to add method to directly add these
-                final ConditionalJumpStmt jump_stmt = new ConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
-                final ConditionalJumpEdge<BasicBlock> jump_edge = new ConditionalJumpEdge<>(entry, fuckup, jump_stmt.getOpcode());
+                final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
+                final FakeConditionalJumpEdge<BasicBlock> jump_edge = new FakeConditionalJumpEdge<>(entry, fuckup, Opcodes.IF_ICMPNE);
 
                 if (entry.get(entry.size() - 1) instanceof UnconditionalJumpStmt)
                     entry.add(entry.size() - 1, jump_stmt);

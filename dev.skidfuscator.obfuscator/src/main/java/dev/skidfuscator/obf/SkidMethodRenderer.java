@@ -50,10 +50,7 @@ public class SkidMethodRenderer {
             projectPass.pass(skidSession);
         }
 
-        logger.log("[*] Passing fun passes...");
-        for (ProjectPass projectPass : projectPasses) {
-            projectPass.pass(skidSession);
-        }
+
 
         final List<ClassNode> nodeList = Streams.stream(skidSession.getClassSource().iterate())
                 .parallel()
@@ -181,10 +178,11 @@ public class SkidMethodRenderer {
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
         final FlowPass[] flowPasses = new FlowPass[]{
-                //new NumberMutatorPass(),
+                new NumberMutatorPass(),
                 new SwitchMutatorPass(),
+                //new FakeTryCatchFlowPass(),
                 //new ConditionV2MutatorPass(),
-                //new ConditionMutatorPass(),
+                new ConditionMutatorPass(),
                 new FakeExceptionJumpFlowPass(),
                 new FakeJumpFlowPass(),
                 new SeedFlowPass(),
@@ -222,6 +220,14 @@ public class SkidMethodRenderer {
                     + "]");
         }
 
+        logger.log("[*] Passing fun passes...");
+        for (ProjectPass projectPass : projectPasses) {
+            projectPass.pass(skidSession);
+            logger.log("     [@G3#flow] Finished running "
+                    + projectPass.getName()
+                    + " [Changed: " + skidSession.popCount()
+                    + "]");
+        }
 
         logger.log("[*] Linearizing GEN3...");
 
