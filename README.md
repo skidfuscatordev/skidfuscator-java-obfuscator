@@ -8,7 +8,7 @@
   <a><img alt="Forks" src="https://img.shields.io/github/forks/terminalsin/skidfuscator-java-obfuscator"></a>
   <a><img alt="Stars" src="https://img.shields.io/github/stars/terminalsin/skidfuscator-java-obfuscator"></a>
   
-  <h3 align="center">Join the discord: https://discord.gg/qSEYBmdU</h3>
+  <h3 align="center">Join the discord: https://discord.gg/QJC9g8fBU9</h3>
 </p>
 
 
@@ -49,9 +49,9 @@ to date:
 - [x] Fake Jump GEN3 Obfuscation
 - [x] Switch Mangling GEN3 Obfuscation
 - [ ] Loop Mangling GEN3 Obfuscation
-- [ ] Arithmetic Obfuscation GEN3 Obfuscation
+- [x] Arithmetic Obfuscation GEN3 Obfuscation
 - [ ] Exception Mangling GEN3 Obfuscation
-- [ ] Condition Mangling GEN3 Obfuscation
+- [x] Condition Mangling GEN3 Obfuscation
 
 ### **NEW** Switch Mutation
 ![Graph](https://i.imgur.com/yPjFC8k.png)
@@ -67,6 +67,7 @@ to date:
 ## Libraries used
 - [Maple IR and the Team](https://github.com/LLVM-but-worse/maple-ir)
 - [ASM](https://gitlab.ow2.org/asm/asm)
+- [AntiDumper by Sim0n](https://github.com/sim0n/anti-java-agent/)
 
 ## Inspired from
 - [Soot](https://github.com/soot-oss/soot)
