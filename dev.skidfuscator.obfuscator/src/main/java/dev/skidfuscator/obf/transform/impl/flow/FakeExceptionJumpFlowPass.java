@@ -66,7 +66,7 @@ public class FakeExceptionJumpFlowPass implements FlowPass {
                 final BasicBlock fuckup = Blocks.exception(cfg);
 
                 // Todo change blocks to be skiddedblocks to add method to directly add these
-                final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
+                final ConditionalJumpStmt jump_stmt = new ConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
                 final ConditionalJumpEdge<BasicBlock> jump_edge = new ConditionalJumpEdge<>(entry, fuckup, jump_stmt.getOpcode());
 
                 if (entry.get(entry.size() - 1) instanceof UnconditionalJumpStmt)

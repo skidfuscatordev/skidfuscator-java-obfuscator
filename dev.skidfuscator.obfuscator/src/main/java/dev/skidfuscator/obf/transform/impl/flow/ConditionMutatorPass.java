@@ -2,6 +2,7 @@ package dev.skidfuscator.obf.transform.impl.flow;
 
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.maple.FakeArithmeticExpr;
+import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
 import dev.skidfuscator.obf.number.NumberManager;
 import dev.skidfuscator.obf.number.hash.HashTransformer;
 import dev.skidfuscator.obf.number.hash.SkiddedHash;

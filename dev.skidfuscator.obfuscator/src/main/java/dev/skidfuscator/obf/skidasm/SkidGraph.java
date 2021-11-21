@@ -73,7 +73,6 @@ public class SkidGraph {
         // Phase 2
         linearize(cfg);
 
-        range(cfg, local);
         linkage(cfg, local);
 
         /*BasicBlock next = cfg.verticesInOrder().iterator().next();
@@ -165,11 +164,19 @@ public class SkidGraph {
             });
         }
 
+        range(cfg, local);
+
         for (BasicBlock entry : cfg.vertices()) {
             new HashSet<>(entry).forEach(e -> {
                 if (e instanceof UnconditionalJumpStmt) {
                     addSeedToUncJump(local, entry, (UnconditionalJumpStmt) e);
-                } else if (e instanceof ConditionalJumpStmt && !(e instanceof FakeConditionalJumpStmt)) {
+                }
+            });
+        }
+
+        for (BasicBlock entry : new HashSet<>(cfg.vertices())) {
+            new HashSet<>(entry).forEach(e -> {
+                if (e instanceof ConditionalJumpStmt && !(e instanceof FakeConditionalJumpStmt)) {
                     addSeedToCondJump(local, entry, (ConditionalJumpStmt) e);
                 }
             });
@@ -262,7 +269,7 @@ public class SkidGraph {
     private void addSeedToCondJump(final Local local, final BasicBlock block, final ConditionalJumpStmt stmt) {
         //  Todo    Add support for various different types of conditional jumps
         //          support such as block splitting and shit to mess with reversers
-        if (true) {
+        if (false) {
             final SkidBlock seededBlock = getBlock(block);
             final SkidBlock targetSeededBlock = getBlock(stmt.getTrueSuccessor());
 
@@ -286,7 +293,7 @@ public class SkidGraph {
         }
 
         final ConditionalJumpEdge<BasicBlock> edge = block.cfg.getEdges(block).stream()
-                .filter(e -> !(e instanceof ImmediateEdge))
+                .filter(e -> e instanceof ConditionalJumpEdge)
                 .map(e -> (ConditionalJumpEdge<BasicBlock>) e)
                 .filter(e -> e.dst().equals(stmt.getTrueSuccessor()))
                 .findFirst()
@@ -391,7 +398,7 @@ public class SkidGraph {
         // Haha get fucked
         // Todo     Fix the other shit to re-enable this; this is for the lil shits
         //          (love y'all tho) that are gonna try reversing this
-        for (int i = 0; i < 10; i++) {
+        /*for (int i = 0; i < 10; i++) {
             // Generate random seed + prevent conflict
             final int seed = RandomUtil.nextInt();
             if (sortedList.contains(seed))
@@ -412,7 +419,7 @@ public class SkidGraph {
 
             basicBlockMap.put(seed, block);
             cfg.addEdge(new SwitchEdge<>(handler.getBlock(), block, seed));
-        }
+        }*/
 
         // Hash
         final Expr hash = hashTransformer.hash(local);
