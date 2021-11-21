@@ -2,6 +2,7 @@ package dev.skidfuscator.obf;
 
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obf.init.SkidSession;
+import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
 import dev.skidfuscator.obf.skidasm.NoNoSkidMethod;
 import dev.skidfuscator.obf.skidasm.v2.SStorage;
 import dev.skidfuscator.obf.transform.impl.ProjectPass;
@@ -49,10 +50,7 @@ public class SkidMethodRenderer {
             projectPass.pass(skidSession);
         }
 
-        logger.log("[*] Passing fun passes...");
-        for (ProjectPass projectPass : projectPasses) {
-            projectPass.pass(skidSession);
-        }
+
 
         final List<ClassNode> nodeList = Streams.stream(skidSession.getClassSource().iterate())
                 .parallel()
@@ -180,11 +178,13 @@ public class SkidMethodRenderer {
         logger.log("[*] Finished initial seed of " + skidMethods.size() + " methods");
         logger.post("[*] Gen3 Flow... Beginning obfuscation...");
         final FlowPass[] flowPasses = new FlowPass[]{
-                //new NumberMutatorPass(),
-                //new SwitchMutatorPass(),
-                //new ConditionMutatorPass(),
-                //new FakeExceptionJumpFlowPass(),
-                //new FakeJumpFlowPass(),
+                new NumberMutatorPass(),
+                new SwitchMutatorPass(),
+                //new FakeTryCatchFlowPass(),
+                //new ConditionV2MutatorPass(),
+                new ConditionMutatorPass(),
+                new FakeExceptionJumpFlowPass(),
+                new FakeJumpFlowPass(),
                 new SeedFlowPass(),
         };
 
@@ -220,6 +220,14 @@ public class SkidMethodRenderer {
                     + "]");
         }
 
+        logger.log("[*] Passing fun passes...");
+        for (ProjectPass projectPass : projectPasses) {
+            projectPass.pass(skidSession);
+            logger.log("     [@G3#flow] Finished running "
+                    + projectPass.getName()
+                    + " [Changed: " + skidSession.popCount()
+                    + "]");
+        }
 
         logger.log("[*] Linearizing GEN3...");
 
