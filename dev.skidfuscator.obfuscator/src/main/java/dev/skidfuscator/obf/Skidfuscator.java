@@ -5,8 +5,12 @@ import dev.skidfuscator.obf.init.DefaultInitHandler;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
 import org.mapleir.deob.PassGroup;
+import org.mapleir.ir.code.expr.InstanceofExpr;
 
 import java.io.File;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * @author Ghast
@@ -48,6 +52,26 @@ public class Skidfuscator {
             if (args[1].equalsIgnoreCase("--antidump")) {
                 preventDump = true;
             }
+        }
+
+        final String[] logo = new String[] {
+                "",
+                "  /$$$$$$  /$$       /$$       /$$  /$$$$$$                                           /$$",
+                " /$$__  $$| $$      |__/      | $$ /$$__  $$                                         | $$",
+                "| $$  \\__/| $$   /$$ /$$  /$$$$$$$| $$  \\__//$$   /$$  /$$$$$$$  /$$$$$$$  /$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$",
+                "|  $$$$$$ | $$  /$$/| $$ /$$__  $$| $$$$   | $$  | $$ /$$_____/ /$$_____/ |____  $$|_  $$_/   /$$__  $$ /$$__  $$",
+                " \\____  $$| $$$$$$/ | $$| $$  | $$| $$_/   | $$  | $$|  $$$$$$ | $$        /$$$$$$$  | $$    | $$  \\ $$| $$  \\__/",
+                " /$$  \\ $$| $$_  $$ | $$| $$  | $$| $$     | $$  | $$ \\____  $$| $$       /$$__  $$  | $$ /$$| $$  | $$| $$",
+                "|  $$$$$$/| $$ \\  $$| $$|  $$$$$$$| $$     |  $$$$$$/ /$$$$$$$/|  $$$$$$$|  $$$$$$$  |  $$$$/|  $$$$$$/| $$",
+                " \\______/ |__/  \\__/|__/ \\_______/|__/      \\______/ |_______/  \\_______/ \\_______/   \\___/   \\______/ |__/",
+                "",
+                "                       Author: Ghast     Version: 1.0.4     Today: " + new Date(Instant.now().toEpochMilli()).toGMTString(),
+                "",
+                ""
+        };
+
+        for (String s : logo) {
+            System.out.println(s);
         }
 
         final SkiddedDirectory directory = new SkiddedDirectory(null);
