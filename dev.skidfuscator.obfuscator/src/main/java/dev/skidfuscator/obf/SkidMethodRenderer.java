@@ -232,7 +232,7 @@ public class SkidMethodRenderer {
         logger.log("[*] Linearizing GEN3...");
 
         try (ProgressBar progressBar = ProgressUtil.progress(skidMethods.size())) {
-            skidMethods.parallelStream().forEach(e -> {
+            new LinkedList<>(skidMethods).forEach(e -> {
                 e.getMethodNodes().forEach(methodNode -> {
                     if (methodNode.getNode().isAbstract())
                         return;

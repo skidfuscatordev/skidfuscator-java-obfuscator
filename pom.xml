@@ -10,6 +10,7 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>dev.skidfuscator.obfuscator</module>
+        <module>dev.skidfuscator.discord-bot</module>
     </modules>
 
     <properties>
