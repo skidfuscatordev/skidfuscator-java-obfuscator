@@ -74,16 +74,24 @@ public class Skidfuscator {
             System.out.println(s);
         }
 
+
+        final File file = new File(args[0]);
+        start(file);
+    }
+
+    public static File start(final File file) {
         final SkiddedDirectory directory = new SkiddedDirectory(null);
         directory.init();
-        final File file = new File(args[0]);
 
-        final SkidSession session = new DefaultInitHandler().init(file, new File(file.getPath() + "-out.jar"));
+        final File out = new File(file.getPath() + "-out.jar");
+        final SkidSession session = new DefaultInitHandler().init(file, out);
         try {
             MapleJarUtil.dumpJar(session.getClassSource(), session.getJarDownloader(), new PassGroup("Output"),
                     session.getOutputFile().getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return out;
     }
 }
