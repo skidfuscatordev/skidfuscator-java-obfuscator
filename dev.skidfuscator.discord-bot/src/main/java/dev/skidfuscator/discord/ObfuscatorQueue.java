@@ -2,13 +2,12 @@ package dev.skidfuscator.discord;
 
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class ObfuscatorQueue extends LinkedBlockingQueue<ObfuscatorRequest> {
     private final Consumer<ObfuscatorRequest> poller;
+    private final ExecutorService service = Executors.newSingleThreadExecutor();
 
     public ObfuscatorQueue(Consumer<ObfuscatorRequest> poller) {
         this.poller = poller;
@@ -25,13 +24,13 @@ public class ObfuscatorQueue extends LinkedBlockingQueue<ObfuscatorRequest> {
     }
 
     private void kewl(final ObfuscatorRequest obfuscatorRequest) {
-        CompletableFuture.runAsync(() -> {
+        service.execute(() -> {
             try {
                 poller.accept(obfuscatorRequest);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-            super.remove(obfuscatorRequest);
+            remove(obfuscatorRequest);
 
             if (!isEmpty()) {
                 kewl(peek());

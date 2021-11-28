@@ -10,6 +10,9 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.guild.GuildAvailableEvent;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -41,12 +44,21 @@ public class DiscordBot {
         builder.disableCache(CacheFlag.MEMBER_OVERRIDES, CacheFlag.VOICE_STATE);
         // Enable the bulk delete event
         builder.setBulkDeleteSplittingEnabled(false);
-
         // Set activity (like "playing Something")
         builder.setActivity(Activity.watching("Skids like you"));
 
         JDA jda = builder.build();
 
+        update(jda);
+
+        jda.addEventListener(new EventListener() {
+            @Override
+            public void onEvent(@NotNull GenericEvent event) {
+                if (event instanceof GuildJoinEvent || event instanceof GuildAvailableEvent || event instanceof GuildReadyEvent) {
+                    update(jda);
+                }
+            }
+        });
         jda.addEventListener(new EventListener() {
             private final ObfuscatorQueue obfuscatorRequests = new ObfuscatorQueue(new Consumer<ObfuscatorRequest>() {
                 @lombok.SneakyThrows
@@ -127,8 +139,7 @@ public class DiscordBot {
                             )).setColor(Color.ORANGE).build()).build()).queue();
 
                     final List<String> logs = new EvictingArrayList<>(16);
-
-                    LogManager.getRootLogger().addAppender(new AsyncAppender() {
+                    final Appender appender = new AsyncAppender() {
                         private long lastAppend;
 
                         @Override
@@ -165,9 +176,38 @@ public class DiscordBot {
 
                             request.getMessage().editMessage(new MessageBuilder().setEmbeds(embedBuilder.build()).build()).queue();
                         }
-                    });
+                    };
+                    LogManager.getRootLogger().addAppender(appender);
 
-                    final File file = Skidfuscator.start(temp);
+                    final File file;
+                    try {
+                        file = Skidfuscator.start(temp);
+                    } catch (Throwable e) {
+                        LogManager.getRootLogger().fatal("Failed to obfuscate", e);
+                        final StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append("```");
+
+                        for (String log : logs) {
+                            stringBuilder.append(log).append("\n");
+                        }
+
+                        stringBuilder.append("```");
+
+                        request.getMessage().editMessage(new MessageBuilder().setEmbeds(new EmbedBuilder()
+                                .addField(new MessageEmbed.Field(
+                                        ":thumbsdown: Failed to validate",
+                                        "Your jar failed to be validated by Skidfuscator!"
+                                                + " \nPlease try again!",
+                                        false,
+                                        true
+                                ))
+                                .addField(new MessageEmbed.Field(":computer: Console", stringBuilder.toString(), false, true))
+                                .setColor(Color.RED).build()).build()).queue();
+                        temp.delete();
+                        LogManager.getRootLogger().removeAppender(appender);
+                        return;
+                    }
+
                     temp.delete();
 
                     request.getMessage().editMessage(new MessageBuilder().setEmbeds(new EmbedBuilder()
@@ -190,6 +230,8 @@ public class DiscordBot {
                                     file.delete();
                                 }
                             });
+
+                    LogManager.getRootLogger().removeAppender(appender);
                 }
             });
 
@@ -258,5 +300,9 @@ public class DiscordBot {
                 }
             }
         });
+    }
+
+    private static void update(final JDA jda) {
+        jda.getPresence().setActivity(Activity.watching(jda.getGuilds().size() + " skids like you"));
     }
 }
