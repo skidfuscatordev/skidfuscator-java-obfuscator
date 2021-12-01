@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.managers.ChannelManager;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -30,13 +31,18 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.CodeSource;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class DiscordBot {
+
+    private static final ExecutorService service = Executors.newSingleThreadExecutor();
+
     public static void main(String[] args) throws LoginException {
         JDABuilder builder = JDABuilder.createDefault(args[0]);
 
@@ -73,7 +79,9 @@ public class DiscordBot {
                                     true
                             )).setColor(Color.ORANGE).build()).build()).queue();
 
-                    final File temp = File.createTempFile("skidfuscator", Math.random() + "-abc.jar");
+                    final CodeSource codeSource = DiscordBot.class.getProtectionDomain().getCodeSource();
+                    final File jarFile = new File(codeSource.getLocation().toURI().getPath());
+                    final File temp = File.createTempFile("skidfuscator", Math.random() + "-abc.jar", jarFile.getParentFile());
 
                     InputStream stream = null;
                     try {
@@ -180,8 +188,24 @@ public class DiscordBot {
                     LogManager.getRootLogger().addAppender(appender);
 
                     final File file;
+                    final Future<File> fileFuture = service.submit(() -> Skidfuscator.start(temp));
                     try {
-                        file = Skidfuscator.start(temp);
+                        file = fileFuture.get(60, TimeUnit.SECONDS);
+                    } catch (TimeoutException e) {
+                        LogManager.getRootLogger().fatal("Failed to obfuscate", e);
+                        fileFuture.cancel(true);
+                        request.getMessage().editMessage(new MessageBuilder().setEmbeds(new EmbedBuilder()
+                                .addField(new MessageEmbed.Field(
+                                        ":thumbsdown: Failed to obfuscate",
+                                        "Skidfuscator has timed out!"
+                                                + " \nPlease try again!",
+                                        false,
+                                        true
+                                ))
+                                .setColor(Color.RED).build()).build()).queue();
+                        temp.delete();
+                        LogManager.getRootLogger().removeAppender(appender);
+                        return;
                     } catch (Throwable e) {
                         LogManager.getRootLogger().fatal("Failed to obfuscate", e);
                         final StringBuilder stringBuilder = new StringBuilder();
@@ -195,7 +219,7 @@ public class DiscordBot {
 
                         request.getMessage().editMessage(new MessageBuilder().setEmbeds(new EmbedBuilder()
                                 .addField(new MessageEmbed.Field(
-                                        ":thumbsdown: Failed to validate",
+                                        ":thumbsdown: Failed to obfuscate",
                                         "Your jar failed to be validated by Skidfuscator!"
                                                 + " \nPlease try again!",
                                         false,
@@ -218,6 +242,12 @@ public class DiscordBot {
                                     false,
                                     true
                             )).setColor(Color.GREEN).build()).build()).queue();
+
+                    // Official skidfuscator guild channel thing
+                    final ChannelManager manager = jda.getGuildChannelById(914359072726343701L).getManager();
+
+                    final int old = Integer.parseInt(manager.getChannel().getName().split(" ")[0]) + 1;
+                    manager.setName(old + " files obfuscated").queue();
 
                     request.getMessage().getChannel().sendMessage(new MessageBuilder().mention(request.getUser())
                                     .appendCodeBlock(request.getName(), "bash")
