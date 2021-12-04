@@ -12,6 +12,8 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.algorithms.BoissinotDestructor;
 import org.mapleir.ir.algorithms.LocalsReallocator;
+import org.mapleir.ir.algorithms.SreedharDestructor;
+import org.mapleir.ir.algorithms.TrollDestructor;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.codegen.ControlFlowGraphDumper;
 import org.topdank.byteio.in.SingleJarDownloader;
@@ -62,7 +64,7 @@ public class DefaultInitHandler implements InitHandler {
             }
 
 
-            BoissinotDestructor.leaveSSA(cfg);
+            SreedharDestructor.leaveSSA(cfg);
             LocalsReallocator.realloc(cfg);
 
             try {

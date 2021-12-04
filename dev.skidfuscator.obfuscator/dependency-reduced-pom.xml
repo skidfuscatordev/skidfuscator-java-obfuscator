@@ -46,6 +46,28 @@
       <version>1.18.16</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>1.33</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>jopt-simple</artifactId>
+          <groupId>net.sf.jopt-simple</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-math3</artifactId>
+          <groupId>org.apache.commons</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <version>1.33</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <properties>
     <java.version>1.8</java.version>
