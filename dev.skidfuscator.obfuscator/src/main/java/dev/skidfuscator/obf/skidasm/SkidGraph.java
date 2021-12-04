@@ -99,7 +99,7 @@ public class SkidGraph {
             next = immediate;
         }*/
 
-        for (BasicBlock vertex : cfg.vertices()) {
+        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
             if (vertex instanceof FakeBlock)
                 continue;
 
