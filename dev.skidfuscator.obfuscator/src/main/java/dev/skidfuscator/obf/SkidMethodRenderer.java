@@ -50,8 +50,6 @@ public class SkidMethodRenderer {
             projectPass.pass(skidSession);
         }
 
-
-
         final List<ClassNode> nodeList = Streams.stream(skidSession.getClassSource().iterate())
                 .parallel()
                 .filter(e -> skidSession.getClassSource().isApplicationClass(e.getName()))
@@ -83,7 +81,7 @@ public class SkidMethodRenderer {
                         method = skidMethodMap.get(node);
                         break;
                     }
-                    if (node.node.instructions.size() > 6000) {
+                    if (node.node.instructions.size() > 3000) {
                         bar.step();
 
                         for (MethodNode methodNode1 : hierarchy) {

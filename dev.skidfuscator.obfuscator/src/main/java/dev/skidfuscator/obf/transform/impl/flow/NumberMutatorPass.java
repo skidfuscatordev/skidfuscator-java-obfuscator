@@ -30,6 +30,9 @@ public class NumberMutatorPass implements FlowPass {
             if (methodNode.getNode().isAbstract() || methodNode.isInit())
                 continue;
 
+            if (methodNode.getNode().node.instructions.size() > 10000)
+                continue;
+
             final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode.getNode());
 
             if (cfg == null)

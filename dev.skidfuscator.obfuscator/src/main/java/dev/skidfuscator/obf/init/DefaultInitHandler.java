@@ -53,7 +53,6 @@ public class DefaultInitHandler implements InitHandler {
 
         System.out.println("Evaluating classes...");
 
-
         for(Map.Entry<MethodNode, ControlFlowGraph> e : session.getCxt().getIRCache().entrySet()) {
             MethodNode mn = e.getKey();
             ControlFlowGraph cfg = e.getValue();
@@ -62,17 +61,6 @@ public class DefaultInitHandler implements InitHandler {
             } catch (Exception ex){
                 ex.printStackTrace();
             }
-
-
-            SreedharDestructor.leaveSSA(cfg);
-            LocalsReallocator.realloc(cfg);
-
-            try {
-                cfg.verify();
-            } catch (Exception ex){
-                ex.printStackTrace();
-            }
-
         }
 
         final EntryPoint entryPoint = new MapleEntryPoint();

@@ -44,6 +44,9 @@ public class FakeTryCatchFlowPass implements FlowPass {
             if (methodNode.getNode().isAbstract())
                 continue;
 
+            if (methodNode.getNode().node.instructions.size() > 10000)
+                continue;
+
             final ControlFlowGraph cfg = session.getCxt().getIRCache().get(methodNode.getNode());
 
             if (cfg == null)

@@ -1,6 +1,7 @@
 package dev.skidfuscator.obf.init;
 
 import com.google.common.collect.Streams;
+import dev.skidfuscator.obf.creator.SkidCache;
 import dev.skidfuscator.obf.utils.Counter;
 import dev.skidfuscator.obf.yggdrasil.method.DefaultMethodInvokerResolver;
 import dev.skidfuscator.obf.yggdrasil.method.MethodInvokerResolver;
@@ -53,7 +54,7 @@ public class SkidSession {
         this.classSource = classSource;
         this.jarDownloader = jarDownloader;
         this.outputFile = outputFile;
-        this.irFactory = new IRCache(ControlFlowGraphBuilder::build);
+        this.irFactory = new SkidCache();
         this.cxt = new BasicAnalysisContext.BasicContextBuilder()
                 .setApplication(classSource)
                 .setInvocationResolver(new DefaultInvocationResolver(classSource))

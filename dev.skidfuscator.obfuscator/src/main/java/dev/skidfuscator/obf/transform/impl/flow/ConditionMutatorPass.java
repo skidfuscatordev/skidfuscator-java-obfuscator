@@ -47,6 +47,9 @@ public class ConditionMutatorPass implements FlowPass {
                 if (parent.size() == 0)
                     continue;
 
+                if (methodNode.getNode().node.instructions.size() > 10000)
+                    continue;
+
                 final Stmt stmt = parent.get(parent.size() - 1);
 
                 if (!(stmt instanceof ConditionalJumpStmt)) {
