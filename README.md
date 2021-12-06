@@ -1,13 +1,12 @@
 <p align="center">
-  <img width="50%" height="50%" src="https://i.imgur.com/KzXiF67.png">
+  <img width="70%" height="70%" src="https://i.imgur.com/kY8ilvC.gif">
   <br>
   <a><img alt="Server Version" src="https://img.shields.io/badge/Server%20Version-J8%20J16-blue"></a>
   <a><img alt="Api Type" src="https://img.shields.io/badge/API-MapleIR-blue"></a>
   <a><img alt="Authors" src="https://img.shields.io/badge/Authors-Ghast-blue"></a>
   <a><img alt="Issues" src="https://img.shields.io/github/issues/terminalsin/skidfuscator-java-obfuscator"></a>
   <a><img alt="Forks" src="https://img.shields.io/github/forks/terminalsin/skidfuscator-java-obfuscator"></a>
-  <a><img alt="Stars" src="https://img.shields.io/github/stars/terminalsin/skidfuscator-java-obfuscator"></a>
-  
+  <a><img alt="Stars" src="https://img.shields.io/github/stars/terminalsin/skidfuscator-java-obfuscator"></a> 
   <h3 align="center">Join the discord: https://discord.gg/QJC9g8fBU9</h3>
 </p>
 
