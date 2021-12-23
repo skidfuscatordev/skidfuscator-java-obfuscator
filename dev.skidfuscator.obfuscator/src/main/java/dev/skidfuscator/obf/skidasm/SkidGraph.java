@@ -1,5 +1,9 @@
 package dev.skidfuscator.obf.skidasm;
 
+import dev.skidfuscator.obf.attribute.Attributable;
+import dev.skidfuscator.obf.attribute.Attribute;
+import dev.skidfuscator.obf.attribute.AttributeKey;
+import dev.skidfuscator.obf.attribute.AttributeMap;
 import dev.skidfuscator.obf.maple.FakeBlock;
 import dev.skidfuscator.obf.maple.FakeConditionalJumpEdge;
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
@@ -31,7 +35,7 @@ import org.objectweb.asm.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SkidGraph {
+public class SkidGraph implements Attributable {
     @Getter
     private final MethodNode node;
     private final SkidMethod method;
@@ -40,6 +44,7 @@ public class SkidGraph {
     @Getter
     private Local local;
     private final Map<BasicBlock, SkidBlock> cache = new HashMap<>();
+    private final AttributeMap attributeMap = new AttributeMap();
 
     public static final boolean DEBUG = false;
 
@@ -461,5 +466,20 @@ public class SkidGraph {
 
     public boolean isInit() {
         return node.node.name.equals("<init>");
+    }
+
+    @Override
+    public <T> Attribute<T> getAttribute(AttributeKey attributeKey) {
+        return (Attribute<T>) attributeMap.get(attributeKey);
+    }
+
+    @Override
+    public <T> void addAttribute(AttributeKey key, Attribute<T> attribute) {
+        attributeMap.put(key, (Attribute<Object>) attribute);
+    }
+
+    @Override
+    public <T> void removeAttribute(AttributeKey attributeKey) {
+        attributeMap.remove(attributeKey);
     }
 }

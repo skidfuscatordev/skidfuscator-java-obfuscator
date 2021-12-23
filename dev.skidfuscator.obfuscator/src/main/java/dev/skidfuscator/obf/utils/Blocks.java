@@ -6,9 +6,12 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.AllocObjectExpr;
+import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.expr.invoke.InitialisedObjectExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
+import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import org.mapleir.ir.code.stmt.PopStmt;
 import org.mapleir.ir.code.stmt.ThrowStmt;
@@ -58,7 +61,7 @@ public class Blocks {
         } else {
             init_alloc = new VirtualInvocationExpr(
                     InvocationExpr.CallType.SPECIAL,
-                    new Expr[]{fuck, new ConstantExpr(notice)},
+                    new Expr[]{fuck, bruteforceInterpolation(new ConstantExpr(notice))},
                     exception.getClassName().replace(".", "/"),
                     "<init>",
                     "(Ljava/lang/String;)V"
@@ -75,5 +78,72 @@ public class Blocks {
         cfg.addVertex(fuckup);
 
         return fuckup;
+    }
+
+    public Expr bruteforceInterpolation(final Expr string) {
+        final int random = RandomUtil.nextInt(35);
+
+        Expr start = randomDouble();
+
+        for (int i = 0; i < random; i++) {
+            switch (RandomUtil.nextInt(5)) {
+                case 0: {
+                    start = new ArithmeticExpr(start, randomDouble(), ArithmeticExpr.Operator.ADD);
+                    break;
+                }
+                case 1: {
+                    start = new ArithmeticExpr(start, randomDouble(), ArithmeticExpr.Operator.SUB);
+                    break;
+                }
+                case 2: {
+                    start = new ArithmeticExpr(start, randomDouble(), ArithmeticExpr.Operator.MUL);
+                    break;
+                }
+                case 3: {
+                    start = new ArithmeticExpr(start, randomDouble(), ArithmeticExpr.Operator.DIV);
+                    break;
+                }
+                case 4: {
+                    start = new ArithmeticExpr(start, randomDouble(), ArithmeticExpr.Operator.REM);
+                    break;
+                }
+            }
+        }
+
+        final Expr doubleToString = new StaticInvocationExpr(
+                new Expr[]{start},
+                "java/lang/Double",
+                "toString",
+                "(D)Ljava/lang/String;"
+        );
+
+
+        final Expr stringBuilder = new InitialisedObjectExpr("java/lang/StringBuilder", "()V", new Expr[0]);
+        final Expr append = new VirtualInvocationExpr(
+                InvocationExpr.CallType.VIRTUAL, new Expr[]{stringBuilder, string},
+                "java/lang/StringBuilder",
+                "append",
+                "(Ljava/lang/String;)Ljava/lang/StringBuilder;"
+        );
+
+        final Expr append2 = new VirtualInvocationExpr(
+                InvocationExpr.CallType.VIRTUAL, new Expr[]{append, doubleToString},
+                "java/lang/StringBuilder",
+                "append",
+                "(Ljava/lang/String;)Ljava/lang/StringBuilder;"
+        );
+
+        final Expr toString = new VirtualInvocationExpr(
+                InvocationExpr.CallType.VIRTUAL, new Expr[]{append2},
+                "java/lang/StringBuilder",
+                "toString",
+                "()Ljava/lang/String;"
+        );
+
+        return toString;
+    }
+
+    public Expr randomDouble() {
+        return new ConstantExpr(RandomUtil.nextDouble(Integer.MAX_VALUE), Type.DOUBLE_TYPE);
     }
 }

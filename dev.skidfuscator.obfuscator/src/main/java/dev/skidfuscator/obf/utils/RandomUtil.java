@@ -15,4 +15,8 @@ public class RandomUtil {
     public int nextInt(int bound) {
         return random.nextInt(bound);
     }
+
+    public double nextDouble(int bound) {
+        return nextInt(bound) + random.nextDouble();
+    }
 }

@@ -4,6 +4,7 @@ import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.maple.FakeConditionalJumpStmt;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.skidasm.SkidMethod;
+import dev.skidfuscator.obf.transform.Transformer;
 import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
 import dev.skidfuscator.obf.transform.type.SkidGraphTransformer;
 import dev.skidfuscator.obf.utils.Blocks;
@@ -34,6 +35,8 @@ import java.util.HashSet;
  * >> Space complexity (n = number of blocks)
  * C = O(1)
  */
+
+@Transformer("Fake Exception [Simple]")
 public class FakeExceptionFlowPass implements SkidGraphTransformer {
 
     @Override
@@ -53,7 +56,7 @@ public class FakeExceptionFlowPass implements SkidGraphTransformer {
             final ConstantExpr var_const = new ConstantExpr(graph.getBlock(entry).getSeed());
 
             // Todo add more boilerplates + add exception rotation
-            final BasicBlock fuckup = Blocks.exception(cfg);
+            final BasicBlock fuckup = Blocks.exception(cfg, "ay");
 
             // Todo change blocks to be skiddedblocks to add method to directly add these
             final FakeConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(var_load, var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);

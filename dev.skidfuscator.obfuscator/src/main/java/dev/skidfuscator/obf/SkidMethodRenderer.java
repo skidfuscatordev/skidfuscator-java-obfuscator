@@ -11,6 +11,7 @@ import dev.skidfuscator.obf.transform.impl.fixer.SwitchFixerPass;
 import dev.skidfuscator.obf.transform.impl.flow.*;
 import dev.skidfuscator.obf.transform.impl.kappa.AhegaoPass;
 import dev.skidfuscator.obf.transform.impl.kappa.SuperDuperAgentPass;
+import dev.skidfuscator.obf.transform.impl.string.SimpleXorCipher;
 import dev.skidfuscator.obf.utils.ProgressUtil;
 import dev.skidfuscator.obf.utils.TimedLogger;
 import dev.skidfuscator.obf.yggdrasil.caller.CallerType;
@@ -184,6 +185,7 @@ public class SkidMethodRenderer {
                 new FakeExceptionJumpFlowPass(),
                 new FakeJumpFlowPass(),
                 new SeedFlowPass(),
+                new SimpleXorCipher()
         };
 
         final FlowPass[] fixers = new FlowPass[]{
@@ -245,7 +247,7 @@ public class SkidMethodRenderer {
 
             logger.log("[*] Linearizing GEN3...");
 
-            skidMethods.parallelStream().forEach(e -> e.renderPublic(skidSession));
+            skidMethods.forEach(e -> e.renderPublic(skidSession));
             logger.log("[*] Finished Gen3 flow obfuscation");
 
         }
