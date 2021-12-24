@@ -46,7 +46,7 @@ We currently are working on a variety of ways to approach this system using vari
 to date:
 
 - [x] Fake Exception GEN3 Obfuscation
-- [ ] Block Mangling GEN3 Obfuscation
+- [x] Block Mangling GEN3 Obfuscation
 - [x] Fake Jump GEN3 Obfuscation
 - [x] Switch Mangling GEN3 Obfuscation
 - [ ] Loop Mangling GEN3 Obfuscation
