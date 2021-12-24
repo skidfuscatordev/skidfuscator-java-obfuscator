@@ -53,6 +53,7 @@ to date:
 - [x] Arithmetic Obfuscation GEN3 Obfuscation
 - [ ] Exception Mangling GEN3 Obfuscation
 - [x] Condition Mangling GEN3 Obfuscation
+- [x] String GEN3 Encryption
 
 ### ***NEW*** Number Mutation
 ![Graph](https://i.imgur.com/XjUFdRU.png)
