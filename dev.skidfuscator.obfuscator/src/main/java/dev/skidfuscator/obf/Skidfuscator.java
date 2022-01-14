@@ -65,7 +65,7 @@ public class Skidfuscator {
                 "|  $$$$$$/| $$ \\  $$| $$|  $$$$$$$| $$     |  $$$$$$/ /$$$$$$$/|  $$$$$$$|  $$$$$$$  |  $$$$/|  $$$$$$/| $$",
                 " \\______/ |__/  \\__/|__/ \\_______/|__/      \\______/ |_______/  \\_______/ \\_______/   \\___/   \\______/ |__/",
                 "",
-                "                       Author: Ghast     Version: 1.0.6     Today: " + new Date(Instant.now().toEpochMilli()).toGMTString(),
+                "                       Author: Ghast     Version: 1.0.8     Today: " + new Date(Instant.now().toEpochMilli()).toGMTString(),
                 "",
                 ""
         };

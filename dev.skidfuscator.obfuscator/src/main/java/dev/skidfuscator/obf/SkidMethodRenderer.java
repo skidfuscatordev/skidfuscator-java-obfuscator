@@ -39,7 +39,7 @@ public class SkidMethodRenderer {
     private final TimedLogger logger = new TimedLogger(LogManager.getLogger(this.getClass()));
 
     public void render(final SkidSession skidSession) {
-        logger.log("Beginning Skidfuscator 1.0.1...");
+        logger.log("Beginning Skidfuscator 1.0.8...");
 
         final ProjectPass[] projectPasses = new ProjectPass[]{
                 new AhegaoPass()
