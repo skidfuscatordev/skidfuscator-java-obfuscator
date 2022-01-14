@@ -97,7 +97,9 @@ public class SimpleXorCipher implements FlowPass {
 
                 session.count();
 
-                if (parentExpr instanceof InvocationExpr) {
+                parentExpr.overwrite(constantExpr, invocation);
+
+                /*if (parentExpr instanceof InvocationExpr) {
                     final InvocationExpr invocationExpr = ((InvocationExpr) parentExpr);
                     final int index = MiscUtils.indexOf(invocationExpr.getArgumentExprs(), constantExpr);
                     //constantExpr.unlink();
@@ -105,7 +107,7 @@ public class SimpleXorCipher implements FlowPass {
                 } else {
                     final int index = parentExpr.indexOf(constantExpr);
                     parentExpr.writeAt(invocation, index);
-                }
+                }*/
 
 
             }

@@ -13,6 +13,7 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
 import org.mapleir.ir.locals.impl.BasicLocal;
@@ -99,9 +100,10 @@ public class IntegerBasedSeed extends AbstractSeed<Integer> {
                  * Here we initialize the private seed as a root factor. This is the sensitive part of the application
                  * we'll have to rework it to add some protection
                  */
-                final ConstantExpr privateSeed = new ConstantExpr(this.privateSeed, Type.INT_TYPE);
+                final ConstantExpr privateSeed = new ConstantExpr(Integer.toString(this.privateSeed), Type.getType(String.class));
+                final StaticInvocationExpr statiz = new StaticInvocationExpr(new Expr[]{privateSeed}, "java/lang/Integer", "parseInt", "(Ljava/lang/String;)I");
                 final VarExpr privateSeedLoader = new VarExpr(local, Type.INT_TYPE);
-                final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, privateSeed);
+                final CopyVarStmt privateSeedSetter = new CopyVarStmt(privateSeedLoader, statiz);
                 cfg.getEntries().iterator().next().add(0, privateSeedSetter);
             }
         }

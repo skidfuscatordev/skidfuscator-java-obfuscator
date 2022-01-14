@@ -1,16 +1,18 @@
 package dev.skidfuscator.obf.transform.impl.fixer;
 
-import com.google.common.collect.Lists;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.skidasm.SkidGraph;
 import dev.skidfuscator.obf.skidasm.SkidMethod;
 import dev.skidfuscator.obf.transform.impl.flow.FlowPass;
+import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
+import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Type;
 
+import java.io.IOException;
 import java.util.*;
 
 public class ExceptionFixerPass implements FlowPass {
@@ -26,41 +28,38 @@ public class ExceptionFixerPass implements FlowPass {
                 if (range.getTypes().size() <= 1)
                     continue;
 
-                final Stack<ClassNode> stack = new Stack<>();
+                ClassNode superType = null;
                 for (Type type : range.getTypes()) {
-                    final ClassNode classNode = session.getCxt().getApplication().findClassNode(type.getClassName().replace(".", "/"));
+                    ClassNode classNode = session.getCxt()
+                            .getApplication()
+                            .findClassNode(type.getClassName());
 
                     if (classNode == null) {
-                        System.err.println("[fatal] Could not find exception of name " + type.getClassName().replace(".", "/") + "! Skipping...");
-                        continue;
+                        try {
+                            classNode = ClassHelper.create(type.getClassName());
+                        } catch (IOException e) {
+                            continue;
+                        }
                     }
 
-                    final List<ClassNode> classNodeList = session.getCxt().getApplication().getClassTree().getAllParents(classNode);
-
-                    if (stack.isEmpty()) {
-                        stack.add(classNode);
-                        stack.addAll(Lists.reverse(classNodeList));
+                    if (superType == null) {
+                        superType = classNode;
                     } else {
-                        final Stack<ClassNode> toIterate = new Stack<>();
-                        toIterate.add(classNode);
-                        toIterate.addAll(Lists.reverse(classNodeList));
-
-                        runner: {
-                            while (!stack.isEmpty()) {
-                                for (ClassNode node : toIterate) {
-                                    if (node.equals(stack.peek()))
-                                        break runner;
-                                }
-
-                                stack.pop();
-                            }
-
-                            throw new IllegalStateException("Could not find common exception type between " + Arrays.toString(range.getTypes().toArray()));
-                        }
+                        superType = session.getCxt()
+                                .getApplication()
+                                .getClassTree()
+                                .getCommonSuperType(superType.getName(), classNode.getName());
                     }
                 }
 
-                range.setTypes(new HashSet<>(Collections.singleton(Type.getObjectType(stack.peek().getName()))));
+                final Set<Type> types = new HashSet<>(Collections.singleton(
+                        superType == null
+                                ? TypeUtils.OBJECT_TYPE
+                                : Type.getObjectType(superType.getName())
+                ));
+                range.setTypes(types);
+
+                session.count();
             }
         }
     }
