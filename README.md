@@ -8,6 +8,7 @@
   <a><img alt="Forks" src="https://img.shields.io/github/forks/terminalsin/skidfuscator-java-obfuscator"></a>
   <a><img alt="Stars" src="https://img.shields.io/github/stars/terminalsin/skidfuscator-java-obfuscator"></a> 
   <h3 align="center">Join the discord: https://discord.gg/QJC9g8fBU9</h3>
+  <h3 align="center">https://skidfuscator.dev powered</h3>
 </p>
 
 
