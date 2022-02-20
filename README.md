@@ -56,19 +56,8 @@ to date:
 - [x] Condition Mangling GEN3 Obfuscation
 - [x] String GEN3 Encryption
 
-### ***NEW*** Number Mutation
-![Graph](https://i.imgur.com/XjUFdRU.png)
-
-### Switch Mutation
-![Graph](https://i.imgur.com/yPjFC8k.png)
-
-### Fake exceptions
-![Graph](https://i.imgur.com/bJcTNHm.png)
-
-### Fake jumps
-![Graph](https://i.imgur.com/780UIIc.png)
-
 # Credits
+![Alt](https://repobeats.axiom.co/api/embed/313a28936c13fdca6993eb5b506273fca0fa0f4e.svg "Repobeats analytics image")
 
 ## Libraries used
 - [Maple IR and the Team](https://github.com/LLVM-but-worse/maple-ir)
