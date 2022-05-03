@@ -97,7 +97,7 @@ public class SimpleXorCipher implements FlowPass {
 
                 session.count();
 
-                parentExpr.overwrite(constantExpr, invocation);
+                overwrite(parentExpr, constantExpr, invocation);
 
                 /*if (parentExpr instanceof InvocationExpr) {
                     final InvocationExpr invocationExpr = ((InvocationExpr) parentExpr);
@@ -112,10 +112,13 @@ public class SimpleXorCipher implements FlowPass {
 
             }
 
-
         }
     }
-
+    public void overwrite(CodeUnit codeUnit, Expr expr, Expr expr2) {
+        int n = codeUnit.indexOf(expr);
+        codeUnit.children[n] = expr2;
+        expr.setParent(null);
+    }
     @Override
     public String getName() {
         return "Xor String Encryption";

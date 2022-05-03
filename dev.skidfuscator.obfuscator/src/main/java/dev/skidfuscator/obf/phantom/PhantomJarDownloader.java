@@ -11,6 +11,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import ch.qos.logback.classic.Level;
+import dev.skidfuscator.obf.Skidfuscator;
 import dev.skidfuscator.obf.directory.SkiddedDirectory;
 import dev.skidfuscator.obf.utils.Files;
 import dev.skidfuscator.obf.utils.ProgressUtil;
@@ -72,18 +73,19 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 * Map holding all the regular data
 		 */
 		Map<String, byte[]> data = new HashMap<>();
-
 		/*
 		 * Add all the regular data to the map, add the resources to the jar contents, we won't
 		 * be needing them for now. Once that's done, cleate a new type map.
 		 */
+
 		while (entries.hasMoreElements()) {
 			JarEntry entry = entries.nextElement();
 			byte[] bytes = read(jarFile.getInputStream(entry));
-			if (entry.getName().endsWith(".class")) {
+			String name = entry.getName();
+			if (name.endsWith(".class") && !Skidfuscator.INSTANCE.matchesExclusion(name)) {
 				data.put(entry.getName(), bytes);
 			} else {
-				JarResource resource = new JarResource(entry.getName(), bytes);
+				JarResource resource = new JarResource(name, bytes);
 				contents.getResourceContents().add(resource);
 			}
 		}
