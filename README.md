@@ -77,13 +77,13 @@ Here are the features:
 
 
 ### Todo
-- [ ] (In progress) Converting block creation to a factory style to give us more leniency to play around with stmts and stuff without having to wrap em 
-- [ ] Convert method nodes and modasm to factory style too for that same reason
+- [x] Converting block creation to a factory style to give us more leniency to play around with stmts and stuff without having to wrap em 
+- [x] Convert method nodes and modasm to factory style too for that same reason
 - [ ] Create a proper util which allows for easy addition, editing and so and forth of the IR. For example, a proper util which can find edges. Perhaps also add a reference to the apropriate jump edge linked in the stmt and vice versa? For the util I envision doing something such as Build.new().Integer(<params>).create() or Build.new().IllegalStateException(<params>).create() or Build.invokevirtual(method).build() or Build.jump(target) or Build.if(<condition>).jump(<target>).build() or Build.if(<condition>).invokevirtual(method).store().build(). Depending on what we want it to return, we give it multiple choices, making it easier to create obfuscation and stuff
 - [ ] Begin implementation of LLVM compiler using the sorta-LLVM style stmt structure we got. We need to override them all and add a LLVM compile method to compile them to LLVM bytecode. Once that's done in the future we'll be able to create a website which runs that shit in LLVM-clang to cross compile on our backend, making it a smooth experience for customers
-- [ ] Add proper parameter obfuscation with a properly done seeding system. My idea is that seeds should vary in type instead of being consistent eg one seed will be passed as a double then will be transformed using it's hashcode and stuff.
-- [ ] Add a proper invocation resolver which caches everything pre-emptively. Make sure to make it support exclusions and stuff
-- [ ] Optimize MapleIR's class heredity construction. Pretty weak sauce rn
+- [x] Add proper parameter obfuscation with a properly done seeding system. My idea is that seeds should vary in type instead of being consistent eg one seed will be passed as a double then will be transformed using it's hashcode and stuff.
+- [x] Add a proper invocation resolver which caches everything pre-emptively. Make sure to make it support exclusions and stuff
+- [x] Optimize MapleIR's class heredity construction. Pretty weak sauce rn
 
 ## Examples
   
