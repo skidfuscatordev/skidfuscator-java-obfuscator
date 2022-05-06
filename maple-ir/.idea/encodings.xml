@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/org.mapleir.app-services/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.dot4j/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.flowgraph/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.ir.printer/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.ir/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.main/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.main/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.modasm/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.property-framework/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.service-framework.api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.service-framework.impl/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.service-util/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.stdlib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/org.mapleir.topdank-services/src/main/java" charset="UTF-8" />
+  </component>
+</project>

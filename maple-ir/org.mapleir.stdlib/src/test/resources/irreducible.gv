@@ -1,0 +1,9 @@
+digraph {
+   1 -> 2
+   1 -> 3
+   2 -> 3
+   3 -> 2
+
+   {rank=source; 1;}
+   {rank=same; 2;3;}
+}

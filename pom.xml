@@ -4,22 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>dev.skidfuscator.obf</groupId>
-    <artifactId>SkidfuscatorV2</artifactId>
+    <groupId>dev.skidfuscator</groupId>
+    <artifactId>skidfuscator-enterprise</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
-    <modules>
-        <module>dev.skidfuscator.obfuscator</module>
-        <module>dev.skidfuscator.discord-bot</module>
-    </modules>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Skidfuscator-parent</name>
 
     <properties>
-        <java.version>1.8</java.version>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
     </properties>
 
-
+    <modules>
+        <module>maple-ir</module>
+        <module>obfuscator</module>
+    </modules>
 
 </project>

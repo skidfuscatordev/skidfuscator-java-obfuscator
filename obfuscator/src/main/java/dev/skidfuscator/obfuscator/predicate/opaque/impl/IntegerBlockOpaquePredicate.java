@@ -1,0 +1,56 @@
+package dev.skidfuscator.obfuscator.predicate.opaque.impl;
+
+import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
+import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowSetter;
+import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
+import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.transform.Transformer;
+import dev.skidfuscator.obfuscator.util.RandomUtil;
+import org.mapleir.ir.cfg.BasicBlock;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class IntegerBlockOpaquePredicate implements BlockOpaquePredicate {
+    private final Map<BasicBlock, Integer> predicateMap;
+    private PredicateFlowGetter getter;
+    private PredicateFlowSetter setter;
+
+    public IntegerBlockOpaquePredicate(PredicateFlowGetter getter) {
+        this.predicateMap = new HashMap<>();
+        this.getter = getter;
+    }
+
+    public IntegerBlockOpaquePredicate() {
+        this(null);
+    }
+
+    @Override
+    public PredicateFlowGetter getGetter() {
+        return getter;
+    }
+
+    @Override
+    public void setGetter(PredicateFlowGetter getter) {
+        this.getter = getter;
+    }
+
+    @Override
+    public PredicateFlowSetter getSetter() {
+        return setter;
+    }
+
+    @Override
+    public void setSetter(PredicateFlowSetter setter) {
+        this.setter = setter;
+    }
+
+    @Override
+    public int get(SkidBlock block) {
+        return predicateMap.computeIfAbsent(block, e -> RandomUtil.nextInt());
+    }
+
+}

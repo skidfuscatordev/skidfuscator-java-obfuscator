@@ -1,0 +1,15 @@
+* text=auto
+
+# Convert these line endings on checkout
+*.java text
+*.html text
+*.xml text
+*.MF text
+*.txt text
+*.md text
+
+*.png binary
+*.jpg binary
+*.jar binary
+*.pdf binary
+*.class binary
