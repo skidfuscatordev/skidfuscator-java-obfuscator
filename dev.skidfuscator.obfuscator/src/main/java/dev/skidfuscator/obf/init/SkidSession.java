@@ -1,7 +1,9 @@
 package dev.skidfuscator.obf.init;
 
 import com.google.common.collect.Streams;
+import dev.skidfuscator.obf.SkidInstance;
 import dev.skidfuscator.obf.creator.SkidCache;
+import dev.skidfuscator.obf.exclusion.ExclusionManager;
 import dev.skidfuscator.obf.utils.Counter;
 import dev.skidfuscator.obf.yggdrasil.method.DefaultMethodInvokerResolver;
 import dev.skidfuscator.obf.yggdrasil.method.MethodInvokerResolver;
@@ -41,6 +43,7 @@ public class SkidSession {
     private final AbstractJarDownloader<ClassNode> jarDownloader;
     private final IRCache irFactory;
     private final AnalysisContext cxt;
+    private final ExclusionManager exclusion;
     //private final MethodInvokerResolver methodInvokerResolver;
 
     private final File outputFile;
@@ -50,11 +53,16 @@ public class SkidSession {
 
     private final Counter counter = new Counter();
 
-    public SkidSession(ApplicationClassSource classSource, AbstractJarDownloader<ClassNode> jarDownloader, File outputFile) {
+    public SkidSession(SkidInstance instance, ApplicationClassSource classSource, AbstractJarDownloader<ClassNode> jarDownloader, File outputFile) {
         this.classSource = classSource;
         this.jarDownloader = jarDownloader;
         this.outputFile = outputFile;
         this.irFactory = new SkidCache();
+        this.exclusion = new ExclusionManager();
+        for (String exclusion : instance.getExclusions()) {
+            this.exclusion.add(exclusion);
+        }
+
         this.cxt = new BasicAnalysisContext.BasicContextBuilder()
                 .setApplication(classSource)
                 .setInvocationResolver(new DefaultInvocationResolver(classSource))
@@ -95,5 +103,13 @@ public class SkidSession {
         final int count = counter.get();
         counter.reset();
         return count;
+    }
+
+    public boolean isExcluded(final ClassNode node) {
+        return exclusion.check(node);
+    }
+
+    public boolean isExcluded(final MethodNode node) {
+        return exclusion.check(node);
     }
 }

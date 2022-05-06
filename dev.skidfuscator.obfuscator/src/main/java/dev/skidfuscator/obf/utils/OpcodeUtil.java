@@ -1,6 +1,8 @@
 package dev.skidfuscator.obf.utils;
 
 import lombok.experimental.UtilityClass;
+import org.mapleir.asm.ClassNode;
+import org.mapleir.asm.FieldNode;
 import org.mapleir.asm.MethodNode;
 import org.objectweb.asm.Opcodes;
 
@@ -42,6 +44,46 @@ public class OpcodeUtil {
 
     public boolean isStatic(final MethodNode methodNode) {
         return (methodNode.node.access & Opcodes.ACC_STATIC) != 0;
+    }
+
+    public boolean isStatic(final FieldNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_STATIC) != 0;
+    }
+
+    public boolean isPublic(final MethodNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PUBLIC) != 0;
+    }
+
+    public boolean isPublic(final ClassNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PUBLIC) != 0;
+    }
+
+    public boolean isPublic(final FieldNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PUBLIC) != 0;
+    }
+
+    public boolean isProtected(final MethodNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PROTECTED) != 0;
+    }
+
+    public boolean isProtected(final FieldNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PROTECTED) != 0;
+    }
+
+    public boolean isProtected(final ClassNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PROTECTED) != 0;
+    }
+
+    public boolean isPrivate(final MethodNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PRIVATE) != 0;
+    }
+
+    public boolean isPrivate(final ClassNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PRIVATE) != 0;
+    }
+
+    public boolean isPrivate(final FieldNode methodNode) {
+        return (methodNode.node.access & Opcodes.ACC_PRIVATE) != 0;
     }
 
     public boolean isSynthetic(final MethodNode methodNode) {

@@ -56,6 +56,21 @@ public class SkidMethodRenderer {
                 .filter(e -> skidSession.getClassSource().isApplicationClass(e.getName()))
                 .collect(Collectors.toList());
 
+        for (ClassNode classNode : nodeList) {
+            if (skidSession.isExcluded(classNode)) {
+                for (MethodNode methodNode : classNode.getMethods()) {
+                    final Set<MethodNode> hierarchy = skidSession.getCxt().getInvocationResolver()
+                            .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
+
+                    hierarchy.add(methodNode);
+
+                    for (MethodNode methodNode1 : hierarchy) {
+                        skidMethodMap.put(methodNode1, new NoNoSkidMethod());
+                    }
+                }
+            }
+        }
+
         nodeList.parallelStream().forEach(e -> methodNodes.addAll(e.getMethods()));
         logger.log("Finished initial load");
         storage.cache(skidSession);
@@ -82,7 +97,9 @@ public class SkidMethodRenderer {
                         method = skidMethodMap.get(node);
                         break;
                     }
-                    if (node.node.instructions.size() > 3000) {
+                    if (node.node.instructions.size() > 10000
+                            || skidSession.isExcluded(node)
+                            || skidSession.isExcluded(node.owner)) {
                         bar.step();
 
                         for (MethodNode methodNode1 : hierarchy) {

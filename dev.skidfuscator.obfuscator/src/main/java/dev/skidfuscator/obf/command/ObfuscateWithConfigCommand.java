@@ -1,58 +1,42 @@
-package dev.skidfuscator.obf;
+package dev.skidfuscator.obf.command;
 
+import dev.skidfuscator.obf.SkidConfig;
+import dev.skidfuscator.obf.SkidInstance;
 import dev.skidfuscator.obf.directory.SkiddedDirectory;
 import dev.skidfuscator.obf.init.DefaultInitHandler;
 import dev.skidfuscator.obf.init.SkidSession;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
+import org.bovinegenius.kurgan.ConfigLoader;
 import org.mapleir.deob.PassGroup;
-import org.mapleir.ir.code.expr.InstanceofExpr;
+import picocli.CommandLine;
 
 import java.io.File;
 import java.time.Instant;
-import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.concurrent.Callable;
 
 /**
  * @author Ghast
- * @since 21/01/2021
+ * @since 06/03/2021
  * SkidfuscatorV2 © 2021
  */
-public class Skidfuscator {
-    public static Skidfuscator INSTANCE;
 
-    private final String[] args;
+@CommandLine.Command(
+        name = "run",
+        mixinStandardHelpOptions = true,
+        version = "obfuscate 1.0.0",
+    description = "Obfuscates and runs a specific jar"
+)
+public class ObfuscateWithConfigCommand implements Callable<Integer> {
 
-    public static Skidfuscator init(String[] args) {
-        return new Skidfuscator(args);
-    }
-
-    public Skidfuscator(String[] args) {
-        INSTANCE = this;
-        this.args = args;
-        this.init();
-    }
-
-    public Skidfuscator() {
-        this(new String[0]);
-    }
-
-    // Temp workaround
-    public static boolean preventDump;
-
-    public void init() {
-        if (args.length < 1) {
-            System.out.println("Not valid command bro");
-            System.exit(1);
-            return;
-        }
-
-        // Todo: Actually add an CLI
-        if (args.length > 1) {
-            if (args[1].equalsIgnoreCase("--antidump")) {
-                preventDump = true;
-            }
-        }
-
+    @CommandLine.Parameters(
+            index = "0",
+            description = "Config path of the file."
+    )
+    private File config;
+    @Override
+    public Integer call()  {
         final String[] logo = new String[] {
                 "",
                 "  /$$$$$$  /$$       /$$       /$$  /$$$$$$                                           /$$",
@@ -73,23 +57,39 @@ public class Skidfuscator {
             System.out.println(s);
         }
 
+        final SkidConfig skidConfig = ConfigLoader.getDefault().loadYaml(SkidConfig.class, config.getAbsolutePath());
 
-        final File file = new File(args[0]);
-        start(file);
+
+        final SkidInstance skidInstance = SkidInstance.builder()
+                .input(skidConfig.input().location())
+                .output(skidConfig.output().location())
+                .libs(skidConfig.libs().location())
+                .runtime(skidConfig.runtime().location())
+                .preventDump(skidConfig.preventDump().enabled())
+                .exclusions(skidConfig.excludes())
+                .build();
+
+        if (skidInstance.getOutput() == null) {
+            skidInstance.setOutput(new File(skidInstance.getInput().getPath() + "-out.jar"));
+        }
+
+        if (skidInstance.getRuntime() == null) {
+            skidInstance.setRuntime(new File(System.getProperty("java.home"), "lib/rt.jar"));
+        }
+
+        if (skidInstance.getExclusions() == null) {
+            skidInstance.setExclusions(Collections.emptyList());
+        }
+
+        start(skidInstance);
+        return 0;
     }
 
-    public static File start(final File file) {
+    public static File start(final SkidInstance instance) {
         final SkiddedDirectory directory = new SkiddedDirectory(null);
         directory.init();
 
-        final File out = new File(file.getPath() + "-out.jar");
-        final SkidSession session = new DefaultInitHandler().init(SkidInstance.builder()
-                .input(file)
-                .output(out)
-                .runtime(new File(System.getProperty("java.home"), "lib/rt.jar"))
-                .preventDump(preventDump)
-                .build()
-        );
+        final SkidSession session = new DefaultInitHandler().init(instance);
         try {
             MapleJarUtil.dumpJar(session.getClassSource(), session.getJarDownloader(), new PassGroup("Output"),
                     session.getOutputFile().getPath());
@@ -97,6 +97,6 @@ public class Skidfuscator {
             e.printStackTrace();
         }
 
-        return out;
+        return instance.getOutput();
     }
 }

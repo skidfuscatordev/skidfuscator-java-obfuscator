@@ -1,5 +1,6 @@
 package dev.skidfuscator.obf.init;
 
+import dev.skidfuscator.obf.SkidInstance;
 import dev.skidfuscator.obf.SkidMethodRenderer;
 import dev.skidfuscator.obf.phantom.PhantomJarDownloader;
 import dev.skidfuscator.obf.utils.MapleJarUtil;
@@ -29,11 +30,11 @@ import java.util.Map;
 public class DefaultInitHandler implements InitHandler {
     @Override
     @SneakyThrows
-    public SkidSession init(final File jar, final File output) {
-        System.out.println("Starting download of jar " + jar.getName() + "...");
-        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(jar);
+    public SkidSession init(final SkidInstance instance) {
+        System.out.println("Starting download of jar " + instance.getInput().getName() + "...");
+        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(instance.getInput());
         ApplicationClassSource classSource = new ApplicationClassSource(
-                jar.getName(), downloader.getJarContents().getClassContents()
+                instance.getInput().getName(), downloader.getJarContents().getClassContents()
         );
 
         classSource.addLibraries(new LibraryClassSource(
@@ -42,14 +43,33 @@ public class DefaultInitHandler implements InitHandler {
         ));
 
         System.out.println("Starting download of runtime jar...");
-        final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(new File(System.getProperty("java.home"), "lib/rt.jar"));
+        final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(instance.getRuntime());
 
         classSource.addLibraries(new LibraryClassSource(
                 classSource,
                 libs.getJarContents().getClassContents()
         ));
 
-        final SkidSession session = new SkidSession(classSource, downloader, output);
+        if (instance.getLibs() != null && instance.getLibs().listFiles() != null) {
+            for (File file : instance.getLibs().listFiles()) {
+                // Really shitty hack
+                if (file.getName().contains(".jar")) {
+                    final SingleJarDownloader<ClassNode> lib = MapleJarUtil.importJar(file);
+
+                    classSource.addLibraries(new LibraryClassSource(
+                            classSource,
+                            lib.getJarContents().getClassContents()
+                    ));
+                }
+            }
+        }
+
+        final SkidSession session = new SkidSession(
+                instance,
+                classSource,
+                downloader,
+                instance.getOutput()
+        );
 
         System.out.println("Evaluating classes...");
 
