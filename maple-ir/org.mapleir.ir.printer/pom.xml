@@ -3,24 +3,24 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.mapleir</groupId>
+    <groupId>dev.skidfuscator.mapleir</groupId>
     <artifactId>parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../org.mapleir.parent</relativePath>
   </parent>
   
-  <groupId>org.mapleir</groupId>
+  <groupId>dev.skidfuscator.mapleir</groupId>
   <artifactId>ir.printer</artifactId>
   <name>MapleIR-ir.printer</name>
 
   <dependencies>
     <dependency>
-      <groupId>org.mapleir</groupId>
+      <groupId>dev.skidfuscator.mapleir</groupId>
       <artifactId>ir</artifactId>
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-    	<groupId>org.mapleir</groupId>
+    	<groupId>dev.skidfuscator.mapleir</groupId>
     	<artifactId>property-framework</artifactId>
     	<version>0.0.1-SNAPSHOT</version>
     </dependency>

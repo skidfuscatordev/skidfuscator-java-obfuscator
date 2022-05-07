@@ -55,7 +55,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.mapleir</groupId>
+            <groupId>dev.skidfuscator.mapleir</groupId>
             <artifactId>main</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
