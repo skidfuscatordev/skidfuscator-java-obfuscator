@@ -6,7 +6,6 @@
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../org.mapleir.parent</relativePath>
   </parent>
-  <groupId>dev.skidfuscator.mapleir</groupId>
   <artifactId>main</artifactId>
   <name>MapleIR-main</name>
   <dependencies>

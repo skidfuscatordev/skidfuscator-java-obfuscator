@@ -22,7 +22,7 @@
   </properties>
 
   <modules>
-  	<module>dev.skidfuscator.mapleir.parent</module>
+  	<module>org.mapleir.parent</module>
   </modules>
 
   <build>

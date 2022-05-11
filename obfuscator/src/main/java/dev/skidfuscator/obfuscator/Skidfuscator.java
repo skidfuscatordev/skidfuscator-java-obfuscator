@@ -37,6 +37,7 @@ import dev.skidfuscator.obfuscator.transform.impl.NegationTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.FlatteningFlowTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;

@@ -21,6 +21,8 @@ public class SkidGroup {
     private String name;
     private String desc;
 
+    private int stackHeight;
+
     // TODO: Add parameter and parameter compilation
 
     public SkidGroup(List<MethodNode> methodNodeList, Skidfuscator skidfuscator) {
@@ -42,6 +44,9 @@ public class SkidGroup {
         return methodNodeList.iterator().next();
     }
 
+    public boolean isEntryPoint() {
+        return this.getInvokers().isEmpty() || this.isAnnotation();
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

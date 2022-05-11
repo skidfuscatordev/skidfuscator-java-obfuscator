@@ -9,7 +9,6 @@ import org.mapleir.flowgraph.edges.FlowEdge;
 import org.mapleir.flowgraph.edges.FlowEdges;
 import org.mapleir.flowgraph.edges.ImmediateEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
-import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Stmt;

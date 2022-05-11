@@ -1,7 +1,6 @@
 package dev.skidfuscator.obfuscator.predicate.renderer.impl;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
-import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.clazz.InitClassTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.group.InitGroupTransformEvent;
@@ -35,7 +34,9 @@ import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Opcode;
 import org.mapleir.ir.code.Stmt;
+import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.FieldLoadExpr;
 import org.mapleir.ir.code.expr.VarExpr;
@@ -82,10 +83,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             }
         });
 
-        final ClassOpaquePredicate classPredicate = methodNode.isStatic() || methodNode.isInit()
-                ? methodNode.getParent().getStaticPredicate()
-                : methodNode.getParent().getPredicate();
-
         final MethodOpaquePredicate methodPredicate = methodNode.getPredicate();
 
         if (methodPredicate == null)
@@ -95,16 +92,21 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             @Override
             public Expr get(ControlFlowGraph cfg) {
                 final XorNumberTransformer numberTransformer = new XorNumberTransformer();
+                final SkidMethodNode skidMethodNode = (SkidMethodNode) cfg.getMethodNode();
 
+                final ClassOpaquePredicate classPredicate = skidMethodNode.isStatic()
+                                ? skidMethodNode.getParent().getStaticPredicate()
+                                : skidMethodNode.getParent().getPredicate();
                 int seed;
                 PredicateFlowGetter expr;
-                if (methodNode.isClinit() || methodNode.isInit() || true) {
-                    seed = RandomUtil.nextInt();
+                if (skidMethodNode.isClinit() || skidMethodNode.isInit()) {
+                    final int randomSeed = RandomUtil.nextInt();
+                    seed = randomSeed;
                     expr = new PredicateFlowGetter() {
                         @Override
                         public Expr get(ControlFlowGraph cfg) {
                             return new StaticInvocationExpr(
-                                    new Expr[]{new ConstantExpr("" + seed, TypeUtil.STRING_TYPE)},
+                                    new Expr[]{new ConstantExpr("" + randomSeed, TypeUtil.STRING_TYPE)},
                                     "java/lang/Integer",
                                     "parseInt",
                                     "(Ljava/lang/String;)I"
@@ -115,8 +117,31 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     seed = classPredicate.get();
                     expr = classPredicate.getGetter();
                 }
+
+                if (!skidMethodNode.getGroup().isEntryPoint()) {
+                    seed = seed ^ skidMethodNode.getGroup().getPredicate().getPublic();
+
+                    final PredicateFlowGetter previousExprGetter = expr;
+                    expr = new PredicateFlowGetter() {
+                        @Override
+                        public Expr get(ControlFlowGraph cfg) {
+                            return new ArithmeticExpr(
+                                    /* Get the seed from the parameter */
+                                    new VarExpr(
+                                            cfg.getLocals().get(skidMethodNode.getGroup().getStackHeight()),
+                                            Type.INT_TYPE
+                                    ),
+                                    /* Hash the previous instruction */
+                                    previousExprGetter.get(cfg),
+                                    /* Obv xor operation */
+                                    ArithmeticExpr.Operator.XOR
+                            );
+                        }
+                    };
+                }
+
                 return numberTransformer.getNumber(
-                        methodPredicate.get(),
+                        methodPredicate.getPrivate(),
                         seed,
                         cfg,
                         expr
@@ -136,13 +161,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     void handle(final InitClassTransformEvent event) {
         final SkidClassNode classNode = event.getClassNode();
 
-        final ClassOpaquePredicate clazzInstancePredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getClassPredicate(classNode);
-
-        final ClassOpaquePredicate clazzStaticPredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getClassStaticPredicate(classNode);
+        final ClassOpaquePredicate clazzInstancePredicate = classNode.getPredicate();
+        final ClassOpaquePredicate clazzStaticPredicate = classNode.getStaticPredicate();
 
         /*
          * Both methods down below are designed to create a specific way to access
@@ -199,6 +219,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 @Override
                 public Expr get(final ControlFlowGraph cfg) {
                     return new FieldLoadExpr(
+                            /* Call the class this variable */
                             new VarExpr(
                                     cfg.getLocals().get(0),
                                     Type.getType("L" + classNode.getName() + ";")
@@ -306,7 +327,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .anyMatch(e -> !e.isInit() && !e.isStatic());
 
-            if (addInstance) {
+            // TODO: Figure out why tf this breaks shit
+            if (addInstance && false) {
                 createDynamicInstance.run();
             } else {
                 createConstantInstance.run();
@@ -316,7 +338,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .anyMatch(e -> !e.isClinit() && e.isStatic());
 
-            if (addStatic) {
+            if (addStatic && false) {
                 createDynamicStatic.run();
             } else {
                 createDynamicStatic.run();
@@ -393,7 +415,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         invoker.getExpr().getArgumentExprs().length
                 );
 
-                final ConstantExpr constant = new ConstantExpr(skidGroup.getPredicate().get());
+                final ConstantExpr constant = new ConstantExpr(skidGroup.getPredicate().getPublic());
                 args[args.length - 1] = constant;
 
                 invoker.getExpr().setArgumentExprs(args);
@@ -404,7 +426,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         }
 
         final int finalStackHeight = stackHeight;
-        final MethodOpaquePredicate blockOpaquePredicate = skidGroup.getPredicate();
+        skidGroup.setStackHeight(finalStackHeight);
+        /*final MethodOpaquePredicate blockOpaquePredicate = skidGroup.getPredicate();
         blockOpaquePredicate.setGetter(
                 new PredicateFlowGetter() {
                     @Override
@@ -434,16 +457,18 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                         "java/lang/Integer",
                                         "parseInt",
                                         "(Ljava/lang/String;)I"
-                                );*/
+                                );
 
                                 return skidGroup.getPredicate().getGetter().get(cfg);
                             }
                         } else {
-                            return new VarExpr(cfg.getLocals().get(finalStackHeight), Type.INT_TYPE);
+                            return new VarExpr(cfg.getLocals()
+                                    .get(finalStackHeight), Type.INT_TYPE);
                         }
                     }
                 }
-        );
+        );*/
+
     }
 
     @Listen
@@ -470,7 +495,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         PredicateFlowGetter getter = predicate.getGetter();
 
         // TODO: Figure out why this happens?
-        if (getter == null) {
+        /*if (getter == null) {
             final SkidGroup group = skidfuscator
                     .getHierarchy()
                     .getGroup(methodNode);
@@ -481,7 +506,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             ));
 
             getter = group.getPredicate().getGetter();
-        }
+        }*/
+        assert getter != null : "Predicate flow getter is null! Has group not been initialized?";
 
         PredicateFlowGetter localGetterT = methodNode.getFlowPredicate().getGetter();
         PredicateFlowSetter localSetterT = methodNode.getFlowPredicate().getSetter();
@@ -502,16 +528,31 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         final PredicateFlowGetter localGetter = localGetterT;
         final PredicateFlowSetter localSetter = localSetterT;
 
+        /*
+         * Here we transition the method
+         */
         final Expr loadedChanged = /*new ConstantExpr(seedEntry.getSeed(), Type.INT_TYPE); */
                 new XorNumberTransformer().getNumber(
                         methodNode.getBlockPredicate(seedEntry), // Outcome
-                        methodNode.getPredicate().get(), // Entry
+                        methodNode.getPredicate().getPrivate(), // Entry
                         methodNode.getCfg(),
                         getter
                 );
 
         final Stmt copyVarStmt = localSetter.apply(loadedChanged);
         entryPoint.add(0, copyVarStmt);
+        if (DEBUG) {
+            final int seed = methodNode.getBlockPredicate(seedEntry);
+            final BasicBlock exception = Blocks.exception(cfg, "Failed to match seed of value " + seed);
+            final Stmt jumpStmt = new FakeConditionalJumpStmt(
+                    methodNode.getFlowPredicate().getGetter().get(cfg),
+                    new ConstantExpr(seed, Type.INT_TYPE),
+                    exception,
+                    ConditionalJumpStmt.ComparisonType.NE
+            );
+            cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcode.COND_JUMP));
+            entryPoint.add(1, jumpStmt);
+        }
 
         /*
          *    _____         _ __       __
@@ -786,7 +827,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             if (vertex instanceof FakeBlock)
                 continue;
 
-            cfg.getEdges(vertex).stream()
+            new HashSet<>(cfg.getEdges(vertex))
+                    .stream()
                     .filter(e -> e instanceof ImmediateEdge)
                     .forEach(e -> {
                         final SkidBlock seededBlock = (SkidBlock) e.src();
@@ -814,9 +856,18 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     private void addSeedLoader(final BasicBlock block, final int index, final PredicateFlowGetter getter, final PredicateFlowSetter local, final int value, final int target) {
         final Expr load = NumberManager.encrypt(target, value, block.cfg, getter);
         final Stmt set = local.apply(load);
-        if (index < 0)
-            block.add(set);
-        else
-            block.add(index, set);
+
+        block.add(index < 0 ? block.size() : index, set);
+        if (DEBUG) {
+            final BasicBlock exception = Blocks.exception(block.cfg, "Failed to match seed of value " + target);
+            final Stmt jumpStmt = new FakeConditionalJumpStmt(
+                    getter.get(block.cfg),
+                    new ConstantExpr(target, Type.INT_TYPE),
+                    exception,
+                    ConditionalJumpStmt.ComparisonType.NE
+            );
+            block.cfg.addEdge(new ConditionalJumpEdge<>(block, exception, Opcode.COND_JUMP));
+            block.add(index < 0 ? block.size() : index + 1, jumpStmt);
+        }
     }
 }

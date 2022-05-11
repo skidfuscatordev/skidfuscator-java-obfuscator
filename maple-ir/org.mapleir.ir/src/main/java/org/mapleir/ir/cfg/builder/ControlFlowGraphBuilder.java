@@ -40,9 +40,15 @@ public class ControlFlowGraphBuilder {
 		this.method = method;
 		this.factory = factory;
 		if(Modifier.isStatic(method.node.access)) {
-			graph = new ControlFlowGraph(new StaticMethodLocalsPool(), method.getJavaDesc());
+			graph = factory.cfg()
+					.localsPool(new StaticMethodLocalsPool())
+					.method(method)
+					.build();
 		} else {
-			graph = new ControlFlowGraph(new VirtualMethodLocalsPool(), method.getJavaDesc());
+			graph = factory.cfg()
+					.localsPool(new VirtualMethodLocalsPool())
+					.method(method)
+					.build();
 		}
 		locals = new HashSet<>();
 

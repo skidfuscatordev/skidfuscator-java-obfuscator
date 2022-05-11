@@ -1,8 +1,10 @@
 package org.mapleir.ir.cfg;
 
+import org.mapleir.asm.MethodNode;
 import org.mapleir.flowgraph.edges.ConditionalJumpEdge;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
+import org.mapleir.ir.cfg.builder.ssa.CfgBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.*;
 import org.mapleir.ir.cfg.builder.ssa.stmt.*;
 import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyPhiStmtBuilder;
@@ -13,6 +15,8 @@ import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
+import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.impl.StaticMethodLocalsPool;
 import org.objectweb.asm.Type;
 
 import java.util.LinkedHashMap;
@@ -20,6 +24,35 @@ import java.util.Map;
 
 public class DefaultBlockFactory implements SSAFactory {
     public static final SSAFactory INSTANCE = new DefaultBlockFactory();
+
+    @Override
+    public CfgBuilder cfg() {
+        return new CfgBuilder() {
+            private LocalsPool localsPool;
+            private MethodNode methodNode;
+
+            @Override
+            public CfgBuilder localsPool(LocalsPool localsPool) {
+                this.localsPool = localsPool;
+                return this;
+            }
+
+            @Override
+            public CfgBuilder method(MethodNode methodNode) {
+                this.methodNode = methodNode;
+                return this;
+            }
+
+            @Override
+            public ControlFlowGraph build() {
+                assert localsPool != null : "Locals pool has to not be null";
+                assert methodNode != null : "MethodNode cannot be null";
+                assert localsPool instanceof StaticMethodLocalsPool == methodNode.isStatic()
+                        : "LocalsPool has to have a corresponding assignment (StaticMethodLocalsPool if method is static)";
+                return new ControlFlowGraph(localsPool, methodNode);
+            }
+        };
+    }
 
     @Override
     public BlockBuilder block() {

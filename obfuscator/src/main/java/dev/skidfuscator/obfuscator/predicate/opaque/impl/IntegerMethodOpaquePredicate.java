@@ -12,12 +12,14 @@ import java.util.List;
 public class IntegerMethodOpaquePredicate implements MethodOpaquePredicate {
     private final SkidGroup group;
     private final int predicate;
+    private final int publicPredicate;
     private PredicateFlowGetter getter;
     private PredicateFlowSetter setter;
 
     public IntegerMethodOpaquePredicate(SkidGroup group) {
         this.group = group;
         this.predicate = RandomUtil.nextInt();
+        this.publicPredicate = RandomUtil.nextInt();
     }
 
     @Override
@@ -41,7 +43,12 @@ public class IntegerMethodOpaquePredicate implements MethodOpaquePredicate {
     }
 
     @Override
-    public int get() {
+    public int getPublic() {
+        return publicPredicate;
+    }
+
+    @Override
+    public int getPrivate() {
         return predicate;
     }
 }

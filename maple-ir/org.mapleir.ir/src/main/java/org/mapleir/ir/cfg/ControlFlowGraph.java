@@ -1,6 +1,7 @@
 package org.mapleir.ir.cfg;
 
 import com.google.common.collect.Streams;
+import org.mapleir.asm.MethodNode;
 import org.mapleir.dot4j.model.DotGraph;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.FlowGraph;
@@ -36,20 +37,23 @@ import static org.mapleir.ir.code.Opcode.PHI_STORE;
 public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>> implements IHasJavaDesc {
 	
 	private final LocalsPool locals;
+	private final MethodNode methodNode;
 	private final JavaDesc javaDesc;
 
 	// used for assigning unique id's to basicblocks. ugly hack
 	// fyi, we start at one arbitrarily.
 	private int blockCounter = 1;
 
-	public ControlFlowGraph(LocalsPool locals, JavaDesc javaDesc) {
+	public ControlFlowGraph(LocalsPool locals, MethodNode methodNode) {
 		this.locals = locals;
-		this.javaDesc = javaDesc;
+		this.methodNode = methodNode;
+		this.javaDesc = methodNode.getJavaDesc();
 	}
 	
 	public ControlFlowGraph(ControlFlowGraph cfg) {
 		super(cfg);
 		locals = cfg.locals;
+		methodNode = cfg.methodNode;
 		javaDesc = cfg.javaDesc;
 	}
 
@@ -175,6 +179,10 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 	@Override
 	public JavaDesc.DescType getDescType() {
 		return JavaDesc.DescType.METHOD;
+	}
+
+	public MethodNode getMethodNode() {
+		return methodNode;
 	}
 
 	@Override

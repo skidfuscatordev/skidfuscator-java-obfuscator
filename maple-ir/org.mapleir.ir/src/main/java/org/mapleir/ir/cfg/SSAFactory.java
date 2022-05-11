@@ -1,6 +1,7 @@
 package org.mapleir.ir.cfg;
 
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
+import org.mapleir.ir.cfg.builder.ssa.CfgBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.*;
 import org.mapleir.ir.cfg.builder.ssa.stmt.*;
 import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyPhiStmtBuilder;
@@ -8,6 +9,8 @@ import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyVarStmtBuilder;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 
 public interface SSAFactory {
+    CfgBuilder cfg();
+
     BlockBuilder block();
 
     AllocObjectExprBuilder alloc_object_expr();
