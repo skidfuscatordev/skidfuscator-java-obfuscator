@@ -9,16 +9,16 @@ import org.objectweb.asm.tree.TypeAnnotationNode;
 import java.util.List;
 
 public class FieldNodeBuilder implements Builder<FieldNode> {
-    public int access = -1;
-    public String name;
-    public String desc;
-    public String signature;
-    public Object value;
-    public List<AnnotationNode> visibleAnnotations;
-    public List<AnnotationNode> invisibleAnnotations;
-    public List<TypeAnnotationNode> visibleTypeAnnotations;
-    public List<TypeAnnotationNode> invisibleTypeAnnotations;
-    public List<Attribute> attrs;
+    private int access = -1;
+    private String name;
+    private String desc;
+    private String signature;
+    private Object value;
+    private List<AnnotationNode> visibleAnnotations;
+    private List<AnnotationNode> invisibleAnnotations;
+    private List<TypeAnnotationNode> visibleTypeAnnotations;
+    private List<TypeAnnotationNode> invisibleTypeAnnotations;
+    private List<Attribute> attrs;
 
     public FieldNodeBuilder access(int access) {
         this.access = access;
