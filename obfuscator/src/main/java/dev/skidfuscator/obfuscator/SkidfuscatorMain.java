@@ -1,13 +1,14 @@
 package dev.skidfuscator.obfuscator;
 
+import dev.skidfuscator.obfuscator.command.ObfuscateCommand;
 import lombok.SneakyThrows;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 import org.jline.reader.impl.DefaultParser;
-import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import picocli.CommandLine;
 
 import java.io.File;
 
@@ -16,7 +17,8 @@ public class SkidfuscatorMain {
     @SneakyThrows
     public static void main(String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("cli")) {
-            final LineReader reader = LineReaderBuilder.builder()
+            final LineReader reader = LineReaderBuilder
+                    .builder()
                     .terminal(TerminalBuilder.terminal())
                     .appName("Skidfuscator")
                     .parser(new DefaultParser())
@@ -43,7 +45,10 @@ public class SkidfuscatorMain {
 
                     final SkidfuscatorSession session = new SkidfuscatorSession(
                             new File(input),
-                            new File(output)
+                            new File(output),
+                            null,
+                            null,
+                            new File(System.getProperty("java.home"), "lib/rt.jar")
                     );
 
                     final Skidfuscator skidfuscator = new Skidfuscator(session);
@@ -51,6 +56,9 @@ public class SkidfuscatorMain {
                 }
             }
 
+        } else {
+            new CommandLine(new ObfuscateCommand())
+                    .execute(args);
         }
     }
 }

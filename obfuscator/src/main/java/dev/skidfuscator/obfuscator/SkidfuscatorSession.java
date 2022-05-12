@@ -10,6 +10,7 @@ import java.io.File;
 public class SkidfuscatorSession {
     private File input;
     private File output;
-
-
+    private File libs;
+    private File exempt;
+    private File runtime;
 }

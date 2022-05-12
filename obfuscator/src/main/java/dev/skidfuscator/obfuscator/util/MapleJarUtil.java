@@ -15,6 +15,7 @@ import org.objectweb.asm.ClassWriter;
 import org.topdank.byteengineer.commons.asm.DefaultASMFactory;
 import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteio.in.AbstractJarDownloader;
+import org.topdank.byteio.in.MultiJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
 
 import java.io.*;
@@ -102,6 +103,20 @@ public class MapleJarUtil {
                 return 1;
             }
         }).dump(new File(outputFile));
+    }
+
+    @SneakyThrows
+    public static MultiJarDownloader<ClassNode> importJars(File... file) {
+        final JarInfo[] jarInfos = new JarInfo[file.length];
+
+        for (int i = 0; i < file.length; i++) {
+            jarInfos[i] = new JarInfo(file[i]);
+        }
+
+        MultiJarDownloader<ClassNode> dl = new MultiJarDownloader<>(jarInfos);
+        dl.download();
+
+        return dl;
     }
 
     @SneakyThrows

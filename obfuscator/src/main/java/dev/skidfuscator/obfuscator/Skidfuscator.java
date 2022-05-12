@@ -15,6 +15,7 @@ import dev.skidfuscator.obfuscator.event.impl.transform.group.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
 import dev.skidfuscator.obfuscator.exempt.ExemptAnalysis;
+import dev.skidfuscator.obfuscator.exempt.SimpleExemptAnalysis;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
@@ -42,11 +43,14 @@ import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
+import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Counter;
 import dev.skidfuscator.obfuscator.util.misc.TimedLogger;
 import lombok.Getter;
+import me.tongfei.progressbar.ProgressBar;
 import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
+import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.LibraryClassSource;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
@@ -59,10 +63,11 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
 
 @Getter
 public class Skidfuscator {
@@ -92,6 +97,7 @@ public class Skidfuscator {
         LOGGER.post("Beginning Skidfuscator Enterprise...");
         SkiddedDirectory.init(null);
         this.irFactory = new SkidCache();
+        this.exemptAnalysis = new SimpleExemptAnalysis();
 
         LOGGER.post("Resolving predicate analysis...");
 
@@ -125,6 +131,34 @@ public class Skidfuscator {
 
         LOGGER.log("Finished resolving predicate analysis!");
 
+        /* Importation and exemptions */
+        LOGGER.post("Importing exemptions...");
+        if (session.getExempt() != null) {
+            try  {
+                final List<String> exclusions = new ArrayList<>();
+
+                final FileReader fileReader = new FileReader(session.getExempt());
+                final BufferedReader br = new BufferedReader(fileReader);
+                String exclusion;
+                while ((exclusion = br.readLine()) != null) {
+                    exclusions.add(exclusion);
+                }
+
+                try(ProgressBar progressBar = ProgressUtil.progress(exclusions.size())) {
+                    for (String s : exclusions) {
+                        exemptAnalysis.add(s);
+                        progressBar.step();
+                    }
+                }
+            }
+            catch (IOException ex) {
+                LOGGER.error("Error reading exclusions file", ex);
+                System.exit(1);
+            }
+        }
+        LOGGER.log("Finished importing exemptions");
+
+
         LOGGER.log("Importing jar...");
         final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
                 session.getInput(),
@@ -137,21 +171,53 @@ public class Skidfuscator {
                 downloader.getJarContents()
         );
 
-        classSource.addLibraries(new LibraryClassSource(
+        if (session.getLibs() != null && session.getLibs().listFiles() != null) {
+            try {
+                /* Download the libraries jar contents */
+                final AbstractJarDownloader<ClassNode> jar = MapleJarUtil.importJars(
+                        session.getLibs().listFiles()
+                );
+
+                /* Port it to application class source container */
+                final ApplicationClassSource applicationClassSource = new SkidApplicationClassSource(
+                        "libraries",
+                        jar.getJarContents()
+                );
+
+                /* Create a new library class source with superior to default priority */
+                final LibraryClassSource libraryClassSource = new LibraryClassSource(
+                        applicationClassSource,
+                        5
+                );
+
+                /* Add library source to class source */
+                classSource.addLibraries(libraryClassSource);
+            } catch (Throwable e) {
+                /* Failed to load libs as a whole */
+                LOGGER.error("Failed to load libs at path " + session.getLibs().getAbsolutePath(), e);
+            }
+        }
+
+        /* Add phantom libs for any content / links which arent generated (low priority) */
+        this.classSource.addLibraries(new LibraryClassSource(
                 classSource,
                 downloader.getPhantomContents().getClassContents()
         ));
         LOGGER.log("Finished importing jar!");
-        LOGGER.post("Beginning importing of the JVM...");
-        final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(new File(System.getProperty("java.home"), "lib/rt.jar"));
 
-        classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+        /* Import JVM */
+        LOGGER.post("Beginning importing of the JVM...");
+        final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
+                session.getRuntime()
+        );
+        this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
                 classSource,
                 libs.getJarContents().getClassContents()
         )));
         LOGGER.log("Finished importing the JVM!");
-        LOGGER.post("Resolving basic context...");
 
+        /* Resolve context */
+        LOGGER.post("Resolving basic context...");
         this.cxt = new BasicAnalysisContext.BasicContextBuilder()
                 .setApplication(classSource)
                 .setInvocationResolver(new SkidInvocationResolver(classSource))
@@ -159,19 +225,16 @@ public class Skidfuscator {
                 .setApplicationContext(new SimpleApplicationContext(classSource))
                 .setDataFlowAnalysis(new LiveDataFlowAnalysisImpl(irFactory))
                 .build();
-
         LOGGER.log("Finished resolving basic context!");
 
-
+        /* Resolve hierarchy */
         LOGGER.post("Resolving hierarchy (this could take a while)...");
-
         this.hierarchy = new SkidHierarchy(this);
-        hierarchy.cache();
-
+        this.hierarchy.cache();
         LOGGER.log("Finished resolving hierarchy!");
+
+        /* Register opaque predicate renderer and transformers */
         LOGGER.post("Loading transformers...");
-
-
         EventBus.register(new IntegerBlockPredicateRenderer(this, null));
 
         /*
@@ -203,25 +266,27 @@ public class Skidfuscator {
         transform();
         postTransform();
         finalTransform();
-
         LOGGER.log("Finished executing transformers...");
+
         LOGGER.post("Dumping classes...");
+        try(ProgressBar progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {
+            for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(cxt.getIRCache().entrySet())) {
+                MethodNode mn = e.getKey();
 
-        for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(cxt.getIRCache().entrySet())) {
-            MethodNode mn = e.getKey();
+                ControlFlowGraph cfg = e.getValue();
 
-            ControlFlowGraph cfg = e.getValue();
-
-            try {
-                cfg.verify();
-            } catch (Exception ex){
-                ex.printStackTrace();
+                try {
+                    cfg.verify();
+                } catch (Exception ex){
+                    ex.printStackTrace();
+                }
+                (new SkidFlowGraphDumper(this, cfg, mn)).dump();
+                progressBar.step();
             }
-            (new SkidFlowGraphDumper(this, cfg, mn)).dump();
         }
         LOGGER.log("Finished dumping classes...");
-        LOGGER.post("Dumping jar...");
 
+        LOGGER.post("Dumping jar...");
         EventBus.end();
         try {
             MapleJarUtil.dumpJar(
@@ -252,19 +317,37 @@ public class Skidfuscator {
         for (ClassNode ccls : hierarchy.getClasses()) {
             final SkidClassNode classNode = (SkidClassNode) ccls;
 
+            if (exemptAnalysis.isExempt(classNode))
+                continue;
+
             EventBus.call(caller.callClass(classNode));
         }
         for (SkidGroup group : hierarchy.getGroups()) {
+            if (group.getMethodNodeList().stream().anyMatch(e -> exemptAnalysis.isExempt(e)))
+                continue;
+
             EventBus.call(caller.callGroup(group));
         }
 
         for (ClassNode ccls : hierarchy.getClasses()) {
             final SkidClassNode classNode = (SkidClassNode) ccls;
 
+            if (exemptAnalysis.isExempt(classNode))
+                continue;
+
             for (MethodNode cmth : classNode.getMethods()) {
                 final SkidMethodNode methodNode = (SkidMethodNode) cmth;
 
                 if (methodNode.isAbstract() || methodNode.isNative())
+                    continue;
+
+                if (cmth.isStatic() && methodNode.getName().equalsIgnoreCase("main")) {
+                    if (session.getExempt() != null && !exemptAnalysis.isExempt(methodNode)) {
+                        throw new IllegalStateException("Exemption Analysis failed: " + exemptAnalysis);
+                    }
+                }
+
+                if (exemptAnalysis.isExempt(methodNode))
                     continue;
 
                 EventBus.call(caller.callMethod(methodNode));
@@ -299,155 +382,107 @@ public class Skidfuscator {
     }
 
     private void preTransform() {
-        EventBus.call(new PreSkidTransformEvent(
-                this
-        ));
+        final Skidfuscator skidfuscator = this;
 
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            EventBus.call(new PreClassTransformEvent(
-                    this,
-                    classNode
-            ));
-        }
-        for (SkidGroup group : hierarchy.getGroups()) {
-            EventBus.call(new PreGroupTransformEvent(
-                    this,
-                    group
-            ));
-        }
-
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            for (MethodNode cmth : classNode.getMethods()) {
-                final SkidMethodNode methodNode = (SkidMethodNode) cmth;
-
-                if (methodNode.isAbstract() || methodNode.isNative())
-                    continue;
-
-                EventBus.call(new PreMethodTransformEvent(
-                        this,
-                        methodNode
-                ));
+        run(new Caller() {
+            @Override
+            public SkidTransformEvent callBase() {
+                return new PreSkidTransformEvent(skidfuscator);
             }
-        }
+
+            @Override
+            public ClassTransformEvent callClass(SkidClassNode classNode) {
+                return new PreClassTransformEvent(skidfuscator, classNode);
+            }
+
+            @Override
+            public GroupTransformEvent callGroup(SkidGroup group) {
+                return new PreGroupTransformEvent(skidfuscator, group);
+            }
+
+            @Override
+            public MethodTransformEvent callMethod(SkidMethodNode methodNode) {
+                return new PreMethodTransformEvent(skidfuscator, methodNode);
+            }
+        });
     }
 
     private void transform() {
-        EventBus.call(new RunSkidTransformEvent(
-                this
-        ));
+        final Skidfuscator skidfuscator = this;
 
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            EventBus.call(new RunClassTransformEvent(
-                    this,
-                    classNode
-            ));
-        }
-
-        for (SkidGroup group : hierarchy.getGroups()) {
-            EventBus.call(new RunGroupTransformEvent(
-                    this,
-                    group
-            ));
-        }
-
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            for (MethodNode cmth : new HashSet<>(classNode.getMethods())) {
-                final SkidMethodNode methodNode = (SkidMethodNode) cmth;
-
-                if (methodNode.isAbstract() || methodNode.isNative())
-                    continue;
-
-                EventBus.call(new RunMethodTransformEvent(
-                        this,
-                        methodNode
-                ));
+        run(new Caller() {
+            @Override
+            public SkidTransformEvent callBase() {
+                return new RunSkidTransformEvent(skidfuscator);
             }
-        }
+
+            @Override
+            public ClassTransformEvent callClass(SkidClassNode classNode) {
+                return new RunClassTransformEvent(skidfuscator, classNode);
+            }
+
+            @Override
+            public GroupTransformEvent callGroup(SkidGroup group) {
+                return new RunGroupTransformEvent(skidfuscator, group);
+            }
+
+            @Override
+            public MethodTransformEvent callMethod(SkidMethodNode methodNode) {
+                return new RunMethodTransformEvent(skidfuscator, methodNode);
+            }
+        });
     }
 
     private void postTransform() {
-        EventBus.call(new PostSkidTransformEvent(
-                this
-        ));
+        final Skidfuscator skidfuscator = this;
 
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            EventBus.call(new PostClassTransformEvent(
-                    this,
-                    classNode
-            ));
-
-        }
-
-        for (SkidGroup group : hierarchy.getGroups()) {
-            EventBus.call(new PostGroupTransformEvent(
-                    this,
-                    group
-            ));
-        }
-
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            for (MethodNode cmth : classNode.getMethods()) {
-                final SkidMethodNode methodNode = (SkidMethodNode) cmth;
-
-                if (methodNode.isAbstract() || methodNode.isNative())
-                    continue;
-
-                EventBus.call(new PostMethodTransformEvent(
-                        this,
-                        methodNode
-                ));
+        run(new Caller() {
+            @Override
+            public SkidTransformEvent callBase() {
+                return new PostSkidTransformEvent(skidfuscator);
             }
-        }
+
+            @Override
+            public ClassTransformEvent callClass(SkidClassNode classNode) {
+                return new PostClassTransformEvent(skidfuscator, classNode);
+            }
+
+            @Override
+            public GroupTransformEvent callGroup(SkidGroup group) {
+                return new PostGroupTransformEvent(skidfuscator, group);
+            }
+
+            @Override
+            public MethodTransformEvent callMethod(SkidMethodNode methodNode) {
+                return new PostMethodTransformEvent(skidfuscator, methodNode);
+            }
+        });
     }
 
     private void finalTransform() {
-        EventBus.call(new FinalSkidTransformEvent(
-                this
-        ));
+        final Skidfuscator skidfuscator = this;
 
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            EventBus.call(new FinalClassTransformEvent(
-                    this,
-                    classNode
-            ));
-        }
-
-        for (SkidGroup group : hierarchy.getGroups()) {
-            EventBus.call(new FinalGroupTransformEvent(
-                    this,
-                    group
-            ));
-        }
-
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            for (MethodNode cmth : classNode.getMethods()) {
-                final SkidMethodNode methodNode = (SkidMethodNode) cmth;
-
-                if (methodNode.isAbstract() || methodNode.isNative())
-                    continue;
-
-                EventBus.call(new FinalMethodTransformEvent(
-                        this,
-                        methodNode
-                ));
+        run(new Caller() {
+            @Override
+            public SkidTransformEvent callBase() {
+                return new FinalSkidTransformEvent(skidfuscator);
             }
-        }
+
+            @Override
+            public ClassTransformEvent callClass(SkidClassNode classNode) {
+                return new FinalClassTransformEvent(skidfuscator, classNode);
+            }
+
+            @Override
+            public GroupTransformEvent callGroup(SkidGroup group) {
+                return new FinalGroupTransformEvent(skidfuscator, group);
+            }
+
+            @Override
+            public MethodTransformEvent callMethod(SkidMethodNode methodNode) {
+                return new FinalMethodTransformEvent(skidfuscator, methodNode);
+            }
+        });
     }
 }
 

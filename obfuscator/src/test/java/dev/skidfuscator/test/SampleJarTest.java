@@ -22,6 +22,7 @@ public class SampleJarTest {
                 .builder()
                 .input(input)
                 .output(output)
+                .runtime(new File(System.getProperty("java.home"), "lib/rt.jar"))
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(session);

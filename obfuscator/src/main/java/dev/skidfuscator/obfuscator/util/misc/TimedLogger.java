@@ -44,4 +44,9 @@ public class TimedLogger {
     public void post(String text) {
         logger.info(text);
     }
+
+    public void error(String text, Throwable e) {
+        logger.error(text);
+        logger.debug("[Repeat] " + text, e);
+    }
 }

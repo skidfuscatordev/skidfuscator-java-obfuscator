@@ -3,6 +3,7 @@ package org.mapleir.asm;
 import org.mapleir.stdlib.collections.graph.FastGraphVertex;
 import org.mapleir.stdlib.util.IHasJavaDesc;
 import org.mapleir.stdlib.util.JavaDesc;
+import org.objectweb.asm.Opcodes;
 
 public class FieldNode implements FastGraphVertex, IHasJavaDesc {
     private static int ID_COUNTER = 1;
@@ -49,5 +50,21 @@ public class FieldNode implements FastGraphVertex, IHasJavaDesc {
     @Override
     public JavaDesc getJavaDesc() {
 	    return new JavaDesc(owner.getName(), getName(), getDesc(), JavaDesc.DescType.FIELD);
+    }
+
+    public boolean isStatic() {
+        return (node.access & Opcodes.ACC_STATIC) != 0;
+    }
+
+    public boolean isPublic() {
+        return (node.access & Opcodes.ACC_PUBLIC) != 0;
+    }
+
+    public boolean isProtected() {
+        return (node.access & Opcodes.ACC_PROTECTED) != 0;
+    }
+
+    public boolean isPrivate() {
+        return (node.access & Opcodes.ACC_PRIVATE) != 0;
     }
 }

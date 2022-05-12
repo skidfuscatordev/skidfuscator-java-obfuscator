@@ -10,19 +10,25 @@ import org.mapleir.asm.ClassNode;
 public class LibraryClassSource extends ClassSource {
 
 	protected final ApplicationClassSource parent;
-	
+	protected final int priority;
+
 	protected LibraryClassSource(ApplicationClassSource parent) {
-		this(parent, new HashMap<>());
+		this(parent, 0, new HashMap<>());
 	}
-		
+
+	public LibraryClassSource(ApplicationClassSource parent, int priority) {
+		this(parent, priority, new HashMap<>());
+	}
+
 	public LibraryClassSource(ApplicationClassSource parent, Collection<ClassNode> classes) {
-		this(parent, ClassHelper.convertToMap(classes));
+		this(parent, 0, ClassHelper.convertToMap(classes));
 	}
 	
-	public LibraryClassSource(ApplicationClassSource parent, Map<String, ClassNode> nodeMap) {
+	public LibraryClassSource(ApplicationClassSource parent, int priority, Map<String, ClassNode> nodeMap) {
 		super(nodeMap);
 		
 		this.parent = parent;
+		this.priority = priority;
 	}
 	
 	/* public lookup method, polls parent first (which can
@@ -43,5 +49,9 @@ public class LibraryClassSource extends ClassSource {
 	
 	public boolean isIterable() {
 		return true;
+	}
+
+	public int getPriority() {
+		return priority;
 	}
 }
