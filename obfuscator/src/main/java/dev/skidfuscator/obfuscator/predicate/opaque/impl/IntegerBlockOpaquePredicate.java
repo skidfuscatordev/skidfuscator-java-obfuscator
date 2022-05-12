@@ -53,4 +53,8 @@ public class IntegerBlockOpaquePredicate implements BlockOpaquePredicate {
         return predicateMap.computeIfAbsent(block, e -> RandomUtil.nextInt());
     }
 
+    @Override
+    public void set(SkidBlock skidBlock, int value) {
+        predicateMap.put(skidBlock, value);
+    }
 }

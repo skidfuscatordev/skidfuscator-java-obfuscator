@@ -476,8 +476,9 @@ public class TrollDestructor {
 						// i don't think it's necessary to copy phi arg expression since we
 						// are just reassigning it to a different block. tricky!
 						stubBlock.add(new CopyVarStmt(phi.getVariable().copy(), phiArg.getValue()));
-						stubBlock.add(new UnconditionalJumpStmt(b));
-						cfg.addEdge(new UnconditionalJumpEdge<>(stubBlock, b));
+						final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(stubBlock, b);
+						stubBlock.add(new UnconditionalJumpStmt(b, edge));
+						cfg.addEdge(edge);
 						int predId = phiArg.getKey().getNumericId();
 						dsts.put(predId, stubBlock);
 						cfg.addEdge(new SwitchEdge<>(splitBlock, stubBlock, predId));

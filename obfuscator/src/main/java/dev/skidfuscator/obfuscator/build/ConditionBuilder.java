@@ -53,11 +53,12 @@ public class ConditionBuilder {
 
     public BlockBuilder exit() {
         // Push the new block
-        final UnconditionalJumpStmt moveStack = new UnconditionalJumpStmt(immediate);
         final UnconditionalJumpEdge<BasicBlock> moveEdge = new UnconditionalJumpEdge<>(
                 current,
                 immediate
         );
+        final UnconditionalJumpStmt moveStack = new UnconditionalJumpStmt(immediate, moveEdge);
+
         current.add(moveStack);
         cfg.addEdge(moveEdge);
 
@@ -110,11 +111,12 @@ public class ConditionBuilder {
         cfg.addVertex(current);
 
         // Push the new block
-        final UnconditionalJumpStmt moveStack = new UnconditionalJumpStmt(current);
         final UnconditionalJumpEdge<BasicBlock> moveEdge = new UnconditionalJumpEdge<>(
                 old,
                 current
         );
+        final UnconditionalJumpStmt moveStack = new UnconditionalJumpStmt(current, moveEdge);
+
         old.add(moveStack);
         cfg.addEdge(moveEdge);
     }

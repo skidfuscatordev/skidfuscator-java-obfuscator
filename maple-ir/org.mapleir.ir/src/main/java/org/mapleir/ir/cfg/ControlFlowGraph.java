@@ -243,7 +243,10 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 				maxId = b.getNumericId();
 
 			if (getReverseEdges(b).size() == 0 && !getEntries().contains(b)) {
-				throw new IllegalStateException("dead incoming: " + b);
+				throw new IllegalStateException("dead incoming: " + b
+						+ " outbound=" + Arrays.toString(getEdges(b).toArray())
+						+ " stmts=" + Streams.stream(b.iterator()).map(Stmt::toString).collect(Collectors.joining("\n"))
+				);
 			}
 
 			for (FlowEdge<BasicBlock> fe : getEdges(b)) {

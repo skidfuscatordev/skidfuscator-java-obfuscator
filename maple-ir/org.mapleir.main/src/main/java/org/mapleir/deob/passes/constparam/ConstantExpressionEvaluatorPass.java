@@ -145,9 +145,9 @@ public class ConstantExpressionEvaluatorPass implements IPass, Opcode {
 			}
 			
 			// create new jump and update cfg
-			UnconditionalJumpStmt newJump = new UnconditionalJumpStmt(cond.getTrueSuccessor());
-			b.set(insnIndex, newJump);
 			UnconditionalJumpEdge<BasicBlock> uje = new UnconditionalJumpEdge<>(b, cond.getTrueSuccessor());
+			UnconditionalJumpStmt newJump = new UnconditionalJumpStmt(cond.getTrueSuccessor(), uje);
+			b.set(insnIndex, newJump);
 			cfg.addEdge(uje);
 		} else { // always false, keep immediate (fallthrough) and remove the conditional branch.
 			// remove statement amd uses in d/u map

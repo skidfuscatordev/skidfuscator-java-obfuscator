@@ -89,12 +89,14 @@ public class NaturalisationPass extends ControlFlowGraphBuilder.BuilderPass {
 
 			// decapitate, doesn't update edges
 			BasicBlock newHandlerHead = CFGUtils.splitBlockSimpleFactory(builder.factory, builder.graph, b, 1);
+			final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(newHandlerHead, b);
 			newHandlerHead.add(
 					builder.factory.unconditional_jump_stmt()
 							.target(b)
+							.edge(edge)
 							.build()
 			);
-			builder.graph.addEdge(new UnconditionalJumpEdge<>(newHandlerHead, b));
+			builder.graph.addEdge(edge);
 			// update assigns map
 			builder.assigns.get(catchCopy.getVariable().getLocal()).add(newHandlerHead);
 			search: { // ugly.

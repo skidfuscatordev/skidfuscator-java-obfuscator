@@ -31,7 +31,6 @@ public class StringTransformer extends AbstractTransformer {
         super(skidfuscator, "String Transformer", children);
     }
 
-
     @Listen
     void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();

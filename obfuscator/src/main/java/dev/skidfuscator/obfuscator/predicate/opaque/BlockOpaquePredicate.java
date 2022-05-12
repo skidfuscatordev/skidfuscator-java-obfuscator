@@ -8,6 +8,8 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 public interface BlockOpaquePredicate extends OpaquePredicate<SkidMethodNode> {
     int get(final SkidBlock t);
 
+    void set(final SkidBlock skidBlock, int value);
+
     @Override
     PredicateFlowSetter getSetter();
 }

@@ -217,9 +217,10 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				BasicBlock dst = e.dst();
 				if (e instanceof ImmediateEdge && order.indexOf(dst) != i + 1) {
 					// Fix immediates
-					b.add(new UnconditionalJumpStmt(dst));
+					final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(b, dst);
+					b.add(new UnconditionalJumpStmt(dst, edge));
 					cfg.removeEdge(e);
-					cfg.addEdge(new UnconditionalJumpEdge<>(b, dst));
+					cfg.addEdge(edge);
 				} else if (e instanceof UnconditionalJumpEdge && order.indexOf(dst) == i + 1) {
 					// Remove extraneous gotos
 					for (ListIterator<Stmt> it = b.listIterator(b.size()); it.hasPrevious(); ) {

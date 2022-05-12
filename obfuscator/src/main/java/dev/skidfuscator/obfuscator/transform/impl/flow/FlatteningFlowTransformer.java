@@ -3,8 +3,11 @@ package dev.skidfuscator.obfuscator.transform.impl.flow;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.FinalMethodTransformEvent;
+import dev.skidfuscator.obfuscator.event.impl.transform.method.InitMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.PreMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
+import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
+import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
@@ -27,6 +30,7 @@ import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Type;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FlatteningFlowTransformer extends AbstractTransformer {
     public FlatteningFlowTransformer(final Skidfuscator skidfuscator) {
@@ -34,7 +38,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
     }
 
     @Listen
-    void handle(final RunMethodTransformEvent event) {
+    void handle(final InitMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
 
         final ControlFlowGraph cfg = methodNode.getCfg();
@@ -44,7 +48,11 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
             if (immediate == null)
                 continue;
 
-            block.add(new UnconditionalJumpStmt(immediate));
+            cfg.removeEdge(cfg.getImmediateEdge(block));
+
+            final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(block, immediate);
+            cfg.addEdge(edge);
+            block.add(new UnconditionalJumpStmt(immediate, edge));
         }
     }
 
@@ -55,8 +63,24 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
 
         final ControlFlowGraph cfg = methodNode.getCfg();
 
-        final LinkedHashMap<Integer, BasicBlock> destinations = new LinkedHashMap<>();
-        final SkidBlock skidBlock = new SkidBlock(cfg);
+        if (cfg == null)
+            return;
+
+        if (cfg.size() <= 3) {
+            return;
+        }
+
+        if (methodNode.isAbstract() || methodNode.isNative())
+            return;
+
+        final BlockOpaquePredicate opaquePredicate = methodNode.getFlowPredicate();
+
+        assert opaquePredicate != null : "Flow Predicate is null?";
+        final PredicateFlowGetter getter = opaquePredicate.getGetter();
+
+        // TODO: Figure why this is happening
+        if (getter == null)
+            return;
 
         final Set<BasicBlock> exempt = new HashSet<>();
         for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
@@ -64,49 +88,50 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
             exempt.add(range.getHandler());
         }
 
-        for (BasicBlock block : new HashSet<>(cfg.vertices())) {
-            if (exempt.contains(block))
-                continue;
-            final int seed = methodNode.getBlockPredicate((SkidBlock) block);
-            destinations.put(seed, block);
-            cfg.addEdge(new SwitchEdge<>(skidBlock, block, seed));
+        for (BasicBlock vertex : cfg.vertices()) {
+            if (vertex.getStack() == null)
+                exempt.add(vertex);
         }
 
-        final SkidBlock entry = (SkidBlock) cfg.getEntries().iterator().next();
-        final int startPredicate = methodNode.getBlockPredicate(entry);
-        cfg.addEdge(new SwitchEdge<>(skidBlock, entry, startPredicate));
-        cfg.addVertex(skidBlock);
+        if (cfg.vertices()
+                .stream()
+                .filter(exempt::contains)
+                .flatMap(Collection::stream)
+                .noneMatch(e -> e instanceof UnconditionalJumpStmt))
+            return;
 
-        for (BasicBlock block : new ArrayList<>(cfg.vertices())) {
-            if (exempt.contains(block))
-                continue;
+        final LinkedHashMap<Integer, BasicBlock> destinations = new LinkedHashMap<>();
+        final SkidBlock dispatcherBlock = new SkidBlock(cfg);
+        cfg.addVertex(dispatcherBlock);
 
-            final BasicBlock immediate = cfg.getImmediate(block);
-            for (FlowEdge<BasicBlock> edge : new HashSet<>(cfg.getEdges(block))) {
-                final boolean remove = edge instanceof UnconditionalJumpEdge
-                        || edge instanceof ImmediateEdge;
-                if (!remove)
-                    continue;
+        new HashSet<>(cfg.vertices())
+                .stream()
+                .filter(exempt::contains)
+                .flatMap(Collection::stream)
+                .filter(e -> e instanceof UnconditionalJumpStmt)
+                .map(e -> (UnconditionalJumpStmt) e)
+                .forEach(e -> {
+                    final SkidBlock currentBlock = (SkidBlock) e.getBlock();
+                    final SkidBlock oldTarget = (SkidBlock) e.getTarget();
 
-                cfg.removeEdge(edge);
-            }
+                    /* Replace target block */
+                    e.setTarget(dispatcherBlock);
 
-            if (immediate != null)
-                cfg.addEdge(new UnconditionalJumpEdge<>(block, immediate));
-            cfg.addEdge(new UnconditionalJumpEdge<>(block, skidBlock));
+                    /* Replace edge */
+                    final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(currentBlock, dispatcherBlock);
+                    cfg.removeEdge(e.getEdge());
+                    cfg.addEdge(edge);
+                    e.setEdge(edge);
 
-            for (Stmt stmt : new ArrayList<>(block)) {
-                if (stmt instanceof UnconditionalJumpStmt) {
-                    final UnconditionalJumpStmt jump = (UnconditionalJumpStmt) stmt;
-                    jump.setTarget(skidBlock);
-                }
-            }
-        }
+                    final int seed = methodNode.getBlockPredicate(oldTarget);
+                    destinations.put(seed, oldTarget);
+                    cfg.addEdge(new SwitchEdge<>(dispatcherBlock, oldTarget, seed));
+                });
 
-        skidBlock.add(new SwitchStmt(
-                methodNode.getFlowPredicate().getGetter().get(cfg),
+        dispatcherBlock.add(new SwitchStmt(
+                getter.get(cfg),
                 destinations,
-                skidBlock
+                dispatcherBlock
         ));
     }
 }

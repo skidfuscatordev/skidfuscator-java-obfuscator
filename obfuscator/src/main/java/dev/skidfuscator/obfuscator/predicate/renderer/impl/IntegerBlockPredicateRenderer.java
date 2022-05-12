@@ -651,8 +651,9 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 );
 
                 // Jump to handler
-                block.add(new FakeUnconditionalJumpStmt(basicHandler));
-                cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
+                final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(block, basicHandler);
+                block.add(new FakeUnconditionalJumpStmt(basicHandler, edge));
+                cfg.addEdge(edge);
 
                 // Final hashed
                 final int hashed = hashTransformer.hash(
@@ -791,6 +792,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         // Add jump and seed
                         final BasicBlock basicBlock = new SkidBlock(block.cfg);
                         final SkidBlock intraSeededBlock = (SkidBlock) basicBlock;
+
+                        methodNode.getFlowPredicate()
+                                .set(intraSeededBlock, methodNode.getBlockPredicate(targetSeeded));
+
                         this.addSeedLoader(
                                 intraSeededBlock,
                                 0,
@@ -799,11 +804,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                 methodNode.getBlockPredicate(seededBlock),
                                 methodNode.getBlockPredicate(targetSeeded)
                         );
-                        basicBlock.add(new UnconditionalJumpStmt(target));
+                        final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
+                        basicBlock.add(new UnconditionalJumpStmt(target, edge));
 
                         // Add edge
                         basicBlock.cfg.addVertex(basicBlock);
-                        basicBlock.cfg.addEdge(new UnconditionalJumpEdge<>(basicBlock, target));
+                        basicBlock.cfg.addEdge(edge);
 
                         // Replace successor
                         stmt.setTrueSuccessor(basicBlock);

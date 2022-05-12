@@ -115,13 +115,15 @@ public class BasicConditionTransformer extends AbstractTransformer {
             final BasicBlock exception = Blocks.exception(cfg);
 
             // Add gay loop
-            basicBlock.add(new UnconditionalJumpStmt(
-                    exception
-            ));
-            cfg.addEdge(new UnconditionalJumpEdge<>(
+            final UnconditionalJumpEdge<BasicBlock> edge1 = new UnconditionalJumpEdge<>(
                     basicBlock,
                     exception
+            );
+            basicBlock.add(new UnconditionalJumpStmt(
+                    exception,
+                    edge1
             ));
+            cfg.addEdge(edge1);
 
             jump.setTrueSuccessor(basicBlock);
 

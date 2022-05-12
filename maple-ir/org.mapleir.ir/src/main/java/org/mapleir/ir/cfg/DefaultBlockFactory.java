@@ -2,6 +2,7 @@ package org.mapleir.ir.cfg;
 
 import org.mapleir.asm.MethodNode;
 import org.mapleir.flowgraph.edges.ConditionalJumpEdge;
+import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
 import org.mapleir.ir.cfg.builder.ssa.CfgBuilder;
@@ -867,6 +868,7 @@ public class DefaultBlockFactory implements SSAFactory {
     public UnconditionalJumpStmtBuilder unconditional_jump_stmt() {
         return new UnconditionalJumpStmtBuilder() {
             private BasicBlock target;
+            private UnconditionalJumpEdge<BasicBlock> edge;
 
             @Override
             public UnconditionalJumpStmtBuilder target(BasicBlock target) {
@@ -875,10 +877,17 @@ public class DefaultBlockFactory implements SSAFactory {
             }
 
             @Override
+            public UnconditionalJumpStmtBuilder edge(UnconditionalJumpEdge<BasicBlock> edge) {
+                this.edge = edge;
+                return this;
+            }
+
+            @Override
             public UnconditionalJumpStmt build() {
                 assert target != null : "Target cannot be null";
+                assert edge != null : "Edge cannot be null";
 
-                return new UnconditionalJumpStmt(target);
+                return new UnconditionalJumpStmt(target, edge);
             }
         };
     }

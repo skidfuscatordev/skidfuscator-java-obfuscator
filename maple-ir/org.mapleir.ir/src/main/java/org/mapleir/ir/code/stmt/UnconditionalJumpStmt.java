@@ -1,5 +1,6 @@
 package org.mapleir.ir.code.stmt;
 
+import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Stmt;
@@ -11,10 +12,12 @@ import org.objectweb.asm.Opcodes;
 public class UnconditionalJumpStmt extends Stmt {
 
 	private BasicBlock target;
+	private UnconditionalJumpEdge<BasicBlock> edge;
 
-	public UnconditionalJumpStmt(BasicBlock target) {
+	public UnconditionalJumpStmt(BasicBlock target, UnconditionalJumpEdge<BasicBlock> edge) {
 		super(UNCOND_JUMP);
 		this.target = target;
+		this.edge = edge;
 	}
 
 	public BasicBlock getTarget() {
@@ -23,6 +26,14 @@ public class UnconditionalJumpStmt extends Stmt {
 	
 	public void setTarget(BasicBlock b) {
 		target = b;
+	}
+
+	public UnconditionalJumpEdge<BasicBlock> getEdge() {
+		return edge;
+	}
+
+	public void setEdge(UnconditionalJumpEdge<BasicBlock> edge) {
+		this.edge = edge;
 	}
 
 	@Override
@@ -47,7 +58,7 @@ public class UnconditionalJumpStmt extends Stmt {
 
 	@Override
 	public Stmt copy() {
-		return new UnconditionalJumpStmt(target);
+		return new UnconditionalJumpStmt(target, edge);
 	}
 
 	@Override
