@@ -86,7 +86,11 @@ public class ExclusionHelper {
                         }
 
                         case METHOD: {
-                            final Pattern regexMethod = Pattern.compile(parsed);
+                            final String[] splitz = parsed.split("#");
+                            final String method = splitz[0];
+                            final String desc = splitz.length > 1 ? splitz[1] : null;
+                            final Pattern regexMethod = Pattern.compile(method);
+                            final Pattern descRegex = desc == null ? null : Pattern.compile(desc);
 
                             map.put(type, new ExclusionTester<MethodNode>() {
                                 @Override
@@ -99,8 +103,15 @@ public class ExclusionHelper {
                                             .match("private", var.isPrivate())
                                             .check();
 
-                                    return initialMatch
-                                            && regexMethod.matcher(var.getName()).matches();
+                                    if (!initialMatch) {
+                                        return false;
+                                    }
+
+                                    if (descRegex != null && !descRegex.matcher(var.getDesc()).matches()) {
+                                        return false;
+                                    }
+
+                                    return regexMethod.matcher(var.getName()).matches();
                                             //&& regexClazz.matcher(var.owner.getDisplayName()).matches();
                                 }
 

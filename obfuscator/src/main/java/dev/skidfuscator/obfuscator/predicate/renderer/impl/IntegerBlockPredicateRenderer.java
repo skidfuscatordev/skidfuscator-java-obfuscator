@@ -555,55 +555,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         }
 
         /*
-         *    _____         _ __       __
-         *   / ___/      __(_) /______/ /_
-         *   \__ \ | /| / / / __/ ___/ __ \
-         *  ___/ / |/ |/ / / /_/ /__/ / / /
-         * /____/|__/|__/_/\__/\___/_/ /_/
-         *
-         */
-
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
-            new HashSet<>(vertex)
-                    .stream()
-                    .filter(e -> e instanceof SwitchStmt)
-                    .map(e -> (SwitchStmt) e)
-                    .forEach(stmt -> {
-                        final SkidBlock seededBlock = (SkidBlock) vertex;
-
-                        for (BasicBlock value : stmt.getTargets().values()) {
-                            final SkidBlock target = (SkidBlock) value;
-                            this.addSeedLoader(
-                                    target,
-                                    0,
-                                    localGetter,
-                                    localSetter,
-                                    methodNode.getBlockPredicate(seededBlock),
-                                    methodNode.getBlockPredicate(target)
-                            );
-
-                /*final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
-                value.add(0, new CopyVarStmt(new VarExpr(local1, Type.getType(String.class)),
-                        new ConstantExpr(block.getDisplayName() +" : c-loc - switch : " + target.getSeed())));
-                */
-                        }
-
-                        if (stmt.getDefaultTarget() == null || stmt.getDefaultTarget() == vertex)
-                            return;
-
-                        final SkidBlock dflt = (SkidBlock) stmt.getDefaultTarget();
-                        this.addSeedLoader(
-                                dflt,
-                                0,
-                                localGetter,
-                                localSetter,
-                                methodNode.getBlockPredicate(seededBlock),
-                                methodNode.getBlockPredicate(dflt)
-                        );
-                    });
-        }
-
-        /*
          *     ______                     __  _
          *    / ____/  __________  ____  / /_(_)___  ____
          *   / __/ | |/_/ ___/ _ \/ __ \/ __/ / __ \/ __ \
@@ -731,6 +682,25 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
          *
          */
 
+
+        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+            if (vertex instanceof FakeBlock)
+                continue;
+
+            new HashSet<>(cfg.getEdges(vertex))
+                    .stream()
+                    .filter(e -> e instanceof ImmediateEdge)
+                    .forEach(e -> {
+                        final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(
+                                e.src(),
+                                e.dst()
+                        );
+                        cfg.removeEdge(e);
+                        cfg.addEdge(edge);
+                        e.src().add(new UnconditionalJumpStmt(e.dst(), edge));
+                    });
+        }
+
         for (BasicBlock block : new HashSet<>(cfg.vertices())) {
             new HashSet<>(block)
                     .stream()
@@ -753,7 +723,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                             final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
                             block.add(index, new SkidCopyVarStmt(
                                             new VarExpr(local1, Type.getType(String.class)),
-                                            new ConstantExpr(block.getDisplayName() +" : c-loc - uncond : " + methodNode.getBlockPredicate(targetSeededBlock))
+                                            new ConstantExpr(
+                                                    block.getDisplayName()
+                                                            + " -> " + targetSeededBlock.getDisplayName()
+                                                            + " : c-loc - uncond : "
+                                                            + methodNode.getBlockPredicate(targetSeededBlock)
+                                            )
                                     )
                             );
                         }
@@ -790,14 +765,13 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         final SkidBlock targetSeeded = (SkidBlock) target;
 
                         // Add jump and seed
-                        final BasicBlock basicBlock = new SkidBlock(block.cfg);
-                        final SkidBlock intraSeededBlock = (SkidBlock) basicBlock;
+                        final SkidBlock basicBlock = new SkidBlock(block.cfg);
 
                         methodNode.getFlowPredicate()
-                                .set(intraSeededBlock, methodNode.getBlockPredicate(targetSeeded));
+                                .set(basicBlock, methodNode.getBlockPredicate(targetSeeded));
 
                         this.addSeedLoader(
-                                intraSeededBlock,
+                                basicBlock,
                                 0,
                                 localGetter,
                                 localSetter,
@@ -813,15 +787,20 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
                         // Replace successor
                         stmt.setTrueSuccessor(basicBlock);
-                        block.cfg.addEdge(new ConditionalJumpEdge<>(block, basicBlock, stmt.getOpcode()));
+                        basicBlock.cfg.addEdge(new ConditionalJumpEdge<>(block, basicBlock, stmt.getOpcode()));
 
                         if (DEBUG) {
-                            final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
-                            block.add(
-                                    block.indexOf(stmt),
+                            final Local local1 = basicBlock.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+                            basicBlock.add(
+                                    1,
                                     new SkidCopyVarStmt(
                                             new VarExpr(local1, Type.getType(String.class)),
-                                            new ConstantExpr(block.getDisplayName() + " : c-loc - cond : " + methodNode.getBlockPredicate(targetSeeded))
+                                            new ConstantExpr(
+                                                    block.getDisplayName()
+                                                    + " -> " + targetSeeded.getDisplayName()
+                                                    + " : c-loc - cond : "
+                                                    + methodNode.getBlockPredicate(targetSeeded)
+                                            )
                                     )
                             );
                         }
@@ -829,7 +808,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         }
 
 
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+        /*for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
             if (vertex instanceof FakeBlock)
                 continue;
 
@@ -853,6 +832,119 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                     new ConstantExpr(vertex.getDisplayName() +" : c-loc - immediate : " + methodNode.getBlockPredicate((SkidBlock) vertex))));
                         }
                     });
+        */
+
+        /*
+         *    _____         _ __       __
+         *   / ___/      __(_) /______/ /_
+         *   \__ \ | /| / / / __/ ___/ __ \
+         *  ___/ / |/ |/ / / /_/ /__/ / / /
+         * /____/|__/|__/_/\__/\___/_/ /_/
+         *
+         */
+
+        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+            new HashSet<>(vertex)
+                    .stream()
+                    .filter(e -> e instanceof SwitchStmt)
+                    .map(e -> (SwitchStmt) e)
+                    .forEach(stmt -> {
+                        final SkidBlock seededBlock = (SkidBlock) vertex;
+
+                        for (Map.Entry<Integer, BasicBlock> entry : stmt.getTargets().entrySet()) {
+                            final int seed = entry.getKey();
+                            final BasicBlock value = entry.getValue();
+                            if (value == stmt.getDefaultTarget())
+                                continue;
+
+                            final SkidBlock target = (SkidBlock) value;
+                            // Add jump and seed
+                            final SkidBlock basicBlock = new SkidBlock(value.cfg);
+
+                            methodNode.getFlowPredicate()
+                                    .set(basicBlock, methodNode.getBlockPredicate(target));
+
+                            this.addSeedLoader(
+                                    basicBlock,
+                                    0,
+                                    localGetter,
+                                    localSetter,
+                                    methodNode.getBlockPredicate(seededBlock),
+                                    methodNode.getBlockPredicate(target)
+                            );
+                            final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
+                            basicBlock.add(new UnconditionalJumpStmt(target, edge));
+
+                            // Add edge
+                            basicBlock.cfg.addVertex(basicBlock);
+                            basicBlock.cfg.addEdge(edge);
+
+                            // Replace successor
+                            stmt.getTargets().replace(seed, basicBlock);
+                            basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
+
+                            if (DEBUG) {
+                                final Local local1 = basicBlock.cfg.getLocals().get(seededBlock.cfg.getLocals().getMaxLocals() + 2);
+                                basicBlock.add(
+                                        1,
+                                        new SkidCopyVarStmt(
+                                                new VarExpr(local1, Type.getType(String.class)),
+                                                new ConstantExpr(
+                                                        seededBlock.getDisplayName()
+                                                                + " -> " + target.getDisplayName()
+                                                                + " : c-loc - switch : "
+                                                                + methodNode.getBlockPredicate(target)
+                                                )
+                                        )
+                                );
+                            }
+                        }
+
+                        if (stmt.getDefaultTarget() == null || stmt.getDefaultTarget() == vertex)
+                            return;
+
+                        final SkidBlock target = (SkidBlock) stmt.getDefaultTarget();
+                        // Add jump and seed
+                        final SkidBlock basicBlock = new SkidBlock(target.cfg);
+
+                        methodNode.getFlowPredicate()
+                                .set(basicBlock, methodNode.getBlockPredicate(target));
+
+                        this.addSeedLoader(
+                                basicBlock,
+                                0,
+                                localGetter,
+                                localSetter,
+                                methodNode.getBlockPredicate(seededBlock),
+                                methodNode.getBlockPredicate(target)
+                        );
+                        final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
+                        basicBlock.add(new UnconditionalJumpStmt(target, edge));
+
+                        // Add edge
+                        basicBlock.cfg.addVertex(basicBlock);
+                        basicBlock.cfg.addEdge(edge);
+
+                        // Replace successor
+                        stmt.setDefaultTarget(basicBlock);
+                        basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
+
+                        if (DEBUG) {
+                            final Local local1 = basicBlock.cfg.getLocals().get(seededBlock.cfg.getLocals().getMaxLocals() + 2);
+                            basicBlock.add(
+                                    1,
+                                    new SkidCopyVarStmt(
+                                            new VarExpr(local1, Type.getType(String.class)),
+                                            new ConstantExpr(
+                                                    seededBlock.getDisplayName()
+                                                            + " -> " + target.getDisplayName()
+                                                            + " : c-loc - switch : "
+                                                            + methodNode.getBlockPredicate(target)
+                                            )
+                                    )
+                            );
+                        }
+                    });
         }
 
         return;
@@ -860,20 +952,44 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
 
     private void addSeedLoader(final BasicBlock block, final int index, final PredicateFlowGetter getter, final PredicateFlowSetter local, final int value, final int target) {
-        final Expr load = NumberManager.encrypt(target, value, block.cfg, getter);
+        final Expr load = NumberManager.encrypt(
+                target,
+                value,
+                block.cfg,
+                getter
+        );
         final Stmt set = local.apply(load);
 
-        block.add(index < 0 ? block.size() : index, set);
+        block.add(
+                index < 0 ? block.size() : index,
+                set
+        );
         if (DEBUG) {
-            final BasicBlock exception = Blocks.exception(block.cfg, "Failed to match seed of value " + target);
+            final BasicBlock exception = Blocks.exception(
+                    block.cfg,
+                    "Failed to match seed of value " + target
+            );
+
             final Stmt jumpStmt = new FakeConditionalJumpStmt(
                     getter.get(block.cfg),
-                    new ConstantExpr(target, Type.INT_TYPE),
+                    new ConstantExpr(
+                            target,
+                            Type.INT_TYPE
+                    ),
                     exception,
                     ConditionalJumpStmt.ComparisonType.NE
             );
-            block.cfg.addEdge(new ConditionalJumpEdge<>(block, exception, Opcode.COND_JUMP));
-            block.add(index < 0 ? block.size() : index + 1, jumpStmt);
+            block.cfg.addEdge(
+                    new ConditionalJumpEdge<>(
+                            block,
+                            exception,
+                            Opcode.COND_JUMP
+                    )
+            );
+            block.add(
+                    index < 0 ? block.size() : index + 1,
+                    jumpStmt
+            );
         }
     }
 }

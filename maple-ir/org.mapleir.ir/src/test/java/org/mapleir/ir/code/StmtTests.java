@@ -72,7 +72,7 @@ public class StmtTests extends UnitSubTestBase {
 	}
 	
 	public void testUnconditionalJumpStmt() throws Throwable {
-		UnconditionalJumpStmt stmt = new UnconditionalJumpStmt(null);
+		UnconditionalJumpStmt stmt = new UnconditionalJumpStmt(null, null);
 		testUnit(stmt, new Expr[0], new String[0]);
 	}
 	
