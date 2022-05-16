@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator.transform.impl.flow;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
+import dev.skidfuscator.obfuscator.event.impl.transform.method.FinalMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
@@ -58,7 +59,8 @@ public class BasicExceptionTransformer extends AbstractTransformer {
             final int seed = methodNode.getBlockPredicate((SkidBlock) entry);
 
             // Create hash
-            final SkiddedHash hash = NumberManager.randomHasher()
+            final SkiddedHash hash = NumberManager
+                    .randomHasher()
                     .hash(seed, cfg, methodNode.getFlowPredicate().getGetter());
             final ConstantExpr var_const = new ConstantExpr(hash.getHash());
 

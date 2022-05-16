@@ -4,11 +4,8 @@ import org.mapleir.dot4j.model.DotGraph;
 import org.mapleir.propertyframework.api.IPropertyDictionary;
 import org.mapleir.propertyframework.util.PropertyHelper;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public interface FastGraph<N extends FastGraphVertex, E extends FastGraphEdge<N>> {
 
@@ -37,6 +34,8 @@ public interface FastGraph<N extends FastGraphVertex, E extends FastGraphEdge<N>
 	void replace(N old, N n);
 	
 	void clear();
+
+	Collection<N> getCommonAncestor(Collection<N> nodes);
 	
 	default FastGraph<N, E> copy() {
 		throw new UnsupportedOperationException();

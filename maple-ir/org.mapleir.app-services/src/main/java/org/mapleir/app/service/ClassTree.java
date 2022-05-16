@@ -61,7 +61,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	}
 	
 	public Iterable<ClassNode> iterateChildren(ClassNode cn) {
-		return () -> getReverseEdges(cn).stream().map(e -> e.src()).iterator();
+		return () -> getReverseEdges(cn).stream().map(FastGraphEdge::src).iterator();
 	}
 
 	// rip beautiful do/while loop.
@@ -161,7 +161,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	
 	private ClassNode requestClass0(String name, String from) {
 		try {
-			return findClass(name);
+			return source.findClassNode(name);
 		} catch(RuntimeException e) {
 			throw new RuntimeException("request from " + from, e);
 		}
@@ -179,7 +179,9 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 		
 		if(cn != rootNode) {
 			Set<InheritanceEdge> edges = new HashSet<>();
-			ClassNode sup = cn.node.superName != null ? requestClass0(cn.node.superName, cn.getName()) : rootNode;
+			ClassNode sup = cn.node.superName != null
+					? requestClass0(cn.node.superName, cn.getName())
+					: rootNode;
 			if(sup == null) {
 				LOGGER.error(String.format("No superclass %s for %s", cn.node.superName, cn.getName()));
 				removeVertex(cn);

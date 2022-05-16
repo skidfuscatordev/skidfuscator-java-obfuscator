@@ -22,6 +22,8 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
     public void add(final String exclusionStr) {
         final Exclusion exclusion = ExclusionHelper.renderExclusion(exclusionStr);
         exclusions.add(exclusion);
+
+        System.out.println(this);
     }
 
     @Override
@@ -42,6 +44,8 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
             }
         }
 
+        methodCache.put(methodNode, false);
+
         return false;
     }
 
@@ -53,16 +57,20 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
             return var;
 
         for (Exclusion exclusion : exclusions) {
+            System.out.println("Testing " + exclusion);
             try {
                 if (exclusion.test(classNode)) {
                     classCache.put(classNode, true);
+                    System.out.println("EXCLUDED --> " + classNode.getName());
                     return true;
                 }
             } catch (AssertionError e) {
                 // Do nothing
+                e.printStackTrace();
             }
         }
-
+        System.out.println("INCLUDED --> " + classNode.getName());
+        classCache.put(classNode, false);
         return false;
     }
 

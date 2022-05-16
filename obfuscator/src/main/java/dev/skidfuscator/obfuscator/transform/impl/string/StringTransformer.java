@@ -6,6 +6,7 @@ import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransfor
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
@@ -68,7 +69,7 @@ public class StringTransformer extends AbstractTransformer {
         }
 
         cfg.allExprStream()
-                .filter(ConstantExpr.class::isInstance)
+                .filter(SkidConstantExpr.class::isInstance)
                 .map(ConstantExpr.class::cast)
                 .filter(constantExpr -> constantExpr.getConstant() instanceof String)
                 .collect(Collectors.toList())

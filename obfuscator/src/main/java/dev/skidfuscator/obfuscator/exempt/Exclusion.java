@@ -22,7 +22,7 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final ClassNode classNode) {
-        assert !testers.containsKey(ExclusionType.CLASS) : "Trying to test with null class tester";
+        assert testers.containsKey(ExclusionType.CLASS) : "Trying to test with null class tester";
 
         return testers.poll(ExclusionType.CLASS).test(classNode);
     }
@@ -34,7 +34,7 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final MethodNode methodNode) {
-        assert !testers.containsKey(ExclusionType.METHOD) : "Trying to test with null method tester";
+        assert testers.containsKey(ExclusionType.METHOD) : "Trying to test with null method tester";
 
         return testers.poll(ExclusionType.METHOD).test(methodNode);
     }
@@ -46,7 +46,7 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final FieldNode fieldNode) {
-        assert !testers.containsKey(ExclusionType.FIELD) : "Trying to test with null field tester";
+        assert testers.containsKey(ExclusionType.FIELD) : "Trying to test with null field tester";
 
         return testers.poll(ExclusionType.FIELD).test(fieldNode);
     }

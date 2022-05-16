@@ -151,6 +151,7 @@ public class SkidHierarchy implements Hierarchy {
         Skidfuscator.LOGGER.log("[#]     > Cached over " + methodToGroupMap.size() + " method groups!");
         Skidfuscator.LOGGER.post("[#] Establishing dynamic call evaluation...");
         this.setupInvoke();
+        Skidfuscator.LOGGER.log("[#] Logged over " + invocationToGroupMap.size() + " invocations!");
     }
 
     @Override
@@ -265,15 +266,20 @@ public class SkidHierarchy implements Hierarchy {
     private void getAnnotation(final AnnotationNode node, final SkidAnnotation.AnnotationType type) {
         final String filteredNamePre = node.desc.substring(1);
         final String filteredNamePost = filteredNamePre.substring(0, filteredNamePre.length() - 1);
-        final ClassNode parent = skidfuscator.getClassSource().findClassNode(filteredNamePost);
-
+        final ClassNode parent = skidfuscator
+                .getClassSource()
+                .findClassNode(filteredNamePost);
         List<SkidAnnotation> nodes = annotations.computeIfAbsent(parent, k -> new ArrayList<>());
-        nodes.add(new SkidAnnotation(
-                node,
-                type,
-                skidfuscator,
-                parent
-        ));
+        try {
+            nodes.add(new SkidAnnotation(
+                    node,
+                    type,
+                    skidfuscator,
+                    parent
+            ));
+        } catch (Exception e) {
+            // Just skip for now
+        }
     }
 
     @Override

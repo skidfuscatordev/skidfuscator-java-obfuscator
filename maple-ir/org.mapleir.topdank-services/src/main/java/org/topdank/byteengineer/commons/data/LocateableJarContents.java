@@ -14,7 +14,7 @@ public class LocateableJarContents<C extends ClassNode> extends JarContents<C> {
 	}
 
 	public LocateableJarContents(DataContainer<C> classContents, DataContainer<JarResource> resourceContents, URL... jarUrls) {
-		super(classContents, resourceContents);
+		super(classContents, null, resourceContents);
 		this.jarUrls = jarUrls;
 	}
 

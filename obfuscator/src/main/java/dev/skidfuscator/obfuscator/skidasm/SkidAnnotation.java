@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Wrapper for the ASM annotations to allow support for annotation obfuscation. This is stored in
@@ -89,7 +90,30 @@ public class SkidAnnotation {
      * can directly virtually edit the annotation
      */
     private void parse() {
+        if (node.values == null || node.values.size() == 0) {
+            return;
+        }
+
         String name = null;
+        if (node.desc == null) {
+            values.put("value", new AnnotationValue<>("value",
+                    new Consumer<Object>() {
+                        @Override
+                        public void accept(Object o) {
+                            node.values.set(0, o);
+                        }
+                    },
+                    new Supplier<Object>(){
+                        @Override
+                        public Object get() {
+                            return node.values.get(0);
+                        }
+                    },
+                    parent.getMethods().get(0)
+            ));
+            return;
+        }
+
         for (int i = 0; i < this.node.values.size(); i++) {
             if (i % 2 == 0) {
                 // This is the name
@@ -110,10 +134,21 @@ public class SkidAnnotation {
                                 return node.values.get(finalI);
                             }
                         },
-                        parent.getMethods().stream()
+                        parent.getMethods()
+                                .stream()
                                 .filter(e -> e.getName().equals(finalName))
                                 .findFirst()
-                                .orElseThrow(IllegalStateException::new)
+                                .orElseThrow(() -> {
+                                    return new IllegalStateException(
+                                            "Failed to find method for "
+                                            + finalName + " of value "
+                                            + node.values.get(finalI)
+                                            + " (parent: " + parent.getMethods().stream()
+                                                    .map(e -> e.getName() + "#" + e.getDesc())
+                                                    .collect(Collectors.joining("\n"))
+                                            + ")"
+                                    );
+                                })
                 ));
             }
         }

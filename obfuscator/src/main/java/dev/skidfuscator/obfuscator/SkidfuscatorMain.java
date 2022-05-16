@@ -48,7 +48,8 @@ public class SkidfuscatorMain {
                             new File(output),
                             null,
                             null,
-                            new File(System.getProperty("java.home"), "lib/rt.jar")
+                            new File(System.getProperty("java.home"), "lib/rt.jar"),
+                            false
                     );
 
                     final Skidfuscator skidfuscator = new Skidfuscator(session);

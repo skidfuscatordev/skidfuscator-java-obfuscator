@@ -11,6 +11,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidSwitchStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import org.mapleir.ir.cfg.BasicBlock;
@@ -56,7 +57,7 @@ public class SwitchTransformer extends AbstractTransformer {
         cfg.vertices()
                 .stream()
                 .flatMap(Collection::stream)
-                .filter(SwitchStmt.class::isInstance)
+                .filter(SkidSwitchStmt.class::isInstance)
                 .map(SwitchStmt.class::cast)
                 .collect(Collectors.toList())
                 .forEach(unit -> {

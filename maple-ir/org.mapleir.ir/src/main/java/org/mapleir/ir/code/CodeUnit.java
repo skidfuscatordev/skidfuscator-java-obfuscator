@@ -321,7 +321,9 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 
 	public void overwrite(final Expr previous, final Expr newest) {
 		final int index = this.indexOf(previous);
-		children[index] = newest;
+		writeAt(newest, index);
+		assert children[index] == newest;
+		//children[index] = newest;
 		previous.setParent(null);
 	}
 
