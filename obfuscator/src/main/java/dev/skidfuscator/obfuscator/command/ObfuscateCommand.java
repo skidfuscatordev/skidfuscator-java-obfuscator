@@ -52,6 +52,12 @@ public class ObfuscateCommand implements Callable<Integer> {
     )
     private File output;
 
+    @CommandLine.Option(
+            names = {"-ph", "--phantom"},
+            description = "Declare if phantom computation should be used"
+    )
+    private boolean phantom;
+
     @Override
     public Integer call()  {
         final String[] logo = new String[] {
@@ -92,6 +98,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .libs(libs)
                 .runtime(runtime)
                 .exempt(exempt)
+                .phantom(phantom)
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(skidInstance);

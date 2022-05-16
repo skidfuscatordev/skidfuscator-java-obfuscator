@@ -12,20 +12,27 @@ import org.mapleir.asm.ClassNode;
 public class JarContents<C extends ClassNode> {
 
 	private final DataContainer<C> classContents;
+	private final DataContainer<JarResource> classData;
 	private final DataContainer<JarResource> resourceContents;
 
 	public JarContents() {
 		classContents = new ClassNodeContainer<C>();
+		classData = new ResourceContainer();
 		resourceContents = new ResourceContainer();
 	}
 
-	public JarContents(DataContainer<C> classContents, DataContainer<JarResource> resourceContents) {
+	public JarContents(DataContainer<C> classContents, DataContainer<JarResource> classData, DataContainer<JarResource> resourceContents) {
 		this.classContents = classContents == null ? new ClassNodeContainer<C>() : classContents;
+		this.classData = classData == null ? new ResourceContainer() : classData;
 		this.resourceContents = resourceContents == null ? new ResourceContainer() : resourceContents;
 	}
 
 	public final DataContainer<C> getClassContents() {
 		return classContents;
+	}
+
+	public final DataContainer<JarResource> getClassData() {
+		return classData;
 	}
 
 	public final DataContainer<JarResource> getResourceContents() {
@@ -52,7 +59,9 @@ public class JarContents<C extends ClassNode> {
 		r3.addAll(r1);
 		r3.addAll(r2);
 
-		return new JarContents<C>(new ClassNodeContainer<>(c3), new ResourceContainer(r3));
+
+		// TODO add jar data here
+		return new JarContents<C>(new ClassNodeContainer<>(c3), null, new ResourceContainer(r3));
 	}
 
 	public static class ClassNodeContainer<C extends ClassNode> extends DataContainer<C> {
@@ -113,7 +122,6 @@ public class JarContents<C extends ClassNode> {
 
 	public static class ResourceContainer extends DataContainer<JarResource> {
 		private static final long serialVersionUID = -6169578803641192235L;
-
 		public ResourceContainer() {
 			this(16);
 		}

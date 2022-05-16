@@ -1,12 +1,16 @@
 package org.topdank.byteio.in;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import com.google.common.io.ByteStreams;
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.asm.ASMFactory;
 import org.topdank.byteengineer.commons.data.JarInfo;
@@ -39,17 +43,32 @@ public class MultiJarDownloader<C extends ClassNode> extends AbstractJarDownload
 			JarURLConnection connection = (JarURLConnection) new URL(jarinfo.formattedURL()).openConnection();
 			JarFile jarFile = connection.getJarFile();
 			Enumeration<JarEntry> entries = jarFile.entries();
+
+			Map<String, ClassNode> map = new HashMap<>();
+
 			while (entries.hasMoreElements()) {
 				JarEntry entry = entries.nextElement();
-				byte[] bytes = IOUtil.read(jarFile.getInputStream(entry));
+				byte[] bytes = read(jarFile.getInputStream(entry));
 				if (entry.getName().endsWith(".class")) {
 					C cn = factory.create(bytes, entry.getName());
-					contents.getClassContents().add(cn);
+					if(!map.containsKey(cn.getName())) {
+						contents.getClassContents().add(cn);
+					} else {
+						throw new IllegalStateException("duplicate: " + cn.getName());
+					}
+
+					//if(cn.name.equals("org/xmlpull/v1/XmlPullParser")) {
+					//	System.out.println("SingleJarDownloader.download() " +entry.getName() + " " + bytes.length);
+					//}
 				} else {
 					JarResource resource = new JarResource(entry.getName(), bytes);
 					contents.getResourceContents().add(resource);
 				}
 			}
 		}
+	}
+
+	private byte[] read(InputStream inputStream) throws IOException {
+		return ByteStreams.toByteArray(inputStream);
 	}
 }

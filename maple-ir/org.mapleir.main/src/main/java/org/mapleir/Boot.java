@@ -48,7 +48,7 @@ public class Boot {
 		SingleJarDownloader<ClassNode> dl = new SingleJarDownloader<>(new JarInfo(rtjar));
 		dl.download();
 
-		return new LibraryClassSource(app, dl.getJarContents().getClassContents());
+		return null; //new LibraryClassSource(app, dl.getJarContents().getClassContents());
 	}
 
 	public static void main(String[] args) throws Exception {

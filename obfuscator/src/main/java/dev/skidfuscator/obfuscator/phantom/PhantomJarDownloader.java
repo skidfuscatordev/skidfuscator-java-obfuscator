@@ -45,21 +45,21 @@ import java.util.jar.JarFile;
 public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownloader<C> {
 	private final Skidfuscator skidfuscator;
 	protected final JarInfo jarInfo;
-	protected JarContents<C> phantomContents;
+	protected LocateableJarContents<C> phantomContents;
 	private final Logger logger = LogManager.getLogger(this.getClass());
 
 	public PhantomJarDownloader(Skidfuscator skidfuscator, JarInfo jarInfo) {
 		super();
 		this.skidfuscator = skidfuscator;
 		this.jarInfo = jarInfo;
-		this.phantomContents = new JarContents<>();
+		this.phantomContents = new LocateableJarContents<>();
 	}
 
 	public PhantomJarDownloader(Skidfuscator skidfuscator, ASMFactory<C> factory, JarInfo jarInfo) {
 		super(factory);
 		this.skidfuscator = skidfuscator;
 		this.jarInfo = jarInfo;
-		this.phantomContents = new JarContents<>();
+		this.phantomContents = new LocateableJarContents<>();
 	}
 
 	@SneakyThrows
@@ -85,6 +85,12 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 			byte[] bytes = read(jarFile.getInputStream(entry));
 			if (entry.getName().endsWith(".class")) {
 				data.put(entry.getName(), bytes);
+
+				System.out.println("[+] " + entry.getName());
+				contents.getClassData().add(new JarResource(
+						entry.getName(),
+						bytes
+				));
 			} else {
 				JarResource resource = new JarResource(entry.getName(), bytes);
 				contents.getResourceContents().add(resource);
@@ -101,11 +107,15 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 			data.forEach((name, db) -> {
 				C cn;
 				try {
-					cn = factory.create(db, name);
-					if(!data.containsKey(cn.getName())) {
-						contents.getClassContents().add(cn);
-					} else {
-						throw new IllegalStateException("duplicate: " + cn.getName());
+					try {
+						cn = factory.create(db, name);
+						if(!data.containsKey(cn.getName())) {
+							contents.getClassContents().add(cn);
+						} else {
+							throw new IllegalStateException("duplicate: " + cn.getName());
+						}
+					} catch (UnsupportedOperationException e) {
+						contents.getResourceContents().add(new JarResource(name, db));
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -114,6 +124,9 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				progressBar.step();
 			});
 		}
+
+		if (!skidfuscator.getSession().isPhantom())
+			return;
 
 		/*
 		 * Just like in Recaf, copy the file to a temporary file. Overwrite if necessary. This
@@ -220,7 +233,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		java.nio.file.Files.deleteIfExists(input.toPath());
 	}
 
-	public JarContents<C> getPhantomContents() {
+	public LocateableJarContents<C> getPhantomContents() {
 		return phantomContents;
 	}
 

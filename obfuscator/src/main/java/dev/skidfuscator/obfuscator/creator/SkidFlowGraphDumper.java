@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.creator;
 import com.google.common.collect.Lists;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
+import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.FlowEdge;
@@ -28,6 +29,7 @@ import org.objectweb.asm.tree.TryCatchBlockNode;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private final Skidfuscator skidfuscator;
@@ -264,14 +266,15 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		Set<Type> typeSet = er.getTypes();
 		if (typeSet.size() != 1) {
 			// TODO: find base exception
-			final Stack<ClassNode> stack = new Stack<>();
+			final Set<ClassNode> classNodes = new HashSet<>();
 			for (Type typec : er.getTypes()) {
 				final String type1 = typec.getClassName().replace(".", "/");
-				ClassNode classNode = skidfuscator.getCxt()
-						.getApplication()
+				ClassNode classNode = skidfuscator
+						.getClassSource()
 						.findClassNode(type1);
 
 				if (classNode == null) {
+					System.err.println("Failed to find class of type " + type1  + "!" );
 					try {
 						final ClassReader reader = new ClassReader(type1);
 						final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
@@ -285,23 +288,26 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 					}
 				}
 
-				final List<ClassNode> classNodeList = skidfuscator.getCxt()
-						.getApplication()
+				classNodes.add(classNode);
+
+				/*final List<ClassNode> parents = skidfuscator
+						.getClassSource()
 						.getClassTree()
 						.getAllParents(classNode);
 
 				if (stack.isEmpty()) {
-					stack.add(classNode);
-					stack.addAll(Lists.reverse(classNodeList));
+
+					stack.addAll(Lists.reverse(parents));
 				} else {
 					final Stack<ClassNode> toIterate = new Stack<>();
 					toIterate.add(classNode);
-					toIterate.addAll(Lists.reverse(classNodeList));
+					toIterate.addAll(Lists.reverse(parents));
 
 					runner: {
 						while (!stack.isEmpty()) {
+
 							for (ClassNode node : toIterate) {
-								if (node.equals(stack.peek()))
+								if (node.getName().equals(stack.peek().getName()))
 									break runner;
 							}
 
@@ -311,10 +317,74 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 						throw new IllegalStateException("Could not find common exception type between "
 								+ Arrays.toString(er.getTypes().toArray()));
 					}
+				}*/
+			}
+
+			/* Simple DFS naive common ancestor algorithm */
+			/*final ClassNode seedClassNodeForIteration = classNodes.iterator().next();
+			final Stack<ClassNode> hierarchy = new Stack<>();
+			hierarchy.addAll(Lists.reverse(
+						skidfuscator
+							.getClassSource()
+							.getClassTree()
+							.getAllParents(seedClassNodeForIteration)
+					)
+			);
+			hierarchy.add(seedClassNodeForIteration);
+
+			while (true) {
+				final Set<ClassNode> children = new HashSet<>(
+						skidfuscator.getClassSource()
+							.getClassTree()
+							.getAllChildren(hierarchy.peek())
+				);
+
+				if (children.containsAll(classNodes)) {
+					break;
+				}
+
+				System.err.println("Failed for " + hierarchy.peek().getName());
+				System.err.println("Looking for: " + Arrays.toString(classNodes.stream().map(ClassNode::getName).toArray()));
+				for (ClassNode child : children) {
+					System.err.println("    -> " + child.getName());
+				}
+
+				hierarchy.pop();
+			}*/
+
+			final Collection<ClassNode> commonAncestors = skidfuscator
+					.getClassSource()
+					.getClassTree()
+					.getCommonAncestor(classNodes);
+
+			assert commonAncestors.size() > 0 : "No common ancestors between exceptions!";
+			ClassNode mostIdealAncestor = null;
+
+			if (commonAncestors.size() == 1) {
+				mostIdealAncestor = commonAncestors.iterator().next();
+			} else {
+				iteration: {
+					for (ClassNode commonAncestor : commonAncestors) {
+						Stack<ClassNode> parents = new Stack<>();
+						parents.add(commonAncestor);
+
+						while (!parents.isEmpty()) {
+							if (parents.peek()
+									.getName()
+									.equalsIgnoreCase("java/lang/Throwable")) {
+								mostIdealAncestor = commonAncestor;
+								break iteration;
+							}
+
+							parents.addAll(skidfuscator.getClassSource().getClassTree().getParents(parents.pop()));
+						}
+					}
 				}
 			}
 
-			type = Type.getObjectType(stack.peek().getName());
+			assert mostIdealAncestor != null : "Exception parent not found in dumper!";
+
+			type = Type.getObjectType(mostIdealAncestor.getName());
 		} else {
 			type = typeSet.iterator().next();
 		}

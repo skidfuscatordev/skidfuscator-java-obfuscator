@@ -13,4 +13,5 @@ public class SkidfuscatorSession {
     private File libs;
     private File exempt;
     private File runtime;
+    private boolean phantom;
 }

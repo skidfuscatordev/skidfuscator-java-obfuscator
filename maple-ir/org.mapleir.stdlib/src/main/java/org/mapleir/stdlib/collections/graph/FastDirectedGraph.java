@@ -2,6 +2,7 @@ package org.mapleir.stdlib.collections.graph;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.mapleir.dot4j.model.DotGraph;
@@ -217,7 +218,131 @@ public abstract class FastDirectedGraph<N extends FastGraphVertex, E extends Fas
 		map.clear();
 		reverseMap.clear();
 	}
-	
+
+	@Override
+	public Collection<N> getCommonAncestor(Collection<N> nodes) {
+		/*
+		 * Really shite O(3h) algorithm because I'm too lazy to actually learn one
+		 *
+		 * h: maximum height of graph
+		 *
+		 *
+		 */
+		final Map<N, Integer> depthMap = new HashMap<>();
+		final Map<Integer, Map<N, List<N>>> ancestorMap = new HashMap<>();
+
+		int lowestDepth = 9999;
+		
+		/* 
+		 * Here we first compute the max depth of all the branches 
+		 * since we know they all have the common ancestor of 
+		 * java/lang/Object so yeah...
+		 *
+		 * Btw we have to get the depth before to be able to invert
+		 * it
+		 */
+		for (N node : nodes) {
+			int maxDepth = 0;
+			
+			List<N> above = new ArrayList<>();
+			above.add(node);
+			
+			while (true) {
+				final List<N> stack = new ArrayList<>(above);
+				above.clear();
+				for (N n : stack) {
+					this.getSuccessors(n).forEach(above::add);
+				}
+				
+				if (above.isEmpty())
+					break;
+				
+				maxDepth++;
+			}
+			
+			depthMap.put(node, maxDepth);
+			
+			if (lowestDepth > maxDepth) {
+				lowestDepth = maxDepth;
+			}
+		}
+
+		/*
+		 * Here we directly compute all the hierarchy they have 
+		 * at a specified branch height which is inverted
+		 */
+		for (N node : nodes) {
+			/* Get the max depth to properly invert it */
+			int maxDepth = depthMap.get(node);
+
+			List<N> above = new ArrayList<>();
+			above.add(node);
+
+			while (maxDepth >= 0) {
+				final List<N> stack = new ArrayList<>(above);
+				above.clear();
+				for (N n : stack) {
+					this.getSuccessors(n).forEach(above::add);
+				}
+
+				/* Slight optimization since we're not gonna bother with anything higher */
+				if (maxDepth <= lowestDepth) {
+					ancestorMap
+							.computeIfAbsent(maxDepth, e -> new HashMap<>())
+							.put(node, stack);
+				}
+				
+				maxDepth--;
+			}
+		}
+		
+		int depth = lowestDepth;
+		final List<N> common = new ArrayList<>();
+
+		while (depth >= 0) {
+			final Map<N, List<N>> checked = ancestorMap.get(depth);
+
+			final Set<N> visited = new HashSet<>();
+
+			/*
+			 * If there's any common match at a specific height, then
+			 * by default it is the lowest common node but since it's
+			 * a graph, it can be multiple:
+			 *
+			 *      O
+			 *     / \
+			 *    N1 N2
+			 *     \ /
+			 *     / \
+			 *    N4 N5
+			 *
+			 * Both N4 and N5 have N1 and N2 as common ancestors
+			 */
+			for (List<N> value : checked.values()) {
+				for (N n : value) {
+					if (visited.contains(n))
+						continue;
+
+					if (checked.values().stream().allMatch(e -> e.contains(n))) {
+						common.add(n);
+					}
+
+					visited.add(n);
+				}
+
+			}
+
+			/* We have a common ancestor, since we want the lowest one we grab this */
+			if (!common.isEmpty())
+				break;
+
+			depth--;
+		}
+		
+
+		return common;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

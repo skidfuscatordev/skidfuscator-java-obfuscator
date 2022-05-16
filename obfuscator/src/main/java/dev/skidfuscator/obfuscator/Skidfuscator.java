@@ -52,6 +52,7 @@ import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.LibraryClassSource;
+import org.mapleir.app.service.LocateableClassNode;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.context.AnalysisContext;
@@ -60,6 +61,7 @@ import org.mapleir.context.IRCache;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.objectweb.asm.Opcodes;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
 
@@ -159,7 +161,7 @@ public class Skidfuscator {
         LOGGER.log("Finished importing exemptions");
 
 
-        LOGGER.log("Importing jar...");
+        LOGGER.post("Importing jar...");
         final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
                 session.getInput(),
                 this
@@ -170,28 +172,37 @@ public class Skidfuscator {
                 session.getInput().getName(),
                 downloader.getJarContents()
         );
+        LOGGER.log("Finished importing jar.");
 
         if (session.getLibs() != null && session.getLibs().listFiles() != null) {
+            final File[] libs = session.getLibs().listFiles();
+            LOGGER.post("Importing " + libs.length + " libs...");
             try {
                 /* Download the libraries jar contents */
-                final AbstractJarDownloader<ClassNode> jar = MapleJarUtil.importJars(
-                        session.getLibs().listFiles()
-                );
-
-                /* Port it to application class source container */
-                final ApplicationClassSource applicationClassSource = new SkidApplicationClassSource(
-                        "libraries",
-                        jar.getJarContents()
-                );
+                final AbstractJarDownloader<ClassNode> jar = MapleJarUtil.importJars(libs);
 
                 /* Create a new library class source with superior to default priority */
-                final LibraryClassSource libraryClassSource = new LibraryClassSource(
-                        applicationClassSource,
-                        5
+                final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
+                        "libraries",
+                        jar.getJarContents().getClassContents()
                 );
+                LOGGER.post("Imported " + jar.getJarContents().getClassContents().size() + " library classes...");
 
                 /* Add library source to class source */
-                classSource.addLibraries(libraryClassSource);
+                classSource.addLibraries(new LibraryClassSource(
+                        libraryClassSource,
+                        5
+                ));
+
+                final LocateableClassNode classNode = libraryClassSource.findClass("org/json/simple/parser/ParseException");
+                if (classNode == null) {
+                    System.err.println("FUCK");
+                    for (ClassNode vertex : libraryClassSource.iterate()) {
+                        System.out.println(vertex.getDisplayName());
+                    }
+                }
+
+                LOGGER.log("Finished importing libs!");
             } catch (Throwable e) {
                 /* Failed to load libs as a whole */
                 LOGGER.error("Failed to load libs at path " + session.getLibs().getAbsolutePath(), e);
@@ -200,10 +211,13 @@ public class Skidfuscator {
 
         /* Add phantom libs for any content / links which arent generated (low priority) */
         this.classSource.addLibraries(new LibraryClassSource(
-                classSource,
-                downloader.getPhantomContents().getClassContents()
+                new ApplicationClassSource(
+                        "phantom",
+                        downloader.getPhantomContents().getClassContents()
+                ),
+                -1
         ));
-        LOGGER.log("Finished importing jar!");
+        LOGGER.log("Finished importing classpath!");
 
         /* Import JVM */
         LOGGER.post("Beginning importing of the JVM...");
@@ -211,10 +225,24 @@ public class Skidfuscator {
                 session.getRuntime()
         );
         this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                classSource,
-                libs.getJarContents().getClassContents()
+                new ApplicationClassSource(
+                        "runtime",
+                        libs.getJarContents().getClassContents()
+                ),
+                0
         )));
         LOGGER.log("Finished importing the JVM!");
+
+        if (session.getLibs() != null) {
+            final ClassNode classNode = classSource.findClassNode("org/json/simple/parser/ParseException");
+            if (classNode == null) {
+                System.err.println("HAHAHHAHAHAH");
+                for (ClassNode vertex : classSource.iterateWithLibraries()) {
+                    if (classSource.isLibraryClass(vertex.getName()) && vertex.getName().contains("org") && !vertex.getName().contains("sun"))
+                        System.out.println(vertex.getDisplayName());
+                }
+            }
+        }
 
         /* Resolve context */
         LOGGER.post("Resolving basic context...");
@@ -273,6 +301,16 @@ public class Skidfuscator {
             for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(cxt.getIRCache().entrySet())) {
                 MethodNode mn = e.getKey();
 
+                if (exemptAnalysis.isExempt(mn.owner)) {
+                    progressBar.step();
+                    continue;
+                }
+
+                if (exemptAnalysis.isExempt(mn)) {
+                    progressBar.step();
+                    continue;
+                }
+
                 ControlFlowGraph cfg = e.getValue();
 
                 try {
@@ -314,43 +352,59 @@ public class Skidfuscator {
     private void run(final Caller caller) {
         EventBus.call(caller.callBase());
 
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
+        try (ProgressBar progressBar = ProgressUtil.progress(hierarchy.getClasses().size())){
+            for (ClassNode ccls : hierarchy.getClasses()) {
+                final SkidClassNode classNode = (SkidClassNode) ccls;
 
-            if (exemptAnalysis.isExempt(classNode))
-                continue;
-
-            EventBus.call(caller.callClass(classNode));
-        }
-        for (SkidGroup group : hierarchy.getGroups()) {
-            if (group.getMethodNodeList().stream().anyMatch(e -> exemptAnalysis.isExempt(e)))
-                continue;
-
-            EventBus.call(caller.callGroup(group));
-        }
-
-        for (ClassNode ccls : hierarchy.getClasses()) {
-            final SkidClassNode classNode = (SkidClassNode) ccls;
-
-            if (exemptAnalysis.isExempt(classNode))
-                continue;
-
-            for (MethodNode cmth : classNode.getMethods()) {
-                final SkidMethodNode methodNode = (SkidMethodNode) cmth;
-
-                if (methodNode.isAbstract() || methodNode.isNative())
+                if (exemptAnalysis.isExempt(classNode)) {
+                    progressBar.step();
                     continue;
-
-                if (cmth.isStatic() && methodNode.getName().equalsIgnoreCase("main")) {
-                    if (session.getExempt() != null && !exemptAnalysis.isExempt(methodNode)) {
-                        throw new IllegalStateException("Exemption Analysis failed: " + exemptAnalysis);
-                    }
                 }
 
-                if (exemptAnalysis.isExempt(methodNode))
-                    continue;
+                EventBus.call(caller.callClass(classNode));
+                progressBar.step();
+            }
+        }
 
-                EventBus.call(caller.callMethod(methodNode));
+        try (ProgressBar progressBar = ProgressUtil.progress(hierarchy.getGroups().size())){
+            for (SkidGroup group : hierarchy.getGroups()) {
+                if (group.getMethodNodeList().stream().anyMatch(e -> exemptAnalysis.isExempt(e))) {
+                    progressBar.step();
+                    continue;
+                }
+
+                EventBus.call(caller.callGroup(group));
+                progressBar.step();
+            }
+        }
+
+        final int size = hierarchy.getClasses().stream().mapToInt(e -> e.getMethods().size()).sum();
+
+        try (ProgressBar progressBar = ProgressUtil.progress(size)){
+            for (ClassNode ccls : hierarchy.getClasses()) {
+                final SkidClassNode classNode = (SkidClassNode) ccls;
+
+                if (exemptAnalysis.isExempt(classNode)) {
+                    progressBar.stepBy(classNode.getMethods().size());
+                    continue;
+                }
+
+                for (MethodNode cmth : classNode.getMethods()) {
+                    final SkidMethodNode methodNode = (SkidMethodNode) cmth;
+
+                    if (methodNode.isAbstract() || methodNode.isNative()) {
+                        progressBar.step();
+                        continue;
+                    }
+
+                    if (exemptAnalysis.isExempt(methodNode)) {
+                        progressBar.step();
+                        continue;
+                    }
+
+                    EventBus.call(caller.callMethod(methodNode));
+                    progressBar.step();
+                }
             }
         }
     }

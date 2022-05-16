@@ -28,7 +28,6 @@ public class SkidMethodNode extends MethodNode {
     public SkidMethodNode(org.objectweb.asm.tree.MethodNode node, ClassNode owner, Skidfuscator skidfuscator) {
         super(node, owner);
         this.skidfuscator = skidfuscator;
-        this.cfg = skidfuscator.getIrFactory().getFor(this);
         this.flowPredicate = skidfuscator
                 .getPredicateAnalysis()
                 .getBlockPredicate(this);
@@ -64,11 +63,19 @@ public class SkidMethodNode extends MethodNode {
         this.cfg = skidfuscator.getIrFactory().getFor(this);
     }
 
+    public ControlFlowGraph getCfg() {
+        /* Lazy computing to improve import performance */
+        if (cfg == null) {
+            cfg = skidfuscator.getIrFactory().getFor(this);
+        }
+        return cfg;
+    }
+
     /**
      * Dumps the control flow graph to the method node
      */
     public void dump() {
-        new SkidFlowGraphDumper(skidfuscator, cfg, this).dump();
+        new SkidFlowGraphDumper(skidfuscator, this.getCfg(), this).dump();
     }
 
     public void addInvocation(final SkidInvocation invocation) {

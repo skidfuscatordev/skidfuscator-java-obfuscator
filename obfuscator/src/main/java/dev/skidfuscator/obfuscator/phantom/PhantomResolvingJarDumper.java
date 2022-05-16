@@ -83,10 +83,21 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	public int dumpClass(JarOutputStream out, String name, ClassNode cn) throws IOException {
 		JarEntry entry = new JarEntry(cn.getName() + ".class");
 		out.putNextEntry(entry);
-		ClassTree tree = source.getClassTree();
-		
 
-		
+		if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+			out.write(
+					skidfuscator
+					.getJarDownloader()
+					.getJarContents()
+					.getClassData()
+					.namedMap()
+					.get(cn.getName() + ".class")
+					.getData()
+			);
+			return 1;
+		}
+
+		ClassTree tree = source.getClassTree();
 		for(MethodNode m : cn.getMethods()) {
 			if(m.node.instructions.size() > 10000) {
 				System.out.println("large method: " + m + " @" + m.node.instructions.size());
@@ -188,18 +199,12 @@ public class PhantomResolvingJarDumper implements JarDumper {
 					}
 				}
 
-
-				final Stack<ClassNode> stack = new Stack<>();
-				stack.addAll(Lists.reverse(tree.getAllParents(ccn)));
-
-				final Set<ClassNode> nodes = new HashSet<>(tree.getAllParents(dcn));
-				while (!stack.isEmpty()) {
-					if (nodes.contains(stack.peek())) {
-						return stack.peek().getName();
-					}
-
-					stack.pop();
-				}
+				if (true)
+					return skidfuscator.getClassSource().getClassTree()
+							.getCommonAncestor(Arrays.asList(ccn, dcn))
+							.iterator()
+							.next()
+							.getName();
 
 
 				{

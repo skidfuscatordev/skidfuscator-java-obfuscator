@@ -75,6 +75,19 @@ public class MapleJarUtil {
             public int dumpClass(JarOutputStream out, String name, ClassNode cn) throws IOException {
                 JarEntry entry = new JarEntry(cn.getName() + ".class");
                 out.putNextEntry(entry);
+
+                if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+                    out.write(
+                            skidfuscator
+                            .getJarDownloader()
+                            .getJarContents()
+                            .getClassData()
+                            .namedMap().get(cn.getName() + ".class")
+                            .getData()
+                    );
+                    return 1;
+                }
+
                 ClassTree tree = skidfuscator.getClassSource().getClassTree();
 
                 for (MethodNode m : cn.getMethods()) {

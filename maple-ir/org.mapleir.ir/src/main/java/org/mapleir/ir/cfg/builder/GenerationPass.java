@@ -668,6 +668,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				break;
 			}
 
+			case JSR:
 			case GOTO:
 				_jump_uncond(resolveTarget(((JumpInsnNode) ain).label));
 				break;
