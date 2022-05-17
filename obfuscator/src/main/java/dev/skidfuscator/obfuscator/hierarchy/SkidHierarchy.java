@@ -167,10 +167,12 @@ public class SkidHierarchy implements Hierarchy {
         try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
             nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
-                    final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().get(method);
+                    final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().getFor(method);
 
-                    if (cfg == null)
+                    if (cfg == null) {
+                        System.err.println("Failed to compute CFG for method " + method.toString());
                         continue;
+                    }
 
                     cfg.allExprStream()
                             .parallel()
@@ -227,9 +229,15 @@ public class SkidHierarchy implements Hierarchy {
         SkidGroup group = methodToGroupMap.get(methodNode);
 
         if (group == null) {
-            final Set<MethodNode> h = session.getCxt()
+            final Set<MethodNode> h = session
+                    .getCxt()
                     .getInvocationResolver()
-                    .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
+                    .getHierarchyMethodChain(
+                            methodNode.owner,
+                            methodNode.getName(),
+                            methodNode.getDesc(),
+                            true
+                    );
             h.add(methodNode);
 
             final List<MethodNode> methods = new ArrayList<>(h);

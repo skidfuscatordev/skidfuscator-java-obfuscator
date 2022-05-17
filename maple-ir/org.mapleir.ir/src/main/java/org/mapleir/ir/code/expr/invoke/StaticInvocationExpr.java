@@ -15,6 +15,10 @@ public class StaticInvocationExpr extends InvocationExpr {
 		super(CallType.STATIC, args, owner, name, desc);
 	}
 
+	public StaticInvocationExpr(CallType callType, Expr[] args, String owner, String name, String desc) {
+		super(callType, args, owner, name, desc);
+	}
+
 	@Override
 	public StaticInvocationExpr copy() {
 		return new StaticInvocationExpr(copyArgs(), getOwner(), getName(), getDesc());
@@ -32,7 +36,13 @@ public class StaticInvocationExpr extends InvocationExpr {
 
 	@Override
 	protected void generateCallCode(MethodVisitor visitor) {
-		visitor.visitMethodInsn(Opcodes.INVOKESTATIC, getOwner(), getName(), getDesc(), getCallType() == CallType.INTERFACE);
+		visitor.visitMethodInsn(
+				Opcodes.INVOKESTATIC,
+				getOwner(),
+				getName(),
+				getDesc(),
+				getCallType() == CallType.INTERFACE
+		);
 	}
 	
 	@Override

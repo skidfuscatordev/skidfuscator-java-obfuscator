@@ -57,11 +57,11 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
             return var;
 
         for (Exclusion exclusion : exclusions) {
-            System.out.println("Testing " + exclusion);
+            //System.out.println("Testing " + exclusion);
             try {
                 if (exclusion.test(classNode)) {
                     classCache.put(classNode, true);
-                    System.out.println("EXCLUDED --> " + classNode.getName());
+                    //System.out.println("EXCLUDED --> " + classNode.getName());
                     return true;
                 }
             } catch (AssertionError e) {
@@ -69,7 +69,7 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
                 e.printStackTrace();
             }
         }
-        System.out.println("INCLUDED --> " + classNode.getName());
+        //System.out.println("INCLUDED --> " + classNode.getName());
         classCache.put(classNode, false);
         return false;
     }

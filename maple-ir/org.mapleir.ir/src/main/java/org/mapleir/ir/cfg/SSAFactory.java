@@ -3,6 +3,7 @@ package org.mapleir.ir.cfg;
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
 import org.mapleir.ir.cfg.builder.ssa.CfgBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.*;
+import org.mapleir.ir.cfg.builder.ssa.expr.invoke.StaticInvocationExprBuilder;
 import org.mapleir.ir.cfg.builder.ssa.stmt.*;
 import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyPhiStmtBuilder;
 import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyVarStmtBuilder;
@@ -42,6 +43,8 @@ public interface SSAFactory {
     PhiExprBuilder phi_expr();
 
     VarExprBuilder var_expr();
+
+    StaticInvocationExprBuilder static_invoke_expr();
 
     CopyPhiStmtBuilder copy_phi_stmt();
 

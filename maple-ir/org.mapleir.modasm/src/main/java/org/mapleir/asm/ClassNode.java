@@ -94,4 +94,14 @@ public class ClassNode implements FastGraphVertex {
     public boolean isSynthetic() {
         return (node.access & Opcodes.ACC_SYNTHETIC) != 0;
     }
+
+    public boolean isInterface() {
+        return (node.access & Opcodes.ACC_INTERFACE) != 0;
+    }
+
+    public boolean isAnnoyingVersion() {
+        return node.version > Opcodes.V1_8;
+    }
+
+
 }

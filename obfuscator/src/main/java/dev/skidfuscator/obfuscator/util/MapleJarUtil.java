@@ -17,6 +17,7 @@ import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.MultiJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
+import org.topdank.byteio.in.SingleJmodDownloader;
 
 import java.io.*;
 import java.util.jar.JarEntry;
@@ -135,6 +136,14 @@ public class MapleJarUtil {
     @SneakyThrows
     public static SingleJarDownloader<ClassNode> importJar(File file) {
         SingleJarDownloader<ClassNode> dl = new SingleJarDownloader<>(new JarInfo(file));
+        dl.download();
+
+        return dl;
+    }
+
+    @SneakyThrows
+    public static SingleJmodDownloader<ClassNode> importJmod(File file) {
+        SingleJmodDownloader<ClassNode> dl = new SingleJmodDownloader<>(new JarInfo(file));
         dl.download();
 
         return dl;

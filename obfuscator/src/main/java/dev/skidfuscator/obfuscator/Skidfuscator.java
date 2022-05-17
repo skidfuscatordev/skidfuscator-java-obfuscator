@@ -64,12 +64,19 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
+import org.topdank.byteio.in.SingleJmodDownloader;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Getter
 public class Skidfuscator {
@@ -98,7 +105,7 @@ public class Skidfuscator {
     public void run() {
         LOGGER.post("Beginning Skidfuscator Enterprise...");
         SkiddedDirectory.init(null);
-        this.irFactory = new SkidCache();
+        this.irFactory = new SkidCache(this);
         this.exemptAnalysis = new SimpleExemptAnalysis();
 
         LOGGER.post("Resolving predicate analysis...");
@@ -221,16 +228,34 @@ public class Skidfuscator {
 
         /* Import JVM */
         LOGGER.post("Beginning importing of the JVM...");
-        final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
-                session.getRuntime()
-        );
-        this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                new ApplicationClassSource(
-                        "runtime",
-                        libs.getJarContents().getClassContents()
-                ),
-                0
-        )));
+        if (!session.isJmod()) {
+            final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
+                    session.getRuntime()
+            );
+            this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                    new ApplicationClassSource(
+                            "runtime",
+                            libs.getJarContents().getClassContents()
+                    ),
+                    0
+            )));
+        } else {
+            for (File file : session.getRuntime().listFiles()) {
+                System.out.println("Trying to download " + file.toString());
+                final SingleJmodDownloader<ClassNode> libs = MapleJarUtil.importJmod(
+                        file
+                );
+                this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                        new ApplicationClassSource(
+                                file.getName(),
+                                libs.getJarContents().getClassContents()
+                        ),
+                        0
+                )));
+            }
+
+        }
+
         LOGGER.log("Finished importing the JVM!");
 
         if (session.getLibs() != null) {
