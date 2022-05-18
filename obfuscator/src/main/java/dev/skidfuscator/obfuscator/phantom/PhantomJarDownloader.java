@@ -86,7 +86,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 			if (entry.getName().endsWith(".class")) {
 				data.put(entry.getName(), bytes);
 
-				System.out.println("[+] " + entry.getName());
+				//System.out.println("[+] " + entry.getName());
 				contents.getClassData().add(new JarResource(
 						entry.getName(),
 						bytes

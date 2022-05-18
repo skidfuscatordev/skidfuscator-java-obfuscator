@@ -28,10 +28,10 @@ public class SkidMethodNode extends MethodNode {
     public SkidMethodNode(org.objectweb.asm.tree.MethodNode node, ClassNode owner, Skidfuscator skidfuscator) {
         super(node, owner);
         this.skidfuscator = skidfuscator;
+        this.invokers = new ArrayList<>();
         this.flowPredicate = skidfuscator
                 .getPredicateAnalysis()
                 .getBlockPredicate(this);
-        this.invokers = new ArrayList<>();
     }
 
     public int getBlockPredicate(final SkidBlock block) {

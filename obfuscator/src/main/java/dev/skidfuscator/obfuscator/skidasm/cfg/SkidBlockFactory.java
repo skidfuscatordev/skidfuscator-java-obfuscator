@@ -85,8 +85,13 @@ public class SkidBlockFactory extends DefaultBlockFactory {
                         .getClassSource()
                         .findClassNode(owner);
 
-                final boolean isInterface = classNode != null
-                        && (classNode.isAnnoyingVersion() && classNode.isInterface());
+                if (classNode == null) {
+                    //System.out.println("Failed to find " + owner + " in reference path...");
+                } else if (classNode.isInterface()){
+                    //System.out.println("Class " + owner + " is of version " + classNode.node.version + " (annoying: " + classNode.isAnnoyingVersion() + ")");
+                }
+
+                final boolean isInterface = classNode != null && classNode.isInterface();
 
                 return new StaticInvocationExpr(
                         isInterface

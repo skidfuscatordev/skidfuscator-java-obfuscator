@@ -23,7 +23,7 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
         final Exclusion exclusion = ExclusionHelper.renderExclusion(exclusionStr);
         exclusions.add(exclusion);
 
-        System.out.println(this);
+        //System.out.println(this);
     }
 
     @Override

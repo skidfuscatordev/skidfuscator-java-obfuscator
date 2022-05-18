@@ -241,7 +241,9 @@ public class Skidfuscator {
             )));
         } else {
             for (File file : session.getRuntime().listFiles()) {
-                System.out.println("Trying to download " + file.toString());
+                if (!file.getAbsolutePath().endsWith(".jmod"))
+                    continue;
+                LOGGER.post("↳ Trying to download " + file.toString());
                 final SingleJmodDownloader<ClassNode> libs = MapleJarUtil.importJmod(
                         file
                 );
@@ -252,6 +254,7 @@ public class Skidfuscator {
                         ),
                         0
                 )));
+                LOGGER.post("✓ Success");
             }
 
         }

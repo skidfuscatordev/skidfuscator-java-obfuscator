@@ -175,7 +175,6 @@ public class SkidHierarchy implements Hierarchy {
                     }
 
                     cfg.allExprStream()
-                            .parallel()
                             .filter(e -> e instanceof Invokable && !(e instanceof DynamicInvocationExpr))
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {

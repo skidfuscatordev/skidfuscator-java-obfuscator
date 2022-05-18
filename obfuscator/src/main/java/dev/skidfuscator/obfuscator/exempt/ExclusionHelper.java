@@ -67,7 +67,6 @@ public class ExclusionHelper {
                     switch (type) {
                         case CLASS: {
                             final Pattern regex = Pattern.compile(parsed);
-                            System.out.println("Found pattern for clazz: [" + regex + "]");
                             map.put(type, new ExclusionTester<ClassNode>() {
                                 @Override
                                 public boolean test(ClassNode var) {
@@ -82,8 +81,6 @@ public class ExclusionHelper {
                                     if (!initialMatch) {
                                         System.out.println("Oh?");
                                     }
-
-                                    System.out.println("Testing if match: " + var.getName());
 
                                     return initialMatch
                                             && regex.matcher(var.getName()).find();

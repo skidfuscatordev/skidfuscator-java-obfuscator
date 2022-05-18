@@ -57,10 +57,6 @@ public class ApplicationClassSource extends ClassSource {
 
 		libraries.sort(Comparator.comparingInt(LibraryClassSource::getPriority));
 		Collections.reverse(libraries);
-
-		for (LibraryClassSource library : libraries) {
-			System.out.println("LIBRARY --> " + library.parent.getName() + " [priority: " + library.getPriority() + "]");
-		}
 	}
 	
 	public ClassNode findClassNode(String name) {

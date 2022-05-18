@@ -2,7 +2,9 @@ package org.mapleir.ir.code.expr.invoke;
 
 import org.mapleir.app.service.InvocationResolver;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Opcode;
 import org.mapleir.stdlib.collections.CollectionUtils;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.mapleir.asm.MethodNode;
