@@ -13,7 +13,9 @@ import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.passes.rename.ClassRenamerPass;
 import org.objectweb.asm.ClassWriter;
 import org.topdank.byteengineer.commons.asm.DefaultASMFactory;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
+import org.topdank.byteengineer.commons.data.JarResource;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.MultiJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
@@ -31,61 +33,25 @@ import java.util.jar.JarOutputStream;
 public class MapleJarUtil {
     public static void dumpJar(Skidfuscator skidfuscator, PassGroup masterGroup, String outputFile) throws IOException {
         (new PhantomResolvingJarDumper(skidfuscator, skidfuscator.getJarDownloader().getJarContents(), skidfuscator.getClassSource()) {
+
             @Override
-            public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
-//				if(name.startsWith("META-INF")) {
-//					System.out.println(" ignore " + name);
-//					return 0;
-//				}
-                if(name.equals("META-INF/MANIFEST.MF")) {
-                    ClassRenamerPass renamer = (ClassRenamerPass) masterGroup.getPass(e -> e.is(ClassRenamerPass.class));
+            public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
+                ClassNode cn = classData.getClassNode();
+                JarEntry entry = new JarEntry(classData.getName());
 
-                    if(renamer != null) {
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(baos));
-                        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file)));
-
-                        String line;
-                        while((line = br.readLine()) != null) {
-                            String[] parts = line.split(": ", 2);
-                            if(parts.length != 2) {
-                                bw.write(line);
-                                continue;
-                            }
-
-                            if(parts[0].equals("Main-Class")) {
-                                String newMain = renamer.getRemappedName(parts[1].replace(".", "/")).replace("/", ".");
-                                parts[1] = newMain;
-                            }
-
-                            bw.write(parts[0]);
-                            bw.write(": ");
-                            bw.write(parts[1]);
-                            bw.write(System.lineSeparator());
-                        }
-
-                        br.close();
-                        bw.close();
-
-                        file = baos.toByteArray();
-                    }
-                }
-                return super.dumpResource(out, name, file);
-            }
-
-            public int dumpClass(JarOutputStream out, String name, ClassNode cn) throws IOException {
-                JarEntry entry = new JarEntry(cn.getName() + ".class");
-                out.putNextEntry(entry);
-
-                if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
-                    out.write(
-                            skidfuscator
+                if (cn.isAnnoyingVersion()) {
+                    final JarClassData resource = skidfuscator
                             .getJarDownloader()
                             .getJarContents()
-                            .getClassData()
-                            .namedMap().get(cn.getName() + ".class")
-                            .getData()
-                    );
+                            .getClassContents()
+                            .namedMap()
+                            .get(classData.getName());
+
+                    if (resource == null) {
+                        throw new IllegalStateException("Failed to find class source for " + cn.getName());
+                    }
+                    out.putNextEntry(entry);
+                    out.write(resource.getData());
                     return 1;
                 }
 
@@ -93,11 +59,12 @@ public class MapleJarUtil {
 
                 for (MethodNode m : cn.getMethods()) {
                     if (m.node.instructions.size() > 10000) {
-                        System.out.println("large method: " + m + " @" + m.node.instructions.size());
+                        System.out.println("\rlarge method: " + m + " @" + m.node.instructions.size() + "\n");
                     }
                 }
 
                 try {
+                    out.putNextEntry(entry);
                     try {
                         ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
                         cn.node.accept(writer);
@@ -107,10 +74,10 @@ public class MapleJarUtil {
                         cn.node.accept(writer);
                         out.write(writer.toByteArray());
                         var8.printStackTrace();
-                        System.err.println("Failed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, which may cause runtime abnormalities");
+                        System.err.println("\rFailed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, which may cause runtime abnormalities\n");
                     }
                 } catch (Exception var9) {
-                    System.err.println("Failed to write " + cn.getName() + "! Skipping class...");
+                    System.err.println("\rFailed to write " + cn.getName() + "! Skipping class...\n");
                     var9.printStackTrace();
                 }
 

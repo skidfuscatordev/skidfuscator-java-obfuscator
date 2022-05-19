@@ -5,12 +5,13 @@ import java.io.IOException;
 import java.util.jar.JarOutputStream;
 
 import org.mapleir.asm.ClassNode;
+import org.topdank.byteengineer.commons.data.JarClassData;
 
-public abstract interface JarDumper {
+public interface JarDumper {
 	
-	public void dump(File file) throws IOException;
+	void dump(File file) throws IOException;
 	
-	public abstract int dumpClass(JarOutputStream out, String name, ClassNode cn) throws IOException;
+	int dumpClass(JarOutputStream out, JarClassData classData) throws IOException;
 	
-	public abstract int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException;
+	int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException;
 } //?

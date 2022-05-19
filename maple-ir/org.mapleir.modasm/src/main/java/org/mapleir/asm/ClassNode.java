@@ -100,8 +100,13 @@ public class ClassNode implements FastGraphVertex {
     }
 
     public boolean isAnnoyingVersion() {
-        return node.version > Opcodes.V1_8;
+        return (node.version & 0xFFFF) < Opcodes.V1_8;
     }
 
-
+    @Override
+    public String toString() {
+        return "ClassNode{" +
+                "node=" + node +
+                '}';
+    }
 }

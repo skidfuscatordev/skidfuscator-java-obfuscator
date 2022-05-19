@@ -248,7 +248,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     );
                 }
             });
-
         };
 
         /*
@@ -426,8 +425,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
                 invoker.getExpr().setArgumentExprs(args);
                 invoker.getExpr().setDesc(desc);
-
-                //System.out.println("Fixed invoker " + invoker.toString());
             }
         }
 

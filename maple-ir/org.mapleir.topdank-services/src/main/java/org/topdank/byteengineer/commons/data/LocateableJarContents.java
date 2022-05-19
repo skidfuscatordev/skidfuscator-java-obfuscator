@@ -4,7 +4,7 @@ import java.net.URL;
 
 import org.mapleir.asm.ClassNode;
 
-public class LocateableJarContents<C extends ClassNode> extends JarContents<C> {
+public class LocateableJarContents extends JarContents {
 
 	private final URL[] jarUrls;
 
@@ -13,7 +13,7 @@ public class LocateableJarContents<C extends ClassNode> extends JarContents<C> {
 		this.jarUrls = jarUrls;
 	}
 
-	public LocateableJarContents(DataContainer<C> classContents, DataContainer<JarResource> resourceContents, URL... jarUrls) {
+	public LocateableJarContents(DataContainer<JarClassData> classContents, DataContainer<JarResource> resourceContents, URL... jarUrls) {
 		super(classContents, null, resourceContents);
 		this.jarUrls = jarUrls;
 	}

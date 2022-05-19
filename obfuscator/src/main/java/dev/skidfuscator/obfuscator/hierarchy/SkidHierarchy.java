@@ -9,6 +9,7 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AnnotationNode;
 
 import java.util.*;
@@ -166,6 +167,9 @@ public class SkidHierarchy implements Hierarchy {
     private void setupInvoke() {
         try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
             nodes.forEach(c -> {
+                if (c.isAnnoyingVersion())
+                    return;
+
                 for (MethodNode method : c.getMethods()) {
                     final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().getFor(method);
 

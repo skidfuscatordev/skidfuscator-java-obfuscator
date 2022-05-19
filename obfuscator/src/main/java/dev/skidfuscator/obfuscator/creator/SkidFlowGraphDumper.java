@@ -13,6 +13,7 @@ import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Stmt;
+import org.mapleir.ir.code.stmt.NopStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.stdlib.collections.graph.*;
@@ -55,6 +56,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			labels.put(b, new LabelNode());
 		}
 
+		// Fix ranges
+		fixRanges();
+
 		// Linearize
 		linearize();
 
@@ -84,7 +88,19 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		
 		m.node.visitEnd();
 	}
-	
+
+	private void fixRanges() {
+		/*
+		 * Short term fix to prevent TryCatchNode-s from being optimized
+		 * out, leaving an open range
+		 */
+		for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
+			range.getNodes().stream().filter(BasicBlock::isEmpty).forEach(e -> {
+				e.add(new NopStmt());
+			});
+		}
+	}
+
 	private void linearize() {
 		if (cfg.getEntries().size() != 1)
 			throw new IllegalStateException("CFG doesn't have exactly 1 entry");
@@ -274,7 +290,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 						.findClassNode(type1);
 
 				if (classNode == null) {
-					System.err.println("Failed to find class of type " + type1  + "!" );
+					System.err.println("\r\nFailed to find class of type " + type1  + "!\n" );
 					try {
 						final ClassReader reader = new ClassReader(type1);
 						final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
@@ -408,10 +424,12 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		for (;;) {
 			// check for endpoints
 			if (orderIdx + 1 == order.size()) { // end of method
+				assert start != terminalLabel.getLabel() : "Label assigned is semantically identical.";
 				m.node.visitTryCatchBlock(start, terminalLabel.getLabel(), handler, type.getInternalName());
 				break;
 			} else if (rangeIdx + 1 == range.size()) { // end of range
 				Label end = getLabel(order.get(orderIdx + 1));
+				assert start != end : "Label assigned is semantically identical.";
 				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
 				break;
 			}
@@ -420,8 +438,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			BasicBlock nextBlock = range.get(rangeIdx + 1);
 			int nextOrderIdx = order.indexOf(nextBlock);
 			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
-				System.err.println("[warn] Had to split up a range: " + m);
+				System.err.println("\r\n[warn] Had to split up a range: " + m + "\n");
 				Label end = getLabel(order.get(orderIdx + 1));
+				assert start != end : "Label assigned is semantically identical.";
 				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
 				start = getLabel(nextBlock);
 			}
@@ -451,6 +470,10 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				if (l == tc.handler.getLabel()) {
 					handler = i;
 				}
+			}
+
+			if (start == end) {
+				throw new IllegalStateException("Try block ends on starting position in " + m);
 			}
 			if (start == -1 || end == -1 || handler == -1)
 				throw new IllegalStateException("Try/catch endpoints missing: " + start + " " + end + " " + handler + m);

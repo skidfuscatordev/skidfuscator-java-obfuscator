@@ -9,6 +9,7 @@ import java.util.jar.JarOutputStream;
 import org.mapleir.asm.ClassHelper;
 import org.objectweb.asm.ClassWriter;
 import org.mapleir.asm.ClassNode;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 import org.topdank.byteengineer.commons.data.JarResource;
 import org.topdank.byteio.util.Debug;
@@ -20,14 +21,14 @@ import org.topdank.byteio.util.Debug;
  */
 public class CompleteJarDumper implements JarDumper {
 
-	private final JarContents<?> contents;
+	private final JarContents contents;
 
 	/**
 	 * Creates a new JarDumper.
 	 *
 	 * @param contents Contents of jar.
 	 */
-	public CompleteJarDumper(JarContents<ClassNode> contents) {
+	public CompleteJarDumper(JarContents contents) {
 		this.contents = contents;
 	}
 
@@ -44,8 +45,8 @@ public class CompleteJarDumper implements JarDumper {
 		JarOutputStream jos = new JarOutputStream(new FileOutputStream(file));
 		int classesDumped = 0;
 		int resourcesDumped = 0;
-		for (ClassNode cn : contents.getClassContents()) {
-			classesDumped += dumpClass(jos, cn.getName(), cn);
+		for (JarClassData cn : contents.getClassContents()) {
+			classesDumped += dumpClass(jos, cn);
 		}
 		for (JarResource res : contents.getResourceContents()) {
 			resourcesDumped += dumpResource(jos, res.getName(), res.getData());
@@ -60,16 +61,15 @@ public class CompleteJarDumper implements JarDumper {
 	 * Writes the {@link ClassNode} to the Jar.
 	 *
 	 * @param out The {@link JarOutputStream}.
-	 * @param cn The ClassNode.
-	 * @param name The entry name.
+	 * @param classData The {@link JarClassData}.
 	 * @throws IOException If there is a write error.
 	 * @return The amount of things dumped, 1 or if you're not dumping it 0.
 	 */
 	@Override
-	public int dumpClass(JarOutputStream out, String name, ClassNode cn) throws IOException {
-		JarEntry entry = new JarEntry(cn.getName() + ".class");
+	public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
+		JarEntry entry = new JarEntry(classData.getClassNode().getName() + ".class");
 		out.putNextEntry(entry);
-		out.write(ClassHelper.toByteArray(cn, ClassWriter.COMPUTE_FRAMES));
+		out.write(ClassHelper.toByteArray(classData.getClassNode(), ClassWriter.COMPUTE_FRAMES));
 		return 1;
 	}
 

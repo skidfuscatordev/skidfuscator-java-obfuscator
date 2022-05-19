@@ -62,6 +62,7 @@ import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
 import org.topdank.byteio.in.SingleJmodDownloader;
@@ -76,6 +77,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Getter
@@ -191,7 +193,7 @@ public class Skidfuscator {
                 /* Create a new library class source with superior to default priority */
                 final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                         "libraries",
-                        jar.getJarContents().getClassContents()
+                        jar.getJarContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
                 );
                 LOGGER.post("Imported " + jar.getJarContents().getClassContents().size() + " library classes...");
 
@@ -220,7 +222,7 @@ public class Skidfuscator {
         this.classSource.addLibraries(new LibraryClassSource(
                 new ApplicationClassSource(
                         "phantom",
-                        downloader.getPhantomContents().getClassContents()
+                        downloader.getPhantomContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
                 ),
                 -1
         ));
@@ -235,7 +237,11 @@ public class Skidfuscator {
             this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
                     new ApplicationClassSource(
                             "runtime",
-                            libs.getJarContents().getClassContents()
+                            libs.getJarContents()
+                                    .getClassContents()
+                                    .stream()
+                                    .map(JarClassData::getClassNode)
+                                    .collect(Collectors.toList())
                     ),
                     0
             )));
@@ -251,6 +257,9 @@ public class Skidfuscator {
                         new ApplicationClassSource(
                                 file.getName(),
                                 libs.getJarContents().getClassContents()
+                                        .stream()
+                                        .map(JarClassData::getClassNode)
+                                        .collect(Collectors.toList())
                         ),
                         0
                 )));
@@ -328,25 +337,15 @@ public class Skidfuscator {
         try(ProgressBar progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {
             for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(cxt.getIRCache().entrySet())) {
                 MethodNode mn = e.getKey();
-
-                if (exemptAnalysis.isExempt(mn.owner)) {
-                    progressBar.step();
-                    continue;
-                }
-
-                if (exemptAnalysis.isExempt(mn)) {
-                    progressBar.step();
-                    continue;
-                }
-
                 ControlFlowGraph cfg = e.getValue();
 
                 try {
                     cfg.verify();
+                    (new SkidFlowGraphDumper(this, cfg, mn)).dump();
                 } catch (Exception ex){
+                    if (ex instanceof IllegalStateException)
                     ex.printStackTrace();
                 }
-                (new SkidFlowGraphDumper(this, cfg, mn)).dump();
                 progressBar.step();
             }
         }

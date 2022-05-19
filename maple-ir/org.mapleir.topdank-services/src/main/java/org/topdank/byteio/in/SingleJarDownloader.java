@@ -12,6 +12,7 @@ import java.util.jar.JarFile;
 
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.asm.ASMFactory;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteengineer.commons.data.JarResource;
 import org.topdank.byteengineer.commons.data.LocateableJarContents;
@@ -38,7 +39,7 @@ public class SingleJarDownloader<C extends ClassNode> extends AbstractJarDownloa
 		JarURLConnection connection = (JarURLConnection) (url = new URL(jarInfo.formattedURL())).openConnection();
 		JarFile jarFile = connection.getJarFile();
 		Enumeration<JarEntry> entries = jarFile.entries();
-		contents = new LocateableJarContents<>(url);
+		contents = new LocateableJarContents(url);
 		
 		Map<String, ClassNode> map = new HashMap<>();
 		
@@ -48,7 +49,11 @@ public class SingleJarDownloader<C extends ClassNode> extends AbstractJarDownloa
 			if (entry.getName().endsWith(".class")) {
 				C cn = factory.create(bytes, entry.getName());
 				if(!map.containsKey(cn.getName())) {
-					contents.getClassContents().add(cn);
+					contents.getClassContents().add(new JarClassData(
+							entry.getName(),
+							bytes,
+							cn
+					));
 				} else {
 					throw new IllegalStateException("duplicate: " + cn.getName());
 				}
