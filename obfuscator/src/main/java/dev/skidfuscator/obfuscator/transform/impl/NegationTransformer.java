@@ -3,14 +3,23 @@ package dev.skidfuscator.obfuscator.transform.impl;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
+import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
+import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
+import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.NegationExpr;
+import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -70,26 +79,62 @@ public class NegationTransformer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        cfg.allExprStream()
-                .filter(ConstantExpr.class::isInstance)
-                .map(ConstantExpr.class::cast)
-                .filter(constantExpr -> TYPES.contains(constantExpr.getType()))
-                .collect(Collectors.toList())
-                .forEach(unit -> {
-                    final CodeUnit parent = unit.getParent();
+        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+            for (Stmt stmt : new HashSet<>(vertex)) {
+                for (Expr expr : stmt.enumerateOnlyChildren()) {
+                    if (!(expr instanceof ConstantExpr))
+                        continue;
 
-                    final int constant = ((Number) unit.getConstant()).intValue();
+                    final ConstantExpr constantExpr = (ConstantExpr) expr;
+
+                    if (!TYPES.contains(constantExpr.getType()))
+                        continue;
+
+                    final SkidBlock skidBlock = (SkidBlock) vertex;
+
+                    assert constantExpr.getParent() != null;
+
+                    final CodeUnit parent = constantExpr.getParent();
+
+                    final int constant = ((Number) constantExpr.getConstant()).intValue();
 
                     Expr modified;
-
                     if (constant < 0) {
                         modified = new NegationExpr(new ConstantExpr(Math.abs(constant)));
                     } else {
                         // I have no clue why this works now, and it didn't previously.
                         modified = new NegationExpr(new NegationExpr(new ConstantExpr(constant)));
                     }
+                    parent.overwrite(constantExpr, modified);
 
-                    parent.overwrite(unit, modified);
+                    if (IntegerBlockPredicateRenderer.DEBUG) {
+                        final Local local1 = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+                        vertex.add(
+                                vertex.indexOf(stmt) + 1,
+                                new SkidCopyVarStmt(
+                                        new VarExpr(local1, Type.getType(String.class)),
+                                        new ConstantExpr(
+                                                "[Constant] "
+                                                        + constantExpr.getConstant()
+                                                        + " -> "
+                                                        + constant
+                                                        + " predicate="
+                                                        + methodNode.getFlowPredicate().get(skidBlock)
+                                        )
+                                )
+                        );
+                    }
+                }
+            }
+        }
+
+        cfg.allExprStream()
+                .filter(ConstantExpr.class::isInstance)
+                .map(ConstantExpr.class::cast)
+                .filter(constantExpr -> TYPES.contains(constantExpr.getType()))
+                .collect(Collectors.toList())
+                .forEach(unit -> {
+
                 });
     }
 }

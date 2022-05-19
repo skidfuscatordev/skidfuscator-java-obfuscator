@@ -8,7 +8,7 @@ import org.topdank.byteengineer.commons.data.JarContents;
 
 public class NonMetaJarDumper extends CompleteJarDumper {
 
-	public NonMetaJarDumper(JarContents<ClassNode> contents) {
+	public NonMetaJarDumper(JarContents contents) {
 		super(contents);
 	}
 

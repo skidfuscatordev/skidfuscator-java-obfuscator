@@ -17,6 +17,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.ClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeBlock;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
@@ -57,7 +58,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
 
     @Listen
     void handle(final InitMethodTransformEvent event) {
@@ -67,7 +68,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         final Local local = methodNode
                 .getCfg()
                 .getLocals()
-                .get(methodNode.getCfg().getLocals().getMaxLocals() + 2);
+                .get(methodNode.getCfg().getLocals().getMaxLocals() + 3);
 
         flowPredicate.setGetter(new PredicateFlowGetter() {
             @Override
@@ -247,7 +248,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     );
                 }
             });
-
         };
 
         /*
@@ -350,14 +350,19 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     void handle(final InitGroupTransformEvent event) {
         final SkidGroup skidGroup = event.getGroup();
 
-        if (skidGroup.getPredicate().getGetter() != null)
+        if (skidGroup.getPredicate().getGetter() != null) {
+            System.err.println("SkidGroup " + skidGroup.getName() + " does not have getter!");
             return;
+        }
 
-        final boolean entryPoint = skidGroup.getInvokers().isEmpty()
-                || skidGroup.isAnnotation();
+        final boolean entryPoint = skidGroup.isEntryPoint();
         Local local = null;
         int stackHeight = -1;
         String desc = null;
+
+        if (entryPoint) {
+            //System.err.println("SkidGroup " + skidGroup.getName() + "#" + skidGroup.getDesc() + " is an entry point!");
+        }
 
         if (!entryPoint) {
             for (MethodNode methodNode : skidGroup.getMethodNodeList()) {
@@ -415,13 +420,11 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         invoker.getExpr().getArgumentExprs().length
                 );
 
-                final ConstantExpr constant = new ConstantExpr(skidGroup.getPredicate().getPublic());
+                final ConstantExpr constant = new SkidConstantExpr(skidGroup.getPredicate().getPublic());
                 args[args.length - 1] = constant;
 
                 invoker.getExpr().setArgumentExprs(args);
                 invoker.getExpr().setDesc(desc);
-
-                //System.out.println("Fixed invoker " + invoker.toString());
             }
         }
 
@@ -554,124 +557,19 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             entryPoint.add(1, jumpStmt);
         }
 
-        /*
-         *     ______                     __  _
-         *    / ____/  __________  ____  / /_(_)___  ____
-         *   / __/ | |/_/ ___/ _ \/ __ \/ __/ / __ \/ __ \
-         *  / /____>  </ /__/  __/ /_/ / /_/ / /_/ / / / /
-         * /_____/_/|_|\___/\___/ .___/\__/_/\____/_/ /_/
-         *                     /_/
-         */
-
-        for (ExceptionRange<BasicBlock> blockRange : cfg.getRanges()) {
-            LinkedHashMap<Integer, BasicBlock> basicBlockMap = new LinkedHashMap<>();
-            List<Integer> sortedList = new ArrayList<>();
-
-            // Save current handler
-            final BasicBlock basicHandler = blockRange.getHandler();
-            final SkidBlock handler = (SkidBlock) blockRange.getHandler();
-
-            // Create new block handle
-            final BasicBlock toppleHandler = new SkidBlock(cfg);
-            cfg.addVertex(toppleHandler);
-            blockRange.setHandler(toppleHandler);
-
-            // Hasher
-            final HashTransformer hashTransformer = new BitwiseHashTransformer();
-
-            // For all block being read
-            for (BasicBlock node : blockRange.getNodes()) {
-                if (node instanceof FakeBlock)
-                    continue;
-
-                // Get their internal seed and add it to the list
-                final SkidBlock internal = (SkidBlock) node;
-
-                // Create a new switch block and get it's seeded variant
-                final SkidBlock block = new SkidBlock(cfg);
-                cfg.addVertex(block);
-
-                // Add a seed loader for the incoming block and convert it to the handler's
-                this.addSeedLoader(
-                        block,
-                        0,
-                        localGetter,
-                        localSetter,
-                        methodNode.getBlockPredicate(internal),
-                        methodNode.getBlockPredicate(handler)
-                );
-
-                // Jump to handler
-                final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(block, basicHandler);
-                block.add(new FakeUnconditionalJumpStmt(basicHandler, edge));
-                cfg.addEdge(edge);
-
-                // Final hashed
-                final int hashed = hashTransformer.hash(
-                        methodNode.getBlockPredicate(internal),
-                        cfg,
-                        localGetter
-                ).getHash();
-
-                // Add to switch
-                basicBlockMap.put(hashed, block);
-                cfg.addEdge(new SwitchEdge<>(toppleHandler, block, hashed));
-                sortedList.add(hashed);
-
-                // Find egde and transform
-                cfg.getEdges(node)
-                        .stream()
-                        .filter(e -> e instanceof TryCatchEdge)
-                        .map(e -> (TryCatchEdge<BasicBlock>) e)
-                        .filter(e -> e.erange == blockRange)
-                        .findFirst()
-                        .ifPresent(cfg::removeEdge);
-
-                // Add new edge
-                cfg.addEdge(new TryCatchEdge<>(node, blockRange));
-            }
-
-            // Haha get fucked
-            // Todo     Fix the other shit to re-enable this; this is for the lil shits
-            //          (love y'all tho) that are gonna try reversing this
-            /*for (int i = 0; i < 10; i++) {
-                // Generate random seed + prevent conflict
-                final int seed = RandomUtil.nextInt();
-                if (sortedList.contains(seed))
-                    continue;
-
-                // Add seed to list
-                sortedList.add(seed);
-
-                // Create new switch block
-                final BasicBlock block = new BasicBlock(cfg);
-                cfg.addVertex(block);
-
-                // Get seeded version and add seed loader
-                final SkidBlock seededBlock = getBlock(block);
-                seededBlock.addSeedLoader(-1, local, seed, RandomUtil.nextInt());
-                block.add(new UnconditionalJumpStmt(basicHandler));
-                cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
-
-                basicBlockMap.put(seed, block);
-                cfg.addEdge(new SwitchEdge<>(handler.getBlock(), block, seed));
-            }*/
-
-            // Hash
-            final Expr hash = hashTransformer.hash(cfg, localGetter);
-
-            // Default switch edge
-            final BasicBlock defaultBlock = Blocks.exception(cfg, "Error in hash");
-            cfg.addEdge(new DefaultSwitchEdge<>(toppleHandler, defaultBlock));
-
-            // Add switch
-            // Todo     Add hashing to prevent dumb bs reversing
-            final SwitchStmt stmt = new SwitchStmt(hash, basicBlockMap, defaultBlock);
-            toppleHandler.add(stmt);
-
-            // Add unconditional jump edge
-            cfg.addEdge(new UnconditionalJumpEdge<>(toppleHandler, basicHandler));
+        if (DEBUG) {
+            final int seed = methodNode.getPredicate().getPrivate();
+            final BasicBlock exception = Blocks.exception(cfg, "Failed to match entry seed of value " + seed + " of entry " + methodNode.getPredicate().getPublic());
+            final Stmt jumpStmt = new FakeConditionalJumpStmt(
+                    methodNode.getPredicate().getGetter().get(cfg),
+                    new ConstantExpr(seed, Type.INT_TYPE),
+                    exception,
+                    ConditionalJumpStmt.ComparisonType.NE
+            );
+            cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcode.COND_JUMP));
+            entryPoint.add(0, jumpStmt);
         }
+
 
         /*
          *    __  __                           ___ __  _                   __
@@ -945,6 +843,128 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                             );
                         }
                     });
+        }
+
+        /*
+         *     ______                     __  _
+         *    / ____/  __________  ____  / /_(_)___  ____
+         *   / __/ | |/_/ ___/ _ \/ __ \/ __/ / __ \/ __ \
+         *  / /____>  </ /__/  __/ /_/ / /_/ / /_/ / / / /
+         * /_____/_/|_|\___/\___/ .___/\__/_/\____/_/ /_/
+         *                     /_/
+         */
+
+        for (ExceptionRange<BasicBlock> blockRange : cfg.getRanges()) {
+            LinkedHashMap<Integer, BasicBlock> basicBlockMap = new LinkedHashMap<>();
+            List<Integer> sortedList = new ArrayList<>();
+
+            // Save current handler
+            final BasicBlock basicHandler = blockRange.getHandler();
+            final SkidBlock handler = (SkidBlock) blockRange.getHandler();
+
+            // Create new block handle
+            final BasicBlock toppleHandler = new SkidBlock(cfg);
+            cfg.addVertex(toppleHandler);
+            blockRange.setHandler(toppleHandler);
+
+            // Hasher
+            final HashTransformer hashTransformer = new BitwiseHashTransformer();
+
+            // For all block being read
+            for (BasicBlock node : blockRange.getNodes()) {
+                if (node instanceof FakeBlock)
+                    continue;
+
+                // Get their internal seed and add it to the list
+                final SkidBlock internal = (SkidBlock) node;
+
+                // Create a new switch block and get it's seeded variant
+                final SkidBlock block = new SkidBlock(cfg);
+                cfg.addVertex(block);
+
+                // Add a seed loader for the incoming block and convert it to the handler's
+                this.addSeedLoader(
+                        block,
+                        0,
+                        localGetter,
+                        localSetter,
+                        methodNode.getBlockPredicate(internal),
+                        methodNode.getBlockPredicate(handler)
+                );
+
+                // Jump to handler
+                final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(
+                        block,
+                        handler
+                );
+                block.add(new FakeUnconditionalJumpStmt(handler, edge));
+                cfg.addEdge(edge);
+
+                // Final hashed
+                final int hashed = hashTransformer.hash(
+                        methodNode.getBlockPredicate(internal),
+                        cfg,
+                        localGetter
+                ).getHash();
+
+                // Add to switch
+                // TODO: Revert back to hashed
+                basicBlockMap.put(hashed, block);
+                cfg.addEdge(new SwitchEdge<>(toppleHandler, block, hashed));
+                sortedList.add(hashed);
+
+                // Find egde and transform
+                cfg.getEdges(node)
+                        .stream()
+                        .filter(e -> e instanceof TryCatchEdge)
+                        .map(e -> (TryCatchEdge<BasicBlock>) e)
+                        .filter(e -> e.erange == blockRange)
+                        .findFirst()
+                        .ifPresent(cfg::removeEdge);
+
+                // Add new edge
+                cfg.addEdge(new TryCatchEdge<>(node, blockRange));
+            }
+
+            // Haha get fucked
+            // Todo     Fix the other shit to re-enable this; this is for the lil shits
+            //          (love y'all tho) that are gonna try reversing this
+            /*for (int i = 0; i < 10; i++) {
+                // Generate random seed + prevent conflict
+                final int seed = RandomUtil.nextInt();
+                if (sortedList.contains(seed))
+                    continue;
+
+                // Add seed to list
+                sortedList.add(seed);
+
+                // Create new switch block
+                final BasicBlock block = new BasicBlock(cfg);
+                cfg.addVertex(block);
+
+                // Get seeded version and add seed loader
+                final SkidBlock seededBlock = getBlock(block);
+                seededBlock.addSeedLoader(-1, local, seed, RandomUtil.nextInt());
+                block.add(new UnconditionalJumpStmt(basicHandler));
+                cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
+
+                basicBlockMap.put(seed, block);
+                cfg.addEdge(new SwitchEdge<>(handler.getBlock(), block, seed));
+            }*/
+
+            // Hash
+            final Expr hash = hashTransformer.hash(cfg, localGetter);
+
+            // Default switch edge
+            final BasicBlock defaultBlock = Blocks.exception(cfg, "Error in hash");
+            cfg.addEdge(new DefaultSwitchEdge<>(toppleHandler, defaultBlock));
+
+            // Add switch
+            final SwitchStmt stmt = new SwitchStmt(hash, basicBlockMap, defaultBlock);
+            toppleHandler.add(stmt);
+
+            // Add unconditional jump edge
+            cfg.addEdge(new UnconditionalJumpEdge<>(toppleHandler, basicHandler));
         }
 
         return;

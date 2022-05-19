@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit;
 @UtilityClass
 public class ProgressUtil {
     public ProgressBar progress(final int count) {
-        return new ProgressBar("",
+        return new ProgressBar("Executing...",
                 count,
                 1000,
                 System.err,

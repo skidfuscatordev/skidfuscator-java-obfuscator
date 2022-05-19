@@ -1,5 +1,14 @@
 package org.topdank.byteio.in;
 
+import com.google.common.io.ByteStreams;
+import org.mapleir.asm.ClassNode;
+import org.topdank.byteengineer.commons.asm.ASMFactory;
+import org.topdank.byteengineer.commons.data.JarClassData;
+import org.topdank.byteengineer.commons.data.JarInfo;
+import org.topdank.byteengineer.commons.data.JarResource;
+import org.topdank.byteengineer.commons.data.LocateableJarContents;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
@@ -9,46 +18,34 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
-import com.google.common.io.ByteStreams;
-import org.mapleir.asm.ClassNode;
-import org.topdank.byteengineer.commons.asm.ASMFactory;
-import org.topdank.byteengineer.commons.data.JarClassData;
-import org.topdank.byteengineer.commons.data.JarInfo;
-import org.topdank.byteengineer.commons.data.JarResource;
-import org.topdank.byteengineer.commons.data.LocateableJarContents;
-import org.topdank.byteio.util.IOUtil;
+public class SingleJmodDownloader<C extends ClassNode> extends AbstractJarDownloader<C> {
 
-public class MultiJarDownloader<C extends ClassNode> extends AbstractJarDownloader<C> {
+	protected final JarInfo jarInfo;
 
-	protected final JarInfo[] jarInfos;
-
-	public MultiJarDownloader(JarInfo... jarInfos) {
+	public SingleJmodDownloader(JarInfo jarInfo) {
 		super();
-		this.jarInfos = jarInfos;
+		this.jarInfo = jarInfo;
 	}
 
-	public MultiJarDownloader(ASMFactory<C> factory, JarInfo... jarInfos) {
+	public SingleJmodDownloader(ASMFactory<C> factory, JarInfo jarInfo) {
 		super(factory);
-		this.jarInfos = jarInfos;
+		this.jarInfo = jarInfo;
 	}
 
 	@Override
 	public void download() throws IOException {
-		URL[] urls = new URL[jarInfos.length];
-		for (int i = 0; i < jarInfos.length; i++) {
-			urls[i] = new URL(jarInfos[i].formattedURL());
-		}
-		contents = new LocateableJarContents(urls);
-		for (JarInfo jarinfo : jarInfos) {
-			JarURLConnection connection = (JarURLConnection) new URL(jarinfo.formattedURL()).openConnection();
-			JarFile jarFile = connection.getJarFile();
-			Enumeration<JarEntry> entries = jarFile.entries();
+		File file;
+		try (ZipFile jarFile = new ZipFile((file = new File(jarInfo.getPath())))) {
+			Enumeration<? extends ZipEntry> entries = jarFile.entries();
+			contents = new LocateableJarContents(file.toURI().toURL());
 
 			Map<String, ClassNode> map = new HashMap<>();
 
 			while (entries.hasMoreElements()) {
-				JarEntry entry = entries.nextElement();
+				ZipEntry entry = entries.nextElement();
 				byte[] bytes = read(jarFile.getInputStream(entry));
 				if (entry.getName().endsWith(".class")) {
 					C cn = factory.create(bytes, entry.getName());

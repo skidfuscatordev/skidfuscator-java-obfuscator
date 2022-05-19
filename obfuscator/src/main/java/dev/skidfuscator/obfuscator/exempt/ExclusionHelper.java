@@ -78,8 +78,12 @@ public class ExclusionHelper {
                                             .match("private", var.isPrivate())
                                             .check();
 
+                                    if (!initialMatch) {
+                                        System.out.println("Oh?");
+                                    }
+
                                     return initialMatch
-                                            && regex.matcher(var.getName()).matches();
+                                            && regex.matcher(var.getName()).find();
                                 }
                             });
                             break;
@@ -111,7 +115,7 @@ public class ExclusionHelper {
                                         return false;
                                     }
 
-                                    return regexMethod.matcher(var.getName()).matches();
+                                    return regexMethod.matcher(var.getName()).find();
                                             //&& regexClazz.matcher(var.owner.getDisplayName()).matches();
                                 }
 
@@ -163,6 +167,20 @@ public class ExclusionHelper {
             map.put(ExclusionType.CLASS, new ExclusionTester<ClassNode>() {
                 @Override
                 public boolean test(ClassNode var) {
+                    return false;
+                }
+
+                @Override
+                public String toString() {
+                    return "ExclusionTester={DefaultExemptTester}";
+                }
+            });
+        }
+
+        if (!map.containsKey(ExclusionType.METHOD)) {
+            map.put(ExclusionType.METHOD, new ExclusionTester<MethodNode>() {
+                @Override
+                public boolean test(MethodNode var) {
                     return false;
                 }
 

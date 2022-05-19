@@ -9,6 +9,7 @@ import org.danilopianini.urlclassloader.URLClassLoaderUtil;
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.asm.ASMFactory;
 import org.topdank.byteengineer.commons.asm.DefaultASMFactory;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.LocateableJarContents;
 
 /**
@@ -25,14 +26,14 @@ public class JarClassLoader extends ClassLoader {
 	private Map<String, Class<?>> cache;
 	private ClassLoader ucp;
 
-	public JarClassLoader(LocateableJarContents<ClassNode> contents) {
+	public JarClassLoader(LocateableJarContents contents) {
 		this(contents, null, new DefaultASMFactory());
 	}
 
 	/**
 	 * @param contents Reference to the JarContents object.
 	 */
-	public JarClassLoader(LocateableJarContents<ClassNode> contents, ClassLoader parent) {
+	public JarClassLoader(LocateableJarContents contents, ClassLoader parent) {
 		this(contents, parent, new DefaultASMFactory());
 	}
 
@@ -41,7 +42,7 @@ public class JarClassLoader extends ClassLoader {
 	 * @param parent
 	 * @param factory ASMFactory.
 	 */
-	public JarClassLoader(LocateableJarContents<ClassNode> contents, ClassLoader parent, ASMFactory<ClassNode> factory) {
+	public JarClassLoader(LocateableJarContents contents, ClassLoader parent, ASMFactory<ClassNode> factory) {
 		this.factory = factory;
 
 		ClassLoader _parent = parent;
@@ -74,12 +75,12 @@ public class JarClassLoader extends ClassLoader {
 		return null;
 	}
 
-	public void add(LocateableJarContents<ClassNode> contents) {
+	public void add(LocateableJarContents contents) {
 		for (URL url : contents.getJarUrls()) {
 			URLClassLoaderUtil.addLast(url, ucp);
 		}
-		for (ClassNode cn : contents.getClassContents()) {
-			fastNodeCache.put(cn.getName(), cn);
+		for (JarClassData cn : contents.getClassContents()) {
+			fastNodeCache.put(cn.getName(), cn.getClassNode());
 		}
 	}
 

@@ -19,7 +19,7 @@ public class ApplicationClassSource extends ClassSource {
 	public ApplicationClassSource(String name, Map<String, ClassNode> nodeMap) {
 		super(nodeMap);
 		this.name = (name == null ? "unknown" : name);
-		libraries = new ArrayList<>();
+		libraries = new LinkedList<>();
 	}
 	
 	public List<LibraryClassSource> getLibraries() {
@@ -63,8 +63,7 @@ public class ApplicationClassSource extends ClassSource {
 		LocateableClassNode n = findClass(name);
 		
 		if(n != null) {
-			ClassNode cn = n.node;
-			return cn;
+			return n.node;
 		} else {
 			return null;
 		}
@@ -83,7 +82,7 @@ public class ApplicationClassSource extends ClassSource {
 		} else {
 			for(LibraryClassSource cs : libraries) {
 				if(cs.contains(name)) {
-					return cs.findClass0(name);
+					return cs.findClass(name);
 				}
 			}
 			return null;

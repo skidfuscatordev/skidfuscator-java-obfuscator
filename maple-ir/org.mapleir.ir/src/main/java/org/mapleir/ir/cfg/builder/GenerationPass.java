@@ -668,6 +668,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				break;
 			}
 
+			case JSR:
 			case GOTO:
 				_jump_uncond(resolveTarget(((JumpInsnNode) ain).label));
 				break;
@@ -1248,7 +1249,13 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				callExpr = new VirtualInvocationExpr(VirtualInvocationExpr.resolveCallType(op), args, owner, name, desc);
 				break;
 			case Opcodes.INVOKESTATIC:
-				callExpr = new StaticInvocationExpr(args, owner, name, desc);
+				callExpr = builder.factory
+						.static_invoke_expr()
+						.args(args)
+						.owner(owner)
+						.name(name)
+						.desc(desc)
+						.build();
 				break;
 			default:
 				throw new IllegalArgumentException("invalid call opcode " + op);

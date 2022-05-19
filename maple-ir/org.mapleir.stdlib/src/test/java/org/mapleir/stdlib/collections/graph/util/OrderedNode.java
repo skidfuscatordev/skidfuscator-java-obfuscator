@@ -68,5 +68,9 @@ public class OrderedNode implements FastGraphVertex {
 	}
 	
 	public static class OUndirectedGraph extends FastUndirectedGraph<OrderedNode, ONEdge> implements OGraph {
+		@Override
+		public Collection<OrderedNode> getCommonAncestor(Collection<OrderedNode> nodes) {
+			return null;
+		}
 	}
 }

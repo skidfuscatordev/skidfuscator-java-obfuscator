@@ -36,7 +36,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 		this.app = app;
 		hierarchyMethodsHelper = new SkidHierarchyMethods(app);
 		
-		computeVTables();
+		//computeVTables();
 		
 		LOGGER.info(String.format("built vtables for %s classes", concreteVTables.size()));
 	}
@@ -45,7 +45,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 		return concreteVTables.containsKey(c) && abstractVTables.containsKey(c);
 	}
 	
-	private void computeVTables() {
+	public void computeVTables() {
 		for(ClassNode c : app.getClassTree().vertices()) {
 			if(app.getClassTree().getChildren(c).size() == 0) {
 				// also implies getAllChildren.size() == 0

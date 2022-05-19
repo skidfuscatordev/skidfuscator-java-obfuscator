@@ -4,15 +4,24 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.number.NumberManager;
+import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
+import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
+import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.TransformResult;
 import dev.skidfuscator.obfuscator.transform.Transformer;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Type;
 
 import java.util.Arrays;
@@ -46,7 +55,7 @@ public class NumberTransformer extends AbstractTransformer {
         if (methodNode.isAbstract() || methodNode.isInit())
             return;
 
-        if (methodNode.node.instructions.size() > 30000)
+        if (methodNode.node.instructions.size() > 10000)
             return;
 
         final ControlFlowGraph cfg = methodNode.getCfg();
@@ -54,28 +63,56 @@ public class NumberTransformer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        cfg.allExprStream()
-                .filter(ConstantExpr.class::isInstance)
-                .map(ConstantExpr.class::cast)
-                .filter(constantExpr -> TYPES.contains(constantExpr.getType()))
-                .collect(Collectors.toList())
-                .forEach(unit -> {
-                    final CodeUnit parent = unit.getParent();
+        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+            for (Stmt stmt : new HashSet<>(vertex)) {
+                for (Expr expr : stmt.enumerateOnlyChildren()) {
+                    if (!(expr instanceof ConstantExpr))
+                        continue;
 
-                    if (parent == null)
-                        return;
+                    final ConstantExpr constantExpr = (ConstantExpr) expr;
 
-                    final SkidBlock skidBlock = (SkidBlock) unit.getBlock();
-                    final Expr modified = NumberManager.encrypt(
-                            ((Number) unit.getConstant()).intValue(),
-                            methodNode.getBlockPredicate(skidBlock),
+                    if (!TYPES.contains(constantExpr.getType()))
+                        continue;
+
+                    final SkidBlock skidBlock = (SkidBlock) vertex;
+
+                    assert constantExpr.getParent() != null;
+
+                    final CodeUnit parent = constantExpr.getParent();
+                    final BlockOpaquePredicate flowPredicate = methodNode.getFlowPredicate();
+                    final int predicate = flowPredicate.get(skidBlock);
+
+                    final int xored = ((Number) constantExpr.getConstant()).intValue()
+                            ^ predicate;
+                    final Expr modified = new XorNumberTransformer().getNumber(
+                            ((Number) constantExpr.getConstant()).intValue(),
+                            predicate,
                             cfg,
-                            methodNode.getFlowPredicate().getGetter()
+                            flowPredicate.getGetter()
                     );
 
-                    parent.overwrite(unit, modified);
-                });
+                    //constantExpr.setConstant(xored);
+                    parent.overwrite(constantExpr, modified);
 
+                    if (IntegerBlockPredicateRenderer.DEBUG && false) {
+                        final Local local1 = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+                        vertex.add(
+                                vertex.indexOf(stmt) + 1,
+                                new SkidCopyVarStmt(
+                                        new VarExpr(local1, Type.getType(String.class)),
+                                        new ConstantExpr(
+                                                "[Constant] "
+                                                        + constantExpr.getConstant()
+                                                        + " -> "
+                                                        + xored
+                                                        + " predicate="
+                                                        + predicate
+                                        )
+                                )
+                        );
+                    }
+                }
+            }
+        }
     }
-
 }

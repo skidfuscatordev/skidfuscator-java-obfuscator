@@ -26,10 +26,7 @@ import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
 import org.objectweb.asm.*;
 import org.topdank.byteengineer.commons.asm.ASMFactory;
-import org.topdank.byteengineer.commons.data.JarContents;
-import org.topdank.byteengineer.commons.data.JarInfo;
-import org.topdank.byteengineer.commons.data.JarResource;
-import org.topdank.byteengineer.commons.data.LocateableJarContents;
+import org.topdank.byteengineer.commons.data.*;
 import org.topdank.byteio.in.AbstractJarDownloader;
 
 import java.io.File;
@@ -45,21 +42,21 @@ import java.util.jar.JarFile;
 public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownloader<C> {
 	private final Skidfuscator skidfuscator;
 	protected final JarInfo jarInfo;
-	protected JarContents<C> phantomContents;
+	protected LocateableJarContents phantomContents;
 	private final Logger logger = LogManager.getLogger(this.getClass());
 
 	public PhantomJarDownloader(Skidfuscator skidfuscator, JarInfo jarInfo) {
 		super();
 		this.skidfuscator = skidfuscator;
 		this.jarInfo = jarInfo;
-		this.phantomContents = new JarContents<>();
+		this.phantomContents = new LocateableJarContents();
 	}
 
 	public PhantomJarDownloader(Skidfuscator skidfuscator, ASMFactory<C> factory, JarInfo jarInfo) {
 		super(factory);
 		this.skidfuscator = skidfuscator;
 		this.jarInfo = jarInfo;
-		this.phantomContents = new JarContents<>();
+		this.phantomContents = new LocateableJarContents();
 	}
 
 	@SneakyThrows
@@ -69,7 +66,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		JarURLConnection connection = (JarURLConnection) (url = new URL(jarInfo.formattedURL())).openConnection();
 		JarFile jarFile = connection.getJarFile();
 		Enumeration<JarEntry> entries = jarFile.entries();
-		contents = new LocateableJarContents<>(url);
+		contents = new LocateableJarContents(url);
 
 		/*
 		 * Map holding all the regular data
@@ -85,6 +82,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 			byte[] bytes = read(jarFile.getInputStream(entry));
 			if (entry.getName().endsWith(".class")) {
 				data.put(entry.getName(), bytes);
+				//System.out.println("[+] " + entry.getName());
 			} else {
 				JarResource resource = new JarResource(entry.getName(), bytes);
 				contents.getResourceContents().add(resource);
@@ -101,11 +99,19 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 			data.forEach((name, db) -> {
 				C cn;
 				try {
-					cn = factory.create(db, name);
-					if(!data.containsKey(cn.getName())) {
-						contents.getClassContents().add(cn);
-					} else {
-						throw new IllegalStateException("duplicate: " + cn.getName());
+					try {
+						cn = factory.create(db, name);
+						if(!data.containsKey(cn.getName())) {
+							contents.getClassContents().add(new JarClassData(
+									name,
+									db,
+									cn
+							));
+						} else {
+							throw new IllegalStateException("duplicate: " + cn.getName());
+						}
+					} catch (UnsupportedOperationException e) {
+						contents.getResourceContents().add(new JarResource(name, db));
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -114,6 +120,9 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				progressBar.step();
 			});
 		}
+
+		if (!skidfuscator.getSession().isPhantom())
+			return;
 
 		/*
 		 * Just like in Recaf, copy the file to a temporary file. Overwrite if necessary. This
@@ -186,11 +195,12 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 * class cache. This will be used as a library during obfuscation.
 		 */
 		logger.info("[$] Outputting phantom classes...");
-		final Map<String, C> namedMap = contents.getClassContents().namedMap();
+		final Map<String, JarClassData> namedMap = contents.getClassContents().namedMap();
 
 		try (ProgressBar progressBar = ProgressUtil.progress(phantom.getGenerated().size())){
 			phantom.getGenerated().forEach((k, v) -> {
-				final ClassReader reader = new ClassReader(decorate(v));
+				final byte[] bytes = decorate(v);
+				final ClassReader reader = new ClassReader(bytes);
 				final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
 				reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 
@@ -200,7 +210,11 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				if (namedMap.containsKey(classNode.getName()))
 					return;
 
-				phantomContents.getClassContents().add((C) classNode);
+				phantomContents.getClassContents().add(new JarClassData(
+						classNode.getName() + ".class",
+						v,
+						classNode
+				));
 				progressBar.step();
 			});
 		}
@@ -220,7 +234,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		java.nio.file.Files.deleteIfExists(input.toPath());
 	}
 
-	public JarContents<C> getPhantomContents() {
+	public LocateableJarContents getPhantomContents() {
 		return phantomContents;
 	}
 

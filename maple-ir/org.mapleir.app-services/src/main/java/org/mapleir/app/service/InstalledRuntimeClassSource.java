@@ -14,7 +14,7 @@ public class InstalledRuntimeClassSource extends LibraryClassSource {
 	private final HashSet<String> notContains;
 	
 	public InstalledRuntimeClassSource(ApplicationClassSource parent) {
-		super(parent);
+		super(parent, 0);
 		notContains = new HashSet<>();
 	}
 	
