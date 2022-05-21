@@ -5,6 +5,7 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 public class NopStmt extends Stmt {
 	public NopStmt() {
@@ -23,6 +24,7 @@ public class NopStmt extends Stmt {
 
 	@Override
 	public void toCode(MethodVisitor visitor, BytecodeFrontend assembler) {
+		visitor.visitInsn(Opcodes.NOP);
 	}
 
 	@Override

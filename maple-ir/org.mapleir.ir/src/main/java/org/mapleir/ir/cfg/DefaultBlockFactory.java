@@ -7,11 +7,14 @@ import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
 import org.mapleir.ir.cfg.builder.ssa.CfgBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.*;
+import org.mapleir.ir.cfg.builder.ssa.expr.invoke.StaticInvocationExprBuilder;
 import org.mapleir.ir.cfg.builder.ssa.stmt.*;
 import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyPhiStmtBuilder;
 import org.mapleir.ir.cfg.builder.ssa.stmt.copy.CopyVarStmtBuilder;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.*;
+import org.mapleir.ir.code.expr.invoke.InvocationExpr;
+import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
@@ -300,6 +303,63 @@ public class DefaultBlockFactory implements SSAFactory {
                     return new ConstantExpr(cst);
                 }
                 return new ConstantExpr(cst, type, check);
+            }
+        };
+    }
+
+    @Override
+    public StaticInvocationExprBuilder static_invoke_expr() {
+        return new StaticInvocationExprBuilder() {
+            private InvocationExpr.CallType callType = InvocationExpr.CallType.STATIC;
+            private Expr[] args;
+            private String owner;
+            private String name;
+            private String desc;
+
+            @Override
+            public StaticInvocationExprBuilder callType(InvocationExpr.CallType callType) {
+                this.callType = callType;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder args(Expr[] args) {
+                this.args = args;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder owner(String owner) {
+                this.owner = owner;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder name(String name) {
+                this.name = name;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder desc(String desc) {
+                this.desc = desc;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExpr build() {
+                assert owner != null : "Owner name cannot be null";
+                assert name != null : "Name cannot be null";
+                assert desc != null : "Description cannot be null";
+
+
+                return new StaticInvocationExpr(
+                        callType,
+                        args,
+                        owner,
+                        name,
+                        desc
+                );
             }
         };
     }

@@ -14,4 +14,5 @@ public class SkidfuscatorSession {
     private File exempt;
     private File runtime;
     private boolean phantom;
+    private boolean jmod;
 }

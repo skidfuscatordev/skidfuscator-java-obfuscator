@@ -9,6 +9,10 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.AnnotationNode;
 
 import java.util.*;
@@ -131,7 +135,9 @@ public class SkidHierarchy implements Hierarchy {
         this.annotations = new HashMap<>();
 
         try (ProgressBar progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
-            nodes = skidfuscator.getClassSource().getClassTree().vertices().parallelStream()
+            nodes = skidfuscator.getClassSource().getClassTree()
+                    .vertices()
+                    .parallelStream()
                     .filter(e -> {
                         progressBar.step();
                         return skidfuscator.getClassSource().isApplicationClass(e.getName());
@@ -167,13 +173,14 @@ public class SkidHierarchy implements Hierarchy {
         try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
             nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
-                    final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().get(method);
+                    final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().getFor(method);
 
-                    if (cfg == null)
+                    if (cfg == null) {
+                        System.err.println("Failed to compute CFG for method " + method.toString());
                         continue;
+                    }
 
                     cfg.allExprStream()
-                            .parallel()
                             .filter(e -> e instanceof Invokable && !(e instanceof DynamicInvocationExpr))
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
@@ -227,9 +234,15 @@ public class SkidHierarchy implements Hierarchy {
         SkidGroup group = methodToGroupMap.get(methodNode);
 
         if (group == null) {
-            final Set<MethodNode> h = session.getCxt()
+            final Set<MethodNode> h = session
+                    .getCxt()
                     .getInvocationResolver()
-                    .getHierarchyMethodChain(methodNode.owner, methodNode.getName(), methodNode.getDesc(), true);
+                    .getHierarchyMethodChain(
+                            methodNode.owner,
+                            methodNode.getName(),
+                            methodNode.getDesc(),
+                            true
+                    );
             h.add(methodNode);
 
             final List<MethodNode> methods = new ArrayList<>(h);

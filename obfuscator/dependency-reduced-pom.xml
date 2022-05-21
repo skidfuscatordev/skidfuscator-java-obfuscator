@@ -46,6 +46,18 @@
       <version>1.18.22</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>com.github.xxDark</groupId>
+      <artifactId>SSVM</artifactId>
+      <version>1.7.1</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>CAFED00D</artifactId>
+          <groupId>com.github.Col-E</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
   <properties>
     <jline.version>3.21.0</jline.version>

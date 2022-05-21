@@ -1,8 +1,10 @@
-package dev.skidfuscator.obfuscator.phantom;
+package dev.skidfuscator.obfuscator.phantom.jphantom;
 
 import com.google.common.collect.Lists;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
+import dev.skidfuscator.obfuscator.util.ProgressUtil;
+import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.asm.ClassHelper;
@@ -10,6 +12,7 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 import org.topdank.byteengineer.commons.data.JarResource;
 import org.topdank.byteio.out.JarDumper;
@@ -22,6 +25,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.zip.ZipError;
+import java.util.zip.ZipException;
 
 /**
  * Dumps ClassNodes and JarResources back into a file on the local system.
@@ -32,14 +37,14 @@ import java.util.jar.JarOutputStream;
 public class PhantomResolvingJarDumper implements JarDumper {
 
 	private final Skidfuscator skidfuscator;
-	private final JarContents<?> contents;
+	private final JarContents contents;
 	private final ApplicationClassSource source;
 	/**
 	 * Creates a new JarDumper.
 	 *
 	 * @param contents Contents of jar.
 	 */
-	public PhantomResolvingJarDumper(Skidfuscator skidfuscator, JarContents<?> contents, ApplicationClassSource source) {
+	public PhantomResolvingJarDumper(Skidfuscator skidfuscator, JarContents contents, ApplicationClassSource source) {
 		this.skidfuscator = skidfuscator;
 		this.contents = contents;
 		this.source = source;
@@ -58,12 +63,25 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		JarOutputStream jos = new JarOutputStream(new FileOutputStream(file));
 		int classesDumped = 0;
 		int resourcesDumped = 0;
-		for (ClassNode cn : contents.getClassContents()) {
-			classesDumped += dumpClass(jos, cn.getName(), cn);
+
+		try (ProgressBar progressBar = ProgressUtil.progress(contents.getClassContents().size() + contents.getResourceContents().size())) {
+			for (JarClassData cn : contents.getClassContents()) {
+				try {
+					classesDumped += dumpClass(jos, cn);
+				} catch (ZipException e) {
+					System.out.println("\r[!] Failed to dump " + cn.getName() + "!\n");
+					throw e;
+				}
+
+				progressBar.step();
+			}
+
+			for (JarResource res : contents.getResourceContents()) {
+				resourcesDumped += dumpResource(jos, res.getName(), res.getData());
+				progressBar.step();
+			}
 		}
-		for (JarResource res : contents.getResourceContents()) {
-			resourcesDumped += dumpResource(jos, res.getName(), res.getData());
-		}
+
 		if(!Debug.debugging)
 			System.out.println("Dumped " + classesDumped + " classes and " + resourcesDumped + " resources to " + file.getAbsolutePath());
 		
@@ -74,14 +92,14 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	 * Writes the {@link ClassNode} to the Jar.
 	 *
 	 * @param out The {@link JarOutputStream}.
-	 * @param cn The ClassNode.
-	 * @param name The entry name.
+	 * @param classData The {@link JarClassData}
 	 * @throws IOException If there is a write error.
 	 * @return The amount of things dumped, 1 or if you're not dumping it 0.
 	 */
 	@Override
-	public int dumpClass(JarOutputStream out, String name, ClassNode cn) throws IOException {
-		JarEntry entry = new JarEntry(cn.getName() + ".class");
+	public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
+		ClassNode cn = classData.getClassNode();
+		JarEntry entry = new JarEntry(cn.getName());
 		out.putNextEntry(entry);
 
 		if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
@@ -89,9 +107,9 @@ public class PhantomResolvingJarDumper implements JarDumper {
 					skidfuscator
 					.getJarDownloader()
 					.getJarContents()
-					.getClassData()
+					.getClassContents()
 					.namedMap()
-					.get(cn.getName() + ".class")
+					.get(classData.getName())
 					.getData()
 			);
 			return 1;
@@ -114,8 +132,8 @@ public class PhantomResolvingJarDumper implements JarDumper {
 				ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
 				cn.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
 				out.write(writer.toByteArray());
-				System.err.println("Failed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, " +
-						"which may cause runtime abnormalities");
+				System.err.println("\rFailed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, " +
+						"which may cause runtime abnormalities\n");
 			}
 		} catch (Exception e) {
 			System.err.println("Failed to write " + cn.getName() + "! Skipping class...");
@@ -144,44 +162,37 @@ public class PhantomResolvingJarDumper implements JarDumper {
 				boolean debug = false;
 
 				if(ccn == null) {
-//		    		return "java/lang/Object";
 					ClassNode c;
 					try {
 						final ClassReader reader = new ClassReader(type1);
 						final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
-						reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+						reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES | ClassReader.SKIP_CODE);
 
 						c = new SkidClassNode(node, skidfuscator);
 						skidfuscator.getClassSource().getClassTree().addVertex(c);
 					} catch (IOException e) {
-						e.printStackTrace();
-						return "java/lang/Object";
-					}
-					if(c == null) {
+						System.err.println("[FATAL] Failed to find common superclass due to failed " + type1);
 						return "java/lang/Object";
 					}
 
 					ccn = c;
-					debug = true;
-					//throw new UnsupportedOperationException(c.toString());
-					// classTree.build(c);
-					// return getCommonSuperClass(type1, type2);
 				}
 
 				if(dcn == null) {
-
-//		    		return "java/lang/Object";
 					ClassNode c;
 					try {
-						c = ClassHelper.create(type2);
+						final ClassReader reader = new ClassReader(type1);
+						final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
+						reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES | ClassReader.SKIP_CODE);
+
+						c = new SkidClassNode(node, skidfuscator);
+						skidfuscator.getClassSource().getClassTree().addVertex(c);
 					} catch (IOException e) {
-						e.printStackTrace();
+						System.err.println("[FATAL] Failed to find common superclass due to failed " + type1);
 						return "java/lang/Object";
 					}
-					if(c == null) {
-						return "java/lang/Object";
-					}
-					throw new UnsupportedOperationException(c.toString());
+
+					dcn = c;
 					// classTree.build(c);
 					// return getCommonSuperClass(type1, type2);
 				}
@@ -200,12 +211,13 @@ public class PhantomResolvingJarDumper implements JarDumper {
 				}
 
 				if (true)
-					return skidfuscator.getClassSource().getClassTree()
+					return skidfuscator
+							.getClassSource()
+							.getClassTree()
 							.getCommonAncestor(Arrays.asList(ccn, dcn))
 							.iterator()
 							.next()
 							.getName();
-
 
 				{
 					throw new IllegalStateException("Could not find common class type between " + Arrays.toString(new Object[]{ccn.getDisplayName(), dcn.getDisplayName()}));

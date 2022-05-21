@@ -161,7 +161,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	
 	private ClassNode requestClass0(String name, String from) {
 		try {
-			return source.findClassNode(name);
+			return findClass(name);
 		} catch(RuntimeException e) {
 			throw new RuntimeException("request from " + from, e);
 		}

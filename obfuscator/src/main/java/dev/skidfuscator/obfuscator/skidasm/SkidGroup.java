@@ -22,16 +22,24 @@ public class SkidGroup {
     private String desc;
 
     private int stackHeight;
+    private transient boolean application;
 
     // TODO: Add parameter and parameter compilation
 
     public SkidGroup(List<MethodNode> methodNodeList, Skidfuscator skidfuscator) {
         this.methodNodeList = methodNodeList;
         this.skidfuscator = skidfuscator;
+        this.invokers = new ArrayList<>();
         this.predicate = skidfuscator
                 .getPredicateAnalysis()
                 .getMethodPredicate(this);
-        this.invokers = new ArrayList<>();
+
+        this.application = methodNodeList
+                .stream()
+                .allMatch(e -> skidfuscator.getClassSource().isApplicationClass(e.owner.getName())
+                        && !skidfuscator.getExemptAnalysis().isExempt(e)
+                        && !skidfuscator.getExemptAnalysis().isExempt(e.owner)
+                );
     }
 
     public void setStatical(boolean statical) {
@@ -45,7 +53,7 @@ public class SkidGroup {
     }
 
     public boolean isEntryPoint() {
-        return this.getInvokers().isEmpty() || this.isAnnotation();
+        return !application || this.getInvokers().isEmpty() || this.isAnnotation();
     }
     @Override
     public boolean equals(Object o) {

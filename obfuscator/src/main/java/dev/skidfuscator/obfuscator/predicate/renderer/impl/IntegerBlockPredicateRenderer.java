@@ -68,7 +68,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         final Local local = methodNode
                 .getCfg()
                 .getLocals()
-                .get(methodNode.getCfg().getLocals().getMaxLocals() + 2);
+                .get(methodNode.getCfg().getLocals().getMaxLocals() + 3);
 
         flowPredicate.setGetter(new PredicateFlowGetter() {
             @Override
@@ -248,7 +248,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     );
                 }
             });
-
         };
 
         /*
@@ -356,14 +355,13 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             return;
         }
 
-        final boolean entryPoint = skidGroup.getInvokers().isEmpty()
-                || skidGroup.isAnnotation();
+        final boolean entryPoint = skidGroup.isEntryPoint();
         Local local = null;
         int stackHeight = -1;
         String desc = null;
 
         if (entryPoint) {
-            System.err.println("SkidGroup " + skidGroup.getName() + "#" + skidGroup.getDesc() + " is an entry point!");
+            //System.err.println("SkidGroup " + skidGroup.getName() + "#" + skidGroup.getDesc() + " is an entry point!");
         }
 
         if (!entryPoint) {
@@ -427,8 +425,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
                 invoker.getExpr().setArgumentExprs(args);
                 invoker.getExpr().setDesc(desc);
-
-                //System.out.println("Fixed invoker " + invoker.toString());
             }
         }
 

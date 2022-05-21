@@ -19,7 +19,7 @@ import dev.skidfuscator.obfuscator.exempt.SimpleExemptAnalysis;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
-import dev.skidfuscator.obfuscator.phantom.PhantomJarDownloader;
+import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFactory;
@@ -38,7 +38,6 @@ import dev.skidfuscator.obfuscator.transform.impl.NegationTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.FlatteningFlowTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
@@ -61,15 +60,17 @@ import org.mapleir.context.IRCache;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.objectweb.asm.Opcodes;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
+import org.topdank.byteio.in.SingleJmodDownloader;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 public class Skidfuscator {
@@ -98,7 +99,7 @@ public class Skidfuscator {
     public void run() {
         LOGGER.post("Beginning Skidfuscator Enterprise...");
         SkiddedDirectory.init(null);
-        this.irFactory = new SkidCache();
+        this.irFactory = new SkidCache(this);
         this.exemptAnalysis = new SimpleExemptAnalysis();
 
         LOGGER.post("Resolving predicate analysis...");
@@ -184,7 +185,7 @@ public class Skidfuscator {
                 /* Create a new library class source with superior to default priority */
                 final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                         "libraries",
-                        jar.getJarContents().getClassContents()
+                        jar.getJarContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
                 );
                 LOGGER.post("Imported " + jar.getJarContents().getClassContents().size() + " library classes...");
 
@@ -213,7 +214,7 @@ public class Skidfuscator {
         this.classSource.addLibraries(new LibraryClassSource(
                 new ApplicationClassSource(
                         "phantom",
-                        downloader.getPhantomContents().getClassContents()
+                        downloader.getPhantomContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
                 ),
                 -1
         ));
@@ -221,28 +222,44 @@ public class Skidfuscator {
 
         /* Import JVM */
         LOGGER.post("Beginning importing of the JVM...");
-        final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
-                session.getRuntime()
-        );
-        this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                new ApplicationClassSource(
-                        "runtime",
-                        libs.getJarContents().getClassContents()
-                ),
-                0
-        )));
-        LOGGER.log("Finished importing the JVM!");
-
-        if (session.getLibs() != null) {
-            final ClassNode classNode = classSource.findClassNode("org/json/simple/parser/ParseException");
-            if (classNode == null) {
-                System.err.println("HAHAHHAHAHAH");
-                for (ClassNode vertex : classSource.iterateWithLibraries()) {
-                    if (classSource.isLibraryClass(vertex.getName()) && vertex.getName().contains("org") && !vertex.getName().contains("sun"))
-                        System.out.println(vertex.getDisplayName());
-                }
+        if (!session.isJmod()) {
+            final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
+                    session.getRuntime()
+            );
+            this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                    new ApplicationClassSource(
+                            "runtime",
+                            libs.getJarContents()
+                                    .getClassContents()
+                                    .stream()
+                                    .map(JarClassData::getClassNode)
+                                    .collect(Collectors.toList())
+                    ),
+                    0
+            )));
+        } else {
+            for (File file : session.getRuntime().listFiles()) {
+                if (!file.getAbsolutePath().endsWith(".jmod"))
+                    continue;
+                LOGGER.post("↳ Trying to download " + file.toString());
+                final SingleJmodDownloader<ClassNode> libs = MapleJarUtil.importJmod(
+                        file
+                );
+                this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                        new ApplicationClassSource(
+                                file.getName(),
+                                libs.getJarContents().getClassContents()
+                                        .stream()
+                                        .map(JarClassData::getClassNode)
+                                        .collect(Collectors.toList())
+                        ),
+                        0
+                )));
+                LOGGER.post("✓ Success");
             }
+
         }
+        LOGGER.log("Finished importing the JVM!");
 
         /* Resolve context */
         LOGGER.post("Resolving basic context...");
@@ -274,7 +291,7 @@ public class Skidfuscator {
          */
         for (Listener o : Arrays.asList(
                 new StringTransformer(this),
-                new NegationTransformer(this),
+                //new NegationTransformer(this),
                 //new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
                 new SwitchTransformer(this),
@@ -300,25 +317,17 @@ public class Skidfuscator {
         try(ProgressBar progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {
             for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(cxt.getIRCache().entrySet())) {
                 MethodNode mn = e.getKey();
-
-                if (exemptAnalysis.isExempt(mn.owner)) {
-                    progressBar.step();
-                    continue;
-                }
-
-                if (exemptAnalysis.isExempt(mn)) {
-                    progressBar.step();
-                    continue;
-                }
-
                 ControlFlowGraph cfg = e.getValue();
 
                 try {
                     cfg.verify();
+                    (new SkidFlowGraphDumper(this, cfg, mn)).dump();
                 } catch (Exception ex){
+                    if (ex instanceof IllegalStateException) {
+                        throw ex;
+                    }
                     ex.printStackTrace();
                 }
-                (new SkidFlowGraphDumper(this, cfg, mn)).dump();
                 progressBar.step();
             }
         }

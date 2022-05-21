@@ -21,6 +21,7 @@ import org.mapleir.stdlib.util.JavaDescSpecifier;
 import org.mapleir.stdlib.util.JavaDescUse;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteio.in.SingleJarDownloader;
 
@@ -28,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class DataFlowDemoBoot {
 
@@ -58,7 +60,10 @@ public class DataFlowDemoBoot {
 		SingleJarDownloader<ClassNode> dl = new SingleJarDownloader<>(new JarInfo(f));
 		dl.download();
 		String appName = f.getName().substring(0, f.getName().length() - 4);
-		ApplicationClassSource app = new ApplicationClassSource(appName, dl.getJarContents().getClassContents());
+		ApplicationClassSource app = new ApplicationClassSource(
+				appName,
+				dl.getJarContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
+		);
 //		
 // 		ApplicationClassSource app = new ApplicationClassSource("test", ClassHelper.parseClasses(CGExample.class));
 //		app.addLibraries(new InstalledcoRuntimeClassSource(app));

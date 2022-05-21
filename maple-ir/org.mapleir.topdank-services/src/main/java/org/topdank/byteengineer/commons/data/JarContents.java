@@ -9,65 +9,57 @@ import java.util.Map;
 
 import org.mapleir.asm.ClassNode;
 
-public class JarContents<C extends ClassNode> {
+public class JarContents {
 
-	private final DataContainer<C> classContents;
-	private final DataContainer<JarResource> classData;
+	private final DataContainer<JarClassData> classContents;
 	private final DataContainer<JarResource> resourceContents;
 
 	public JarContents() {
-		classContents = new ClassNodeContainer<C>();
-		classData = new ResourceContainer();
+		classContents = new ClassNodeContainer();
 		resourceContents = new ResourceContainer();
 	}
 
-	public JarContents(DataContainer<C> classContents, DataContainer<JarResource> classData, DataContainer<JarResource> resourceContents) {
-		this.classContents = classContents == null ? new ClassNodeContainer<C>() : classContents;
-		this.classData = classData == null ? new ResourceContainer() : classData;
+	public JarContents(DataContainer<JarClassData> classContents, DataContainer<JarResource> classData, DataContainer<JarResource> resourceContents) {
+		this.classContents = classContents == null ? new ClassNodeContainer() : classContents;
 		this.resourceContents = resourceContents == null ? new ResourceContainer() : resourceContents;
 	}
 
-	public final DataContainer<C> getClassContents() {
+	public final DataContainer<JarClassData> getClassContents() {
 		return classContents;
 	}
-
-	public final DataContainer<JarResource> getClassData() {
-		return classData;
-	}
-
 	public final DataContainer<JarResource> getResourceContents() {
 		return resourceContents;
 	}
 
-	public void merge(JarContents<C> contents) {
+	public void merge(JarContents contents) {
 		classContents.addAll(contents.classContents);
 		resourceContents.addAll(contents.resourceContents);
 	}
 
-	public JarContents<C> add(JarContents<C> contents) {
-		List<C> c1 = classContents;
-		List<C> c2 = contents.classContents;
+	public JarContents add(JarContents contents) {
+		List<JarClassData> c1 = classContents;
+		List<JarClassData> c2 = contents.classContents;
 
 		List<JarResource> r1 = resourceContents;
 		List<JarResource> r2 = contents.resourceContents;
 
-		List<C> c3 = new ArrayList<C>(c1.size() + c2.size());
+		List<JarClassData> c3 = new ArrayList<>(c1.size() + c2.size());
 		c3.addAll(c1);
 		c3.addAll(c2);
 
-		List<JarResource> r3 = new ArrayList<JarResource>(r1.size() + r2.size());
+		List<JarResource> r3 = new ArrayList<>(r1.size() + r2.size());
 		r3.addAll(r1);
 		r3.addAll(r2);
 
 
 		// TODO add jar data here
-		return new JarContents<C>(new ClassNodeContainer<>(c3), null, new ResourceContainer(r3));
+		return new JarContents(new ClassNodeContainer(c3), null, new ResourceContainer(r3));
 	}
 
-	public static class ClassNodeContainer<C extends ClassNode> extends DataContainer<C> {
+	public static class ClassNodeContainer extends DataContainer<JarClassData> {
 		private static final long serialVersionUID = -6169578803641192235L;
 
-		private Map<String, C> lastMap = new HashMap<String, C>();
+		private Map<String, JarClassData> lastMap = new HashMap<>();
 		private boolean invalidated;
 
 		public ClassNodeContainer() {
@@ -78,18 +70,18 @@ public class JarContents<C extends ClassNode> {
 			super(cap);
 		}
 
-		public ClassNodeContainer(Collection<C> data) {
+		public ClassNodeContainer(Collection<JarClassData> data) {
 			super(data);
 		}
 
 		@Override
-		public boolean add(C c) {
+		public boolean add(JarClassData c) {
 			invalidated = true;
 			return super.add(c);
 		}
 
 		@Override
-		public boolean addAll(Collection<? extends C> c) {
+		public boolean addAll(Collection<? extends JarClassData> c) {
 			invalidated = true;
 			return super.addAll(c);
 		}
@@ -101,13 +93,13 @@ public class JarContents<C extends ClassNode> {
 		}
 
 		@Override
-		public Map<String, C> namedMap() {
+		public Map<String, JarClassData> namedMap() {
 			if (invalidated) {
 				invalidated = false;
-				Map<String, C> nodeMap = new HashMap<String, C>();
-				Iterator<C> it = iterator();
+				Map<String, JarClassData> nodeMap = new HashMap<>();
+				Iterator<JarClassData> it = iterator();
 				while (it.hasNext()) {
-					C cn = it.next();
+					JarClassData cn = it.next();
 					if (nodeMap.containsKey(cn.getName())) {
 						it.remove();
 					} else {

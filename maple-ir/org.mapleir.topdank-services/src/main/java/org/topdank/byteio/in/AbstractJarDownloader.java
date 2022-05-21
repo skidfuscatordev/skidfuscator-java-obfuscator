@@ -10,7 +10,7 @@ import org.topdank.byteengineer.commons.data.LocateableJarContents;
 public abstract class AbstractJarDownloader<C extends ClassNode> {
 
 	protected final ASMFactory<C> factory;
-	protected LocateableJarContents<C> contents;
+	protected LocateableJarContents contents;
 
 	@SuppressWarnings("unchecked")
 	public AbstractJarDownloader() {
@@ -23,7 +23,7 @@ public abstract class AbstractJarDownloader<C extends ClassNode> {
 
 	public abstract void download() throws IOException;
 
-	public LocateableJarContents<C> getJarContents() {
+	public LocateableJarContents getJarContents() {
 		return contents;
 	}
 }

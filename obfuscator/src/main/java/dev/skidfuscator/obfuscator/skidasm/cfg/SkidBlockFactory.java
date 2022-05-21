@@ -1,22 +1,110 @@
 package dev.skidfuscator.obfuscator.skidasm.cfg;
 
+import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidSwitchStmt;
+import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.cfg.DefaultBlockFactory;
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.ConstantExprBuilder;
+import org.mapleir.ir.cfg.builder.ssa.expr.invoke.StaticInvocationExprBuilder;
 import org.mapleir.ir.cfg.builder.ssa.stmt.SwitchStmtBuilder;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.invoke.InvocationExpr;
+import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
 import org.objectweb.asm.Type;
 
 import java.util.LinkedHashMap;
 
 public class SkidBlockFactory extends DefaultBlockFactory {
-    public static final SkidBlockFactory INSTANCE = new SkidBlockFactory();
+    public static SkidBlockFactory INSTANCE = null;
+
+    public static SkidBlockFactory v(final Skidfuscator skidfuscator) {
+        if (INSTANCE == null) {
+            INSTANCE = new SkidBlockFactory(skidfuscator);
+        }
+        return INSTANCE;
+    }
+
+    private final Skidfuscator skidfuscator;
+
+    public SkidBlockFactory(Skidfuscator skidfuscator) {
+        this.skidfuscator = skidfuscator;
+    }
+
+    @Override
+    public StaticInvocationExprBuilder static_invoke_expr() {
+        return new StaticInvocationExprBuilder() {
+            private InvocationExpr.CallType callType = InvocationExpr.CallType.STATIC;
+            private Expr[] args;
+            private String owner;
+            private String name;
+            private String desc;
+
+            @Override
+            public StaticInvocationExprBuilder callType(InvocationExpr.CallType callType) {
+                this.callType = callType;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder args(Expr[] args) {
+                this.args = args;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder owner(String owner) {
+                this.owner = owner;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder name(String name) {
+                this.name = name;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExprBuilder desc(String desc) {
+                this.desc = desc;
+                return this;
+            }
+
+            @Override
+            public StaticInvocationExpr build() {
+                assert owner != null : "Owner name cannot be null";
+                assert name != null : "Name cannot be null";
+                assert desc != null : "Description cannot be null";
+
+                final ClassNode classNode = skidfuscator
+                        .getClassSource()
+                        .findClassNode(owner);
+
+                if (classNode == null) {
+                    //System.out.println("Failed to find " + owner + " in reference path...");
+                } else if (classNode.isInterface()){
+                    //System.out.println("Class " + owner + " is of version " + classNode.node.version + " (annoying: " + classNode.isAnnoyingVersion() + ")");
+                }
+
+                final boolean isInterface = classNode != null && classNode.isInterface();
+
+                return new StaticInvocationExpr(
+                        isInterface
+                                ? InvocationExpr.CallType.INTERFACE
+                                : InvocationExpr.CallType.STATIC,
+                        args,
+                        owner,
+                        name,
+                        desc
+                );
+            }
+        };
+    }
 
     @Override
     public SwitchStmtBuilder switch_stmt() {

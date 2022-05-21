@@ -112,6 +112,12 @@
             <artifactId>jline</artifactId>
             <version>${jline.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.xxDark</groupId>
+            <artifactId>SSVM</artifactId>
+            <version>1.7.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
