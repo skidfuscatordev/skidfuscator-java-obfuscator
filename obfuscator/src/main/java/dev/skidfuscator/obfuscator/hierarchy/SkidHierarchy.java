@@ -9,7 +9,10 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.AnnotationNode;
 
 import java.util.*;
@@ -132,7 +135,9 @@ public class SkidHierarchy implements Hierarchy {
         this.annotations = new HashMap<>();
 
         try (ProgressBar progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
-            nodes = skidfuscator.getClassSource().getClassTree().vertices().parallelStream()
+            nodes = skidfuscator.getClassSource().getClassTree()
+                    .vertices()
+                    .parallelStream()
                     .filter(e -> {
                         progressBar.step();
                         return skidfuscator.getClassSource().isApplicationClass(e.getName());
@@ -167,9 +172,6 @@ public class SkidHierarchy implements Hierarchy {
     private void setupInvoke() {
         try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
             nodes.forEach(c -> {
-                if (c.isAnnoyingVersion())
-                    return;
-
                 for (MethodNode method : c.getMethods()) {
                     final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().getFor(method);
 

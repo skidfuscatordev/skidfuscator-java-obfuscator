@@ -1,4 +1,4 @@
-package dev.skidfuscator.obfuscator.phantom;
+package dev.skidfuscator.obfuscator.phantom.jphantom;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.io.ByteStreams;

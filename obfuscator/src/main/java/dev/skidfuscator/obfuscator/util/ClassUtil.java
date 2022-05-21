@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator.util;
 
 import dev.skidfuscator.obfuscator.util.misc.Pair;
 import org.objectweb.asm.*;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.*;
 
 import java.io.IOException;
@@ -418,5 +419,4 @@ public class ClassUtil {
 			return false;
 		}
 	}
-
 }

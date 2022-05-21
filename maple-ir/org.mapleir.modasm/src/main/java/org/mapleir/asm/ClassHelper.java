@@ -10,8 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.*;
+import org.objectweb.asm.commons.JSRInlinerAdapter;
 
 /**
  * @author Bibl (don't ban me pls)
@@ -41,7 +41,13 @@ public class ClassHelper {
 	public static ClassNode create(byte[] bytes, int flags) {
 		ClassReader reader = new ClassReader(bytes);
 		org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
-		reader.accept(node, flags);
+		ClassVisitor visitor = new ClassVisitor(Opcodes.ASM9, node) {
+			@Override public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+				return new JSRInlinerAdapter(super.visitMethod(access, name, desc, signature, exceptions), access, name, desc, signature, exceptions);
+			}
+		};
+
+		reader.accept(visitor, flags);
 		return new ClassNode(node);
 	}
 

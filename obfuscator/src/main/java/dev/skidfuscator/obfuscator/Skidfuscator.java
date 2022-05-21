@@ -19,7 +19,7 @@ import dev.skidfuscator.obfuscator.exempt.SimpleExemptAnalysis;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
-import dev.skidfuscator.obfuscator.phantom.PhantomJarDownloader;
+import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFactory;
@@ -38,7 +38,6 @@ import dev.skidfuscator.obfuscator.transform.impl.NegationTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.FlatteningFlowTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
@@ -61,7 +60,6 @@ import org.mapleir.context.IRCache;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.objectweb.asm.Opcodes;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
@@ -71,14 +69,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Getter
 public class Skidfuscator {
@@ -267,19 +259,7 @@ public class Skidfuscator {
             }
 
         }
-
         LOGGER.log("Finished importing the JVM!");
-
-        if (session.getLibs() != null) {
-            final ClassNode classNode = classSource.findClassNode("org/json/simple/parser/ParseException");
-            if (classNode == null) {
-                System.err.println("HAHAHHAHAHAH");
-                for (ClassNode vertex : classSource.iterateWithLibraries()) {
-                    if (classSource.isLibraryClass(vertex.getName()) && vertex.getName().contains("org") && !vertex.getName().contains("sun"))
-                        System.out.println(vertex.getDisplayName());
-                }
-            }
-        }
 
         /* Resolve context */
         LOGGER.post("Resolving basic context...");
@@ -311,7 +291,7 @@ public class Skidfuscator {
          */
         for (Listener o : Arrays.asList(
                 new StringTransformer(this),
-                new NegationTransformer(this),
+                //new NegationTransformer(this),
                 //new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
                 new SwitchTransformer(this),
@@ -343,7 +323,9 @@ public class Skidfuscator {
                     cfg.verify();
                     (new SkidFlowGraphDumper(this, cfg, mn)).dump();
                 } catch (Exception ex){
-                    if (ex instanceof IllegalStateException)
+                    if (ex instanceof IllegalStateException) {
+                        throw ex;
+                    }
                     ex.printStackTrace();
                 }
                 progressBar.step();

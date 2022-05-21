@@ -94,7 +94,7 @@ public class NumberTransformer extends AbstractTransformer {
                     //constantExpr.setConstant(xored);
                     parent.overwrite(constantExpr, modified);
 
-                    if (IntegerBlockPredicateRenderer.DEBUG && false) {
+                    if (IntegerBlockPredicateRenderer.DEBUG) {
                         final Local local1 = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
                         vertex.add(
                                 vertex.indexOf(stmt) + 1,

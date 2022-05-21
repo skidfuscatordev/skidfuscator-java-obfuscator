@@ -1,4 +1,4 @@
-package dev.skidfuscator.obfuscator.phantom;
+package dev.skidfuscator.obfuscator.phantom.jphantom;
 
 import com.google.common.collect.Lists;
 import dev.skidfuscator.obfuscator.Skidfuscator;
