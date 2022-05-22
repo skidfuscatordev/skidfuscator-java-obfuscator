@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
+import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.BasicBlock;
 
 import java.util.HashMap;
@@ -15,17 +16,19 @@ import java.util.List;
 import java.util.Map;
 
 public class IntegerBlockOpaquePredicate implements BlockOpaquePredicate {
+    private final MethodNode methodNode;
     private final Map<BasicBlock, Integer> predicateMap;
     private PredicateFlowGetter getter;
     private PredicateFlowSetter setter;
 
-    public IntegerBlockOpaquePredicate(PredicateFlowGetter getter) {
+    public IntegerBlockOpaquePredicate(MethodNode methodNode, PredicateFlowGetter getter) {
+        this.methodNode = methodNode;
         this.predicateMap = new HashMap<>();
         this.getter = getter;
     }
 
-    public IntegerBlockOpaquePredicate() {
-        this(null);
+    public IntegerBlockOpaquePredicate(final MethodNode methodNode) {
+        this(methodNode, null);
     }
 
     @Override

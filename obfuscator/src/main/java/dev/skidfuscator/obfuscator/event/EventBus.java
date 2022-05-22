@@ -7,9 +7,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+/**
+ * Basic EventBus quickly mushed up together to serve as an excuse
+ * to not use the visitor pattern.
+ */
 public class EventBus {
     private static final Map<Class<?>, List<EventListener>> listeners = new HashMap<>();
 
+    /**
+     * Registers a listener to the EventBus.
+     *
+     * @param instance Instance of the listener to be registered
+     */
     public static void register(final Listener instance) {
         for (Method declaredMethod : instance.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(Listen.class))
@@ -37,14 +46,31 @@ public class EventBus {
         }
     }
 
+    /**
+     * Unregisters a specific listener from the EventBus.
+     *
+     * @param listener the instance of the listener to be removed
+     */
     public static void unregister(final Object listener) {
         unregister(listener.getClass());
     }
 
+    /**
+     * Unregisters a specific class from the EventBus.
+     *
+     * @param listener the class of the listener to be removed
+     */
     public static void unregister(final Class<?> listener) {
         listeners.remove(listener);
     }
 
+    /**
+     * Calls an event of type T
+     *
+     * @param <T>   the Type parameter of the event
+     * @param event the event
+     * @return Modified or intact output after passing through all the interceptors
+     */
     public static <T extends Event> T call(final T event) {
         final Queue<EventListener> calls = new PriorityQueue<>(Comparator.comparingInt(EventListener::getPriority));
 
@@ -61,16 +87,30 @@ public class EventBus {
         return event;
     }
 
+    /**
+     * Kills the EventBus and clears all of its listeners.
+     */
     public static void end() {
         listeners.clear();
     }
 
+    /**
+     * Wrapper class for EventListener
+     */
     static class EventListener {
         private final Listener listener;
         private final Method method;
         private final Class<?> type;
         private final int priority;
 
+        /**
+         * Instantiates a new Event listener.
+         *
+         * @param listener the listener
+         * @param method   the method
+         * @param type     the type
+         * @param priority the priority
+         */
         public EventListener(Listener listener, Method method, Class<?> type, int priority) {
             this.listener = listener;
             this.method = method;
@@ -78,14 +118,26 @@ public class EventBus {
             this.priority = priority;
         }
 
+        /**
+         * @return the priority of the listener
+         */
         public int getPriority() {
             return priority;
         }
 
+        /**
+         * @param event Object of an event
+         * @return Returns a boolean of whether the listener can process the event
+         */
         boolean check(final Object event) {
             return type.isAssignableFrom(event.getClass());
         }
 
+        /**
+         * Calls a specific event
+         *
+         * @param event Object of the event
+         */
         void call(final Object event) {
             if (!check(event))
                 return;
@@ -93,6 +145,11 @@ public class EventBus {
             callUnsafe(event);
         }
 
+        /**
+         * Calls an event using unsafe casting and reflections.
+         *
+         * @param event the object of the event
+         */
         @Deprecated
         void callUnsafe(final Object event) {
             try {

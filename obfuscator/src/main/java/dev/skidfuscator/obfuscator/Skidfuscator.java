@@ -22,10 +22,6 @@ import dev.skidfuscator.obfuscator.order.OrderAnalysis;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
-import dev.skidfuscator.obfuscator.predicate.factory.PredicateFactory;
-import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.opaque.ClassOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerBlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerMethodOpaquePredicate;
@@ -34,7 +30,6 @@ import dev.skidfuscator.obfuscator.resolver.SkidInvocationResolver;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidGroup;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
-import dev.skidfuscator.obfuscator.transform.impl.NegationTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
@@ -51,7 +46,6 @@ import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.LibraryClassSource;
-import org.mapleir.app.service.LocateableClassNode;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.context.AnalysisContext;
@@ -72,6 +66,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The type Skidfuscator.
+ */
 @Getter
 public class Skidfuscator {
     public static final TimedLogger LOGGER = new TimedLogger(LogManager.getLogger(Skidfuscator.class));
@@ -92,54 +89,103 @@ public class Skidfuscator {
 
     private final Counter counter = new Counter();
 
+    /**
+     * Instantiates a new Skidfuscator.
+     *
+     * @param session the session
+     */
     public Skidfuscator(SkidfuscatorSession session) {
         this.session = session;
     }
 
+    /**
+     * Runs the execution of the obfuscator.
+     */
     public void run() {
         LOGGER.post("Beginning Skidfuscator Enterprise...");
+
+        /*
+         * Initializes a null skid directory. This skid directory is used as a
+         * cache or a temporary directory, most often for silly things such as
+         * JPhantom or in the near future as a cache for the Ghost pre-computed
+         * mappings.
+         */
         SkiddedDirectory.init(null);
+
+        /*
+         * Here is initialized both the exempt analysis and the skid cache.
+         *
+         * The SkidCache is an extension of MapleIR's IRCache
+         * The ExemptAnalysis is a manager which handles exemptions
+         */
         this.irFactory = new SkidCache(this);
         this.exemptAnalysis = new SimpleExemptAnalysis();
 
+        /*
+         * Here we initialize our opaque predicate type. As of right now
+         * only one has been completed: the direct integer opaque predicate.
+         * In the future, it will be possible to add compatibility for other
+         * types such as longs, byte arrays etc...
+         */
         LOGGER.post("Resolving predicate analysis...");
-
         this.predicateAnalysis = new SimplePredicateAnalysis.Builder()
                 .skidfuscator(this)
-                .blockOpaqueFactory(new PredicateFactory<BlockOpaquePredicate, SkidMethodNode>() {
-                    @Override
-                    public BlockOpaquePredicate build(SkidMethodNode methodNode) {
-                        return new IntegerBlockOpaquePredicate();
-                    }
-                })
-                .methodOpaqueFactory(new PredicateFactory<MethodOpaquePredicate, SkidGroup>() {
-                    @Override
-                    public MethodOpaquePredicate build(SkidGroup group) {
-                        return new IntegerMethodOpaquePredicate(group);
-                    }
-                })
-                .classOpaqueFactory(new PredicateFactory<ClassOpaquePredicate, SkidClassNode>() {
-                    @Override
-                    public ClassOpaquePredicate build(SkidClassNode classNode) {
-                        return new IntegerClassOpaquePredicate(classNode);
-                    }
-                })
-                .classStaticOpaqueFactory(new PredicateFactory<ClassOpaquePredicate, SkidClassNode>() {
-                    @Override
-                    public ClassOpaquePredicate build(SkidClassNode skidClassNode) {
-                        return new IntegerClassOpaquePredicate(skidClassNode);
-                    }
-                })
-                .build();
+                /*
+                 * The BlockOpaqueFactory is the factory which builds opaque
+                 * predicates used in the flow obfuscation (hence why 'block').
+                 *
+                 * These are directly present at every BasicBlock in the CFG
+                 */
+                .blockOpaqueFactory(IntegerBlockOpaquePredicate::new)
 
+                /*
+                 * The MethodOpaqueFactory is the factory which builds
+                 * opaque predicates used to call methods. Each method
+                 * has two opaque predicates:
+                 *
+                 * Public predicate:    The one used to call the method
+                 * Private predicate:   The one used inside the method
+                 *                      itself, usually an extension
+                 *                      or transformation of the public
+                 *                      one
+                 *
+                 */
+                .methodOpaqueFactory(IntegerMethodOpaquePredicate::new)
+
+                /*
+                 * The ClassOpaqueFactory is the factory used to build
+                 * predicates present at the Object instance level. This
+                 * predicate can be used in any non-static method and is
+                 * initiated during the <init> clause or the instance init
+                 * through fields.
+                 */
+                .classOpaqueFactory(IntegerClassOpaquePredicate::new)
+
+                /*
+                 * The ClassStaticOpaqueFactory is the factory used to build
+                 * the predicates present at the static class level. These
+                 * predicates are used for any static methods or can sometimes
+                 * be paired to be used with non-static, however at a loss
+                 * of strength due to the predominant less-secure nature
+                 * as it can be more easily emulated
+                 */
+                .classStaticOpaqueFactory(IntegerClassOpaquePredicate::new)
+
+                /* Builder */
+                .build();
         LOGGER.log("Finished resolving predicate analysis!");
 
         /* Importation and exemptions */
         LOGGER.post("Importing exemptions...");
         if (session.getExempt() != null) {
-            try  {
+            try {
                 final List<String> exclusions = new ArrayList<>();
 
+                /*
+                 * This method is really scuffed but temporary for now. As
+                 * of right now we read every line from a .txt file, cache
+                 * them into an array list then pass them off to parsing.
+                 */
                 final FileReader fileReader = new FileReader(session.getExempt());
                 final BufferedReader br = new BufferedReader(fileReader);
                 String exclusion;
@@ -147,14 +193,25 @@ public class Skidfuscator {
                     exclusions.add(exclusion);
                 }
 
+                /*
+                 * This is the parsing bit. We initiate a progress bar and
+                 * simply just call the exempt analysis which builds the
+                 * exclusion call and caches it.
+                 */
                 try(ProgressBar progressBar = ProgressUtil.progress(exclusions.size())) {
                     for (String s : exclusions) {
                         exemptAnalysis.add(s);
                         progressBar.step();
                     }
                 }
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
+                /*
+                 * If there's any error, it can pose significant issues with
+                 * Skidfuscator. It's best to exit the program as of now.
+                 *
+                 * TODO:    Add better syntax highlighting for issues/parsing
+                 *          failure or exceptions
+                 */
                 LOGGER.error("Error reading exclusions file", ex);
                 System.exit(1);
             }
@@ -163,18 +220,41 @@ public class Skidfuscator {
 
 
         LOGGER.post("Importing jar...");
+        /*
+         * This is the main jar download. We'll be keeping a cache of the jar
+         * download as it will simplify our output methods. In several cases,
+         * many jars have classes with names that do not align with their
+         * respective ClassNode#getName, causing conflicts, hence why the cache
+         * of the jar downloader.
+         */
         final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
                 session.getInput(),
                 this
         );
         this.jarDownloader = downloader;
-
         this.classSource = new SkidApplicationClassSource(
                 session.getInput().getName(),
                 downloader.getJarContents()
         );
         LOGGER.log("Finished importing jar.");
 
+        /*
+         * Caching the libs is a fucking disaster - and I apologize
+         * As of right now for anyone who may be trying to read this.
+         * Currently, we have to re-cache entire class files and
+         * repeatedly read over and over again thousands of class files
+         * for extremely minimal information.
+         *
+         * Soon - hopefully - I'll create a mapping format or nick it
+         * from an OS project and convert libs to this mapping format,
+         * then cache the libs md5 and sha1/sha256 hashes, alongside
+         * any maven packaging. My objective is to be able to host an
+         * entire database of mappings in sub 1Gb of storage to allow
+         * for all of Skidfuscator Enterprise to be hosted on the cloud.
+         *
+         * This would allow for a lot of cool stuff, including tracking
+         * and remote HWIDs.
+         */
         if (session.getLibs() != null && session.getLibs().listFiles() != null) {
             final File[] libs = session.getLibs().listFiles();
             LOGGER.post("Importing " + libs.length + " libs...");
@@ -194,15 +274,6 @@ public class Skidfuscator {
                         libraryClassSource,
                         5
                 ));
-
-                final LocateableClassNode classNode = libraryClassSource.findClass("org/json/simple/parser/ParseException");
-                if (classNode == null) {
-                    System.err.println("FUCK");
-                    for (ClassNode vertex : libraryClassSource.iterate()) {
-                        System.out.println(vertex.getDisplayName());
-                    }
-                }
-
                 LOGGER.log("Finished importing libs!");
             } catch (Throwable e) {
                 /* Failed to load libs as a whole */
@@ -210,19 +281,43 @@ public class Skidfuscator {
             }
         }
 
-        /* Add phantom libs for any content / links which arent generated (low priority) */
-        this.classSource.addLibraries(new LibraryClassSource(
-                new ApplicationClassSource(
-                        "phantom",
-                        downloader.getPhantomContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
-                ),
-                -1
-        ));
+        /*
+         * Exclusively run this if JPhantom is activated. JPhantom computes some
+         * stuff really well, albeit it just necks itself the moment the software
+         * grows in size.
+         *
+         * Furthermore, since it computes classes which could be present in other
+         * libraries, we set the priority to -1, making it the last fallback result.
+         */
+        if (session.isPhantom()) {
+            this.classSource.addLibraries(new LibraryClassSource(
+                    new ApplicationClassSource(
+                            "phantom",
+                            downloader.getPhantomContents()
+                                    .getClassContents()
+                                    .stream()
+                                    .map(JarClassData::getClassNode)
+                                    .collect(Collectors.toList())
+                    ),
+                    -1
+            ));
+        }
         LOGGER.log("Finished importing classpath!");
 
         /* Import JVM */
         LOGGER.post("Beginning importing of the JVM...");
+
+        /*
+         * Pardon my inverse condition, although the order will make sense in
+         * a second. Before J9/J11, Java had all of its libraries compiled in
+         * a single jar called rt.jar. This is no longer the case, although
+         * since J8 is still the most predominantly used version of Java, it
+         * is a no-brainer to support it.
+         *
+         * + I love J8,... death to "var" in Java
+         */
         if (!session.isJmod()) {
+            LOGGER.post("↳ Trying to download " + session.getRuntime().toString());
             final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
                     session.getRuntime()
             );
@@ -237,7 +332,15 @@ public class Skidfuscator {
                     ),
                     0
             )));
-        } else {
+            LOGGER.post("✓ Success");
+        }
+        /*
+         * The choice of JMod in Java is so odd. Same "zip" format as other Jars,
+         * but completely and utterly discoostin. Oh well whatever. Here we try
+         * to download these fancily to be able to resolve all the classes in
+         * what used to be rt.jar.
+         */
+        else {
             for (File file : session.getRuntime().listFiles()) {
                 if (!file.getAbsolutePath().endsWith(".jmod"))
                     continue;
@@ -348,13 +451,39 @@ public class Skidfuscator {
         LOGGER.post("Goodbye!");
     }
 
+    /**
+     * The interface Caller.
+     */
     interface Caller {
+        /**
+         * Call base skid transform event.
+         *
+         * @return the skid transform event
+         */
         SkidTransformEvent callBase();
 
+        /**
+         * Call class class transform event.
+         *
+         * @param classNode the class node
+         * @return the class transform event
+         */
         ClassTransformEvent callClass(final SkidClassNode classNode);
 
+        /**
+         * Call group group transform event.
+         *
+         * @param group the group
+         * @return the group transform event
+         */
         GroupTransformEvent callGroup(final SkidGroup group);
 
+        /**
+         * Call method method transform event.
+         *
+         * @param methodNode the method node
+         * @return the method transform event
+         */
         MethodTransformEvent callMethod(final SkidMethodNode methodNode);
     }
 
