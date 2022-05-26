@@ -4,10 +4,12 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidSwitchStmt;
 import org.mapleir.asm.ClassNode;
+import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.cfg.DefaultBlockFactory;
 import org.mapleir.ir.cfg.builder.ssa.BlockBuilder;
+import org.mapleir.ir.cfg.builder.ssa.CfgBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.ConstantExprBuilder;
 import org.mapleir.ir.cfg.builder.ssa.expr.invoke.StaticInvocationExprBuilder;
 import org.mapleir.ir.cfg.builder.ssa.stmt.SwitchStmtBuilder;
@@ -16,6 +18,8 @@ import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
+import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.impl.StaticMethodLocalsPool;
 import org.objectweb.asm.Type;
 
 import java.util.LinkedHashMap;
@@ -192,6 +196,35 @@ public class SkidBlockFactory extends DefaultBlockFactory {
                 assert cfg != null : "ControlFlowGraph cannot be null!";
 
                 return new SkidBlock(cfg);
+            }
+        };
+    }
+
+    @Override
+    public CfgBuilder cfg() {
+        return new CfgBuilder() {
+            private LocalsPool localsPool;
+            private MethodNode methodNode;
+
+            @Override
+            public CfgBuilder localsPool(LocalsPool localsPool) {
+                this.localsPool = localsPool;
+                return this;
+            }
+
+            @Override
+            public CfgBuilder method(MethodNode methodNode) {
+                this.methodNode = methodNode;
+                return this;
+            }
+
+            @Override
+            public ControlFlowGraph build() {
+                assert localsPool != null : "Locals pool has to not be null";
+                assert methodNode != null : "MethodNode cannot be null";
+                assert localsPool instanceof StaticMethodLocalsPool == methodNode.isStatic()
+                        : "LocalsPool has to have a corresponding assignment (StaticMethodLocalsPool if method is static)";
+                return new SkidControlFlowGraph(localsPool, methodNode);
             }
         };
     }

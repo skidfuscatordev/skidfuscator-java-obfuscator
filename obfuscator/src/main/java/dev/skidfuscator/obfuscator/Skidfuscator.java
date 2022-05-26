@@ -33,6 +33,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.FlatteningFlowTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
@@ -78,7 +79,7 @@ public class Skidfuscator {
     private SkidApplicationClassSource classSource;
     private LibraryClassSource jvmClassSource;
     private AbstractJarDownloader<ClassNode> jarDownloader;
-    private IRCache irFactory;
+    private SkidCache irFactory;
     private AnalysisContext cxt;
 
     private Hierarchy hierarchy;

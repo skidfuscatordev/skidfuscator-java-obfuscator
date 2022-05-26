@@ -59,6 +59,9 @@ public class BasicConditionTransformer extends AbstractTransformer {
             if (parent.size() == 0)
                 continue;
 
+            if (parent.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
+                continue;
+
             final Stmt stmt = parent.get(parent.size() - 1);
 
             if (!(stmt instanceof ConditionalJumpStmt)) {
@@ -86,7 +89,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
             final HashTransformer transformer = NumberManager.randomHasher();
             final SkiddedHash hash = transformer.hash(
                     methodNode.getBlockPredicate(basicBlock),
-                    cfg,
+                    basicBlock,
                     methodNode.getFlowPredicate().getGetter()
             );
 

@@ -4,6 +4,7 @@ import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
@@ -14,9 +15,9 @@ import org.objectweb.asm.Type;
 
 public class LegacyHashTransformer implements HashTransformer {
     @Override
-    public SkiddedHash hash(int starting, final ControlFlowGraph cfg, PredicateFlowGetter caller) {
+    public SkiddedHash hash(int starting, final BasicBlock vertex, PredicateFlowGetter caller) {
         final int hashed = hash(starting);
-        final Expr hash = hash(cfg, caller);
+        final Expr hash = hash(vertex, caller);
         return new SkiddedHash(hash, hashed);
     }
 
@@ -26,9 +27,9 @@ public class LegacyHashTransformer implements HashTransformer {
     }
 
     @Override
-    public Expr hash(final ControlFlowGraph cfg, PredicateFlowGetter caller) {
+    public Expr hash(final BasicBlock vertex, PredicateFlowGetter caller) {
         // (starting * 31)
-        final Expr var_load_a = caller.get(cfg);
+        final Expr var_load_a = caller.get(vertex);
         final Expr const_31 = new ConstantExpr(31, Type.INT_TYPE);
         final Expr arith_a = new FakeArithmeticExpr(var_load_a, const_31, ArithmeticExpr.Operator.MUL);
 
@@ -37,11 +38,11 @@ public class LegacyHashTransformer implements HashTransformer {
         final Expr arith_b = new FakeArithmeticExpr(arith_a, const_4, ArithmeticExpr.Operator.USHR);
 
         // ((starting * 31) >>> 4) % starting)
-        final Expr var_load_b = caller.get(cfg);
+        final Expr var_load_b = caller.get(vertex);
         final Expr arith_c = new FakeArithmeticExpr(arith_b, var_load_b, ArithmeticExpr.Operator.REM);
 
         // (starting >>> 16)
-        final Expr var_load_c = caller.get(cfg);
+        final Expr var_load_c = caller.get(vertex);
         final Expr const_16 = new ConstantExpr(16, Type.INT_TYPE);
         final Expr arith_d = new FakeArithmeticExpr(var_load_c, const_16, ArithmeticExpr.Operator.USHR);
 

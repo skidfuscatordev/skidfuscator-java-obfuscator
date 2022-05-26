@@ -54,6 +54,9 @@ public class BasicExceptionTransformer extends AbstractTransformer {
             if (entry.size() == 0)
                 continue;
 
+            if (entry.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
+                continue;
+
             // Todo add hashing to amplify difficulty and remove key exposure
             // Todo make this a better system
             final int seed = methodNode.getBlockPredicate((SkidBlock) entry);
@@ -61,7 +64,7 @@ public class BasicExceptionTransformer extends AbstractTransformer {
             // Create hash
             final SkiddedHash hash = NumberManager
                     .randomHasher()
-                    .hash(seed, cfg, methodNode.getFlowPredicate().getGetter());
+                    .hash(seed, entry, methodNode.getFlowPredicate().getGetter());
             final ConstantExpr var_const = new ConstantExpr(hash.getHash());
 
             // Todo add more boilerplates + add exception rotation

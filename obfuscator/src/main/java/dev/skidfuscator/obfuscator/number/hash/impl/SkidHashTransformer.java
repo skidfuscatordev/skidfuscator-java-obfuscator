@@ -5,6 +5,7 @@ import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
@@ -22,9 +23,9 @@ public class SkidHashTransformer implements HashTransformer {
     private final Map<Integer, MutatingOperation> mutatingOperationMap = new HashMap<>();
 
     @Override
-    public SkiddedHash hash(int starting, final ControlFlowGraph cfg, PredicateFlowGetter caller) {
+    public SkiddedHash hash(int starting, final BasicBlock vertex, PredicateFlowGetter caller) {
         final int hashed = hash(starting);
-        final Expr hash = hash(cfg, caller);
+        final Expr hash = hash(vertex, caller);
         return new SkiddedHash(hash, hashed);
     }
 
@@ -40,15 +41,15 @@ public class SkidHashTransformer implements HashTransformer {
     }
 
     @Override
-    public Expr hash(final ControlFlowGraph cfg, PredicateFlowGetter caller) {
+    public Expr hash(final BasicBlock vertex, PredicateFlowGetter caller) {
         // (starting >>> 16)
-        final Expr var_calla = caller.get(cfg);
+        final Expr var_calla = caller.get(vertex);
         final Expr const_29 = new ConstantExpr(29, Type.INT_TYPE);
         final Expr shifted7to29 = new FakeArithmeticExpr(var_calla, const_29, ArithmeticExpr.Operator.USHR);
 
         // (starting ^ (starting >>> 16))
         final Expr shiftedvartoshift = new FakeArithmeticExpr(
-                caller.get(cfg), shifted7to29, ArithmeticExpr.Operator.XOR);
+                caller.get(vertex), shifted7to29, ArithmeticExpr.Operator.XOR);
         return shiftedvartoshift;
     }
 

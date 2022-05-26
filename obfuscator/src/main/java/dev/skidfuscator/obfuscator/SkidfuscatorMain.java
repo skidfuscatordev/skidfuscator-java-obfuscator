@@ -24,7 +24,6 @@ public class SkidfuscatorMain {
                     .parser(new DefaultParser())
                     .build();
 
-
             while (true) {
                 String line = null;
 
@@ -32,6 +31,7 @@ public class SkidfuscatorMain {
                     line = reader.readLine("> ");
                 } catch (UserInterruptException e) {
                     // Ignore
+                    break;
                 } catch (EndOfFileException e) {
                     return;
                 }

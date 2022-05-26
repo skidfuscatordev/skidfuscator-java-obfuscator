@@ -42,7 +42,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
         final SkidMethodNode methodNode = event.getMethodNode();
 
         final ControlFlowGraph cfg = methodNode.getCfg();
-        for (BasicBlock block : new ArrayList<>(cfg.vertices())) {
+        /*for (BasicBlock block : new ArrayList<>(cfg.vertices())) {
             final BasicBlock immediate = cfg.getImmediate(block);
 
             if (immediate == null)
@@ -53,7 +53,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
             final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(block, immediate);
             cfg.addEdge(edge);
             block.add(new UnconditionalJumpStmt(immediate, edge));
-        }
+        }*/
     }
 
     @Listen
@@ -106,7 +106,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
 
         new HashSet<>(cfg.vertices())
                 .stream()
-                .filter(exempt::contains)
+                .filter(e -> !exempt.contains(e))
                 .flatMap(Collection::stream)
                 .filter(e -> e instanceof UnconditionalJumpStmt)
                 .map(e -> (UnconditionalJumpStmt) e)
@@ -129,7 +129,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
                 });
 
         dispatcherBlock.add(new SwitchStmt(
-                getter.get(cfg),
+                getter.get(dispatcherBlock),
                 destinations,
                 dispatcherBlock
         ));

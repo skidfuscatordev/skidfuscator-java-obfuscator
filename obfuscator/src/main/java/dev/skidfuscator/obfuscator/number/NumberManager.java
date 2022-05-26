@@ -10,6 +10,7 @@ import dev.skidfuscator.obfuscator.number.hash.impl.IntelliJHashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.impl.LegacyHashTransformer;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.locals.Local;
@@ -32,15 +33,15 @@ public class NumberManager {
             new LegacyHashTransformer()
     };
 
-    public static Expr encrypt(final int outcome, final int starting, final ControlFlowGraph cfg, final PredicateFlowGetter startingExpr) {
+    public static Expr encrypt(final int outcome, final int starting, final BasicBlock vertex, final PredicateFlowGetter startingExpr) {
         // Todo add more transformers + randomization
         return TRANSFORMERS[RandomUtil.nextInt(TRANSFORMERS.length)]
-                .getNumber(outcome, starting, cfg, startingExpr);
+                .getNumber(outcome, starting, vertex, startingExpr);
     }
 
-    public static SkiddedHash hash(final int starting, final ControlFlowGraph cfg, final PredicateFlowGetter local) {
+    public static SkiddedHash hash(final int starting, final BasicBlock vertex, final PredicateFlowGetter local) {
         // Todo add more transformers + randomization
-        return HASHER[RandomUtil.nextInt(HASHER.length)].hash(starting, cfg, local);
+        return HASHER[RandomUtil.nextInt(HASHER.length)].hash(starting, vertex, local);
     }
 
     public static HashTransformer randomHasher() {

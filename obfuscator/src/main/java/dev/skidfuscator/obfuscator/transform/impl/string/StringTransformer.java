@@ -81,7 +81,7 @@ public class StringTransformer extends AbstractTransformer {
                     final String encrypted = BasicEncryptionGenerator.encrypt(constant, value, keys);
 
                     final ConstantExpr encryptedExpr = new ConstantExpr(encrypted);
-                    final Expr loadExpr = methodNode.getFlowPredicate().getGetter().get(cfg);
+                    final Expr loadExpr = methodNode.getFlowPredicate().getGetter().get(unit.getBlock());
 
                     final Expr modified = new StaticInvocationExpr(new Expr[]{encryptedExpr, loadExpr},
                             methodNode.getOwner(), BasicEncryptionGenerator.METHOD_NAME,

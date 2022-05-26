@@ -6,7 +6,9 @@ import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidMethodNodeBuilder;
 import lombok.Getter;
 import org.mapleir.asm.ClassNode;
+import org.mapleir.ir.code.stmt.ReturnStmt;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -92,7 +94,13 @@ public class SkidClassNode extends ClassNode {
                 .phantom(false)
                 .build();
 
+        clinit.getEntryBlock().add(new ReturnStmt());
+
         return clinitNode = clinit;
+    }
+
+    public Type getType() {
+        return Type.getType("L" + this.getName() + ";");
     }
 
     /**

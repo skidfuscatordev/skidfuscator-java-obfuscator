@@ -88,15 +88,15 @@ public class SwitchTransformer extends AbstractTransformer {
                             new VarExpr(local, Type.INT_TYPE),
                             new FakeArithmeticExpr(
                                     expr,
-                                    blockOpaquePredicate.getGetter().get(unit.getBlock().cfg),
+                                    blockOpaquePredicate.getGetter().get(unit.getBlock()),
                                     ArithmeticExpr.Operator.XOR
                             )
                     );
                     unit.getBlock().add(unit.getBlock().indexOf(unit), copyVarStmt);
 
-                    unit.setExpression(hasher.hash(cfg, new PredicateFlowGetter() {
+                    unit.setExpression(hasher.hash(unit.getBlock(), new PredicateFlowGetter() {
                         @Override
-                        public Expr get(ControlFlowGraph cfg) {
+                        public Expr get(final BasicBlock vertex) {
                             return new VarExpr(local, Type.INT_TYPE);
                         }
                     }));

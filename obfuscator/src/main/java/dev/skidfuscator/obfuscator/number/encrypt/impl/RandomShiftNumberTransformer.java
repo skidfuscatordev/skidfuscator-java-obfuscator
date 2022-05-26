@@ -4,6 +4,7 @@ import dev.skidfuscator.obfuscator.number.encrypt.NumberTransformer;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
@@ -14,8 +15,8 @@ import org.objectweb.asm.Type;
 
 public class RandomShiftNumberTransformer implements NumberTransformer {
     @Override
-    public Expr getNumber(int outcome, int starting, final ControlFlowGraph cfg, PredicateFlowGetter startingExpr) {
-        Expr expr = startingExpr.get(cfg);
+    public Expr getNumber(int outcome, int starting, final BasicBlock vertex, PredicateFlowGetter startingExpr) {
+        Expr expr = startingExpr.get(vertex);
         int firstSeed = starting;
 
         boolean switcher = false;
@@ -25,7 +26,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
                 case 0: {
                     if (switcher) {
                         firstSeed = firstSeed >> starting;
-                        expr = new FakeArithmeticExpr(expr, startingExpr.get(cfg), ArithmeticExpr.Operator.SHR);
+                        expr = new FakeArithmeticExpr(expr, startingExpr.get(vertex), ArithmeticExpr.Operator.SHR);
                     } else {
                         final byte seed = (byte) (RandomUtil.nextInt(127) + 1);
                         firstSeed = firstSeed >> seed;
@@ -37,7 +38,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
                 case 1: {
                     if (switcher) {
                         firstSeed = firstSeed << starting;
-                        expr = new FakeArithmeticExpr(expr, startingExpr.get(cfg), ArithmeticExpr.Operator.SHL);
+                        expr = new FakeArithmeticExpr(expr, startingExpr.get(vertex), ArithmeticExpr.Operator.SHL);
                     } else {
                         final byte seed = (byte) (RandomUtil.nextInt(127) + 1);
                         firstSeed = firstSeed << seed;
@@ -48,7 +49,7 @@ public class RandomShiftNumberTransformer implements NumberTransformer {
                 case 2: {
                     if (switcher) {
                         firstSeed = firstSeed & starting;
-                        expr = new FakeArithmeticExpr(expr, startingExpr.get(cfg), ArithmeticExpr.Operator.AND);
+                        expr = new FakeArithmeticExpr(expr, startingExpr.get(vertex), ArithmeticExpr.Operator.AND);
                     } else {
                         final byte seed = (byte) (RandomUtil.nextInt(254) + 1);
                         firstSeed = firstSeed & seed;

@@ -23,6 +23,4 @@ public class BlockBuilder {
     public ConditionBuilder condition() {
         return new ConditionBuilder(factory, block.cfg, block, stack);
     }
-
-
 }

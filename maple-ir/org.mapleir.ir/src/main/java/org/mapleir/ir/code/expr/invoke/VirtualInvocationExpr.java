@@ -31,6 +31,10 @@ public class VirtualInvocationExpr extends InvocationExpr {
 		return getCallType() == CallType.INTERFACE;
 	}
 
+	public boolean isSpecialCall() {
+		return getCallType() == CallType.SPECIAL;
+	}
+
 	private static int resolveASMOpcode(CallType t) {
 		switch (t) {
 		case SPECIAL:

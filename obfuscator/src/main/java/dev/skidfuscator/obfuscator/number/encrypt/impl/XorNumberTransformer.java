@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.number.encrypt.impl;
 import dev.skidfuscator.obfuscator.number.encrypt.NumberTransformer;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
+import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
@@ -18,12 +19,16 @@ import org.objectweb.asm.Type;
  */
 public class XorNumberTransformer implements NumberTransformer {
     @Override
-    public Expr getNumber(final int outcome, final int starting, final ControlFlowGraph cfg, final PredicateFlowGetter startingExpr) {
+    public Expr getNumber(
+            final int outcome,
+            final int starting,
+            final BasicBlock vertex,
+            final PredicateFlowGetter startingExpr) {
         final int xored = outcome ^ starting;
         final Expr allocExpr = new ConstantExpr(xored);
         return new FakeArithmeticExpr(
                 allocExpr,
-                startingExpr.get(cfg),
+                startingExpr.get(vertex),
                 ArithmeticExpr.Operator.XOR
         );
     }

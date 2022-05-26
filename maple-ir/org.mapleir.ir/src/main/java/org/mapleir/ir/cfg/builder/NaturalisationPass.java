@@ -25,7 +25,7 @@ public class NaturalisationPass extends ControlFlowGraphBuilder.BuilderPass {
 
 	@Override
 	public void run() {
-		mergeImmediates();
+		//mergeImmediates();
 		resolveNaturalHandlerFlow();
 	}
 

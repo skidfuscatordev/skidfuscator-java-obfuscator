@@ -9,6 +9,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
@@ -58,12 +59,15 @@ public class NumberTransformer extends AbstractTransformer {
         if (methodNode.node.instructions.size() > 10000)
             return;
 
-        final ControlFlowGraph cfg = methodNode.getCfg();
+        final SkidControlFlowGraph cfg = methodNode.getCfg();
 
         if (cfg == null)
             return;
 
         for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+            if (vertex.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
+                continue;
+
             for (Stmt stmt : new HashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
                     if (!(expr instanceof ConstantExpr))
@@ -87,7 +91,7 @@ public class NumberTransformer extends AbstractTransformer {
                     final Expr modified = new XorNumberTransformer().getNumber(
                             ((Number) constantExpr.getConstant()).intValue(),
                             predicate,
-                            cfg,
+                            skidBlock,
                             flowPredicate.getGetter()
                     );
 

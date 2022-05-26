@@ -1,7 +1,7 @@
 package dev.skidfuscator.obfuscator.build;
 
 public class ObjectBuilder {
-    public ExpressionBuilder Integer() {
+    public ExpressionBuilder new_Integer() {
         return null;
     }
 }
