@@ -31,10 +31,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidGroup;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.BasicRangeTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.FlatteningFlowTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.*;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
@@ -402,6 +399,7 @@ public class Skidfuscator {
                 //new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
                 new SwitchTransformer(this),
+                new BasicSimplifierTransformer(this),
                 new BasicConditionTransformer(this),
                 new BasicExceptionTransformer(this),
                 new BasicRangeTransformer(this),
