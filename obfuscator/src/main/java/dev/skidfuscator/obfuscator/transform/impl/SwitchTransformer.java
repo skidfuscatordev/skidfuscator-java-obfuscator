@@ -19,8 +19,6 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
-import org.mapleir.ir.code.expr.ConstantExpr;
-import org.mapleir.ir.code.expr.NegationExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;

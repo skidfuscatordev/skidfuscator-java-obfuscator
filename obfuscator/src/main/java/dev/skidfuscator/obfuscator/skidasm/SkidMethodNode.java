@@ -148,7 +148,7 @@ public class SkidMethodNode extends MethodNode {
                     if (!e.isSpecialCall())
                         return false;
 
-                    System.out.println("----> " + CodeUnit.print(e));
+                    //System.out.println("----> " + CodeUnit.print(e));
 
                     /*
                      * Every super() call has to call to have the following
@@ -164,7 +164,7 @@ public class SkidMethodNode extends MethodNode {
                         return false;
                     }
 
-                    System.out.println("\\_> " + Arrays.toString(e.getArgumentExprs()));
+                    //System.out.println("\\_> " + Arrays.toString(e.getArgumentExprs()));
                     final Expr children0 = e.getArgumentExprs()[0];
 
                     if (!(children0 instanceof VarExpr)) {
@@ -177,7 +177,7 @@ public class SkidMethodNode extends MethodNode {
                 })
                 .findFirst()
                 .orElse(null);
-        System.out.println("<--------> " + this.getOwner() + "#" + getName());
+        //System.out.println("<--------> " + this.getOwner() + "#" + getName());
 
         if (initiator == null) {
             throw new IllegalStateException(
@@ -284,7 +284,7 @@ public class SkidMethodNode extends MethodNode {
             );
         }
 
-        System.out.println("Selected" + CFGUtils.printBlock(initBlock));
+        //System.out.println("Selected" + CFGUtils.printBlock(initBlock));
 
         if (IntegerBlockPredicateRenderer.DEBUG) {
             final Local debugLocal = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);

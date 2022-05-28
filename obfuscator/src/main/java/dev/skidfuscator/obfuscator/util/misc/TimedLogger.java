@@ -46,7 +46,7 @@ public class TimedLogger {
     }
 
     public void error(String text, Throwable e) {
-        logger.error(text);
-        logger.debug("[Repeat] " + text, e);
+        logger.error(text, e);
+        //logger.debug("[Repeat] " + text, e);
     }
 }

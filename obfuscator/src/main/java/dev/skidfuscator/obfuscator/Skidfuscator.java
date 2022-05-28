@@ -55,6 +55,7 @@ import org.mapleir.context.IRCache;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.objectweb.asm.Opcodes;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
@@ -73,6 +74,7 @@ import java.util.stream.Collectors;
 @Getter
 public class Skidfuscator {
     public static final TimedLogger LOGGER = new TimedLogger(LogManager.getLogger(Skidfuscator.class));
+    public static final int ASM_VERSION = Opcodes.ASM9;
 
     private final SkidfuscatorSession session;
 

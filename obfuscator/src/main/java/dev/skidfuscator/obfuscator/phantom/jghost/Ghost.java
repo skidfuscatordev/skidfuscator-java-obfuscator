@@ -13,4 +13,6 @@ public class Ghost {
     public static Gson gson() {
         return GSON;
     }
+
+
 }

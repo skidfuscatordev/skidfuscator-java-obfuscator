@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ClassNodeBuilder implements Builder<ClassNode> {
-    public int access = -1;
-    public String name;
-    public String signature;
-    public String superName;
-    public String[] interfaces = new String[0];
+    private int access = -1;
+    private String name;
+    private String signature;
+    private String superName;
+    private String[] interfaces = new String[0];
 
     public ClassNodeBuilder access(int access) {
         this.access = access;

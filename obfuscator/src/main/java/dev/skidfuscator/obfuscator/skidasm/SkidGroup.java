@@ -48,6 +48,26 @@ public class SkidGroup {
         this.statical = statical;
     }
 
+    public void setDesc(final String desc) {
+        for (MethodNode methodNode : methodNodeList) {
+            methodNode.node.desc = desc;
+        }
+
+        for (SkidInvocation invoker : invokers) {
+            invoker.getExpr().setDesc(desc);
+        }
+    }
+
+    public void setName(final String name) {
+        for (MethodNode methodNode : methodNodeList) {
+            methodNode.node.name = name;
+        }
+
+        for (SkidInvocation invoker : invokers) {
+            invoker.getExpr().setName(name);
+        }
+    }
+
     public MethodNode first() {
         return methodNodeList.iterator().next();
     }

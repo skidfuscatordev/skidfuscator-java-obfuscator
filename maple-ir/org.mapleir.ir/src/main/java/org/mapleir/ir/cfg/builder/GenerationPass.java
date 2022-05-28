@@ -784,7 +784,8 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 
 	protected void _neg() {
 		save_stack(false);
-		push(builder.factory.negation_expr()
+		push(builder.factory
+				.negation_expr()
 				.expr(pop())
 				.build()
 		);
@@ -1385,7 +1386,8 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 		Local l = builder.graph.getLocals().get(index, isStack);
 		l.setType(type);
 		builder.locals.add(l);
-		return builder.factory.var_expr()
+		return builder.factory
+				.var_expr()
 				.local(l)
 				.type(type)
 				.build();

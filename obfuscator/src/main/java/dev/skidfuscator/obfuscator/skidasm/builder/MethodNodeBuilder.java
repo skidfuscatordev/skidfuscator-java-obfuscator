@@ -7,11 +7,11 @@ import org.objectweb.asm.tree.MethodNode;
 import java.util.List;
 
 public class MethodNodeBuilder implements Builder<MethodNode> {
-    public int access = -1;
-    public String name;
-    public String desc;
-    public String signature;
-    public String[] exceptions = new String[0];
+    private int access = -1;
+    private String name;
+    private String desc;
+    private String signature;
+    private String[] exceptions = new String[0];
 
     public MethodNodeBuilder access(int access) {
         this.access = access;

@@ -122,6 +122,7 @@ public class LocalsReallocator {
         for(Local l : wl) {
             Type type = stypes.get(l);
             Local newL = locals.get(idx, false);
+            newL.setType(type);
             if(l != newL) {
                 remap.put(l, newL);
             }

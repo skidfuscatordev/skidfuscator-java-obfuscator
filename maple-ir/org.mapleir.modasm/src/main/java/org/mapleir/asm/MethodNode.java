@@ -11,7 +11,7 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
     private static int ID_COUNTER = 1;
    	private final int numericId = ID_COUNTER++;
 
-   	public final ClassNode owner;
+   	public ClassNode owner;
     public final org.objectweb.asm.tree.MethodNode node;
 
     public MethodNode(org.objectweb.asm.tree.MethodNode node, ClassNode owner) {
@@ -57,6 +57,10 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
     @Override
     public JavaDesc getJavaDesc() {
 	    return new JavaDesc(owner.getName(), getName(), getDesc(), JavaDesc.DescType.METHOD);
+    }
+
+    public void setOwner(ClassNode owner) {
+        this.owner = owner;
     }
 
     public boolean isStatic() {

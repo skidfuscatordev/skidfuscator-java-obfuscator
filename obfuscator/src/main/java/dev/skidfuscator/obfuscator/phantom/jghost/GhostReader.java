@@ -1,5 +1,5 @@
 package dev.skidfuscator.obfuscator.phantom.jghost;
 
-public class GhostReader {
-
+public interface GhostReader<T> {
+    T read();
 }

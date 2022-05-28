@@ -28,7 +28,7 @@ public class SkidFlowGraphBuilder extends ControlFlowGraphBuilder {
         return new BuilderPass[] {
                 new GenerationPass(this),
                 new DeadBlocksPass(this),
-                //new NaturalisationPass(this),
+                new NaturalisationPass(this),
                 new SSAGenPass(this, false),
         };
     }

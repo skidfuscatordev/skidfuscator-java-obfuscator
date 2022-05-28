@@ -55,18 +55,45 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
+    /**
+     * Method called when the class methods are iterated over and initialized.
+     * In this we'll set the flow obfuscation opaque predicate getter and setter.
+     *
+     * @param event Method initializer event
+     */
     @Listen
     void handle(final InitMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
         final BlockOpaquePredicate flowPredicate = methodNode.getFlowPredicate();
 
+        /*
+         * This local is the initial local which stores the opaque predicate.
+         * This will constantly be called and will perpetually store the
+         * opaque predicate's value which changes each block.
+         *
+         * The reason for the +3 is simple:
+         * +1 -> Get the next local
+         * +2 -> Get the next long local
+         * +3 -> Safety net to allow for "long" to be used (I don't really know
+         *       this fixed all my issues)
+         */
         final Local local = methodNode
                 .getCfg()
                 .getLocals()
                 .get(methodNode.getCfg().getLocals().getMaxLocals() + 3);
 
+        /*
+         * The getter right now is quite simple:
+         *
+         * [if] the block is exempted (eg: <init> method calls before super())
+         * -->  Return a constant expression with the predicate
+         *
+         * [else]
+         * -->  Return a variable expression which calls the local storing the
+         *      predicate
+         */
         flowPredicate.setGetter(new PredicateFlowGetter() {
             @Override
             public Expr get(final BasicBlock block) {
@@ -212,8 +239,9 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
              * Contrary to the previous getter, this one store the value in a field. This
              * should make things harder for individuals to fuck around with.
              */
-            final SkidFieldNode fieldNode = classNode.createField()
-                    .access(Opcodes.ACC_PRIVATE)
+            final SkidFieldNode fieldNode = classNode
+                    .createField()
+                    .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT)
                     .name(RandomUtil.randomIsoString(10))
                     .desc("I")
                     .value(clazzInstancePredicate.get())
@@ -251,6 +279,23 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     );
                 }
             });
+
+
+            classNode.getMethods()
+                    .stream()
+                    .filter(MethodNode::isInit)
+                    .filter(SkidMethodNode.class::isInstance)
+                    .map(SkidMethodNode.class::cast)
+                    .forEach(skidMethodNode -> {
+                        final Expr expr = new ConstantExpr(
+                                clazzInstancePredicate.get()
+                        );
+                        expr.setBlock(skidMethodNode.getEntryBlock());
+                        skidMethodNode.getEntryBlock().add(
+                                0,
+                                clazzInstancePredicate.getSetter().apply(expr)
+                        );
+                    });
         };
 
         /*
@@ -344,7 +389,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .anyMatch(e -> !e.isInit() && !e.isStatic());
 
             // TODO: Figure out why tf this breaks shit
-            if (addInstance && false) {
+            if (addInstance) {
                 createDynamicInstance.run();
             } else {
                 createConstantInstance.run();
@@ -354,10 +399,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .anyMatch(e -> !e.isClinit() && e.isStatic());
 
-            if (addStatic && false) {
+            if (addStatic) {
                 createDynamicStatic.run();
             } else {
-                createDynamicStatic.run();
+                createConstantStatic.run();
             }
         }
     }
@@ -375,10 +420,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         Local local = null;
         int stackHeight = -1;
         String desc = null;
-
-        if (entryPoint) {
-            //System.err.println("SkidGroup " + skidGroup.getName() + "#" + skidGroup.getDesc() + " is an entry point!");
-        }
 
         if (!entryPoint) {
             for (MethodNode methodNode : skidGroup.getMethodNodeList()) {
@@ -446,47 +487,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
         final int finalStackHeight = stackHeight;
         skidGroup.setStackHeight(finalStackHeight);
-        /*final MethodOpaquePredicate blockOpaquePredicate = skidGroup.getPredicate();
-        blockOpaquePredicate.setGetter(
-                new PredicateFlowGetter() {
-                    @Override
-                    public Expr get(final ControlFlowGraph cfg) {
-                        if (entryPoint) {
-                            if (skidGroup.isStatical()) {
-                                final ClassOpaquePredicate clazzPredicate = skidfuscator
-                                        .getPredicateAnalysis()
-                                        .getClassStaticPredicate(
-                                                ((SkidMethodNode) skidGroup.first()).getParent()
-                                        );
-                                return new XorNumberTransformer()
-                                        .getNumber(
-                                                clazzPredicate.get(),
-                                                skidGroup.getPredicate().get(),
-                                                cfg,
-                                                clazzPredicate.getGetter()
-                                        );
-                            } else {
-                                /*final Expr privateSeed = new ConstantExpr(
-                                        Integer.toString(skidGroup.getPredicate().get()),
-                                        Type.getType(String.class)
-                                );
-
-                                return new StaticInvocationExpr(
-                                        new Expr[]{privateSeed},
-                                        "java/lang/Integer",
-                                        "parseInt",
-                                        "(Ljava/lang/String;)I"
-                                );
-
-                                return skidGroup.getPredicate().getGetter().get(cfg);
-                            }
-                        } else {
-                            return new VarExpr(cfg.getLocals()
-                                    .get(finalStackHeight), Type.INT_TYPE);
-                        }
-                    }
-                }
-        );*/
 
     }
 

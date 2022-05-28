@@ -61,6 +61,11 @@ public abstract class Local implements Comparable<Local> {
 	public void setType(Type type) {
 		this.type = type;
 	}
+
+	public Type getType() {
+		return type;
+	}
+
 	@Override
 	public int compareTo(Local o) {
 		if(stack && !o.stack) {
