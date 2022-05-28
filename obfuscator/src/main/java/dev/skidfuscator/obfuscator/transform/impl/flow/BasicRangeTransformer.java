@@ -81,10 +81,6 @@ public class BasicRangeTransformer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
-            System.out.println(CFGUtils.printBlock(range.getHandler()));
-        }
-
         for (BasicBlock entry : new HashSet<>(cfg.vertices())) {
             if (entry.size() == 0)
                 continue;
@@ -92,28 +88,79 @@ public class BasicRangeTransformer extends AbstractTransformer {
             if (entry.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
                 continue;
 
-            // Todo add hashing to amplify difficulty and remove key exposure
-            // Todo make this a better system
             for (Stmt stmt : entry) {
                 if (!(stmt instanceof UnconditionalJumpStmt)) {
                     continue;
                 }
 
                 final UnconditionalJumpStmt jmp = (UnconditionalJumpStmt) stmt;
-                // Create hash
-                // Todo add more boilerplates + add exception rotation
                 final BasicBlock target = jmp.getTarget();
 
-
-                final BasicBlock fuckup = new SkidBlock(cfg);
-                cfg.addVertex(fuckup);
+                /*
+                 * THROW DISPATCHER
+                 * ------------------------------------------------------------
+                 * Create a block which will guaranteed throw the exception.
+                 * This block is our 'dispatcher'. It dispatches an exception.
+                 * How clever...
+                 *
+                 * A --> THROW_BRIDGE --> THIS --> <thrown exception>
+                 */
+                final BasicBlock blockThrow = new SkidBlock(cfg);
+                cfg.addVertex(blockThrow);
 
                 final Type exceptionType = RandomUtil.nextException();
-                fuckup.add(new ThrowStmt(
+                blockThrow.add(new ThrowStmt(
                         new InitialisedObjectExpr(exceptionType.getInternalName(), "()V", new Expr[0])
                 ));
                 cfg.removeEdge(jmp.getEdge());
 
+                /*
+                 * THROW BRIDGE
+                 * ------------------------------------------------------------
+                 * This is an indirection condition added on top to prevent
+                 * skids from just saying "oh if block throws x exception without
+                 * any condition then we can just jump to handler".
+                 *
+                 * A --> THIS --> THROW_DISPATCHER --> <thrown exception>
+                 */
+                final SkidBlock throwBridge = new SkidBlock(cfg);
+                cfg.addVertex(throwBridge);
+
+                /* Hash the condition to prevent skids from guessing seeds */
+                final SkiddedHash hash = NumberManager
+                        .randomHasher()
+                        .hash(
+                                methodNode.getBlockPredicate(throwBridge),
+                                entry,
+                                methodNode.getFlowPredicate().getGetter()
+                        );
+                final ConstantExpr var_const = new ConstantExpr(hash.getHash());
+
+                /* Create a fake conditional if exception that's always true */
+                final FakeConditionalJumpStmt bridgeToFuckupStmt = new FakeConditionalJumpStmt(
+                        hash.getExpr(),
+                        var_const,
+                        blockThrow,
+                        ConditionalJumpStmt.ComparisonType.EQ
+                );
+                final FakeConditionalJumpEdge<BasicBlock> edgeFromBridgeToFuckup = new FakeConditionalJumpEdge<>(
+                        throwBridge, blockThrow, Opcodes.IF_ICMPNE
+                );
+                throwBridge.add(bridgeToFuckupStmt);
+                cfg.addEdge(edgeFromBridgeToFuckup);
+
+                /* Add a throw null which causes a NullPointerException to confuse decompilers */
+                throwBridge.add(new ThrowStmt(new ConstantExpr(null)));
+
+                /*
+                 * TARGET BRIDGE
+                 * ------------------------------------------------------------
+                 * This is our bridge to our target for our jump condition. This
+                 * essentially guarantees that we catch the exception, pop it off
+                 * the stack, then move on to our desired location
+                 *
+                 * <caught exception> --> THIS --> B (target)
+                 */
                 final BasicBlock targetBridge = new SkidBlock(cfg);
                 cfg.addVertex(targetBridge);
 
@@ -126,49 +173,34 @@ public class BasicRangeTransformer extends AbstractTransformer {
                 );
                 cfg.addEdge(targetBridgeEdge);
 
-
-                final SkidBlock bridgeToFuckup = new SkidBlock(cfg);
-                cfg.addVertex(bridgeToFuckup);
-                // Create hash
-                final SkiddedHash hash = NumberManager
-                        .randomHasher()
-                        .hash(
-                                methodNode.getBlockPredicate(bridgeToFuckup),
-                                entry,
-                                methodNode.getFlowPredicate().getGetter()
-                        );
-                final ConstantExpr var_const = new ConstantExpr(hash.getHash());
-
-                // Todo add more boilerplates + add exception rotation
-                // Todo change blocks to be skiddedblocks to add method to directly add these
-                final FakeConditionalJumpStmt bridgeToFuckupStmt = new FakeConditionalJumpStmt(
-                        hash.getExpr(),
-                        var_const,
-                        fuckup,
-                        ConditionalJumpStmt.ComparisonType.EQ
-                );
-                final FakeConditionalJumpEdge<BasicBlock> edgeFromBridgeToFuckup = new FakeConditionalJumpEdge<>(
-                        bridgeToFuckup, fuckup, Opcodes.IF_ICMPNE
-                );
-                bridgeToFuckup.add(bridgeToFuckupStmt);
-                bridgeToFuckup.add(new ThrowStmt(new ConstantExpr(null)));
-                cfg.addEdge(edgeFromBridgeToFuckup);
-
-
-                final UnconditionalJumpEdge<BasicBlock> edgeFromEntryToBridge = new UnconditionalJumpEdge<>(entry, bridgeToFuckup);
+                /*
+                 * JUMP
+                 * ------------------------------------------------------------
+                 * Now that we've modified and set up a proper exception trap,
+                 * we can modify the conditions of the jump statement:
+                 *
+                 * JMP --> THROW_BRIDGE --> THROW_DISPATCHER
+                 */
+                jmp.setTarget(throwBridge);
+                final UnconditionalJumpEdge<BasicBlock> edgeFromEntryToBridge = new UnconditionalJumpEdge<>(entry, throwBridge);
                 jmp.setEdge(edgeFromEntryToBridge);
-                jmp.setTarget(bridgeToFuckup);
                 cfg.addEdge(edgeFromEntryToBridge);
 
 
-
+                /*
+                 * EXCEPTION RANGE
+                 * ------------------------------------------------------------
+                 * Here we add all the details of our exception range, including
+                 * a singleton set of our exception type, the blocks involved
+                 * (THROW_BRIDGE && THROW_DISPATCHER) and our handler (TARGET_BRIDGE).
+                 */
                 final ExceptionRange<BasicBlock> range = new ExceptionRange<>();
-                range.addVertex(bridgeToFuckup);
-                range.addVertex(fuckup);
+                range.addVertex(throwBridge);
+                range.addVertex(blockThrow);
                 range.setHandler(targetBridge);
                 range.setTypes(new HashSet<>(Collections.singleton(exceptionType)));
-
-                cfg.addEdge(new TryCatchEdge<>(fuckup, range));
+                cfg.addEdge(new TryCatchEdge<>(throwBridge, range));
+                cfg.addEdge(new TryCatchEdge<>(blockThrow, range));
                 cfg.addRange(range);
 
                 event.tick();
