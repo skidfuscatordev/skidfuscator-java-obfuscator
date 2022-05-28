@@ -11,7 +11,7 @@ public class CaughtExceptionExpr extends Expr {
 
 	private Type type;
 	
-	private CaughtExceptionExpr(Type type) {
+	public CaughtExceptionExpr(Type type) {
 		super(CATCH);
 		this.type = type;
 	}

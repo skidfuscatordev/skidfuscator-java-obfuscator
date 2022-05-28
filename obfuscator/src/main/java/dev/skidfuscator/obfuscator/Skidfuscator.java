@@ -33,6 +33,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.BasicExceptionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.BasicRangeTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.FlatteningFlowTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
@@ -403,6 +404,7 @@ public class Skidfuscator {
                 new SwitchTransformer(this),
                 new BasicConditionTransformer(this),
                 new BasicExceptionTransformer(this),
+                new BasicRangeTransformer(this),
                 new AhegaoTransformer(this)
                 //
                 //new FactoryMakerTransformer()

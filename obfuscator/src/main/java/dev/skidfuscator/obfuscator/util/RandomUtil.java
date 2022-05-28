@@ -1,7 +1,9 @@
 package dev.skidfuscator.obfuscator.util;
 
 import lombok.experimental.UtilityClass;
+import org.objectweb.asm.Type;
 
+import java.io.IOException;
 import java.util.Random;
 
 @UtilityClass
@@ -34,5 +36,16 @@ public class RandomUtil {
                 .limit(size)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
+    }
+
+    private final Class<?>[] exceptionClasses = new Class<?>[] {
+            IllegalAccessException.class,
+            IOException.class,
+            RuntimeException.class,
+            ArrayStoreException.class
+    };
+
+    public static Type nextException() {
+        return Type.getType(exceptionClasses[nextInt(exceptionClasses.length - 1)]);
     }
 }
