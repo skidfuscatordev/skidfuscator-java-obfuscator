@@ -1,6 +1,7 @@
 package org.mapleir.ir.code;
 
 import org.mapleir.ir.code.expr.*;
+import org.objectweb.asm.Type;
 
 public class ExprTests extends UnitSubTestBase {
 	
@@ -34,7 +35,7 @@ public class ExprTests extends UnitSubTestBase {
 	}
 	
 	public void testCaughtExceptionExpr() throws Throwable {
-		CaughtExceptionExpr expr = new CaughtExceptionExpr(null);
+		CaughtExceptionExpr expr = new CaughtExceptionExpr((Type) null);
 		testUnit(expr, new Expr[0], new String[0]);
 	}
 	
