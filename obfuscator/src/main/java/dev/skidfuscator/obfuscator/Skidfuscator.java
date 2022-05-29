@@ -19,6 +19,8 @@ import dev.skidfuscator.obfuscator.exempt.SimpleExemptAnalysis;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
+import dev.skidfuscator.obfuscator.phantom.jghost.GhostHelper;
+import dev.skidfuscator.obfuscator.phantom.jghost.tree.GhostLibrary;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
@@ -257,11 +259,26 @@ public class Skidfuscator {
          * and remote HWIDs.
          */
         if (session.getLibs() != null && session.getLibs().listFiles() != null) {
-            final File[] libs = session.getLibs().listFiles();
+            final File[] libs = Arrays.stream(session.getLibs().listFiles())
+                    .filter(e -> e.getAbsolutePath().endsWith(".jar"))
+                    .toArray(File[]::new);
+
             LOGGER.post("Importing " + libs.length + " libs...");
+
+            for (File lib : libs) {
+                LOGGER.post("[+] " + lib.getAbsolutePath());
+            }
+
             try {
                 /* Download the libraries jar contents */
                 final AbstractJarDownloader<ClassNode> jar = MapleJarUtil.importJars(libs);
+                final GhostLibrary library = GhostHelper.createFromLibraryFile(jar);
+                final File output = new File(
+                        session.getLibs().getParent(), "mappings/libraries.json"
+                );
+                output.getParentFile().mkdirs();
+
+                GhostHelper.saveLibraryFile(library, output);
 
                 /* Create a new library class source with superior to default priority */
                 final ApplicationClassSource libraryClassSource = new ApplicationClassSource(

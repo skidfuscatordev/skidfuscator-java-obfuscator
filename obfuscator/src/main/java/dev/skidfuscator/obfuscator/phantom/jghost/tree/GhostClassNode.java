@@ -12,27 +12,27 @@ import java.util.stream.Collectors;
 
 public class GhostClassNode implements GhostReader<ClassNode> {
     /* Base class data */
-    @SerializedName("version")
+    @SerializedName("ver")
     private int version;
-    @SerializedName("access")
+    @SerializedName("acc")
     private int access;
-    @SerializedName("name")
+    @SerializedName("nme")
     private String name;
-    @SerializedName("signature")
+    @SerializedName("sig")
     private String signature;
-    @SerializedName("superName")
+    @SerializedName("super")
     private String superName;
-    @SerializedName("interfaces")
+    @SerializedName("itfs")
     private String[] interfaces;
-    @SerializedName("methods")
+    @SerializedName("mthds")
     private List<GhostMethodNode> methods;
-    @SerializedName("fields")
+    @SerializedName("flds")
     private List<GhostFieldNode> fields;
 
-    @SerializedName("visibleAnnotations")
+    @SerializedName("vanns")
     private List<GhostAnnotationNode> visibleAnnotations;
 
-    @SerializedName("invisibleAnnotations")
+    @SerializedName("invanns")
     private List<GhostAnnotationNode> invisibleAnnotations;
 
     public GhostClassNode() {

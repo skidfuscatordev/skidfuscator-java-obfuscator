@@ -6,15 +6,15 @@ import dev.skidfuscator.obfuscator.phantom.jghost.GhostReader;
 import org.objectweb.asm.tree.FieldNode;
 
 public class GhostFieldNode implements GhostReader<FieldNode> {
-    @SerializedName("access")
+    @SerializedName("acc")
     private int access;
-    @SerializedName("name")
+    @SerializedName("nme")
     private String name;
-    @SerializedName("desc")
+    @SerializedName("dsc")
     private String desc;
-    @SerializedName("signature")
+    @SerializedName("sig")
     private String signature;
-    @SerializedName("value")
+    @SerializedName("val")
     private Object value;
 
     public GhostFieldNode() {

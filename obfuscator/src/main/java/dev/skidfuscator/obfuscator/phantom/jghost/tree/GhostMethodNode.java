@@ -11,25 +11,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class GhostMethodNode implements GhostReader<MethodNode> {
-    @SerializedName("name")
+    @SerializedName("nme")
     private String name;
 
-    @SerializedName("access")
+    @SerializedName("acc")
     private int access;
 
-    @SerializedName("desc")
+    @SerializedName("dsc")
     private String desc;
 
-    @SerializedName("signature")
+    @SerializedName("sig")
     private String signature;
 
-    @SerializedName("exceptions")
+    @SerializedName("exs")
     private List<String> exceptions;
 
-    @SerializedName("visibleAnnotations")
+    @SerializedName("vanns")
     private List<GhostAnnotationNode> visibleAnnotations;
 
-    @SerializedName("invisibleAnnotations")
+    @SerializedName("invanns")
     private List<GhostAnnotationNode> invisibleAnnotations;
 
     public GhostMethodNode() {
@@ -41,7 +41,7 @@ public class GhostMethodNode implements GhostReader<MethodNode> {
         this.name = node.name;
         this.desc = node.desc;
         this.signature = node.signature;
-        this.exceptions = node.exceptions;
+        this.exceptions = node.exceptions.isEmpty() ? null : node.exceptions;
 
         if (node.visibleAnnotations != null) {
             this.visibleAnnotations = node.visibleAnnotations
@@ -65,7 +65,7 @@ public class GhostMethodNode implements GhostReader<MethodNode> {
                 .name(name)
                 .desc(desc)
                 .signature(signature)
-                .exceptions(exceptions.toArray(new String[0]))
+                .exceptions(exceptions == null ? new String[0] : exceptions.toArray(new String[0]))
                 .build();
 
         if (visibleAnnotations != null) {

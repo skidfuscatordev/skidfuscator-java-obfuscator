@@ -7,10 +7,10 @@ import org.objectweb.asm.tree.AnnotationNode;
 import java.util.List;
 
 public class GhostAnnotationNode implements GhostReader<AnnotationNode> {
-    @SerializedName("desc")
+    @SerializedName("dsc")
     public String desc;
 
-    @SerializedName("values")
+    @SerializedName("vals")
     public List<Object> values;
 
     public GhostAnnotationNode() {
