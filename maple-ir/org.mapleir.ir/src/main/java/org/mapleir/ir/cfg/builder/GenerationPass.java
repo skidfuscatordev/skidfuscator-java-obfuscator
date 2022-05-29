@@ -6,10 +6,7 @@ import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.TypeUtils.ArrayType;
 import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.ExpressionStack;
-import org.mapleir.ir.code.Opcode;
-import org.mapleir.ir.code.Stmt;
+import org.mapleir.ir.code.*;
 import org.mapleir.ir.code.expr.*;
 import org.mapleir.ir.code.expr.ArithmeticExpr.Operator;
 import org.mapleir.ir.code.expr.ComparisonExpr.ValueComparisonType;
@@ -67,6 +64,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 	private GenericBitSet<BasicBlock> stacks;
 	protected BasicBlock currentBlock;
 	protected ExpressionStack currentStack;
+	protected ExpressionPool currentPool;
 	protected boolean saved;
 
 	// moved from FastBlockGraph and BasicBlock respectively
@@ -315,6 +313,14 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				break;
 			}
 		}
+
+		/* Custom frame generation attempt */
+		final ExpressionPool expressionPool = new ExpressionPool(new Type[builder.graph.getLocals().getMaxLocals()]);
+		for (int i = 0; i < builder.graph.getLocals().getMaxLocals(); i++) {
+			expressionPool.getRenderedTypes()[i] = builder.graph.getLocals().get(i).getType();
+		}
+		currentBlock.setPool(expressionPool);
+		/* End of custom frame generation */
 
 		// TODO: check if it should have an immediate.
 		BasicBlock im = block.cfg.getImmediate(block);

@@ -1,7 +1,6 @@
 package dev.skidfuscator.obfuscator.phantom.jghost.tree;
 
 import com.google.gson.annotations.SerializedName;
-import dev.skidfuscator.obfuscator.phantom.jghost.Ghost;
 import dev.skidfuscator.obfuscator.phantom.jghost.GhostReader;
 import dev.skidfuscator.obfuscator.skidasm.builder.ClassNodeBuilder;
 import org.objectweb.asm.tree.ClassNode;

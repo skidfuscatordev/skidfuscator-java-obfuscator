@@ -65,6 +65,7 @@ public class ControlFlowGraphDumper implements BytecodeFrontend {
 
 		// Dump code
 		for (BasicBlock b : order) {
+			m.node.visitFrame();
 			m.node.visitLabel(getLabel(b));
 			for (Stmt stmt : b) {
 				stmt.toCode(m.node, this);
