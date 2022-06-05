@@ -324,6 +324,7 @@ public class SkidMethodNode extends MethodNode {
         this.invokers.add(invocation);
     }
 
+    @Deprecated
     public List<SkidInvocation> getInvocations() {
         return invokers;
     }

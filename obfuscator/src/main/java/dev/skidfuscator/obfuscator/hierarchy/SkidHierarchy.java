@@ -220,9 +220,6 @@ public class SkidHierarchy implements Hierarchy {
                                         return new ArrayList<>(Collections.singleton(skidInvocation));
                                     });
                                 }
-
-
-
                             });
                 }
                 invocationBar.step();
