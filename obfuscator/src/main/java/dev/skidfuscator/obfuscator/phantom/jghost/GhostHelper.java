@@ -1,5 +1,8 @@
 package dev.skidfuscator.obfuscator.phantom.jghost;
 
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteSource;
+import com.google.common.io.Files;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.phantom.jghost.tree.GhostClassNode;
 import dev.skidfuscator.obfuscator.phantom.jghost.tree.GhostContents;
@@ -7,7 +10,8 @@ import dev.skidfuscator.obfuscator.phantom.jghost.tree.GhostLibrary;
 import lombok.experimental.UtilityClass;
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.data.JarClassData;
-import org.topdank.byteio.in.AbstractJarDownloader;
+import org.topdank.byteengineer.commons.data.JarInfo;
+import org.topdank.byteio.in.SingleJarDownloader;
 
 import java.io.*;
 
