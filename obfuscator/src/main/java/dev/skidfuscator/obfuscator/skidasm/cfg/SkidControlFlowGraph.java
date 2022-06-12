@@ -6,6 +6,9 @@ import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Stmt;
+import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
+import org.mapleir.ir.code.expr.invoke.Invocation;
+import org.mapleir.ir.code.expr.invoke.Invokable;
 import org.mapleir.ir.locals.LocalsPool;
 
 import java.util.Collection;
@@ -20,6 +23,18 @@ public class SkidControlFlowGraph extends ControlFlowGraph {
 
     public SkidControlFlowGraph(ControlFlowGraph cfg) {
         super(cfg);
+    }
+
+    public Stream<Invocation> staticInvocationStream() {
+        return allExprStream()
+                .filter(e -> e instanceof Invokable && !(e instanceof DynamicInvocationExpr))
+                .map(e -> (Invocation) e);
+    }
+
+    public Stream<DynamicInvocationExpr> dynamicInvocationStream() {
+        return allExprStream()
+                .filter(e -> e instanceof DynamicInvocationExpr)
+                .map(e -> (DynamicInvocationExpr) e);
     }
 
     @Override

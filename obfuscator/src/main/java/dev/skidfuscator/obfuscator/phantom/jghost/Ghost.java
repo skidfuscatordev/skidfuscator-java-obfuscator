@@ -24,7 +24,7 @@ public class Ghost {
         @Override
         public void write(JsonWriter out, Type value) throws IOException {
             out     .beginObject()
-                    .name("internalName").value(value.getInternalName())
+                    .name("itrlNme").value(value.getInternalName())
                     .endObject();
         }
 

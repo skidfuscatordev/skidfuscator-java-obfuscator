@@ -20,6 +20,7 @@ public class SkidfuscatorSession {
     private boolean jmod;
 
     /**
+     *
      * @return the input
      */
     public File getInput() {

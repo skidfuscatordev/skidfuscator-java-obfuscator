@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.hierarchy;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.hierarchy.matching.ClassMethodHash;
 import dev.skidfuscator.obfuscator.skidasm.*;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.asm.ClassNode;
@@ -10,6 +11,7 @@ import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
@@ -135,7 +137,8 @@ public class SkidHierarchy implements Hierarchy {
         this.annotations = new HashMap<>();
 
         try (ProgressBar progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
-            nodes = skidfuscator.getClassSource().getClassTree()
+            nodes = skidfuscator.getClassSource()
+                    .getClassTree()
                     .vertices()
                     .parallelStream()
                     .filter(e -> {
@@ -173,7 +176,7 @@ public class SkidHierarchy implements Hierarchy {
         try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
             nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
-                    final ControlFlowGraph cfg = skidfuscator.getCxt().getIRCache().getFor(method);
+                    final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
 
                     if (cfg == null) {
                         System.err.println("Failed to compute CFG for method " + method.toString());
@@ -181,12 +184,25 @@ public class SkidHierarchy implements Hierarchy {
                     }
 
                     cfg.allExprStream()
-                            .filter(e -> e instanceof Invokable && !(e instanceof DynamicInvocationExpr))
+                            .filter(e -> e instanceof Invokable)
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
                                 final ClassMethodHash target;
 
-                                if (invocation instanceof InvocationExpr) {
+                                if (invocation instanceof DynamicInvocationExpr) {
+                                    final DynamicInvocationExpr e = (DynamicInvocationExpr) invocation;
+
+                                    if (!e.getOwner().equals("java/lang/invoke/LambdaMetafactory")
+                                            || !e.getName().equals("metafactory")) {
+                                        throw new IllegalStateException("Invalid invoke dynamic!");
+                                    }
+
+                                    assert (e.getBootstrapArgs().length == 3 && e.getBootstrapArgs()[1] instanceof Handle);
+                                    final Handle boundFunc = (Handle) e.getBootstrapArgs()[1];
+
+                                    target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
+
+                                } else if (invocation instanceof InvocationExpr) {
                                     final InvocationExpr e = (InvocationExpr) invocation;
                                     target = new ClassMethodHash(e.getName(), e.getDesc(), e.getOwner());
                                 } else if (invocation instanceof InitialisedObjectExpr) {
@@ -249,6 +265,7 @@ public class SkidHierarchy implements Hierarchy {
             group.setStatical(((SkidMethodNode) methodNode).isStatic());
             group.setName(methodNode.getName());
             group.setDesc(methodNode.getDesc());
+            System.out.println(group.getDesc());
 
             for (MethodNode method : methods) {
                 if (method instanceof SkidMethodNode) {

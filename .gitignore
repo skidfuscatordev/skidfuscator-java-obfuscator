@@ -28,3 +28,5 @@ org.mapleir.main/out/
 org.mapleir.main/dot/
 
 *.DS_Store
+
+obfuscator/src/test/resources/test-out.jar

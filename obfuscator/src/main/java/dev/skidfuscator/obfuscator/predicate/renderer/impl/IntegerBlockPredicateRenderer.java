@@ -411,78 +411,97 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     void handle(final InitGroupTransformEvent event) {
         final SkidGroup skidGroup = event.getGroup();
 
+        /*
+         * This can occur. Warn the user then skip. No significant damage
+         * should be caused by skipping this method.
+         *
+         * TODO: Add stricter exception logging for this
+         */
         if (skidGroup.getPredicate().getGetter() != null) {
             System.err.println("SkidGroup " + skidGroup.getName() + " does not have getter!");
             return;
         }
 
         final boolean entryPoint = skidGroup.isEntryPoint();
-        Local local = null;
         int stackHeight = -1;
+
+        /*
+         * If the skid group is an entry point (it has no direct invocation)
+         * or in the future when we support reflection calls
+         */
+        if (entryPoint) {
+            stackHeight = OpcodeUtil.getArgumentsSizes(skidGroup.getDesc());
+
+            if (skidGroup.isStatical())
+                stackHeight -= 1;
+
+            skidGroup.setStackHeight(stackHeight);
+            return;
+        }
+
+        Local local = null;
         String desc = null;
 
-        if (!entryPoint) {
-            for (MethodNode methodNode : skidGroup.getMethodNodeList()) {
-                final SkidMethodNode skidMethodNode = (SkidMethodNode) methodNode;
+        for (MethodNode methodNode : skidGroup.getMethodNodeList()) {
+            final SkidMethodNode skidMethodNode = (SkidMethodNode) methodNode;
 
-                stackHeight = OpcodeUtil.getArgumentsSizes(methodNode.getDesc());
-                if (methodNode.isStatic()) stackHeight -= 1;
+            stackHeight = OpcodeUtil.getArgumentsSizes(methodNode.getDesc());
+            if (methodNode.isStatic()) stackHeight -= 1;
 
-                final Map<String, Local> localMap = new HashMap<>();
-                for (Map.Entry<String, Local> stringLocalEntry :
-                        skidMethodNode.getCfg().getLocals().getCache().entrySet()) {
-                    final String old = stringLocalEntry.getKey();
-                    final String oldStringId = old.split("var")[1].split("_")[0];
-                    final int oldId = Integer.parseInt(oldStringId);
+            final Map<String, Local> localMap = new HashMap<>();
+            for (Map.Entry<String, Local> stringLocalEntry :
+                    skidMethodNode.getCfg().getLocals().getCache().entrySet()) {
+                final String old = stringLocalEntry.getKey();
+                final String oldStringId = old.split("var")[1].split("_")[0];
+                final int oldId = Integer.parseInt(oldStringId);
 
-                    if (oldId < stackHeight) {
-                        localMap.put(old, stringLocalEntry.getValue());
-                        continue;
-                    }
-                    final int newId = oldId + 1;
-
-                    final String newVar = old.replace("var" + oldStringId, "var" + Integer.toString(newId));
-                    stringLocalEntry.getValue().setIndex(stringLocalEntry.getValue().getIndex() + 1);
-                    localMap.put(newVar, stringLocalEntry.getValue());
+                if (oldId < stackHeight) {
+                    localMap.put(old, stringLocalEntry.getValue());
+                    continue;
                 }
+                final int newId = oldId + 1;
 
-                skidMethodNode.getCfg().getLocals().getCache().clear();
-                skidMethodNode.getCfg().getLocals().getCache().putAll(localMap);
-
-                final Parameter parameter = new Parameter(methodNode.getDesc());
-                parameter.addParameter(Type.INT_TYPE);
-                methodNode.node.desc = desc = parameter.getDesc();
-
-                if (local == null) {
-                    local = skidMethodNode.getCfg().getLocals().get(stackHeight);
-                }
+                final String newVar = old.replace("var" + oldStringId, "var" + Integer.toString(newId));
+                stringLocalEntry.getValue().setIndex(stringLocalEntry.getValue().getIndex() + 1);
+                localMap.put(newVar, stringLocalEntry.getValue());
             }
 
-            for (SkidInvocation invoker : skidGroup.getInvokers()) {
-                assert invoker != null : String.format("Invoker %s is null!", Arrays.toString(skidGroup.getInvokers().toArray()));
-                assert invoker.getExpr() != null : String.format("Invoker %s is null!", invoker.getOwner().getDisplayName());
+            skidMethodNode.getCfg().getLocals().getCache().clear();
+            skidMethodNode.getCfg().getLocals().getCache().putAll(localMap);
 
-                int index = 0;
-                for (Expr argumentExpr : invoker.getExpr().getArgumentExprs()) {
-                    assert argumentExpr != null : "Argument of index " + index + " is null!";
-                    index++;
-                }
+            final Parameter parameter = new Parameter(methodNode.getDesc());
+            parameter.addParameter(Type.INT_TYPE);
+            methodNode.node.desc = desc = parameter.getDesc();
 
-                final Expr[] args = new Expr[invoker.getExpr().getArgumentExprs().length + 1];
-                System.arraycopy(
-                        invoker.getExpr().getArgumentExprs(),
-                        0,
-                        args,
-                        0,
-                        invoker.getExpr().getArgumentExprs().length
-                );
-
-                final ConstantExpr constant = new SkidConstantExpr(skidGroup.getPredicate().getPublic());
-                args[args.length - 1] = constant;
-
-                invoker.getExpr().setArgumentExprs(args);
-                invoker.getExpr().setDesc(desc);
+            if (local == null) {
+                local = skidMethodNode.getCfg().getLocals().get(stackHeight);
             }
+        }
+
+        for (SkidInvocation invoker : skidGroup.getInvokers()) {
+            assert invoker != null : String.format("Invoker %s is null!", Arrays.toString(skidGroup.getInvokers().toArray()));
+            assert invoker.getExpr() != null : String.format("Invoker %s is null!", invoker.getOwner().getDisplayName());
+
+            int index = 0;
+            for (Expr argumentExpr : invoker.getExpr().getArgumentExprs()) {
+                assert argumentExpr != null : "Argument of index " + index + " is null!";
+                index++;
+            }
+
+            final Expr[] args = new Expr[invoker.getExpr().getArgumentExprs().length + 1];
+            System.arraycopy(
+                    invoker.getExpr().getArgumentExprs(),
+                    0,
+                    args,
+                    0,
+                    invoker.getExpr().getArgumentExprs().length
+            );
+
+            final ConstantExpr constant = new SkidConstantExpr(skidGroup.getPredicate().getPublic());
+            args[args.length - 1] = constant;
+
+            invoker.getExpr().setArgumentExprs(args);
+            invoker.getExpr().setDesc(desc);
         }
 
         final int finalStackHeight = stackHeight;

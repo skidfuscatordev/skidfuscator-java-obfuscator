@@ -267,18 +267,19 @@ public class Skidfuscator {
 
             for (File lib : libs) {
                 LOGGER.post("[+] " + lib.getAbsolutePath());
+
+                final GhostLibrary library = GhostHelper.createFromLibraryFile(lib);
+                final File output = new File(
+                        session.getLibs().getParent(), "mappings/" + lib.getName() + ".json"
+                );
+                output.getParentFile().mkdirs();
+
+                GhostHelper.saveLibraryFile(library, output);
             }
 
             try {
                 /* Download the libraries jar contents */
                 final AbstractJarDownloader<ClassNode> jar = MapleJarUtil.importJars(libs);
-                final GhostLibrary library = GhostHelper.createFromLibraryFile(jar);
-                final File output = new File(
-                        session.getLibs().getParent(), "mappings/libraries.json"
-                );
-                output.getParentFile().mkdirs();
-
-                GhostHelper.saveLibraryFile(library, output);
 
                 /* Create a new library class source with superior to default priority */
                 final ApplicationClassSource libraryClassSource = new ApplicationClassSource(

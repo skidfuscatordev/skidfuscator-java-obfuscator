@@ -49,6 +49,8 @@ public class SkidGroup {
     }
 
     public void setDesc(final String desc) {
+        this.desc = desc;
+
         for (MethodNode methodNode : methodNodeList) {
             methodNode.node.desc = desc;
         }
@@ -59,6 +61,8 @@ public class SkidGroup {
     }
 
     public void setName(final String name) {
+        this.name = name;
+
         for (MethodNode methodNode : methodNodeList) {
             methodNode.node.name = name;
         }
