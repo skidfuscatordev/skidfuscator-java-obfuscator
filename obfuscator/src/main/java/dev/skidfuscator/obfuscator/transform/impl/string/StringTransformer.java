@@ -11,10 +11,12 @@ import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.ClassNode;
+import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 
 import java.util.*;
@@ -67,31 +69,42 @@ public class StringTransformer extends AbstractTransformer {
             BasicEncryptionGenerator.visit((SkidClassNode) methodNode.owner, BasicEncryptionGenerator.METHOD_NAME, keys);
             INJECTED.add(parentNode);
         }
-
+        // Overwrites constants in method arguments
+        cfg.allExprStream().filter(InvocationExpr.class::isInstance).map(InvocationExpr.class::cast).forEach(expr -> {
+            for (Expr arg : expr.getArgumentExprs()) {
+                if (arg instanceof ConstantExpr && ((ConstantExpr) arg).getConstant() instanceof String) {
+                    overWriteConstant(methodNode, (ConstantExpr) arg, keys);
+                }
+            }
+        });
+        // Overwrites constants
         cfg.allExprStream()
                 .filter(SkidConstantExpr.class::isInstance)
                 .map(ConstantExpr.class::cast)
                 .filter(constantExpr -> constantExpr.getConstant() instanceof String)
                 .collect(Collectors.toList())
                 .forEach(unit -> {
-                    final CodeUnit parent = unit.getParent();
-
-                    final String constant = (String) unit.getConstant();
-                    final int value = methodNode.getBlockPredicate((SkidBlock) unit.getBlock());
-                    final String encrypted = BasicEncryptionGenerator.encrypt(constant, value, keys);
-
-                    final ConstantExpr encryptedExpr = new ConstantExpr(encrypted);
-                    final Expr loadExpr = methodNode.getFlowPredicate().getGetter().get(unit.getBlock());
-
-                    final Expr modified = new StaticInvocationExpr(new Expr[]{encryptedExpr, loadExpr},
-                            methodNode.getOwner(), BasicEncryptionGenerator.METHOD_NAME,
-                            "(Ljava/lang/String;I)Ljava/lang/String;");
-
-                    try {
-                        parent.overwrite(unit, modified);
-                    } catch (IllegalStateException e) {
-                        return;
-                    }
+                    overWriteConstant(methodNode, unit, keys);
                 });
+    }
+    public void overWriteConstant(SkidMethodNode methodNode, ConstantExpr expr, Integer[] keys) {
+        final CodeUnit parent = expr.getParent();
+
+        final String constant = (String) expr.getConstant();
+        final int value = methodNode.getBlockPredicate((SkidBlock) expr.getBlock());
+        final String encrypted = BasicEncryptionGenerator.encrypt(constant, value, keys);
+
+        final ConstantExpr encryptedExpr = new ConstantExpr(encrypted);
+        final Expr loadExpr = methodNode.getFlowPredicate().getGetter().get(expr.getBlock());
+
+        final Expr modified = new StaticInvocationExpr(new Expr[]{encryptedExpr, loadExpr},
+                methodNode.getOwner(), BasicEncryptionGenerator.METHOD_NAME,
+                "(Ljava/lang/String;I)Ljava/lang/String;");
+
+        try {
+            parent.overwrite(expr, modified);
+        } catch (IllegalStateException e) {
+            return;
+        }
     }
 }
