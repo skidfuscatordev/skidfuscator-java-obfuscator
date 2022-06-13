@@ -10,6 +10,21 @@ public class ExpressionPool {
         this.renderedTypes = renderedTypes;
     }
 
+    public void set(final int index, final Type type) {
+        assert index < renderedTypes.length : "Provided index is larger than allocated array! " +
+                "(" + index + " / " + renderedTypes.length + ")";
+
+        final boolean weirdtype = type == Type.LONG_TYPE || type == Type.DOUBLE_TYPE;
+
+        assert !weirdtype || index + 1 < renderedTypes.length : "Provided expanded index is larger than allocated pool size!";
+
+        renderedTypes[index] = type;
+
+        if (weirdtype) {
+            renderedTypes[index] = Type.VOID_TYPE;
+        }
+    }
+
     public Type[] getRenderedTypes() {
         return renderedTypes;
     }

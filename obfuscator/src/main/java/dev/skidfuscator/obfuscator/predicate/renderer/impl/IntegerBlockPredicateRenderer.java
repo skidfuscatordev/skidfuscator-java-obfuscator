@@ -588,7 +588,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     exception,
                     ConditionalJumpStmt.ComparisonType.NE
             );
-            cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcodes.GOTO));
+            cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcodes.IFNE));
             entryPoint.add(1, jumpStmt);
         }
 
@@ -601,7 +601,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     exception,
                     ConditionalJumpStmt.ComparisonType.NE
             );
-            cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcodes.GOTO));
+            cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcodes.IFNE));
             entryPoint.add(0, jumpStmt);
         }
 
@@ -722,7 +722,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
                         // Replace successor
                         stmt.setTrueSuccessor(basicBlock);
-                        basicBlock.cfg.addEdge(new ConditionalJumpEdge<>(block, basicBlock, stmt.getOpcode()));
+                        basicBlock.cfg.addEdge(new ConditionalJumpEdge<>(block, basicBlock, Opcodes.IF_ICMPEQ));
 
                         if (DEBUG) {
                             final Local local1 = basicBlock.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);

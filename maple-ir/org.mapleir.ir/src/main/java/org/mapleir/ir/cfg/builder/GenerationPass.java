@@ -314,14 +314,6 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 			}
 		}
 
-		/* Custom frame generation attempt */
-		final ExpressionPool expressionPool = new ExpressionPool(new Type[builder.graph.getLocals().getMaxLocals()]);
-		for (int i = 0; i < builder.graph.getLocals().getMaxLocals(); i++) {
-			expressionPool.getRenderedTypes()[i] = builder.graph.getLocals().get(i).getType();
-		}
-		currentBlock.setPool(expressionPool);
-		/* End of custom frame generation */
-
 		// TODO: check if it should have an immediate.
 		BasicBlock im = block.cfg.getImmediate(block);
 		if (im != null/* && !queue.contains(im)*/) {
@@ -1391,6 +1383,11 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 	protected VarExpr _var_expr(int index, Type type, boolean isStack) {
 		Local l = builder.graph.getLocals().get(index, isStack);
 		l.setType(type);
+
+		if (type == Type.DOUBLE_TYPE || type == Type.LONG_TYPE) {
+			builder.graph.getLocals().get(index + 1, isStack);
+		}
+
 		builder.locals.add(l);
 		return builder.factory
 				.var_expr()

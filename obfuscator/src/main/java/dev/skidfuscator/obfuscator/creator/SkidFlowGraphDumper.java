@@ -12,10 +12,14 @@ import org.mapleir.flowgraph.edges.ImmediateEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.mapleir.ir.code.ExpressionPool;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.stmt.NopStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
+import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
+import org.mapleir.ir.locals.Local;
+import org.mapleir.ir.utils.CFGUtils;
 import org.mapleir.stdlib.collections.graph.*;
 import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 import org.mapleir.stdlib.collections.graph.algorithms.TarjanSCC;
@@ -68,6 +72,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		// Sanity check linearization
 		verifyOrdering();
 
+		// Compute frames
+		computeFrames();
+
 		// Dump code
 		for (BasicBlock b : order) {
 			m.node.visitLabel(getLabel(b));
@@ -87,6 +94,63 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		verifyRanges();
 		
 		m.node.visitEnd();
+	}
+
+	private void computeFrames() {
+		if (cfg.getEntries().size() != 1)
+			throw new IllegalStateException("CFG doesn't have exactly 1 entry");
+		BasicBlock entry = cfg.getEntries().iterator().next();
+
+		// Bundle based iteration
+		final Set<BasicBlock> visited = new HashSet<>();
+		final Stack<BasicBlock> stack = new Stack<>();
+
+		stack.add(entry);
+
+		ExpressionPool frame = new ExpressionPool(new Type[cfg.getLocals().getMaxLocals() + 3]);
+		Arrays.fill(frame.getRenderedTypes(), Type.VOID_TYPE);
+
+		if (cfg.getMethodNode().isStatic()) {
+			frame.set(0, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
+		}
+
+		entry.setPool(frame);
+
+		while (!stack.isEmpty()) {
+			/* Visit the top of the stack */
+			final BasicBlock popped = stack.pop();
+			visited.add(popped);
+
+			/* Iterate all the set statements to update the frame */
+			final ExpressionPool expressionPool = popped.getPool().copy();
+
+			popped.stream()
+					.filter(CopyVarStmt.class::isInstance)
+					.map(CopyVarStmt.class::cast)
+					.forEach(stmt -> {
+						expressionPool.set(stmt.getIndex(), stmt.getType());
+					});
+
+			/* Add all the successor nodes */
+			cfg.getSuccessors(popped)
+					.filter(e -> !visited.contains(e))
+					.forEach(e -> {
+						/* Set the expected received pool */
+						e.setPool(expressionPool);
+
+						/* Add it to the stack to be iterated again */
+						stack.add(e);
+					});
+		}
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			if (vertex.getPool() == null) {
+				System.out.println("Frame >>> FAILED TO COMPUTE");
+			} else {
+				System.out.println("Frame >>> " + Arrays.toString(vertex.getPool().getRenderedTypes()));
+			}
+			System.out.println(CFGUtils.printBlock(vertex));
+		}
 	}
 
 	private void fixRanges() {
@@ -305,69 +369,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 
 				classNodes.add(classNode);
-
-				/*final List<ClassNode> parents = skidfuscator
-						.getClassSource()
-						.getClassTree()
-						.getAllParents(classNode);
-
-				if (stack.isEmpty()) {
-
-					stack.addAll(Lists.reverse(parents));
-				} else {
-					final Stack<ClassNode> toIterate = new Stack<>();
-					toIterate.add(classNode);
-					toIterate.addAll(Lists.reverse(parents));
-
-					runner: {
-						while (!stack.isEmpty()) {
-
-							for (ClassNode node : toIterate) {
-								if (node.getName().equals(stack.peek().getName()))
-									break runner;
-							}
-
-							stack.pop();
-						}
-
-						throw new IllegalStateException("Could not find common exception type between "
-								+ Arrays.toString(er.getTypes().toArray()));
-					}
-				}*/
 			}
 
 			/* Simple DFS naive common ancestor algorithm */
-			/*final ClassNode seedClassNodeForIteration = classNodes.iterator().next();
-			final Stack<ClassNode> hierarchy = new Stack<>();
-			hierarchy.addAll(Lists.reverse(
-						skidfuscator
-							.getClassSource()
-							.getClassTree()
-							.getAllParents(seedClassNodeForIteration)
-					)
-			);
-			hierarchy.add(seedClassNodeForIteration);
-
-			while (true) {
-				final Set<ClassNode> children = new HashSet<>(
-						skidfuscator.getClassSource()
-							.getClassTree()
-							.getAllChildren(hierarchy.peek())
-				);
-
-				if (children.containsAll(classNodes)) {
-					break;
-				}
-
-				System.err.println("Failed for " + hierarchy.peek().getName());
-				System.err.println("Looking for: " + Arrays.toString(classNodes.stream().map(ClassNode::getName).toArray()));
-				for (ClassNode child : children) {
-					System.err.println("    -> " + child.getName());
-				}
-
-				hierarchy.pop();
-			}*/
-
 			final Collection<ClassNode> commonAncestors = skidfuscator
 					.getClassSource()
 					.getClassTree()

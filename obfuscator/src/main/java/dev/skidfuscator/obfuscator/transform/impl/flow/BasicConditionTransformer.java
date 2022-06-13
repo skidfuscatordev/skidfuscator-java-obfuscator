@@ -29,6 +29,7 @@ import org.mapleir.ir.code.stmt.SwitchStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -103,7 +104,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
             cfg.addEdge(new ConditionalJumpEdge<>(
                     basicBlock,
                     target,
-                    conditionalJumpStmt.getOpcode()
+                    Opcodes.IFEQ
             ));
 
             // Replace the edge

@@ -4,7 +4,6 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.context.IRCache;
-import org.mapleir.ir.cfg.ControlFlowGraph;
 
 public class SkidCache extends IRCache {
     public SkidCache(final Skidfuscator skidfuscator) {
