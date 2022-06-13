@@ -69,23 +69,21 @@ public class StringTransformer extends AbstractTransformer {
             BasicEncryptionGenerator.visit((SkidClassNode) methodNode.owner, BasicEncryptionGenerator.METHOD_NAME, keys);
             INJECTED.add(parentNode);
         }
-        // Overwrites constants in method arguments
-        cfg.allExprStream().filter(InvocationExpr.class::isInstance).map(InvocationExpr.class::cast).forEach(expr -> {
-            for (Expr arg : expr.getArgumentExprs()) {
-                if (arg instanceof ConstantExpr && ((ConstantExpr) arg).getConstant() instanceof String) {
-                    overWriteConstant(methodNode, (ConstantExpr) arg, keys);
+        cfg.allExprStream().filter(Expr.class::isInstance).map(Expr.class::cast).forEach(expr -> {
+            if (expr instanceof SkidConstantExpr) {
+                SkidConstantExpr cExpr = (SkidConstantExpr) expr;
+                if (cExpr.getConstant() instanceof String) {
+                    overWriteConstant(methodNode, cExpr, keys);
+                }
+            }
+            else if (expr instanceof InvocationExpr) {
+                for (Expr arg : ((InvocationExpr) expr).getArgumentExprs()) {
+                    if (arg instanceof ConstantExpr && ((ConstantExpr) arg).getConstant() instanceof String) {
+                        overWriteConstant(methodNode, (ConstantExpr) arg, keys);
+                    }
                 }
             }
         });
-        // Overwrites constants
-        cfg.allExprStream()
-                .filter(SkidConstantExpr.class::isInstance)
-                .map(ConstantExpr.class::cast)
-                .filter(constantExpr -> constantExpr.getConstant() instanceof String)
-                .collect(Collectors.toList())
-                .forEach(unit -> {
-                    overWriteConstant(methodNode, unit, keys);
-                });
     }
     public void overWriteConstant(SkidMethodNode methodNode, ConstantExpr expr, Integer[] keys) {
         final CodeUnit parent = expr.getParent();
