@@ -105,7 +105,7 @@ public class Skidfuscator {
      * Runs the execution of the obfuscator.
      */
     public void run() {
-        LOGGER.post("Beginning Skidfuscator Enterprise...");
+        LOGGER.post("Beginning Skidfuscator Community...");
 
         /*
          * Initializes a null skid directory. This skid directory is used as a
@@ -428,6 +428,21 @@ public class Skidfuscator {
             EventBus.register(o);
         }
         LOGGER.log("Finished loading transformers...");
+
+        LOGGER.post("Hot-loading exempt cache...");
+        int exempt = 0;
+        try (ProgressBar progressBar = ProgressUtil.progress(hierarchy.getClasses().size())) {
+            for (ClassNode ccls : hierarchy.getClasses()) {
+                final SkidClassNode classNode = (SkidClassNode) ccls;
+
+                if (exemptAnalysis.isExempt(classNode)) {
+                    exempt++;
+                }
+                progressBar.step();
+            }
+        }
+        LOGGER.log("Finished caching " + exempt + " exempted classes...");
+
         LOGGER.post("Executing transformers...");
 
         init();

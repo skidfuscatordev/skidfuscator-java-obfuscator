@@ -69,9 +69,17 @@ public class StringTransformer extends AbstractTransformer {
         }
 
         cfg.allExprStream()
+                /*
+                 *
+                 */
                 .filter(SkidConstantExpr.class::isInstance)
                 .map(ConstantExpr.class::cast)
                 .filter(constantExpr -> constantExpr.getConstant() instanceof String)
+                /*
+                 * We collect since we're modifying the expression stream
+                 * we kinda need to just not cause any concurrency issue.
+                 * ¯\_(ツ)_/¯
+                 */
                 .collect(Collectors.toList())
                 .forEach(unit -> {
                     final CodeUnit parent = unit.getParent();

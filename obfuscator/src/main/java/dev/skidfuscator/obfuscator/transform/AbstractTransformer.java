@@ -14,6 +14,7 @@ public abstract class AbstractTransformer implements Transformer {
         this(skidfuscator, name, Collections.emptyList());
     }
 
+
     public AbstractTransformer(Skidfuscator skidfuscator, String name, List<Transformer> children) {
         this.skidfuscator = skidfuscator;
         this.name = name;

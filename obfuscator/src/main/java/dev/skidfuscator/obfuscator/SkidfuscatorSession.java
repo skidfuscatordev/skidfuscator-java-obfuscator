@@ -24,7 +24,6 @@ public class SkidfuscatorSession {
      * @return the input
      */
     public File getInput() {
-
         return input;
     }
 

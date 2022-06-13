@@ -13,6 +13,7 @@ public class Ghost {
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .disableHtmlEscaping()
+            .serializeSpecialFloatingPointValues()
             .registerTypeAdapter(Type.class, new TypeSerializer())
             .create();
 

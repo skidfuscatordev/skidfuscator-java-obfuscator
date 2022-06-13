@@ -347,7 +347,7 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 		}
 	}
 
-	protected Set<Expr> _enumerate() {
+	public Set<Expr> _enumerate() {
 		Set<Expr> set = new HashSet<>();
 
 		if(opcode == Opcode.PHI) {

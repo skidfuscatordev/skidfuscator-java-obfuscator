@@ -15,4 +15,9 @@ public class SkidConstantExpr extends ConstantExpr {
     public SkidConstantExpr(Object cst, Type type) {
         super(cst, type);
     }
+
+    @Override
+    public ConstantExpr copy() {
+        return new SkidConstantExpr(this.getConstant(), this.getType(), false);
+    }
 }

@@ -30,3 +30,5 @@ org.mapleir.main/dot/
 *.DS_Store
 
 obfuscator/src/test/resources/test-out.jar
+
+obfuscator/src/test/resources/test-bozar.jar

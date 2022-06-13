@@ -8,6 +8,9 @@ import org.mapleir.stdlib.util.*;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc {
 	public enum CallType {
 		STATIC, SPECIAL, VIRTUAL, INTERFACE, DYNAMIC
@@ -183,6 +186,17 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public Set<Expr> _enumerate() {
+		Set<Expr> set = new HashSet<>();
+
+		for (Expr arg : args) {
+			set.add(arg);
+			set.addAll(arg._enumerate());
+		}
+		return set;
 	}
 
 	@Override
