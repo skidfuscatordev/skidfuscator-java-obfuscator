@@ -143,14 +143,14 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 					});
 		}
 
-		for (BasicBlock vertex : cfg.vertices()) {
+		/*for (BasicBlock vertex : cfg.vertices()) {
 			if (vertex.getPool() == null) {
 				System.out.println("Frame >>> FAILED TO COMPUTE");
 			} else {
 				System.out.println("Frame >>> " + Arrays.toString(vertex.getPool().getRenderedTypes()));
 			}
 			System.out.println(CFGUtils.printBlock(vertex));
-		}
+		}*/
 	}
 
 	private void fixRanges() {

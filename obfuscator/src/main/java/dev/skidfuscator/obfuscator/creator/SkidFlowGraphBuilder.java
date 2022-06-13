@@ -29,7 +29,7 @@ public class SkidFlowGraphBuilder extends ControlFlowGraphBuilder {
                 new GenerationPass(this),
                 new DeadBlocksPass(this),
                 //new NaturalisationPass(this),
-                new SSAGenPass(this, true),
+                new SSAGenPass(this, false),
         };
     }
 

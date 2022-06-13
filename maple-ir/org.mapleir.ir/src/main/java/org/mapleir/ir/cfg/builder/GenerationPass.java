@@ -1358,7 +1358,8 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 	protected void _inc(int index, int amt) {
 		save_stack(false);
 		VarExpr load = _var_expr(index, Type.INT_TYPE, false);
-		ArithmeticExpr inc = builder.factory.arithmetic_expr()
+		ArithmeticExpr inc = builder.factory
+				.arithmetic_expr()
 				.right(builder.factory.constant_expr().cst(amt).build())
 				.left(load)
 				.operator(Operator.ADD)

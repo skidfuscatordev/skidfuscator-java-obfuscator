@@ -192,6 +192,9 @@ public class SkidHierarchy implements Hierarchy {
                                 if (invocation instanceof DynamicInvocationExpr) {
                                     final DynamicInvocationExpr e = (DynamicInvocationExpr) invocation;
 
+                                    if (true)
+                                        return;
+
                                     if (!e.getOwner().equals("java/lang/invoke/LambdaMetafactory")
                                             || !e.getName().equals("metafactory")) {
                                         throw new IllegalStateException("Invalid invoke dynamic!");
@@ -265,7 +268,7 @@ public class SkidHierarchy implements Hierarchy {
             group.setStatical(((SkidMethodNode) methodNode).isStatic());
             group.setName(methodNode.getName());
             group.setDesc(methodNode.getDesc());
-            System.out.println(group.getDesc());
+            //System.out.println(group.getDesc());
 
             for (MethodNode method : methods) {
                 if (method instanceof SkidMethodNode) {

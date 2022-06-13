@@ -432,22 +432,25 @@ public class Skidfuscator {
          *
          * Here though shall puteth all your transformers. Enjoy!
          */
-        for (Listener o : Arrays.asList(
-                new StringTransformer(this),
-                //new NegationTransformer(this),
-                //new FlatteningFlowTransformer(this),
-                new NumberTransformer(this),
-                new SwitchTransformer(this),
-                new BasicSimplifierTransformer(this),
-                new BasicConditionTransformer(this),
-                new BasicExceptionTransformer(this),
-                new BasicRangeTransformer(this),
-                new AhegaoTransformer(this)
-                //
-                //new FactoryMakerTransformer()
-        )) {
-            EventBus.register(o);
+        if (!IntegerBlockPredicateRenderer.DEBUG) {
+            for (Listener o : Arrays.asList(
+                    new StringTransformer(this),
+                    //new NegationTransformer(this),
+                    //new FlatteningFlowTransformer(this),
+                    new NumberTransformer(this),
+                    new SwitchTransformer(this),
+                    new BasicSimplifierTransformer(this),
+                    new BasicConditionTransformer(this),
+                    new BasicExceptionTransformer(this),
+                    new BasicRangeTransformer(this),
+                    new AhegaoTransformer(this)
+                    //
+                    //new FactoryMakerTransformer()
+            )) {
+                EventBus.register(o);
+            }
         }
+
         LOGGER.log("Finished loading transformers...");
 
         LOGGER.post("Hot-loading exempt cache...");
@@ -475,13 +478,13 @@ public class Skidfuscator {
 
         LOGGER.post("Dumping classes...");
         try(ProgressBar progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {
-            for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(cxt.getIRCache().entrySet())) {
-                MethodNode mn = e.getKey();
+            for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(this.getIrFactory().entrySet())) {
+                SkidMethodNode mn = (SkidMethodNode) e.getKey();
                 ControlFlowGraph cfg = e.getValue();
 
                 try {
                     cfg.verify();
-                    (new SkidFlowGraphDumper(this, cfg, mn)).dump();
+                    mn.dump();
                 } catch (Exception ex){
                     if (ex instanceof IllegalStateException) {
                         throw ex;
