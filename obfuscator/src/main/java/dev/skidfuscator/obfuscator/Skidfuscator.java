@@ -383,6 +383,27 @@ public class Skidfuscator {
         }
         LOGGER.log("Finished importing the JVM!");
 
+        /* Checking for errors */
+        LOGGER.post("Starting verification");
+        try {
+            classSource.getClassTree().verify();
+        } catch (Exception e) {
+            System.out.println(
+                    "-----------------------------------------------------\n"
+                    + "/!\\ Skidfuscator failed to compute some libraries!\n"
+                    + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
+                    + "\n"
+                    + "Error: " + e.getMessage() + "\n" +
+                            (e.getCause() == null
+                                ? "\n"
+                                : "      " + e.getCause().getMessage() + "\n"
+                            )
+                    + "-----------------------------------------------------\n"
+            );
+            System.exit(1);
+            return;
+        }
+
         /* Resolve context */
         LOGGER.post("Resolving basic context...");
         this.cxt = new BasicAnalysisContext.BasicContextBuilder()

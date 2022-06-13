@@ -23,7 +23,7 @@ import org.mapleir.asm.ClassNode;
 // so a dfs goes through edges towards the root
 public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	private static final Logger LOGGER = Logger.getLogger(ClassTree.class);
-	private static final boolean ALLOW_PHANTOM_CLASSES = true;
+	private static final boolean ALLOW_PHANTOM_CLASSES = false;
 	
 	private final ApplicationClassSource source;
 	private final ClassNode rootNode;
@@ -43,6 +43,12 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	protected void init() {
 		for (ClassNode node : source.iterateWithLibraries()) {
 			addVertex(node);
+		}
+	}
+
+	public void verify() {
+		for (ClassNode node : source.iterateWithLibraries()) {
+			verifyVertex(node);
 		}
 	}
 	
@@ -164,6 +170,32 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 			return findClass(name);
 		} catch(RuntimeException e) {
 			throw new RuntimeException("request from " + from, e);
+		}
+	}
+
+	public void verifyVertex(ClassNode cn) {
+		if(cn == null) {
+			throw new IllegalStateException("Vertex is null!");
+		}
+
+		if (!containsVertex(cn)) {
+			addVertex(cn);
+		}
+
+		if(cn != rootNode) {
+			ClassNode sup = cn.node.superName != null
+					? requestClass0(cn.node.superName, cn.getName())
+					: rootNode;
+			if(sup == null) {
+				throw new IllegalStateException(String.format("No superclass %s for %s", cn.node.superName, cn.getName()));
+			}
+
+			for (String s : cn.node.interfaces) {
+				ClassNode iface = requestClass0(s, cn.getName());
+				if(iface == null) {
+					throw new IllegalStateException(String.format("No superinterface %s for %s", s, cn.getName()));
+				}
+			}
 		}
 	}
 	
