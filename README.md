@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="15%" height="15%" src="https://i.imgur.com/RgDz1Qn.png">
+  <img width="15%" height="15%" src="https://i.imgur.com/RgDz1Qn.png" href="https://github.com/terminalsin/skidfuscator-java-obfuscator/releases">
   <br>
 </p>
 <p align="center">
@@ -12,7 +12,9 @@
   <a><img alt="Issues" src="https://img.shields.io/github/issues/terminalsin/skidfuscator-java-obfuscator"></a>
   <a><img alt="Forks" src="https://img.shields.io/github/forks/terminalsin/skidfuscator-java-obfuscator"></a>
   <a><img alt="Stars" src="https://img.shields.io/github/stars/terminalsin/skidfuscator-java-obfuscator"></a> 
-  <h3 align="center">Join the discord: https://discord.gg/QJC9g8fBU9</h3>
+  <h3 align="center">
+    Join the discord: https://discord.gg/QJC9g8fBU9
+  </h3>
 </p>
 
 ---
