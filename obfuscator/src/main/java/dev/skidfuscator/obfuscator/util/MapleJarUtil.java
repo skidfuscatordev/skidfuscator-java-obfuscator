@@ -34,7 +34,7 @@ public class MapleJarUtil {
                 ClassNode cn = classData.getClassNode();
                 JarEntry entry = new JarEntry(classData.getName());
 
-                if (cn.isAnnoyingVersion()) {
+                if (cn.isAnnoyingVersion() && false) {
                     final JarClassData resource = skidfuscator
                             .getJarDownloader()
                             .getJarContents()
@@ -61,6 +61,7 @@ public class MapleJarUtil {
                 try {
                     out.putNextEntry(entry);
                     try {
+                        System.out.println("e");
                         ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
                         cn.node.accept(writer);
                         out.write(writer.toByteArray());

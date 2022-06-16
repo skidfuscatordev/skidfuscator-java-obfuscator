@@ -33,8 +33,25 @@ public class Parameter {
         return args;
     }
 
+    public Type getArg(final int index) {
+        return args.get(index);
+    }
+
     public Type getReturnType() {
         return returnArg;
+    }
+
+    public int computeSize() {
+        int size = 0;
+
+        for (Type arg : args) {
+            size++;
+
+            if (arg.equals(Type.DOUBLE_TYPE) || arg.equals(Type.LONG_TYPE))
+                size++;
+        }
+
+        return size;
     }
 
     public String getDesc() {

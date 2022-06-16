@@ -1,31 +1,33 @@
 package org.mapleir.ir.code;
 
+import org.objectweb.asm.Type;
+
 import java.util.Arrays;
 import java.util.Objects;
 
 // top(0) -> bottom(size() - 1)
-public class ExpressionStack {
+public class TypeStack {
 
-	private Expr[] stack;
-	private int size;
+	protected Type[] stack;
+	protected int size;
 
-	public ExpressionStack() {
+	public TypeStack() {
 		this(8 * 8);
 	}
 
-	public ExpressionStack(int capacity) {
+	public TypeStack(int capacity) {
 		capacity = Math.max(capacity, 1);
-		stack = new Expr[capacity];
+		stack = new Type[capacity];
 		size = 0;
 	}
 
 	private void expand() {
-		Expr[] s = new Expr[size * 2];
+		Type[] s = new Type[size * 2];
 		System.arraycopy(stack, 0, s, 0, size);
 		stack = s;
 	}
 
-	public void push(Expr e) {
+	public void push(Type e) {
 		int i = size++;
 		if (stack.length == size) {
 			expand();
@@ -33,33 +35,58 @@ public class ExpressionStack {
 		stack[i] = e;
 	}
 
-	public Expr peek() {
+	public Type peek() {
 		return stack[size - 1];
 	}
 
-	public Expr peek(int d) {
+	public Type peek(int d) {
 		return stack[size - d - 1];
 	}
 
-	public Expr pop() {
-		Expr e = stack[--size];
+	public Type pop() {
+		Type e = stack[--size];
 		stack[size] = null;
 		return e;
 	}
 
-	public Expr getAt(int i) {
+	public Type getAt(int i) {
 		return stack[i];
 	}
 
-	public void copyInto(ExpressionStack other) {
-		Expr[] news = new Expr[capacity()];
+	public void merge(final TypeStack other) {
+		if (other.stack.length >= this.stack.length) {
+			Type[] s = new Type[other.capacity()];
+			System.arraycopy(stack, 0, s, 0, size);
+			stack = s;
+		}
+
+		for (int i = 0; i < other.stack.length; i++) {
+			final Type selfType = this.stack[i];
+			final Type otherType = other.stack[i];
+
+			final boolean selfFilled = selfType != Type.VOID_TYPE && selfType != null;
+			final boolean otherFilled = otherType != Type.VOID_TYPE && otherType != null;
+
+			if (selfFilled && otherFilled && selfType != otherType) {
+				throw new IllegalStateException("Trying to merge " + selfType
+						+ " (self) with " + otherType + " (other) [FAILED] [" + i + "]");
+			}
+
+			if (otherFilled && !selfFilled) {
+				this.stack[i] = otherType;
+			}
+		}
+	}
+
+	public void copyInto(TypeStack other) {
+		Type[] news = new Type[capacity()];
 		System.arraycopy(stack, 0, news, 0, capacity());
 		other.stack = news;
 		other.size = size;
 	}
 
-	public ExpressionStack copy() {
-		ExpressionStack stack = new ExpressionStack(size());
+	public TypeStack copy() {
+		TypeStack stack = new TypeStack(size());
 		copyInto(stack);
 		return stack;
 	}
@@ -69,10 +96,10 @@ public class ExpressionStack {
 			throw new UnsupportedOperationException(String.format("hlen=%d, size=%d", heights.length, size()));
 		} else {
 			for (int i = 0; i < heights.length; i++) {
-				Expr e = peek(i);
-				if (e.getType().getSize() != heights[i]) {
+				Type e = peek(i);
+				if (e.getSize() != heights[i]) {
 					throw new IllegalStateException(String.format("item at %d, len=%d, expected=%d, expr:%s", i,
-							e.getType().getSize(), heights[i], e));
+							e.getSize(), heights[i], e));
 				}
 			}
 		}
@@ -100,20 +127,20 @@ public class ExpressionStack {
 	public int height() {
 		int count = 0;
 		for (int i = 0; i < size(); i++) {
-			count += peek(i).getType().getSize();
+			count += peek(i).getSize();
 		}
 		return count;
 	}
 
-	public Expr[] getStack() {
+	public Type[] getStack() {
 		return stack;
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (!(o instanceof ExpressionStack)) return false;
-		ExpressionStack that = (ExpressionStack) o;
+		if (!(o instanceof TypeStack)) return false;
+		TypeStack that = (TypeStack) o;
 		return size == that.size &&
 				Arrays.equals(stack, that.stack);
 	}
@@ -130,10 +157,10 @@ public class ExpressionStack {
 		StringBuilder sb = new StringBuilder();
 		sb.append("top->btm[");
 		for (int i = size() - 1; i >= 0; i--) {
-			Expr n = stack[i];
+			Type n = stack[i];
 			if (n != null) {
 				sb.append(n);
-				sb.append(":").append(n.getType());
+				sb.append(":").append(n);
 				if (i != 0 && stack[i - 1] != null) {
 					sb.append(", ");
 				}

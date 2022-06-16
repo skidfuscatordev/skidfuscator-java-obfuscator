@@ -55,7 +55,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     /**
      * Method called when the class methods are iterated over and initialized.

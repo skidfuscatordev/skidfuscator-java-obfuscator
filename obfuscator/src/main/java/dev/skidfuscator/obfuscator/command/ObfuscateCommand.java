@@ -64,6 +64,12 @@ public class ObfuscateCommand implements Callable<Integer> {
     )
     private boolean jmod;
 
+    @CommandLine.Option(
+            names = {"-fuckit", "--fuckit"},
+            description = "Do not use!"
+    )
+    private boolean fuckit;
+
     @Override
     public Integer call()  {
         final String[] logo = new String[] {
@@ -106,6 +112,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .exempt(exempt)
                 .phantom(phantom)
                 .jmod(jmod)
+                .fuckit(fuckit)
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(skidInstance);

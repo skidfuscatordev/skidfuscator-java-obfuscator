@@ -237,6 +237,7 @@ public class Skidfuscator {
         this.jarDownloader = downloader;
         this.classSource = new SkidApplicationClassSource(
                 session.getInput().getName(),
+                session.isFuckIt(),
                 downloader.getJarContents()
         );
         LOGGER.log("Finished importing jar.");
@@ -284,6 +285,7 @@ public class Skidfuscator {
                 /* Create a new library class source with superior to default priority */
                 final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                         "libraries",
+                        session.isFuckIt(),
                         jar.getJarContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
                 );
                 LOGGER.post("Imported " + jar.getJarContents().getClassContents().size() + " library classes...");
@@ -312,6 +314,7 @@ public class Skidfuscator {
             this.classSource.addLibraries(new LibraryClassSource(
                     new ApplicationClassSource(
                             "phantom",
+                            true,
                             downloader.getPhantomContents()
                                     .getClassContents()
                                     .stream()
@@ -343,6 +346,7 @@ public class Skidfuscator {
             this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
                     new ApplicationClassSource(
                             "runtime",
+                            session.isPhantom(),
                             libs.getJarContents()
                                     .getClassContents()
                                     .stream()
@@ -370,6 +374,7 @@ public class Skidfuscator {
                 this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
                         new ApplicationClassSource(
                                 file.getName(),
+                                session.isFuckIt(),
                                 libs.getJarContents().getClassContents()
                                         .stream()
                                         .map(JarClassData::getClassNode)
@@ -384,24 +389,29 @@ public class Skidfuscator {
         LOGGER.log("Finished importing the JVM!");
 
         /* Checking for errors */
-        LOGGER.post("Starting verification");
-        try {
-            classSource.getClassTree().verify();
-        } catch (Exception e) {
-            System.out.println(
-                    "-----------------------------------------------------\n"
-                    + "/!\\ Skidfuscator failed to compute some libraries!\n"
-                    + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
-                    + "\n"
-                    + "Error: " + e.getMessage() + "\n" +
-                            (e.getCause() == null
-                                ? "\n"
-                                : "      " + e.getCause().getMessage() + "\n"
-                            )
-                    + "-----------------------------------------------------\n"
-            );
-            System.exit(1);
-            return;
+        if (!session.isFuckIt()) {
+            LOGGER.post("Starting verification");
+            try {
+                classSource.getClassTree().verify();
+            } catch (Exception e) {
+                System.out.println(
+                        "-----------------------------------------------------\n"
+                                + "/!\\ Skidfuscator failed to compute some libraries!\n"
+                                + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
+                                + "\n"
+                                + "Error: " + e.getMessage() + "\n" +
+                                (e.getCause() == null
+                                        ? "\n"
+                                        : "      " + e.getCause().getMessage() + "\n"
+                                )
+                                + "-----------------------------------------------------\n"
+                );
+                System.exit(1);
+                return;
+            }
+            LOGGER.log("Finished verification!");
+        } else {
+            LOGGER.post("Skipped verification...");
         }
 
         /* Resolve context */
@@ -423,7 +433,7 @@ public class Skidfuscator {
 
         /* Register opaque predicate renderer and transformers */
         LOGGER.post("Loading transformers...");
-        EventBus.register(new IntegerBlockPredicateRenderer(this, null));
+        //EventBus.register(new IntegerBlockPredicateRenderer(this, null));
 
         /*
          * VAZIAK
@@ -432,23 +442,21 @@ public class Skidfuscator {
          *
          * Here though shall puteth all your transformers. Enjoy!
          */
-        if (!IntegerBlockPredicateRenderer.DEBUG) {
-            for (Listener o : Arrays.asList(
-                    new StringTransformer(this),
-                    //new NegationTransformer(this),
-                    //new FlatteningFlowTransformer(this),
-                    new NumberTransformer(this),
-                    new SwitchTransformer(this),
-                    new BasicSimplifierTransformer(this),
-                    new BasicConditionTransformer(this),
-                    new BasicExceptionTransformer(this),
-                    new BasicRangeTransformer(this),
-                    new AhegaoTransformer(this)
-                    //
-                    //new FactoryMakerTransformer()
-            )) {
-                EventBus.register(o);
-            }
+        for (Listener o : Arrays.asList(
+                //new StringTransformer(this),
+                //new NegationTransformer(this),
+                //new FlatteningFlowTransformer(this),
+                //new NumberTransformer(this),
+                //new SwitchTransformer(this),
+                new BasicSimplifierTransformer(this)
+                //new BasicConditionTransformer(this),
+                //new BasicExceptionTransformer(this),
+                //new BasicRangeTransformer(this),
+                //new AhegaoTransformer(this)
+                //
+                //new FactoryMakerTransformer()
+        )) {
+            EventBus.register(o);
         }
 
         LOGGER.log("Finished loading transformers...");
@@ -459,7 +467,7 @@ public class Skidfuscator {
             for (ClassNode ccls : hierarchy.getClasses()) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
-                if (exemptAnalysis.isExempt(classNode)) {
+                if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
                     exempt++;
                 }
                 progressBar.step();
@@ -481,6 +489,11 @@ public class Skidfuscator {
             for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(this.getIrFactory().entrySet())) {
                 SkidMethodNode mn = (SkidMethodNode) e.getKey();
                 ControlFlowGraph cfg = e.getValue();
+
+                if (mn.owner.isAnnoyingVersion() || mn.isNative() || mn.isAbstract()) {
+                    progressBar.step();
+                    continue;
+                }
 
                 try {
                     cfg.verify();
@@ -554,7 +567,7 @@ public class Skidfuscator {
             for (ClassNode ccls : hierarchy.getClasses()) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
-                if (exemptAnalysis.isExempt(classNode)) {
+                if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
                     progressBar.step();
                     continue;
                 }
@@ -582,7 +595,7 @@ public class Skidfuscator {
             for (ClassNode ccls : hierarchy.getClasses()) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
-                if (exemptAnalysis.isExempt(classNode)) {
+                if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
                     progressBar.stepBy(classNode.getMethods().size());
                     continue;
                 }

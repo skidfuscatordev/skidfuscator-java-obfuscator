@@ -1,7 +1,6 @@
 package dev.skidfuscator.obfuscator;
 
 import lombok.Builder;
-import lombok.Getter;
 
 import java.io.File;
 
@@ -18,6 +17,7 @@ public class SkidfuscatorSession {
     private File runtime;
     private boolean phantom;
     private boolean jmod;
+    private boolean fuckit;
 
     /**
      *
@@ -67,5 +67,13 @@ public class SkidfuscatorSession {
      */
     public boolean isJmod() {
         return jmod;
+    }
+
+    /**
+     * @return  the bool of whether the person is mentally ill and
+     *          is willing to skip the forced phantom generation
+     */
+    public boolean isFuckIt() {
+        return fuckit;
     }
 }

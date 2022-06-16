@@ -1,32 +1,32 @@
 package dev.skidfuscator.obfuscator.creator;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
-import org.mapleir.asm.ClassHelper;
+import dev.skidfuscator.obfuscator.skidasm.SkidExpressionPool;
+import dev.skidfuscator.obfuscator.skidasm.SkidTypeStack;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.util.TypeUtil;
+import dev.skidfuscator.obfuscator.util.misc.Parameter;
+import dev.skidfuscator.obfuscator.verifier.Verifier;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
-import org.mapleir.flowgraph.edges.FlowEdge;
-import org.mapleir.flowgraph.edges.FlowEdges;
-import org.mapleir.flowgraph.edges.ImmediateEdge;
-import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
+import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.ExpressionPool;
-import org.mapleir.ir.code.Stmt;
-import org.mapleir.ir.code.stmt.NopStmt;
-import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
+import org.mapleir.ir.code.*;
+import org.mapleir.ir.code.expr.CaughtExceptionExpr;
+import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.utils.CFGUtils;
 import org.mapleir.stdlib.collections.graph.*;
 import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 import org.mapleir.stdlib.collections.graph.algorithms.TarjanSCC;
 import org.mapleir.stdlib.collections.list.IndexedList;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.LabelNode;
 import org.mapleir.asm.MethodNode;
@@ -34,6 +34,7 @@ import org.objectweb.asm.tree.TryCatchBlockNode;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SkidFlowGraphDumper implements BytecodeFrontend {
@@ -60,6 +61,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			labels.put(b, new LabelNode());
 		}
 
+		// Fix types
+		//fixTypes();
+
 		// Fix ranges
 		fixRanges();
 
@@ -73,14 +77,104 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		verifyOrdering();
 
 		// Compute frames
-		computeFrames();
+		//computeFrames();
+
+		// Stuff
+		/*
+		 * If the method is not static, then the first type of the frame
+		 * will always be the instance. If the instance is not... instantiated,
+		 * then we can safely set it to "uninitialized this". Else, we set it
+		 * to the internal name.
+		 */
+		final Parameter parameter = new Parameter(cfg.getDesc());
+		final boolean isStatic = cfg.getMethodNode().isStatic();
+		final Object[] initialFrame = new Object[(isStatic ? 0 : 1) + parameter.computeSize()];
+
+		int index = 0;
+		if (!isStatic) {
+			initialFrame[index] = cfg.getMethodNode().isInit()
+					? Opcodes.UNINITIALIZED_THIS
+					: "L" + cfg.getMethodNode().getOwner() + ";";
+			index++;
+		}
+
+		/* Method parameters ezzzz */
+		for (int i = 0; i < parameter.getArgs().size(); i++) {
+			Type type = parameter.getArg(i);
+			initialFrame[index] = _getFrameType(type);
+			index++;
+
+			if (type.equals(Type.DOUBLE_TYPE) || type.equals(Type.LONG_TYPE)) {
+				initialFrame[index] = _getFrameType(Type.VOID_TYPE);
+				index++;
+			}
+		}
+
+		Object[] lastFrame = initialFrame;
+		Object[] lastStack = null;
+
+		int maxLocal = 0;
+		int maxStack = 0;
 
 		// Dump code
+		boolean entry = true;
 		for (BasicBlock b : order) {
 			m.node.visitLabel(getLabel(b));
+
+			if (b.isEmpty())
+				continue;
+
+			if (!entry && false) {
+				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
+				final Object[] frame = Arrays.copyOf(initialFrame, frameTypes.computeSize());
+
+
+				/* Whacky first start digit to exempt the first precondition above */
+				for (int i = index;
+					 i < frame.length;
+					 i++) {
+
+					final Type type = frameTypes.get(i);
+					frame[i] = _getFrameType(type);
+				}
+
+				/* Stack */
+				final int stackLength = b.getStack().capacity();
+				final SkidTypeStack typeStack = (SkidTypeStack) b.getStack();
+				final Type[] stackTypes = b.getStack().getStack();
+				final Object[] stack = new Object[typeStack.computeSize()];
+
+				for (int i = 0; i < stack.length; i++) {
+					final Type type = stackTypes[i];
+					stack[i] = _getFrameType(type);
+				}
+
+				if (Arrays.equals(frame, lastFrame)) {
+					if (stack.length == 1) {
+						m.node.visitFrame(Opcodes.F_SAME1, 0, null, 1, stack);
+					} else {
+						m.node.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+					}
+				} else {
+					final int diff = lastFrame == null ? 0 : lastFrame.length - frame.length;
+					if (Math.abs(diff) < 4 && Math.abs(diff) > 0 && false) {
+
+					} else {
+						m.node.visitFrame(Opcodes.F_FULL, frame.length, frame, stack.length, stack);
+					}
+				}
+
+				maxLocal = Math.max(maxLocal, frame.length);
+
+				lastFrame = frame;
+				lastStack = stack;
+			}
+
 			for (Stmt stmt : b) {
 				stmt.toCode(m.node, this);
 			}
+
+			entry = false;
 		}
 		terminalLabel = new LabelNode();
 		m.node.visitLabel(terminalLabel.getLabel());
@@ -94,6 +188,35 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		verifyRanges();
 		
 		m.node.visitEnd();
+
+		//Verifier.verify(m.node);
+	}
+
+	private Object _getFrameType(final Type type) {
+		final boolean isInteger = type == Type.BOOLEAN_TYPE
+				|| type == Type.SHORT_TYPE
+				|| type == Type.BYTE_TYPE
+				|| type == Type.INT_TYPE;
+
+		final Object frameType;
+
+		if (isInteger) {
+			frameType = Opcodes.INTEGER;
+		} else if (type == Type.FLOAT_TYPE) {
+			frameType = Opcodes.FLOAT;
+		} else if (type == Type.DOUBLE_TYPE) {
+			frameType = Opcodes.DOUBLE;
+		} else if (type == Type.LONG_TYPE) {
+			frameType = Opcodes.LONG;
+		} else if (type == Type.VOID_TYPE) {
+			frameType = Opcodes.TOP;
+		} else if (type == null) {
+			frameType = Opcodes.NULL;
+		} else {
+			frameType = type.getInternalName();
+		}
+
+		return frameType;
 	}
 
 	private void computeFrames() {
@@ -102,55 +225,429 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		BasicBlock entry = cfg.getEntries().iterator().next();
 
 		// Bundle based iteration
-		final Set<BasicBlock> visited = new HashSet<>();
-		final Stack<BasicBlock> stack = new Stack<>();
-
-		stack.add(entry);
-
-		ExpressionPool frame = new ExpressionPool(new Type[cfg.getLocals().getMaxLocals() + 3]);
-		Arrays.fill(frame.getRenderedTypes(), Type.VOID_TYPE);
-
-		if (cfg.getMethodNode().isStatic()) {
-			frame.set(0, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
-		}
-
-		entry.setPool(frame);
-
-		while (!stack.isEmpty()) {
-			/* Visit the top of the stack */
-			final BasicBlock popped = stack.pop();
-			visited.add(popped);
-
-			/* Iterate all the set statements to update the frame */
-			final ExpressionPool expressionPool = popped.getPool().copy();
-
-			popped.stream()
-					.filter(CopyVarStmt.class::isInstance)
-					.map(CopyVarStmt.class::cast)
-					.forEach(stmt -> {
-						expressionPool.set(stmt.getIndex(), stmt.getType());
-					});
-
-			/* Add all the successor nodes */
-			cfg.getSuccessors(popped)
-					.filter(e -> !visited.contains(e))
-					.forEach(e -> {
-						/* Set the expected received pool */
-						e.setPool(expressionPool);
-
-						/* Add it to the stack to be iterated again */
-						stack.add(e);
-					});
-		}
-
-		/*for (BasicBlock vertex : cfg.vertices()) {
-			if (vertex.getPool() == null) {
+		final Map<BasicBlock, ConstantExpr> exprMap = new HashMap<>();
+		for (BasicBlock vertex : cfg.vertices()) {
+			/*if (vertex.getPool() == null) {
 				System.out.println("Frame >>> FAILED TO COMPUTE");
 			} else {
 				System.out.println("Frame >>> " + Arrays.toString(vertex.getPool().getRenderedTypes()));
 			}
-			System.out.println(CFGUtils.printBlock(vertex));
+			System.out.println(CFGUtils.printBlock(vertex));*/
+			//final Local local1 = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+			//final ConstantExpr expr = new SkidConstantExpr("E", TypeUtil.STRING_TYPE);
+			//exprMap.put(vertex, expr);
+			/*vertex.add(
+					0,
+					new SkidCopyVarStmt(
+							new VarExpr(local1, Type.getType(String.class)),
+							expr
+					)
+			);*/
+		}
+
+		final Set<BasicBlock> visited = new HashSet<>();
+		final Stack<BasicBlock> bucket = new Stack<>();
+
+		/*
+		 * FRAME LOCALS
+		 */
+		bucket.add(entry);
+		SkidExpressionPool frame = new SkidExpressionPool(
+				new Type[cfg.getLocals().getMaxLocals() + 2],
+				skidfuscator
+		);
+		Arrays.fill(frame.getTypes(), Type.VOID_TYPE);
+
+		int index = 0;
+		int protectedIndex = 0;
+		if (!cfg.getMethodNode().isStatic()) {
+			frame.set(index, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
+			protectedIndex = index;
+			index++;
+		}
+
+		/* Method parameters ezzzz */
+		final Parameter parameter = new Parameter(cfg.getDesc());
+		for (int i = 0; i < parameter.getArgs().size(); i++) {
+			Type type = parameter.getArg(i);
+
+			if (type == Type.BOOLEAN_TYPE
+					|| type == Type.BYTE_TYPE
+					|| type == Type.CHAR_TYPE
+					|| type == Type.SHORT_TYPE) {
+				type = Type.INT_TYPE;
+			}
+
+			frame.set(index, type);
+			protectedIndex = index;
+			index++;
+		}
+
+		entry.setPool(frame);
+
+		// TODO:
+		while (!bucket.isEmpty()) {
+			/* Visit the top of the stack */
+			final BasicBlock popped = bucket.pop();
+			visited.add(popped);
+
+			/* Iterate all the set statements to update the frame */
+			final SkidExpressionPool expressionPool = new SkidExpressionPool(
+					popped.getPool(),
+					skidfuscator
+			);
+
+			final Set<BasicBlock> next = new HashSet<>();
+
+			for (Stmt stmt : popped) {
+				if (stmt instanceof CopyVarStmt) {
+					final CopyVarStmt copyVarStmt = (CopyVarStmt) stmt;
+
+					if(copyVarStmt.getExpression() instanceof VarExpr) {
+						if(((VarExpr) copyVarStmt.getExpression()).getLocal()
+								== copyVarStmt.getVariable().getLocal()) {
+							continue;
+						}
+					}
+
+					if (copyVarStmt.getType().equals(TypeUtil.OBJECT_TYPE)
+							&& cfg.getMethodNode().getDisplayName().equals("decrypt")
+							&& cfg.getMethodNode().getOwner().equals("dev/sim0n/evaluator/util/crypto/Blowfish$BlowfishCBC")) {
+						System.out.println("Debugging " + copyVarStmt);
+					}
+
+					Type type = copyVarStmt.getType();
+
+					if (type == Type.BOOLEAN_TYPE
+							|| type == Type.BYTE_TYPE
+							|| type == Type.CHAR_TYPE
+							|| type == Type.SHORT_TYPE) {
+						type = Type.INT_TYPE;
+					}
+
+					expressionPool.set(copyVarStmt.getIndex(), type);
+				} else {
+					final Set<BasicBlock> vars = new HashSet<>();
+
+					if (stmt instanceof SwitchStmt) {
+						final SwitchStmt switchStmt = (SwitchStmt) stmt;
+						vars.addAll(switchStmt.getTargets().values());
+						vars.add(switchStmt.getDefaultTarget());
+					} else if (stmt instanceof ConditionalJumpStmt) {
+						final ConditionalJumpStmt conditionalJumpStmt = (ConditionalJumpStmt) stmt;
+						vars.add(conditionalJumpStmt.getTrueSuccessor());
+					} else if (stmt instanceof UnconditionalJumpStmt) {
+						final UnconditionalJumpStmt unconditionalJumpStmt = (UnconditionalJumpStmt) stmt;
+						vars.add(unconditionalJumpStmt.getTarget());
+					}
+
+					next.addAll(vars);
+
+					for (BasicBlock value : vars) {
+						final ExpressionPool pool = new SkidExpressionPool(expressionPool, skidfuscator);
+
+						/* Merging pool values if it has previously been accessed */
+						if (value.getPool() != null) {
+							if (true) {
+								value.getPool().addParent(expressionPool);
+								continue;
+							}
+							final Type[] otherTypes = value.getPool().getTypes();
+							final Type[] selfTypes = pool.getTypes();
+
+							for (int i = 0; i < pool.size(); i++) {
+								final Type otherType = pool.get(i);
+								final Type selfType = pool.get(i);
+								if (!otherType.equals(selfType)) {
+									/*
+									 * It should be physically impossible for
+									 * parameters in the method to be reassigned
+									 * a type.
+									 */
+									if (i <= protectedIndex) {
+										throw new IllegalStateException(
+												"Tried to override protected index type at " + i + " \n"
+														+ cfg.getMethodNode().getOwner()
+														+ "#"
+														+ cfg.getMethodNode().getDisplayName()
+														+ "\n"
+														+ " (static: " + cfg.getMethodNode().isStatic()
+														+ " desc: " + cfg.getDesc() + ")\n" +
+												"\nPrevious: " + Arrays.toString(value.getPool().getTypes()) +
+												"\nCurrent: " + Arrays.toString(expressionPool.getTypes())
+										);
+									}
+
+									/*
+									 * Both pools use this same index but compute
+									 * different values. This means that it is
+									 * __most likely__ a local value which is
+									 * forgotten about and hence not used anymore.
+									 */
+									if (selfType.equals(Type.VOID_TYPE)) {
+										pool.set(i, otherType);
+									} else if (otherType.equals(Type.VOID_TYPE)) {
+										pool.set(i, selfType);
+									} else {
+										throw new IllegalStateException(
+												"Failed to compute frame: " +
+														"\nPrevious: " + otherType +
+														"\nCurrent: " + selfType
+										);
+
+										//pool.set(i, Type.VOID_TYPE);
+									}
+
+									if (cfg.getMethodNode().getDisplayName().equals("decrypt")
+											&& cfg.getMethodNode().getOwner().equals("dev/sim0n/evaluator/util/crypto/Blowfish$BlowfishCBC")) {
+										System.out.println(
+												"Overriding debug index type at " + i +
+												"\nPrevious: " + Arrays.toString(otherTypes) +
+												"\nCurrent: " + Arrays.toString(selfTypes)
+										);
+									}
+
+									/*throw new IllegalStateException(
+											"Failed to compute frame: " +
+											"\nPrevious: " + Arrays.toString(value.getPool().getRenderedTypes()) +
+											"\nCurrent: " + Arrays.toString(expressionPool.getRenderedTypes())
+									);*/
+								}
+							}
+							//value.getPool().merge(expressionPool);
+						}
+
+						value.setPool(pool);
+					}
+				}
+			}
+
+			cfg.getSuccessors(new Predicate<FlowEdge<BasicBlock>>() {
+				@Override
+				public boolean test(FlowEdge<BasicBlock> basicBlockFlowEdge) {
+					return basicBlockFlowEdge instanceof TryCatchEdge
+							&& ((TryCatchEdge) basicBlockFlowEdge)
+							.erange
+							.getNodes()
+							.contains(popped);
+				}
+			}, popped).forEach(e -> {
+				final BasicBlock value = e.dst();
+				if (value.getPool() != null) {
+					value.getPool().merge(expressionPool);
+				} else {
+					value.setPool(expressionPool.copy());
+				}
+
+				next.add(value);
+			});
+
+			final BasicBlock value = cfg.getImmediate(popped);
+			if (value != null) {
+				if (value.getPool() != null) {
+					value.getPool().merge(expressionPool);
+				} else {
+					value.setPool(expressionPool.copy());
+				}
+
+				next.add(value);
+			}
+
+			cfg.getEdges(popped)
+					.stream()
+					.filter(e -> !next.contains(e.dst()))
+					.forEach(e -> {
+						System.out.println("Failed " + e + " (Despite "
+										+ Arrays.toString(next.stream().map(BasicBlock::getDisplayName).toArray())
+										+ ")"
+						);
+					});
+			//System.out.println("-----");
+
+			/* Add all the successor nodes */
+			/* Add it to the stack to be iterated again */
+			next.stream()
+					.filter(e -> !visited.contains(e))
+					.forEach(bucket::add);
+		}
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			if (!visited.contains(vertex)) {
+				System.err.println("Missed " + vertex.getDisplayName() + " on method " + cfg.getMethodNode().getOwner() + "#" + cfg.getMethodNode().getDisplayName());
+			}
+		}
+
+		cfg.allExprStream()
+				.filter(VarExpr.class::isInstance)
+				.map(VarExpr.class::cast)
+				.forEach(e -> {
+					Type localType = e.getType();
+
+					if (localType == Type.BOOLEAN_TYPE
+							|| localType == Type.BYTE_TYPE
+							|| localType == Type.CHAR_TYPE
+							|| localType == Type.SHORT_TYPE) {
+						localType = Type.INT_TYPE;
+					}
+
+					final BasicBlock block = e.getBlock();
+
+					if (block.getPool().get(e.getIndex()).equals(TypeUtil.OBJECT_TYPE))
+						block.getPool().set(e.getIndex(), localType);
+					/*final Type frameType = e.getBlock().getPool().get(e.getIndex());
+
+					if (!localType.equals(frameType)) {
+						final List<CopyVarStmt> stmts = cfg.allExprStream()
+								.filter(CopyVarStmt.class::isInstance)
+								.map(CopyVarStmt.class::cast)
+								.filter(c -> c.getIndex() == e.getIndex())
+								.collect(Collectors.toList());
+						throw new IllegalStateException(
+								"Failed to match frame type on method "
+										+ cfg.getMethodNode().getOwner()
+										+ "#"
+										+ cfg.getMethodNode().getDisplayName()
+										+ "\n"
+											+ " (index: " + e.getIndex()
+											+ " static: " + cfg.getMethodNode().isStatic()
+											+ " desc: " + cfg.getDesc() + ")"
+										+ "\n Expected: " + localType
+										+ "\n Got: " + frameType
+										+ "\n "
+								        + "\n Definitions: \n" + stmts
+														.stream()
+														.map(c -> "CopyVarStmt{index=" + c.getIndex()
+																+ " block=" + c.getBlock().getDisplayName()
+																+ " type=" + c.getType().getInternalName()
+																+ " expr=" + c.getExpression().toString()
+																+ " frame=" + cfg.getSuccessors(c.getBlock()).map(s -> s.getPool().get(e.getIndex()).toString()).collect(Collectors.joining(","))
+																+ "}")
+														.collect(Collectors.joining("\n--> "))
+										+ "\n Usage: \n"
+										+ e.getRootParent().toString()
+										+ "\n Scope: \n"
+										+ cfg.vertices()
+											.stream()
+											.map(c -> c.getDisplayName() + " --> " + c.getPool().get(e.getIndex()).toString())
+											.collect(Collectors.joining("\n"))
+										+ "\n Edges: \n"
+										+ cfg.makeDotGraph().toString()
+										+ "\n--------\n"
+						);
+					}*/
+				});
+
+		/*
+		 * FRAME STACK
+		 */
+
+		for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
+			final TypeStack expressionStack = new SkidTypeStack(
+					cfg.getLocals().getMaxStack(),
+					skidfuscator
+			);
+			final Type type = getRangeType(range);
+
+			expressionStack.push(type);
+			range.getHandler().setStack(expressionStack);
+
+			visited.clear();
+			bucket.add(range.getHandler());
+
+			while (!bucket.isEmpty()) {
+				final BasicBlock popped = bucket.pop();
+				visited.add(popped);
+
+				if (popped.stream()
+						.flatMap(e -> Streams.stream(e.enumerateOnlyChildren()))
+						.filter(CaughtExceptionExpr.class::isInstance)
+						.map(CaughtExceptionExpr.class::cast)
+						.anyMatch(e -> e.getType().equals(type))) {
+					break;
+				}
+
+				cfg.getSuccessors(popped)
+						.filter(e -> !visited.contains(e))
+						.forEach(e -> {
+							e.setStack(popped.getStack().copy());
+							bucket.add(e);
+						});
+			}
+		}
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			if (vertex.getStack() == null) {
+				vertex.setStack(
+						new SkidTypeStack(
+							cfg.getLocals().getMaxStack(),
+							skidfuscator
+						)
+				);
+			}
+		}
+		/*visited.clear();
+		bucket.add(entry);
+
+		ExpressionStack stack = new ExpressionStack(cfg.getLocals().getMaxStack() + 1);
+
+		entry.setStack(stack);
+
+		while (!bucket.isEmpty()) {
+			/* Visit the top of the stack *//*
+			final BasicBlock popped = bucket.pop();
+			visited.add(popped);
+
+			/* Iterate all the set statements to update the frame *//*
+			final ExpressionStack expressionPool = popped.getStack().copy();
+
+			AtomicReference<ExceptionRange<BasicBlock>> range = null;
+			iteration: {
+				for (Stmt stmt : popped) {
+					for (Expr expr : stmt.enumerateOnlyChildren()) {
+						if (expr instanceof CaughtExceptionExpr) {
+							expressionPool.pop();
+						}
+						if (stmt instanceof ThrowStmt) {
+							final ThrowStmt throwStmt = (ThrowStmt) stmt;
+							expressionPool.push(throwStmt.getExpression());
+
+
+							cfg.getEdges(popped)
+									.stream()
+									.filter(TryCatchEdge.class::isInstance)
+									.map(TryCatchEdge.class::cast)
+									.findFirst()
+									.ifPresent(e -> range.set(e.erange));
+
+							if (range == null) {
+								break iteration;
+							}
+
+
+							range.get().getHandler().setStack(expressionPool);
+
+						}
+					}
+				}
+
+				/* Add all the successor nodes *//*
+				cfg.getSuccessors(popped)
+						.filter(e -> !visited.contains(e))
+						.forEach(e -> {
+							/* Set the expected received pool
+							e.setPool(expressionPool);
+
+							/* Add it to the stack to be iterated again
+							bucket.add(e);
+						});
+			}
 		}*/
+
+		exprMap.forEach(((block, constantExpr) -> {
+			constantExpr.setConstant("[Frame] " + Arrays.toString(block.getPool().getTypes())
+					+ "\n" + Arrays.toString(block.getStack().getStack())
+			);
+		}));
 	}
 
 	private void fixRanges() {
@@ -163,6 +660,53 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				e.add(new NopStmt());
 			});
 		}
+	}
+
+	private void fixTypes() {
+		Map<Integer, Type> types = new HashMap<>();
+		int index = 0;
+
+		if (!cfg.getMethodNode().isStatic()) {
+			types.put(index, Type.getType("L" + cfg.getMethodNode().getOwner() + ";"));
+			index++;
+		}
+
+		for (Type argumentType : Type.getArgumentTypes(cfg.getMethodNode().getDesc())) {
+			types.put(index, argumentType);
+
+			index++;
+			if (argumentType.equals(Type.DOUBLE_TYPE) || argumentType.equals(Type.LONG_TYPE)) {
+				//types.put(index, Type.VOID_TYPE);
+				index++;
+			}
+		}
+
+		cfg.allExprStream()
+				.filter(VarExpr.class::isInstance)
+				.map(VarExpr.class::cast)
+				.forEach(e -> {
+					final Type type = types.get(e.getIndex());
+
+					if (type == null)
+						return;
+
+					e.setType(type);
+				});
+
+		cfg.vertices()
+				.stream()
+				.flatMap(BasicBlock::stream)
+				.filter(CopyVarStmt.class::isInstance)
+				.map(CopyVarStmt.class::cast)
+				.map(CopyVarStmt::getVariable)
+				.forEach(e -> {
+					final Type type = types.get(e.getIndex());
+
+					if (type == null)
+						return;
+
+					e.setType(type);
+				});
 	}
 
 	private void linearize() {
@@ -342,6 +886,55 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 	private void dumpRange(ExceptionRange<BasicBlock> er) {
 		// Determine exception type
+		final Type type = getRangeType(er);
+		final Label handler = getLabel(er.getHandler());
+		List<BasicBlock> range = new ArrayList<>(er.getNodes());
+		range.sort(Comparator.comparing(order::indexOf));
+		
+		Label start;
+		int rangeIdx = -1, orderIdx;
+		do {
+			if (++rangeIdx == range.size()) {
+				System.err.println("[warn] range is absent: " + m);
+				return;
+			}
+			BasicBlock b = range.get(rangeIdx);
+			orderIdx = order.indexOf(b);
+			start = getLabel(b);
+		} while (orderIdx == -1);
+		
+		for (;;) {
+			// check for endpoints
+			if (orderIdx + 1 == order.size()) { // end of method
+				assert start != terminalLabel.getLabel() : "Label assigned is semantically identical.";
+				m.node.visitTryCatchBlock(start, terminalLabel.getLabel(), handler, type.getInternalName());
+				break;
+			} else if (rangeIdx + 1 == range.size()) { // end of range
+				Label end = getLabel(order.get(orderIdx + 1));
+				assert start != end : "Label assigned is semantically identical.";
+				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
+				break;
+			}
+			
+			// check for discontinuity
+			BasicBlock nextBlock = range.get(rangeIdx + 1);
+			int nextOrderIdx = order.indexOf(nextBlock);
+			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
+				System.err.println("\r\n[warn] Had to split up a range: " + m + "\n");
+				Label end = getLabel(order.get(orderIdx + 1));
+				assert start != end : "Label assigned is semantically identical.";
+				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
+				start = getLabel(nextBlock);
+			}
+
+			// next
+			rangeIdx++;
+			if (nextOrderIdx != -1)
+				orderIdx = nextOrderIdx;
+		}
+	}
+
+	private Type getRangeType(final ExceptionRange<BasicBlock> er) {
 		Type type;
 		Set<Type> typeSet = er.getTypes();
 		if (typeSet.size() != 1) {
@@ -408,52 +1001,8 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		} else {
 			type = typeSet.iterator().next();
 		}
-		
-		final Label handler = getLabel(er.getHandler());
-		List<BasicBlock> range = new ArrayList<>(er.getNodes());
-		range.sort(Comparator.comparing(order::indexOf));
-		
-		Label start;
-		int rangeIdx = -1, orderIdx;
-		do {
-			if (++rangeIdx == range.size()) {
-				System.err.println("[warn] range is absent: " + m);
-				return;
-			}
-			BasicBlock b = range.get(rangeIdx);
-			orderIdx = order.indexOf(b);
-			start = getLabel(b);
-		} while (orderIdx == -1);
-		
-		for (;;) {
-			// check for endpoints
-			if (orderIdx + 1 == order.size()) { // end of method
-				assert start != terminalLabel.getLabel() : "Label assigned is semantically identical.";
-				m.node.visitTryCatchBlock(start, terminalLabel.getLabel(), handler, type.getInternalName());
-				break;
-			} else if (rangeIdx + 1 == range.size()) { // end of range
-				Label end = getLabel(order.get(orderIdx + 1));
-				assert start != end : "Label assigned is semantically identical.";
-				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
-				break;
-			}
-			
-			// check for discontinuity
-			BasicBlock nextBlock = range.get(rangeIdx + 1);
-			int nextOrderIdx = order.indexOf(nextBlock);
-			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
-				System.err.println("\r\n[warn] Had to split up a range: " + m + "\n");
-				Label end = getLabel(order.get(orderIdx + 1));
-				assert start != end : "Label assigned is semantically identical.";
-				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
-				start = getLabel(nextBlock);
-			}
 
-			// next
-			rangeIdx++;
-			if (nextOrderIdx != -1)
-				orderIdx = nextOrderIdx;
-		}
+		return type;
 	}
 	
 	private void verifyRanges() {

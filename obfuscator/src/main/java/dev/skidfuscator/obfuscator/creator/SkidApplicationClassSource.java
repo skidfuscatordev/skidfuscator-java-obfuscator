@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 public class SkidApplicationClassSource extends ApplicationClassSource {
     //private final LocateableJarContents<ClassNode> nodes;
 
-    public SkidApplicationClassSource(String name, LocateableJarContents nodes) {
-        super(name, nodes.getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList()));
+    public SkidApplicationClassSource(String name, boolean phantom, LocateableJarContents nodes) {
+        super(name, phantom, nodes.getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList()));
     }
 
-    public SkidApplicationClassSource(String name, Map<String, ClassNode> nodeMap, LocateableJarContents nodes) {
-        super(name, nodeMap);
+    public SkidApplicationClassSource(String name, boolean phantom, Map<String, ClassNode> nodeMap, LocateableJarContents nodes) {
+        super(name, phantom, nodeMap);
     }
 
     @Override

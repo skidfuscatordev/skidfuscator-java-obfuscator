@@ -988,6 +988,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 	private VersionedLocal latest(int index, boolean isStack) {
 		LocalsPool handler = builder.graph.getLocals();
 		Local l = handler.get(index, isStack);
+
 		Stack<Integer> stack = stacks.get(l);
 		if(stack == null || stack.isEmpty()) {
 			System.err.println(builder.method.getOwner() + "#" + builder.method.getName());

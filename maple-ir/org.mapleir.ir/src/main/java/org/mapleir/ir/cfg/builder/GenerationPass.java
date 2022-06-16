@@ -121,9 +121,9 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 		if(inputStacks.containsKey(b)) {
 			throw new UnsupportedOperationException(b.getDisplayName() + " already has inputstack: " + inputStacks.get(b) + " vs. " + s);
 		}
-		
+
 		inputStacks.put(b, s);
-		b.setStack(s);
+		//b.setStack(s);
 	}
 	
 	protected ExpressionStack getInputStackFor(BasicBlock b) {

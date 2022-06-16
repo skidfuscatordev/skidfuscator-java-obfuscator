@@ -11,14 +11,16 @@ public class ApplicationClassSource extends ClassSource {
 	private final String name;
 	private final List<LibraryClassSource> libraries;
 	private ClassTree classTree;
+	private boolean phantom;
 	
-	public ApplicationClassSource(String name, Collection<ClassNode> classes) {
-		this(name, ClassHelper.convertToMap(classes));
+	public ApplicationClassSource(String name, boolean phantom, Collection<ClassNode> classes) {
+		this(name, phantom, ClassHelper.convertToMap(classes));
 	}
 	
-	public ApplicationClassSource(String name, Map<String, ClassNode> nodeMap) {
+	public ApplicationClassSource(String name, boolean phantom, Map<String, ClassNode> nodeMap) {
 		super(nodeMap);
 		this.name = (name == null ? "unknown" : name);
+		this.phantom = phantom;
 		libraries = new LinkedList<>();
 	}
 	
@@ -32,7 +34,7 @@ public class ApplicationClassSource extends ClassSource {
 	
 	public ClassTree getClassTree() {
 		if (classTree == null) {
-			classTree = new ClassTree(this);
+			classTree = new ClassTree(this, phantom);
 			classTree.init();
 		}
 		return classTree;

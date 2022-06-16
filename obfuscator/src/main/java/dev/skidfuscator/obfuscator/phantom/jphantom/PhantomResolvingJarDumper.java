@@ -22,6 +22,7 @@ import javax.crypto.BadPaddingException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -144,8 +145,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	}
 
 	public ClassWriter buildClassWriter(ClassTree tree, int flags) {
-		return new ClassWriter(flags) {
-
+		final ClassWriter writer = new ClassWriter(flags) {
 
 			// this method in ClassWriter uses the systemclassloader as
 			// a stream location to load the super class, however, most of
@@ -238,6 +238,16 @@ public class PhantomResolvingJarDumper implements JarDumper {
 				}*/
 			}
 		};
+
+		try {
+			final Field field = ClassWriter.class.getDeclaredField("compute");
+			field.setAccessible(true);
+			field.set(writer, 2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return writer;
 	}
 
 	/**

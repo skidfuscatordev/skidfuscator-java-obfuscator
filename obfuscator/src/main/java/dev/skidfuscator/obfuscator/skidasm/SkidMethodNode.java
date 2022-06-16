@@ -16,8 +16,6 @@ import org.mapleir.asm.MethodNode;
 import org.mapleir.flowgraph.edges.ImmediateEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ConstantExpr;
@@ -317,6 +315,7 @@ public class SkidMethodNode extends MethodNode {
      * Dumps the control flow graph to the method node
      */
     public void dump() {
+        getEntryBlock();
         new SkidFlowGraphDumper(skidfuscator, this.getCfg(), this).dump();
     }
 

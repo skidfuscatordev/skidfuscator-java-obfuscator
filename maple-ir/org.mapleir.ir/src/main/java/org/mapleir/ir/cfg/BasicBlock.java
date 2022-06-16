@@ -3,6 +3,7 @@ package org.mapleir.ir.cfg;
 import org.mapleir.ir.code.ExpressionPool;
 import org.mapleir.ir.code.ExpressionStack;
 import org.mapleir.ir.code.Stmt;
+import org.mapleir.ir.code.TypeStack;
 import org.mapleir.stdlib.collections.graph.FastGraphVertex;
 import org.mapleir.stdlib.collections.list.NotifiedList;
 
@@ -24,7 +25,7 @@ public class BasicBlock implements FastGraphVertex, Collection<Stmt> {
 	private int id;
 	public final ControlFlowGraph cfg;
 	private final NotifiedList<Stmt> statements;
-	private ExpressionStack stack;
+	private TypeStack stack;
 	private ExpressionPool pool;
 	private int flags = 0;
 
@@ -219,11 +220,11 @@ public class BasicBlock implements FastGraphVertex, Collection<Stmt> {
 		statements.clear();
 	}
 
-	public ExpressionStack getStack() {
+	public TypeStack getStack() {
 		return stack;
 	}
 
-	public void setStack(ExpressionStack stack) {
+	public void setStack(TypeStack stack) {
 		this.stack = stack;
 	}
 

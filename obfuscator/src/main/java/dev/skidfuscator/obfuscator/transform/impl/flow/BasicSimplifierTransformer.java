@@ -31,7 +31,7 @@ public class BasicSimplifierTransformer extends AbstractTransformer {
         for (BasicBlock block : new ArrayList<>(cfg.vertices())) {
             final BasicBlock immediate = cfg.getImmediate(block);
 
-            if (block.getPool() != null) {
+            /*if (block.getPool() != null) {
                 final Local local1 = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
                 block.add(
                         0,
@@ -42,8 +42,7 @@ public class BasicSimplifierTransformer extends AbstractTransformer {
                                 )
                         )
                 );
-            }
-
+            }*/
 
             if (immediate == null)
                 continue;
