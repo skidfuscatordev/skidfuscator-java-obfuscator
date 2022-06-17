@@ -27,63 +27,9 @@ public class SkidExpressionPool extends ExpressionPool {
         this.skidfuscator = skidfuscator;
     }
 
-    public int computeSize() {
-        int lastExist = 0;
-
-        for (int i = size(); i > 0; i--) {
-            if (!get(i - 1).equals(Type.VOID_TYPE)) {
-                lastExist = i;
-                break;
-            }
-
-            if (i == 1) {
-                continue;
-            }
-
-            final Type subType = get(i - 2);
-            if (subType.equals(Type.DOUBLE_TYPE) || subType.equals(Type.LONG_TYPE)) {
-                lastExist = i;
-                break;
-            }
-        }
-        return lastExist;
-    }
-
     @Override
-    public void merge(ExpressionPool other) {
-        if (other.getTypes().length >= this.types.length) {
-            Type[] s = new Type[other.getTypes().length];
-            System.arraycopy(types, 0, s, 0, types.length);
-            types = s;
-        }
-
-        for (int i = 0; i < other.getTypes().length; i++) {
-            final Type selfType = this.types[i];
-            final Type otherType = other.getTypes()[i];
-
-            final boolean selfFilled = selfType != Type.VOID_TYPE && selfType != null;
-            final boolean otherFilled = otherType != Type.VOID_TYPE && otherType != null;
-
-            if (selfFilled && otherFilled && selfType != otherType) {
-                final ClassNode selfClassNode = skidfuscator.getClassSource().findClassNode(selfType.getInternalName());
-                final ClassNode otherClassNode = skidfuscator.getClassSource().findClassNode(otherType.getInternalName());
-
-                final ClassNode commonClassNode = skidfuscator.getClassSource()
-                        .getClassTree()
-                        .getCommonAncestor(Arrays.asList(selfClassNode, otherClassNode))
-                        .iterator()
-                        .next();
-
-                this.types[i] = Type.getType("L" + commonClassNode.getName() + ";");
-                continue;
-                //throw new IllegalStateException("Trying to merge " + selfType
-                //        + " (self) with " + otherType + " (other) [FAILED] [" + i + "]");
-            }
-
-            if (otherFilled && !selfFilled) {
-                this.types[i] = otherType;
-            }
-        }
+    public Type get(int index) {
+        return super.get(index);
     }
 
     @Override

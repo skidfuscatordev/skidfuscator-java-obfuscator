@@ -315,7 +315,6 @@ public class SkidMethodNode extends MethodNode {
      * Dumps the control flow graph to the method node
      */
     public void dump() {
-        getEntryBlock();
         new SkidFlowGraphDumper(skidfuscator, this.getCfg(), this).dump();
     }
 

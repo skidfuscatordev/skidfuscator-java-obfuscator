@@ -239,13 +239,13 @@ public class PhantomResolvingJarDumper implements JarDumper {
 			}
 		};
 
-		try {
+		/*try {
 			final Field field = ClassWriter.class.getDeclaredField("compute");
 			field.setAccessible(true);
 			field.set(writer, 2);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 
 		return writer;
 	}

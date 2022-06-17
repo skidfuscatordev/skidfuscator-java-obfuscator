@@ -26,6 +26,7 @@ public class BasicSimplifierTransformer extends AbstractTransformer {
     @Listen(EventPriority.MONITOR)
     void handle(final InitMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
+        methodNode.getEntryBlock();
 
         final ControlFlowGraph cfg = methodNode.getCfg();
         for (BasicBlock block : new ArrayList<>(cfg.vertices())) {

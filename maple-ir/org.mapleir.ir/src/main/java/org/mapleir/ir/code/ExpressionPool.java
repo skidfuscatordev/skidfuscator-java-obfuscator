@@ -115,32 +115,31 @@ public class ExpressionPool implements Iterable<Type> {
         this.types = types;
     }
 
-    public void merge(final ExpressionPool other) {
-        if (other.types.length >= this.types.length) {
-            Type[] s = new Type[other.types.length];
-            System.arraycopy(types, 0, s, 0, types.length);
-            types = s;
-        }
+    public int computeSize() {
+        int lastExist = 0;
 
-        for (int i = 0; i < other.types.length; i++) {
-            final Type selfType = this.types[i];
-            final Type otherType = other.types[i];
-
-            final boolean selfFilled = selfType != Type.VOID_TYPE && selfType != null;
-            final boolean otherFilled = otherType != Type.VOID_TYPE && otherType != null;
-
-            if (selfFilled && otherFilled && selfType != otherType) {
-                throw new IllegalStateException("Trying to merge " + selfType
-                        + " (self) with " + otherType + " (other) [FAILED] [" + i + "]");
+        for (int i = size(); i > 0; i--) {
+            if (!get(i - 1).equals(Type.VOID_TYPE)) {
+                lastExist = i;
+                break;
             }
 
-            if (otherFilled && !selfFilled) {
-                this.types[i] = otherType;
+            if (i == 1) {
+                continue;
+            }
+
+            final Type subType = get(i - 2);
+            if (subType.equals(Type.DOUBLE_TYPE) || subType.equals(Type.LONG_TYPE)) {
+                lastExist = i;
+                break;
             }
         }
+        return lastExist;
     }
 
-
+    protected ExpressionPool _self() {
+        return new ExpressionPool(this);
+    }
 
     @Override
     public Iterator<Type> iterator() {

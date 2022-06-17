@@ -8,7 +8,6 @@ import dev.skidfuscator.obfuscator.skidasm.SkidTypeStack;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
-import dev.skidfuscator.obfuscator.verifier.Verifier;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.*;
@@ -21,7 +20,6 @@ import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
-import org.mapleir.ir.locals.Local;
 import org.mapleir.stdlib.collections.graph.*;
 import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 import org.mapleir.stdlib.collections.graph.algorithms.TarjanSCC;
@@ -35,7 +33,6 @@ import org.objectweb.asm.tree.TryCatchBlockNode;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private final Skidfuscator skidfuscator;
@@ -44,6 +41,16 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private IndexedList<BasicBlock> order;
 	private LabelNode terminalLabel; // synthetic last label for malformed ranges
 	private Map<BasicBlock, LabelNode> labels;
+
+	/* Frame specific stuff */
+	private Map<Integer, Set<BasicBlock>> scopeMap = new HashMap<>();
+	private Map<Integer, Boolean> scopeSetMap = new HashMap<>();
+	private Map<BasicBlock, Type[]> localAccessors = new HashMap<>();
+	private Map<BasicBlock, Type[]> localProviders = new HashMap<>();
+	private Map<BasicBlock, Type[]> localFrames = new HashMap<>();
+
+	private int beginIndex;
+
 	public SkidFlowGraphDumper(Skidfuscator skidfuscator, ControlFlowGraph cfg, MethodNode m) {
 		this.skidfuscator = skidfuscator;
 		this.cfg = cfg;
@@ -77,7 +84,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		verifyOrdering();
 
 		// Compute frames
-		//computeFrames();
+		computeFrames();
 
 		// Stuff
 		/*
@@ -87,6 +94,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		 * to the internal name.
 		 */
 		final Parameter parameter = new Parameter(cfg.getDesc());
+		final int parameterSize = parameter.getArgs().size();
 		final boolean isStatic = cfg.getMethodNode().isStatic();
 		final Object[] initialFrame = new Object[(isStatic ? 0 : 1) + parameter.computeSize()];
 
@@ -105,10 +113,11 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			index++;
 
 			if (type.equals(Type.DOUBLE_TYPE) || type.equals(Type.LONG_TYPE)) {
-				initialFrame[index] = _getFrameType(Type.VOID_TYPE);
-				index++;
+				//initialFrame[index] = _getFrameType(Type.VOID_TYPE);
+				//index++;
 			}
 		}
+
 
 		Object[] lastFrame = initialFrame;
 		Object[] lastStack = null;
@@ -121,42 +130,76 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		for (BasicBlock b : order) {
 			m.node.visitLabel(getLabel(b));
 
-			if (b.isEmpty())
-				continue;
+			iter: {
+				if (entry)
+					break iter;
 
-			if (!entry && false) {
+				if (b.isEmpty())
+					break iter;
+
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
-				final Object[] frame = Arrays.copyOf(initialFrame, frameTypes.computeSize());
+				final int frameComputedSize = frameTypes.computeSize();
 
+				/* Implicit frame */
+				if (initialFrame.length >= frameComputedSize)
+					break iter;
+
+				Object[] frameLocal = Arrays.copyOf(initialFrame, frameComputedSize);
+
+				if (!isStatic) {
+					frameLocal[0] = cfg.getMethodNode().isInit()
+							&& b.isFlagSet(SkidBlock.FLAG_NO_OPAQUE)
+							? Opcodes.UNINITIALIZED_THIS
+							: cfg.getMethodNode().getOwner();
+				}
 
 				/* Whacky first start digit to exempt the first precondition above */
+				int indexLocal = index;
 				for (int i = index;
-					 i < frame.length;
+					 i < frameComputedSize;
 					 i++) {
 
 					final Type type = frameTypes.get(i);
-					frame[i] = _getFrameType(type);
+					frameLocal[indexLocal] = _getFrameType(type);
+
+					if (type.equals(Type.DOUBLE_TYPE) || type.equals(Type.LONG_TYPE)) {
+						i++;
+						frameLocal[i] = null;
+					}
+
+					indexLocal++;
+				}
+
+				Object[] frame = new Object[indexLocal];
+				int indexLocal2 = 0;
+				for (final Object object : frameLocal) {
+					if (object == null) {
+						continue;
+					}
+
+					frame[indexLocal2] = object;
+					indexLocal2++;
 				}
 
 				/* Stack */
 				final int stackLength = b.getStack().capacity();
 				final SkidTypeStack typeStack = (SkidTypeStack) b.getStack();
 				final Type[] stackTypes = b.getStack().getStack();
-				final Object[] stack = new Object[typeStack.computeSize()];
+				final Object[] stack = new Object[typeStack.size()];
 
 				for (int i = 0; i < stack.length; i++) {
 					final Type type = stackTypes[i];
 					stack[i] = _getFrameType(type);
 				}
 
-				if (Arrays.equals(frame, lastFrame)) {
+				if (Arrays.equals(frameLocal, lastFrame)) {
 					if (stack.length == 1) {
 						m.node.visitFrame(Opcodes.F_SAME1, 0, null, 1, stack);
 					} else {
 						m.node.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
 					}
 				} else {
-					final int diff = lastFrame == null ? 0 : lastFrame.length - frame.length;
+					final int diff = lastFrame == null ? 0 : lastFrame.length - frameLocal.length;
 					if (Math.abs(diff) < 4 && Math.abs(diff) > 0 && false) {
 
 					} else {
@@ -164,10 +207,11 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 					}
 				}
 
-				maxLocal = Math.max(maxLocal, frame.length);
+				maxLocal = Math.max(maxLocal, frameLocal.length);
 
-				lastFrame = frame;
+				lastFrame = frameLocal;
 				lastStack = stack;
+
 			}
 
 			for (Stmt stmt : b) {
@@ -283,7 +327,48 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			index++;
 		}
 
+		beginIndex = index;
+
 		entry.setPool(frame);
+
+		Map<BasicBlock, Set<Integer>> defMap = new HashMap<>();
+		Map<Integer, Set<BasicBlock>> reverseDefMap = new HashMap<>();
+
+		final int finalProtectedIndex = protectedIndex;
+
+		cfg.allExprStream()
+				.filter(VarExpr.class::isInstance)
+				.map(VarExpr.class::cast)
+				.filter(e -> e.getLocal().isStoredInLocal())
+				//.filter(e -> e.getIndex() > finalProtectedIndex)
+				.forEach(e -> {
+					defMap.computeIfAbsent(e.getBlock(), b -> new HashSet<>())
+							.add(e.getIndex());
+					reverseDefMap.computeIfAbsent(e.getIndex(), b -> new HashSet<>())
+							.add(e.getBlock());
+
+					localAccessors.computeIfAbsent(e.getBlock(), b -> new Type[frame.size()])
+							[e.getIndex()] = e.getType();
+				});
+
+		cfg.vertices()
+				.stream()
+				.flatMap(BasicBlock::stream)
+				.filter(CopyVarStmt.class::isInstance)
+				.map(CopyVarStmt.class::cast)
+				.map(CopyVarStmt::getVariable)
+				.filter(e -> e.getLocal().isStoredInLocal())
+				//.filter(e -> e.getIndex() > finalProtectedIndex)
+				.forEach(e -> {
+					defMap.computeIfAbsent(e.getBlock(), b -> new HashSet<>())
+							.add(e.getIndex());
+					reverseDefMap.computeIfAbsent(e.getIndex(), b -> new HashSet<>())
+							.add(e.getBlock());
+
+					localProviders.computeIfAbsent(e.getBlock(), b -> new Type[frame.size()])
+							[e.getIndex()] = e.getType();
+				});
+
 
 		// TODO:
 		while (!bucket.isEmpty()) {
@@ -291,14 +376,55 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			final BasicBlock popped = bucket.pop();
 			visited.add(popped);
 
+			scopeMap.forEach((key, set) -> {
+				if (!scopeSetMap.get(key))
+					return;
+
+				set.add(popped);
+			});
+
 			/* Iterate all the set statements to update the frame */
 			final SkidExpressionPool expressionPool = new SkidExpressionPool(
 					popped.getPool(),
 					skidfuscator
 			);
 
-			final Set<BasicBlock> next = new HashSet<>();
+			final SkidExpressionPool clone = expressionPool.copy();
+			final Set<Integer> uses = defMap.computeIfAbsent(popped, c -> new HashSet<>());
+			for (Integer use : uses) {
+				if (!reverseDefMap.containsKey(use)) {
+					continue;
+				}
 
+				if (!scopeSetMap.containsKey(use)) {
+					scopeMap.put(use, new HashSet<>(Collections.singleton(popped)));
+					scopeSetMap.put(use, true);
+				}
+
+				final Set<BasicBlock> targets = reverseDefMap.get(use);
+				if (targets.contains(popped) && targets.size() == 1) {
+					clone.set(index, Type.VOID_TYPE);
+
+					scopeSetMap.put(use, false);
+				}
+			}
+
+			final int maxDefHeight = clone.computeSize();
+			for (Integer use : uses) {
+				if (!reverseDefMap.containsKey(use)) {
+					continue;
+				}
+
+				final Set<BasicBlock> targets = reverseDefMap.get(use);
+				targets.remove(popped);
+
+				if (targets.isEmpty() && maxDefHeight < use) {
+					clone.set(index, Type.VOID_TYPE);
+				}
+			}
+
+
+			final Set<BasicBlock> next = new HashSet<>();
 			for (Stmt stmt : popped) {
 				if (stmt instanceof CopyVarStmt) {
 					final CopyVarStmt copyVarStmt = (CopyVarStmt) stmt;
@@ -344,20 +470,17 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 					next.addAll(vars);
 
 					for (BasicBlock value : vars) {
-						final ExpressionPool pool = new SkidExpressionPool(expressionPool, skidfuscator);
+						final SkidExpressionPool pool = new SkidExpressionPool(expressionPool, skidfuscator);
 
 						/* Merging pool values if it has previously been accessed */
 						if (value.getPool() != null) {
-							if (true) {
-								value.getPool().addParent(expressionPool);
-								continue;
-							}
+							value.getPool().addParent(expressionPool);
 							final Type[] otherTypes = value.getPool().getTypes();
-							final Type[] selfTypes = pool.getTypes();
+							final Type[] selfTypes = expressionPool.getTypes();
 
 							for (int i = 0; i < pool.size(); i++) {
-								final Type otherType = pool.get(i);
-								final Type selfType = pool.get(i);
+								final Type otherType = value.getPool().get(i);
+								final Type selfType = expressionPool.get(i);
 								if (!otherType.equals(selfType)) {
 									/*
 									 * It should be physically impossible for
@@ -387,14 +510,13 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 									if (selfType.equals(Type.VOID_TYPE)) {
 										pool.set(i, otherType);
 									} else if (otherType.equals(Type.VOID_TYPE)) {
-										pool.set(i, selfType);
+										pool.set(i, Type.VOID_TYPE);
 									} else {
 										throw new IllegalStateException(
 												"Failed to compute frame: " +
 														"\nPrevious: " + otherType +
 														"\nCurrent: " + selfType
 										);
-
 										//pool.set(i, Type.VOID_TYPE);
 									}
 
@@ -414,6 +536,15 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 									);*/
 								}
 							}
+
+							final int maxHeight = Math.min(
+									expressionPool.computeSize(),
+									((SkidExpressionPool) value.getPool()).computeSize()
+							);
+
+							for (int i = maxHeight; i < pool.size(); i++) {
+								pool.set(i, Type.VOID_TYPE);
+							}
 							//value.getPool().merge(expressionPool);
 						}
 
@@ -422,6 +553,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 			}
 
+			int finalProtectedIndex1 = protectedIndex;
 			cfg.getSuccessors(new Predicate<FlowEdge<BasicBlock>>() {
 				@Override
 				public boolean test(FlowEdge<BasicBlock> basicBlockFlowEdge) {
@@ -433,22 +565,170 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 			}, popped).forEach(e -> {
 				final BasicBlock value = e.dst();
+				final SkidExpressionPool pool = new SkidExpressionPool(expressionPool, skidfuscator);
+
+				/* Merging pool values if it has previously been accessed */
 				if (value.getPool() != null) {
-					value.getPool().merge(expressionPool);
-				} else {
-					value.setPool(expressionPool.copy());
+					value.getPool().addParent(expressionPool);
+					final Type[] otherTypes = value.getPool().getTypes();
+					final Type[] selfTypes = expressionPool.getTypes();
+
+					for (int i = 0; i < pool.size(); i++) {
+						final Type otherType = value.getPool().get(i);
+						final Type selfType = expressionPool.get(i);
+						if (!otherType.equals(selfType)) {
+							/*
+							 * It should be physically impossible for
+							 * parameters in the method to be reassigned
+							 * a type.
+							 */
+							if (i <= finalProtectedIndex1) {
+								throw new IllegalStateException(
+										"Tried to override protected index type at " + i + " \n"
+												+ cfg.getMethodNode().getOwner()
+												+ "#"
+												+ cfg.getMethodNode().getDisplayName()
+												+ "\n"
+												+ " (static: " + cfg.getMethodNode().isStatic()
+												+ " desc: " + cfg.getDesc() + ")\n" +
+												"\nPrevious: " + Arrays.toString(value.getPool().getTypes()) +
+												"\nCurrent: " + Arrays.toString(expressionPool.getTypes())
+								);
+							}
+
+							/*
+							 * Both pools use this same index but compute
+							 * different values. This means that it is
+							 * __most likely__ a local value which is
+							 * forgotten about and hence not used anymore.
+							 */
+							if (selfType.equals(Type.VOID_TYPE)) {
+								pool.set(i, Type.VOID_TYPE);
+							} else if (otherType.equals(Type.VOID_TYPE)) {
+								pool.set(i, Type.VOID_TYPE);
+							} else {
+								throw new IllegalStateException(
+										"Failed to compute frame: " +
+												"\nPrevious: " + otherType +
+												"\nCurrent: " + selfType
+								);
+								//pool.set(i, Type.VOID_TYPE);
+							}
+
+							if (cfg.getMethodNode().getDisplayName().equals("decrypt")
+									&& cfg.getMethodNode().getOwner().equals("dev/sim0n/evaluator/util/crypto/Blowfish$BlowfishCBC")) {
+								System.out.println(
+										"Overriding debug index type at " + i +
+												"\nPrevious: " + Arrays.toString(otherTypes) +
+												"\nCurrent: " + Arrays.toString(selfTypes)
+								);
+							}
+
+									/*throw new IllegalStateException(
+											"Failed to compute frame: " +
+											"\nPrevious: " + Arrays.toString(value.getPool().getRenderedTypes()) +
+											"\nCurrent: " + Arrays.toString(expressionPool.getRenderedTypes())
+									);*/
+						}
+					}
+
+					final int maxHeight = Math.min(
+							expressionPool.computeSize(),
+							((SkidExpressionPool) value.getPool()).computeSize()
+					);
+
+					for (int i = maxHeight; i < pool.size(); i++) {
+						pool.set(i, Type.VOID_TYPE);
+					}
+					//value.getPool().merge(expressionPool);
 				}
+
+				value.setPool(pool);
 
 				next.add(value);
 			});
 
 			final BasicBlock value = cfg.getImmediate(popped);
 			if (value != null) {
+				final SkidExpressionPool pool = new SkidExpressionPool(expressionPool, skidfuscator);
+
+				/* Merging pool values if it has previously been accessed */
 				if (value.getPool() != null) {
-					value.getPool().merge(expressionPool);
-				} else {
-					value.setPool(expressionPool.copy());
+					value.getPool().addParent(expressionPool);
+					final Type[] otherTypes = value.getPool().getTypes();
+					final Type[] selfTypes = expressionPool.getTypes();
+
+					for (int i = 0; i < pool.size(); i++) {
+						final Type otherType = value.getPool().get(i);
+						final Type selfType = expressionPool.get(i);
+						if (!otherType.equals(selfType)) {
+							/*
+							 * It should be physically impossible for
+							 * parameters in the method to be reassigned
+							 * a type.
+							 */
+							if (i <= protectedIndex) {
+								throw new IllegalStateException(
+										"Tried to override protected index type at " + i + " \n"
+												+ cfg.getMethodNode().getOwner()
+												+ "#"
+												+ cfg.getMethodNode().getDisplayName()
+												+ "\n"
+												+ " (static: " + cfg.getMethodNode().isStatic()
+												+ " desc: " + cfg.getDesc() + ")\n" +
+												"\nPrevious: " + Arrays.toString(value.getPool().getTypes()) +
+												"\nCurrent: " + Arrays.toString(expressionPool.getTypes())
+								);
+							}
+
+							/*
+							 * Both pools use this same index but compute
+							 * different values. This means that it is
+							 * __most likely__ a local value which is
+							 * forgotten about and hence not used anymore.
+							 */
+							if (selfType.equals(Type.VOID_TYPE)) {
+								pool.set(i, Type.VOID_TYPE);
+							} else if (otherType.equals(Type.VOID_TYPE)) {
+								pool.set(i, Type.VOID_TYPE);
+							} else {
+								throw new IllegalStateException(
+										"Failed to compute frame: " +
+												"\nPrevious: " + otherType +
+												"\nCurrent: " + selfType
+								);
+								//pool.set(i, Type.VOID_TYPE);
+							}
+
+							if (cfg.getMethodNode().getDisplayName().equals("decrypt")
+									&& cfg.getMethodNode().getOwner().equals("dev/sim0n/evaluator/util/crypto/Blowfish$BlowfishCBC")) {
+								System.out.println(
+										"Overriding debug index type at " + i +
+												"\nPrevious: " + Arrays.toString(otherTypes) +
+												"\nCurrent: " + Arrays.toString(selfTypes)
+								);
+							}
+
+									/*throw new IllegalStateException(
+											"Failed to compute frame: " +
+											"\nPrevious: " + Arrays.toString(value.getPool().getRenderedTypes()) +
+											"\nCurrent: " + Arrays.toString(expressionPool.getRenderedTypes())
+									);*/
+						}
+					}
+
+					final int maxHeight = Math.min(
+							expressionPool.computeSize(),
+							((SkidExpressionPool) value.getPool()).computeSize()
+					);
+
+					for (int i = maxHeight; i < pool.size(); i++) {
+						pool.set(i, Type.VOID_TYPE);
+					}
+					//value.getPool().merge(expressionPool);
 				}
+
+				value.setPool(pool);
 
 				next.add(value);
 			}
@@ -480,6 +760,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		cfg.allExprStream()
 				.filter(VarExpr.class::isInstance)
 				.map(VarExpr.class::cast)
+				.filter(e -> e.getLocal().isStoredInLocal())
 				.forEach(e -> {
 					Type localType = e.getType();
 
@@ -648,6 +929,57 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 					+ "\n" + Arrays.toString(block.getStack().getStack())
 			);
 		}));
+	}
+
+	private void mergeFrames(final BasicBlock target, final ExpressionPool currentFrame, final ExpressionPool otherFrame) {
+		final int selfSize = currentFrame.computeSize();
+		final int otherSize = otherFrame.computeSize();
+
+		final int size = Math.max(selfSize, otherSize);
+
+		final ExpressionPool expressionPool = new ExpressionPool(currentFrame);
+		expressionPool.addParent(otherFrame);
+
+		for (int i = beginIndex; i < size; i++) {
+			/* Simple scope check. If the local is no longer used, we can ditch it */
+			scope: {
+				final Set<BasicBlock> scopeSet = scopeMap.get(i);
+
+				if (scopeSet == null)
+					break scope;
+
+				if (scopeSet.contains(target))
+					break scope;
+
+				expressionPool.set(i, Type.VOID_TYPE);
+				continue;
+			}
+
+
+			/* Simple self-frame override */
+			override: {
+				final Type[] defined = localAccessors.get(target);
+
+				if (defined == null)
+					break override;
+
+				final Type type = defined[i];
+
+				if (type == null)
+					break override;
+
+				if (localProviders.get(target)[i] == null)
+					break override;
+
+				expressionPool.set(i, type);
+				continue;
+			}
+
+			final Type selfType = currentFrame.get(i);
+			final Type otherType = otherFrame.get(i);
+
+
+		}
 	}
 
 	private void fixRanges() {
