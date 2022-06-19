@@ -1,6 +1,7 @@
 package dev.skidfuscator.obfuscator.creator;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.creator.pass.SkidLocalsReallocator;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlockFactory;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.algorithms.BoissinotDestructor;
@@ -38,7 +39,7 @@ public class SkidFlowGraphBuilder extends ControlFlowGraphBuilder {
         ControlFlowGraphBuilder builder = new SkidFlowGraphBuilder(method, SkidBlockFactory.v(skidfuscator));
         final ControlFlowGraph cfg = builder.buildImpl();
         BoissinotDestructor.leaveSSA(cfg);
-        LocalsReallocator.realloc(cfg);
+        SkidLocalsReallocator.realloc(skidfuscator, cfg);
 
         return cfg;
     }

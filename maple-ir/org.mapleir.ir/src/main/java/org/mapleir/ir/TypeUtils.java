@@ -35,7 +35,7 @@ public class TypeUtils {
 	public static final Type CLONEABLE_TYPE = Type.getType(Cloneable.class);
 	public static final Type SERIALIZABLE_TYPE = Type.getType(Serializable.class);
 	public static final Type THROWABLE = Type.getType(Throwable.class);
-	public static final Type NULL_TYPE = Type.getType(Null.class);
+	public static final Type NULL_TYPE = OBJECT_TYPE;
 	public static final Type UNDEFINED_TYPE = Type.getType(Undefined.class);
 
 

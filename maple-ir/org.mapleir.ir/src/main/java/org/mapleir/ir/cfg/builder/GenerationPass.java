@@ -313,7 +313,11 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				break;
 			} else if (type ==  FRAME) {
 				final FrameNode frameNode = (FrameNode) ain;
-				_frame(frameNode.type, frameNode.stack.toArray(), stacks.toArray());
+				_frame(
+						frameNode.type,
+						frameNode.local == null ? new Object[0] : frameNode.local.toArray(),
+						frameNode.stack == null ? new Object[0] : frameNode.stack.toArray()
+				);
 				break;
 			}
 		}
@@ -778,14 +782,23 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 
 	protected void _arithmetic(Operator op) {
 		save_stack(false);
-		Expr e = builder.factory.arithmetic_expr()
-				.right(pop())
-				.left(pop())
-				.operator(op)
-				.build();
-		int index = currentStack.height();
-		Type type = assign_stack(index, e);
-		push(load_stack(index, type));
+
+		try {
+			Expr e = builder.factory.arithmetic_expr()
+					.right(pop())
+					.left(pop())
+					.operator(op)
+					.build();
+			int index = currentStack.height();
+			Type type = assign_stack(index, e);
+			push(load_stack(index, type));
+		} catch (Throwable e) {
+			throw new IllegalStateException(
+					"Failed on " + builder.method.getOwner() + "#" + builder.method.getName(),
+					e
+			);
+		}
+
 	}
 
 	protected void _neg() {
@@ -1360,7 +1373,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 	protected void _load(int index, Type type) {
 		if (!builder.method.isStatic() && index == 0) {
 			type = builder.method.getOwnerType();
-		} else {
+		} /*else {
 			int argumentsSize = Type.getArgumentsAndReturnSizes(builder.method.getDesc()) >> 2;
 			if (index < argumentsSize) {
 				final Type[] args = Type.getArgumentTypes(builder.method.getDesc());
@@ -1377,7 +1390,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 					}
 				}
 			}
-		}
+		}*/
 
 		VarExpr e = _var_expr(index, type, false);
 		// assign_stack(currentStack.height(), e);

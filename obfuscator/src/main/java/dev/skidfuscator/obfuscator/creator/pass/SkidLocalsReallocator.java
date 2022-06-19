@@ -75,7 +75,7 @@ public class SkidLocalsReallocator {
                             System.err.println(e1.getKey() + "  ==  " + e1.getValue());
                         }
                         // String.format("illegal typesets for %s, set=%s, refined=%s", args)
-                        throw new RuntimeException("illegal typesets for " + e.getKey());
+                        throw new RuntimeException("illegal typesets for " + e.getKey() +  " types: " + Arrays.toString(set.toArray()));
                     }
                 }
                 Local l = e.getKey();

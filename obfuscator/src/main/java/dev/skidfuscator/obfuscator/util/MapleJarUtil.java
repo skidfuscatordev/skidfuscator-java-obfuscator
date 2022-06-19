@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator.util;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.creator.SkidASMFactory;
+import dev.skidfuscator.obfuscator.creator.SkidLibASMFactory;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
 import lombok.SneakyThrows;
@@ -96,8 +97,11 @@ public class MapleJarUtil {
     }
 
     @SneakyThrows
-    public static SingleJarDownloader<ClassNode> importJar(File file) {
-        SingleJarDownloader<ClassNode> dl = new SingleJarDownloader<>(new JarInfo(file));
+    public static SingleJarDownloader<ClassNode> importJar(File file, Skidfuscator skidfuscator) {
+        SingleJarDownloader<ClassNode> dl = new SingleJarDownloader<>(
+                new SkidLibASMFactory(skidfuscator),
+                new JarInfo(file)
+        );
         dl.download();
 
         return dl;

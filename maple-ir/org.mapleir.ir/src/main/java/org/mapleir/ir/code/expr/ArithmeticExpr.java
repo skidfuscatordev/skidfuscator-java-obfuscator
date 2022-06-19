@@ -143,7 +143,15 @@ public class ArithmeticExpr extends Expr {
 		if (operator == Operator.SHL || operator == Operator.SHR) {
 			return TypeUtils.resolveUnaryOpType(left.getType());
 		} else {
-			return TypeUtils.resolveBinOpType(left.getType(), right.getType());
+			try {
+				return TypeUtils.resolveBinOpType(left.getType(), right.getType());
+			} catch (IllegalStateException e) {
+				throw new IllegalStateException(
+						"Failed type merge: " + left + " vs " + right
+						+ " (typeLeft: " + left.getType() +  " typeRight: " + right.getType() + ") op " + operator
+								+ " block: " + getBlock(), e
+				);
+			}
 		}
 	}
 

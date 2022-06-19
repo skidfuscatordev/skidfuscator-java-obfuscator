@@ -339,7 +339,8 @@ public class Skidfuscator {
         if (!session.isJmod()) {
             LOGGER.post("↳ Trying to download " + session.getRuntime().toString());
             final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
-                    session.getRuntime()
+                    session.getRuntime(),
+                    this
             );
             this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
                     new ApplicationClassSource(
