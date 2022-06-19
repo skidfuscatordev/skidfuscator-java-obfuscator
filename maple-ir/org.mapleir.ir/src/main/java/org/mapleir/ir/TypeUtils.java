@@ -30,12 +30,15 @@ public class TypeUtils {
 
 	public static final Set<Type> VM_ERRORS = Collections.unmodifiableSet(__getIntrinsicErrors());
 	public static final Type CLASS = Type.getType(Class.class);
-	public static final Type STRING = Type.getType(String.class);
+	public static final Type STRING_TYPE = Type.getType(String.class);
 	public static final Type OBJECT_TYPE = Type.getType(Object.class);
 	public static final Type CLONEABLE_TYPE = Type.getType(Cloneable.class);
 	public static final Type SERIALIZABLE_TYPE = Type.getType(Serializable.class);
 	public static final Type THROWABLE = Type.getType(Throwable.class);
-	
+	public static final Type NULL_TYPE = Type.getType(Null.class);
+	public static final Type UNDEFINED_TYPE = Type.getType(Undefined.class);
+
+
 	// TODO: remove
 	public static final Type ANY = Type.getType("L<any>;");
 	
@@ -606,7 +609,9 @@ public class TypeUtils {
 		unboxTable.put(Float.class, Type.FLOAT_TYPE);
 		unboxTable.put(Double.class, Type.DOUBLE_TYPE);
 		unboxTable.put(Long.class, Type.LONG_TYPE);
-		unboxTable.put(String.class, Type.getType(String.class));
+		unboxTable.put(Null.class, NULL_TYPE);
+		unboxTable.put(Undefined.class, UNDEFINED_TYPE);
+		unboxTable.put(String.class, STRING_TYPE);
 	}
 	
 	public static Type unboxType(Object cst) {

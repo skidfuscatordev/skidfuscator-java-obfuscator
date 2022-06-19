@@ -4,6 +4,7 @@ import org.mapleir.stdlib.collections.graph.FastGraphVertex;
 import org.mapleir.stdlib.util.IHasJavaDesc;
 import org.mapleir.stdlib.util.JavaDesc;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import java.util.List;
 
@@ -93,5 +94,9 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
 
     public boolean isClinit() {
         return this.getName().equals("<clinit>");
+    }
+
+    public Type getOwnerType() {
+        return Type.getType("L" + owner.getName() + ";");
     }
 }

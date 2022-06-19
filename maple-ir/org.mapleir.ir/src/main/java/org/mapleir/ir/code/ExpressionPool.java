@@ -2,26 +2,36 @@ package org.mapleir.ir.code;
 
 import org.objectweb.asm.Type;
 
+import javax.lang.model.util.Types;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ExpressionPool implements Iterable<Type> {
-    protected Set<ExpressionPool> parents;
+    protected final Set<ExpressionPool> parents;
     protected Type[] types;
+    protected final Set<Type> excludedTypes;
 
     public ExpressionPool(ExpressionPool parent) {
         this.parents = new HashSet<>(Collections.singleton(parent));
         this.types = new Type[parent.size()];
+        this.excludedTypes = new HashSet<>(parent.excludedTypes);
     }
 
     public ExpressionPool(Type[] types) {
         this.parents = new HashSet<>();
         this.types = types;
+        this.excludedTypes = new HashSet<>();
     }
 
     protected ExpressionPool(Set<ExpressionPool> parent, Type[] types) {
         this.parents = parent;
         this.types = types;
+        this.excludedTypes = parent
+                .stream()
+                .flatMap(e -> e.getExcludedTypes().stream())
+                .collect(Collectors.toSet());
     }
 
     public void set(final int index, final Type type) {
@@ -40,13 +50,21 @@ public class ExpressionPool implements Iterable<Type> {
     }
 
     public Type get(final int index) {
-        Type type;
+        return get(index, null);
+    }
+    public Type get(final int index, final Predicate<Type> predicate) {
+        Type type = types[index];
+
+        if (predicate != null && predicate.test(type) && parents.isEmpty()) {
+            return null;
+        }
 
         if ((type = types[index]) == null) {
             int i = 0;
             while (true) {
                 for (ExpressionPool parent : parents) {
-                    if ((type = parent.get(index, 0, i)) == null)
+                    type = parent.get(index, predicate, 0, i);
+                    if ((type) == null || (predicate != null && predicate.test(type)))
                         continue;
 
                     return type;
@@ -64,7 +82,7 @@ public class ExpressionPool implements Iterable<Type> {
         return type;
     }
 
-    protected Type get(final int index, final int depth, final int maxDepth) {
+    protected Type get(final int index, final Predicate<Type> predicate, final int depth, final int maxDepth) {
         Type type;
 
         if ((type = types[index]) == null) {
@@ -73,7 +91,7 @@ public class ExpressionPool implements Iterable<Type> {
             }
 
             for (ExpressionPool parent : parents) {
-                if ((type = parent.get(index, depth + 1, maxDepth)) == null)
+                if ((type = parent.get(index, predicate, depth + 1, maxDepth)) == null)
                     continue;
 
                 return type;
@@ -99,8 +117,22 @@ public class ExpressionPool implements Iterable<Type> {
         parents.add(expressionPool);
     }
 
+    public void addExclusion(final Type type) {
+        excludedTypes.add(type);
+    }
+
     public Type[] getTypes() {
         return types;
+    }
+
+    public Type[] getComputedTypes() {
+        final Type[] type = new Type[types.length];
+
+        for (int i = 0; i < types.length; i++) {
+            type[i] = get(i);
+        }
+
+        return type;
     }
 
     public Set<ExpressionPool> getParents() {
@@ -139,6 +171,10 @@ public class ExpressionPool implements Iterable<Type> {
 
     protected ExpressionPool _self() {
         return new ExpressionPool(this);
+    }
+
+    public Set<Type> getExcludedTypes() {
+        return excludedTypes;
     }
 
     @Override

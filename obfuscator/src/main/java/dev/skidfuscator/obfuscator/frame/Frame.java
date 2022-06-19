@@ -1,6 +1,8 @@
 package dev.skidfuscator.obfuscator.frame;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidBogusStmt;
+import lombok.Setter;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.Expr;
@@ -10,34 +12,39 @@ import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.objectweb.asm.Type;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Frame {
     private final Skidfuscator skidfuscator;
-    private final Set<Frame> parents;
+    private final Map<Frame, Set<Stmt>> parents;
+    private final Set<Frame> children;
     private final BasicBlock block;
-
     private final Type[] frame;
     private final Type[] inputTypes;
     private final Type[] outputTypes;
     private final Map<Integer, Type> used;
-    private final Map<Integer, Set<CopyVarStmt>> assigns;
-    private final Set<Integer> uses;
+    private final Map<Integer, Set<CopyVarStmt>> defs;
+    private final Map<Integer, Set<VarExpr>> uses;
 
-    public Frame(Skidfuscator skidfuscator, BasicBlock block, Set<Frame> parents) {
+    @Setter
+    private Type[] staticFrame;
+
+    public Frame(Skidfuscator skidfuscator, BasicBlock block) {
         this.skidfuscator = skidfuscator;
         this.block = block;
-        this.parents = parents;
+        this.parents = new HashMap<>();
+        this.children = new HashSet<>();
 
         this.frame = new Type[block.cfg.getLocals().getMaxLocals() + 2];
         this.inputTypes = new Type[block.cfg.getLocals().getMaxLocals() + 2];
         this.outputTypes = new Type[block.cfg.getLocals().getMaxLocals() + 2];
 
         this.used = new HashMap<>();
-        this.assigns = new HashMap<>();
-        this.uses = new HashSet<>();
+        this.defs = new HashMap<>();
+        this.uses = new HashMap<>();
     }
 
-    protected void preprocess() {
+    public void preprocess() {
         for (Stmt stmt : block) {
             if (stmt instanceof CopyVarStmt) {
                 final CopyVarStmt copyVarStmt = (CopyVarStmt) stmt;
@@ -46,7 +53,7 @@ public class Frame {
                  * is no longer something computed from the
                  * frame, so we exempt it.
                  */
-                assigns.computeIfAbsent(copyVarStmt.getIndex(), b -> new HashSet<>()).add(copyVarStmt);
+                defs.computeIfAbsent(copyVarStmt.getIndex(), b -> new HashSet<>()).add(copyVarStmt);
 
                 /*
                  * Since this is assigned in here, we can set
@@ -64,7 +71,8 @@ public class Frame {
                          * We want to make sure we know that we're using
                          * this index *somewhere* in this block
                          */
-                        this.uses.add(varExpr.getIndex());
+                        this.uses.computeIfAbsent(varExpr.getIndex(), b -> new HashSet<>())
+                                .add(varExpr);
 
                         /*
                          * Since the value has been assigned in the block,
@@ -73,7 +81,7 @@ public class Frame {
                          * We don't need to check the var expression index
                          * since we are iterating linearly.
                          */
-                        if (assigns.containsKey(varExpr.getIndex()))
+                        if (defs.containsKey(varExpr.getIndex()))
                             continue;
 
                         /*
@@ -88,6 +96,15 @@ public class Frame {
         }
     }
 
+    public void hackyMess() {
+        for (int index = 0; index < inputTypes.length; index++) {
+            if (outputTypes[index] != null)
+                continue;
+
+            outputTypes[index] = inputTypes[index];
+        }
+    }
+
 
     /**
      * Compute the frame for a specific block.
@@ -96,7 +113,7 @@ public class Frame {
         for (int index = 0; index < inputTypes.length; index++) {
             Type computedType = inputTypes[index];
 
-            for (Frame parent : parents) {
+            for (Frame parent : parents.keySet()) {
                 final Type parentType = parent.getOutput(index);
 
                 computedType = mergeTypes(parentType, computedType);
@@ -115,14 +132,24 @@ public class Frame {
         }
     }
 
+    private Type getOutput(final int index) {
+        return this.getOutput(index, new HashSet<>());
+    }
+
     /**
      * Get the output at a specific index
      *
-     * @param index int for index
+     * @param index     int for index
+     * @param visited   visitation set to prevent circular dependencies
      * @return      output type for said index
      */
-    public Type getOutput(final int index) {
+    private Type getOutput(final int index, final Set<Frame> visited) {
         Type outputType = outputTypes[index];
+
+        /* Fuck circular loops */
+        if (visited.contains(this))
+            return outputType;
+        visited.add(this);
 
         compute: {
             /*
@@ -140,8 +167,8 @@ public class Frame {
              * on the parent's output type.
              */
             Type proposedType = null;
-            for (Frame parent : parents) {
-                final Type parentType = parent.getOutput(index);
+            for (Frame parent : parents.keySet()) {
+                final Type parentType = parent.getOutput(index, visited);
 
                 proposedType = this.mergeTypes(proposedType, parentType);
             }
@@ -150,6 +177,87 @@ public class Frame {
         }
 
         return outputType;
+    }
+
+    public Frame getUseDefine(final int index, final Set<Frame> visited) {
+        /* Fuck circular loops */
+        if (visited.contains(this))
+            return null;
+
+        visited.add(this);
+
+        if (defs.containsKey(index)) {
+            return this;
+        }
+
+        for (Frame parent : parents.keySet()) {
+            final Frame parentFrame = parent.getUseDefine(index, visited);
+
+            if (parentFrame != null)
+                return parentFrame;
+        }
+
+        return null;
+    }
+
+    public Set<Integer> getUsesNoDefined() {
+        final Set<Integer> undefined = new HashSet<>();
+        for (Map.Entry<Integer, Set<VarExpr>> integerSetEntry : uses.entrySet()) {
+            final Integer use = integerSetEntry.getKey();
+
+            final Set<VarExpr> exprs = integerSetEntry.getValue();
+            final Set<CopyVarStmt> defsStmts = defs.get(use);
+
+            /*
+             * If the variable has no definitions, it means it's
+             * inherited from a frame.
+             */
+            if (defsStmts == null) {
+                undefined.add(use);
+                continue;
+            }
+
+            /*
+             * If the defs statement exists but is empty, it means
+             * that it's been defined by a previous frame.
+             */
+            if (defsStmts.isEmpty())
+                continue;
+
+            final int lowestHeight = exprs
+                    .stream()
+                    .map(Expr::getRootParent)
+                    .mapToInt(block::indexOf)
+                    .min()
+                    .orElse(block.size());
+
+            final boolean previouslyInitiated = defsStmts
+                    .stream()
+                    .anyMatch(e -> block.indexOf(e) < lowestHeight);
+
+            /*
+             * If the variable has been initiated before a
+             * statement, it means its defined. So we skip.
+             */
+            if (previouslyInitiated)
+                continue;
+
+            undefined.add(use);
+        }
+
+        return undefined;
+    }
+
+    public boolean isDefinedBeforeIndex(final int index, final Stmt stmt) {
+        final Set<CopyVarStmt> defsStmts = defs.get(index);
+
+        if (defsStmts == null)
+            return false;
+
+        final int lowestHeight = block.indexOf(stmt);
+        return defsStmts
+                .stream()
+                .anyMatch(e -> block.indexOf(e) < lowestHeight);
     }
 
     private Type mergeTypes(final Type head, final Type newest) {
@@ -226,43 +334,25 @@ public class Frame {
         return type;
     }
 
-    /**
-     * In retrospect, this is so fucking useless since we're already
-     * establishing the context in the input types, which has an
-     * override on the output types... dumb dumb me
-     */
-    @Deprecated
-    protected void updateScope(final int index, final Type type) {
-        /*
-         * The variable defined is used by the block with a
-         * specific type. If the previous type is undefined
-         * (eg it has been defined but not transmitted), then
-         * we redefine it.
-         *
-         * However, if the type is anything but a TOP type,
-         * we override it with TOP to limit conflicts
-         */
-        final Type currentType = outputTypes[index];
-        if (currentType == null) {
-            outputTypes[index] = type;
-        } else if (!currentType.equals(Type.VOID_TYPE)) {
-            outputTypes[index] = Type.VOID_TYPE;
-        }
+    public void setInput(final int index, final Type type) {
+        this.inputTypes[index] = type;
+    }
 
-        /*
-         * Here the local is defined, meaning we no longer have
-         * to update the output scope provided by this frame.
-         */
-        if (used.containsKey(index))
-            return;
+    public void addParent(final Frame parent, final Stmt caller) {
+        parents.computeIfAbsent(parent, e -> new HashSet<>()).add(caller);
+        parent.addChildren(this);
+    }
 
-        for (Frame parent : parents) {
-            parent.updateScope(index, type);
-        }
+    public void addChildren(final Frame child) {
+        children.add(child);
+    }
+
+    public boolean isTerminating() {
+        return children.isEmpty();
     }
 
     public Set<Frame> getParents() {
-        return parents;
+        return parents.keySet();
     }
 
     public BasicBlock getBlock() {
@@ -285,11 +375,24 @@ public class Frame {
         return used;
     }
 
-    public Map<Integer, Set<CopyVarStmt>> getAssigns() {
-        return assigns;
+    public Map<Integer, Set<CopyVarStmt>> getDefs() {
+        return defs;
     }
 
     public Set<Integer> getUses() {
-        return uses;
+        return uses.keySet();
+    }
+
+    @Override
+    public String toString() {
+        return "Frame " + block.getDisplayName() + " {" +
+                "\n  parents: " + parents.keySet().stream().map(e -> e.getBlock().getDisplayName()).collect(Collectors.joining(", ")) +
+                "\n  children: " + children.stream().map(e -> e.getBlock().getDisplayName()).collect(Collectors.joining(", ")) +
+                "\n  frame: " + Arrays.toString(frame) +
+                "\n  inputTypes: " + Arrays.toString(inputTypes) +
+                "\n  outputTypes: " + Arrays.toString(outputTypes) +
+                "\n  assigns: \n    " + defs.entrySet().stream().map(e -> e.getKey() + " --> " + Arrays.toString(e.getValue().toArray())).collect(Collectors.joining("\n    ")) +
+                "\n  uses: " + Arrays.toString(uses.keySet().toArray()) +
+                "\n}";
     }
 }

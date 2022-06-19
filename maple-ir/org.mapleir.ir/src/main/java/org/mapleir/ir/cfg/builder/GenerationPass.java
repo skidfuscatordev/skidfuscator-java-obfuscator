@@ -309,7 +309,11 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				BasicBlock dflt = resolveTarget(tsin.dflt);
 				builder.graph.addEdge(new DefaultSwitchEdge<>(block, dflt));
 				break;
-			} else if(isExitOpcode(ain.getOpcode())) {
+			} else if (isExitOpcode(ain.getOpcode())) {
+				break;
+			} else if (type ==  FRAME) {
+				final FrameNode frameNode = (FrameNode) ain;
+				_frame(frameNode.type, frameNode.stack.toArray(), stacks.toArray());
 				break;
 			}
 		}
@@ -368,7 +372,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 				_const((short)((IntInsnNode) ain).operand, Type.SHORT_TYPE);
 				break;
 			case ACONST_NULL:
-				_const(null, TypeUtils.OBJECT_TYPE);
+				_const(null, TypeUtils.NULL_TYPE);
 				break;
 			case ICONST_M1:
 			case ICONST_0:
@@ -705,6 +709,10 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 
 	protected void _nop() {
 
+	}
+
+	protected void _frame(int type, Object[] frame, Object[] stack) {
+		addStmt(new FrameStmt(type, frame, stack));
 	}
 
 	protected void _const(Object o, Type type) {
@@ -1350,6 +1358,27 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 	}
 
 	protected void _load(int index, Type type) {
+		if (!builder.method.isStatic() && index == 0) {
+			type = builder.method.getOwnerType();
+		} else {
+			int argumentsSize = Type.getArgumentsAndReturnSizes(builder.method.getDesc()) >> 2;
+			if (index < argumentsSize) {
+				final Type[] args = Type.getArgumentTypes(builder.method.getDesc());
+
+				int indexed = 0;
+				for (Type arg : args) {
+					if (indexed == index) {
+						type = arg;
+					}
+
+					indexed++;
+					if (arg == Type.DOUBLE_TYPE || arg == Type.LONG_TYPE) {
+						indexed++;
+					}
+				}
+			}
+		}
+
 		VarExpr e = _var_expr(index, type, false);
 		// assign_stack(currentStack.height(), e);
 		push(e);
@@ -1450,7 +1479,7 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 		Expr left = pop();
 		ConstantExpr right = builder.factory.constant_expr()
 				.cst(null)
-				.type(TypeUtils.OBJECT_TYPE)
+				.type(TypeUtils.NULL_TYPE)
 				.build();
 		ComparisonType type = invert ? ComparisonType.NE : ComparisonType.EQ;
 

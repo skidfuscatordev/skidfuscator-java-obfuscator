@@ -1,9 +1,13 @@
 package dev.skidfuscator.obfuscator.util;
 
+import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import lombok.experimental.UtilityClass;
 import org.mapleir.asm.ClassNode;
+import org.mapleir.ir.TypeUtils;
 import org.objectweb.asm.Type;
+
+import java.util.Arrays;
 
 /**
  * Utilities for ASM's {@link Type} class <i>(And some additional descriptor cases)</i>
@@ -29,6 +33,8 @@ public class TypeUtil {
 	 * Cosntant for object type.
 	 */
 	public final Type OBJECT_TYPE = Type.getObjectType("java/lang/Object");
+	public final Type NULL_TYPE = TypeUtils.NULL_TYPE;
+	public final Type UNDEFINED_TYPE = TypeUtils.UNDEFINED_TYPE;
 	public final Type STRING_TYPE = Type.getObjectType("java/lang/String");
 
 	/**
@@ -234,5 +240,73 @@ public class TypeUtil {
 	 */
 	public Type getType(final ClassNode node) {
 		return Type.getType("L" + node.getName());
+	}
+
+	public static Type mergeTypes(final Skidfuscator skidfuscator, final Type head, final Type newest) {
+		/*
+		 * If the parent type is null (undefined),
+		 * then just skip. We don't need this.
+		 */
+		if (head == null || newest != null && head.equals(UNDEFINED_TYPE))
+			return newest;
+
+		/*
+		 * If the newest type is null (undefined),
+		 * then just return the head.
+		 */
+		if (newest == null || newest.equals(UNDEFINED_TYPE)) {
+			return head;
+		}
+
+		/*
+		 * If the proposed type is identical, we
+		 * can move onto the next parent as the
+		 * local is coherent.
+		 */
+		if (newest.equals(head))
+			return newest;
+
+		/*
+		 * Here's a conflict. The proposed type
+		 * and parent type are different. Yikes.
+		 *
+		 * 1) If    they are both references
+		 *    Then  get common supertype
+		 *
+		 * 2) If    they are anything else
+		 *    Then  push exception
+		 *
+		 * todo: array support
+		 */
+		if (head.getSort() == Type.OBJECT && newest.getSort() == Type.OBJECT
+				&& !head.equals(TypeUtil.NULL_TYPE) && !newest.equals(TypeUtil.NULL_TYPE)) {
+			final ClassNode selfClassNode = skidfuscator
+					.getClassSource()
+					.findClassNode(head.getInternalName());
+			final ClassNode otherClassNode = skidfuscator
+					.getClassSource()
+					.findClassNode(newest.getInternalName());
+
+			final ClassNode commonClassNode = skidfuscator.getClassSource()
+					.getClassTree()
+					.getCommonAncestor(Arrays.asList(selfClassNode, otherClassNode))
+					.iterator()
+					.next();
+
+			System.out.println("/!\\ Merged " + selfClassNode.getName() + " and " + otherClassNode.getName() + " to type " + commonClassNode.getName());
+			return Type.getType("L" + commonClassNode.getName() + ";");
+		} /*else if ((head.equals(TypeUtil.NULL_TYPE) && newest.getSort() == Type.OBJECT)
+				|| (head.getSort() == Type.OBJECT && newest.equals(TypeUtil.NULL_TYPE))) {
+			return TypeUtil.OBJECT_TYPE;
+		}*/ else if (true /* debug */) {
+			return Type.VOID_TYPE;
+		}
+
+		/* kekw this suckz */
+		throw new IllegalStateException(
+				"Incompatible merge types: \n" +
+						"Head: " + head + "\n" +
+						"Newest: "+ newest + "\n"
+		);
 	}
 }

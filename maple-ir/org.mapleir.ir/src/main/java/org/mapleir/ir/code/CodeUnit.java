@@ -73,7 +73,7 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 		children = new Expr[8];
 	}
 
-	protected void setFlag(int flag, boolean val) {
+	public void setFlag(int flag, boolean val) {
 		if(val) {
 			flags |= flag;
 		} else {

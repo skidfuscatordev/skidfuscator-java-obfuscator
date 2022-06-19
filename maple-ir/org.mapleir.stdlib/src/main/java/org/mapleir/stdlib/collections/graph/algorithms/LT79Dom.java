@@ -15,7 +15,8 @@ import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 import org.mapleir.stdlib.collections.map.SetCreator;
 
 /**
- * Implementation of A Fast Algorithm for Finding Dominators in a Flowgraph by Lengauer and Tarjan, 1979
+ * Implementation of A Fast Algorithm for Finding Dominators in a Flowgraph
+ * by Lengauer and Tarjan, 1979
  */
 public class LT79Dom<N extends FastGraphVertex, E extends FastGraphEdge<N>> {
 

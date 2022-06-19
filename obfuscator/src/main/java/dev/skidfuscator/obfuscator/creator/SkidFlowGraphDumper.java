@@ -2,10 +2,13 @@ package dev.skidfuscator.obfuscator.creator;
 
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.frame.Frame;
+import dev.skidfuscator.obfuscator.frame.FrameComputer;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidExpressionPool;
 import dev.skidfuscator.obfuscator.skidasm.SkidTypeStack;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidBogusStmt;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import org.mapleir.asm.ClassNode;
@@ -21,6 +24,7 @@ import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.stdlib.collections.graph.*;
+import org.mapleir.stdlib.collections.graph.algorithms.LT79Dom;
 import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 import org.mapleir.stdlib.collections.graph.algorithms.TarjanSCC;
 import org.mapleir.stdlib.collections.list.IndexedList;
@@ -33,6 +37,7 @@ import org.objectweb.asm.tree.TryCatchBlockNode;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private final Skidfuscator skidfuscator;
@@ -84,7 +89,8 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		verifyOrdering();
 
 		// Compute frames
-		computeFrames();
+		//computeFrames();
+		//new FrameComputer(skidfuscator).compute(cfg);
 
 		// Stuff
 		/*
@@ -98,12 +104,14 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		final boolean isStatic = cfg.getMethodNode().isStatic();
 		final Object[] initialFrame = new Object[(isStatic ? 0 : 1) + parameter.computeSize()];
 
+		int paramCount = 0;
 		int index = 0;
 		if (!isStatic) {
 			initialFrame[index] = cfg.getMethodNode().isInit()
 					? Opcodes.UNINITIALIZED_THIS
-					: "L" + cfg.getMethodNode().getOwner() + ";";
+					: cfg.getMethodNode().getOwner();
 			index++;
+			paramCount++;
 		}
 
 		/* Method parameters ezzzz */
@@ -113,9 +121,11 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			index++;
 
 			if (type.equals(Type.DOUBLE_TYPE) || type.equals(Type.LONG_TYPE)) {
-				//initialFrame[index] = _getFrameType(Type.VOID_TYPE);
-				//index++;
+				initialFrame[index] = _getFrameType(Type.VOID_TYPE);
+				index++;
 			}
+
+			paramCount++;
 		}
 
 
@@ -126,60 +136,102 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		int maxStack = 0;
 
 		// Dump code
-		boolean entry = true;
+		BasicBlock last = null;
 		for (BasicBlock b : order) {
 			m.node.visitLabel(getLabel(b));
 
 			iter: {
-				if (entry)
-					break iter;
-
-				if (b.isEmpty())
+				if (b.isEmpty() || true)
 					break iter;
 
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
+				final Set<FlowEdge<BasicBlock>> predecessors = cfg.getReverseEdges(b);
+
+				boolean fuckingThing = false;
+
+				if (last != null) {
+					for (FlowEdge<BasicBlock> predecessor : predecessors) {
+						if (predecessor instanceof ImmediateEdge || predecessor instanceof UnconditionalJumpEdge) {
+							if (!last.equals(predecessor.src())) {
+								fuckingThing = true;
+								break;
+							}
+						}
+
+						fuckingThing = true;
+						break;
+					}
+
+					if (!fuckingThing) {
+						break iter;
+					}
+				}
+
 				final int frameComputedSize = frameTypes.computeSize();
 
 				/* Implicit frame */
-				if (initialFrame.length >= frameComputedSize)
-					break iter;
+				/*if (initialFrame.length >= frameComputedSize)
+					break iter;*/
 
-				Object[] frameLocal = Arrays.copyOf(initialFrame, frameComputedSize);
+				Object[] frameLocal = Arrays.copyOf(
+						initialFrame,
+						frameComputedSize
+				);
 
+				final Stack<Object> params = new Stack<>();
 				if (!isStatic) {
-					frameLocal[0] = cfg.getMethodNode().isInit()
-							&& b.isFlagSet(SkidBlock.FLAG_NO_OPAQUE)
+					final Object instanze = cfg.getMethodNode().isInit() && b.isFlagSet(SkidBlock.FLAG_NO_OPAQUE)
 							? Opcodes.UNINITIALIZED_THIS
 							: cfg.getMethodNode().getOwner();
+
+					frameLocal[0] = instanze;
+					params.add(instanze);
 				}
 
 				/* Whacky first start digit to exempt the first precondition above */
-				int indexLocal = index;
-				for (int i = index;
+				int paramCountBlock = isStatic ? 0 : 1;
+				for (int i = isStatic ? 0 : 1;
 					 i < frameComputedSize;
 					 i++) {
 
 					final Type type = frameTypes.get(i);
-					frameLocal[indexLocal] = _getFrameType(type);
+					/*final Type dominatorType = domc.getImmediateDominator(b).getPool().get(i);
 
+					if (predecessors.size() == 1 && !dominatorType.equals(type)) {
+						System.out.println("Dominator type overrides: " + type + " vs " + dominatorType);
+						break iter;
+					}*/
+
+					final Object computed = _getFrameType(type);
+
+					assert computed != null : "How the fuck is the object null: " + type;
+
+					params.add(computed);
+					frameLocal[paramCountBlock] = computed;
+					paramCountBlock++;
+
+					// Skip next type
 					if (type.equals(Type.DOUBLE_TYPE) || type.equals(Type.LONG_TYPE)) {
 						i++;
 						frameLocal[i] = null;
 					}
-
-					indexLocal++;
 				}
 
-				Object[] frame = new Object[indexLocal];
+				Object[] frame = new Object[params.size()];
 				int indexLocal2 = 0;
-				for (final Object object : frameLocal) {
-					if (object == null) {
-						continue;
-					}
+
+				for (final Object object : params) {
+					assert object != null : "Stack has null obj: " + Arrays.toString(params.toArray());
 
 					frame[indexLocal2] = object;
 					indexLocal2++;
 				}
+
+				//System.out.println("LOCAL: " + paramCount + " new: " + paramCountBlock);
+				//System.out.println("INIT: " + Arrays.toString(initialFrame));
+				//System.out.println("EGGGGF: " + Arrays.toString(frameLocal));
+				//System.out.println("EGGGGA: " + Arrays.toString(frameTypes.getTypes()));
+				//System.out.println("EGGGGG: " + Arrays.toString(frame));
 
 				/* Stack */
 				final int stackLength = b.getStack().capacity();
@@ -204,6 +256,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 					} else {
 						m.node.visitFrame(Opcodes.F_FULL, frame.length, frame, stack.length, stack);
+						m.node.visitInsn(Opcodes.NOP);
 					}
 				}
 
@@ -218,7 +271,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				stmt.toCode(m.node, this);
 			}
 
-			entry = false;
+			last = b;
 		}
 		terminalLabel = new LabelNode();
 		m.node.visitLabel(terminalLabel.getLabel());
@@ -252,15 +305,330 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			frameType = Opcodes.DOUBLE;
 		} else if (type == Type.LONG_TYPE) {
 			frameType = Opcodes.LONG;
-		} else if (type == Type.VOID_TYPE) {
+		} else if (type == Type.VOID_TYPE || type == TypeUtil.UNDEFINED_TYPE) {
 			frameType = Opcodes.TOP;
-		} else if (type == null) {
+		} else if (type == TypeUtil.NULL_TYPE) {
 			frameType = Opcodes.NULL;
+		} else if (type.getSort() == Type.ARRAY) {
+			frameType = type.getDescriptor();
 		} else {
 			frameType = type.getInternalName();
 		}
 
 		return frameType;
+	}
+
+	private Object _getArrayType(final StringBuilder builder, final Type array) {
+		final Type subType = array.getElementType();
+
+		switch (subType.getSort()) {
+			case Type.ARRAY: {
+				builder.append("[");
+				return _getArrayType(builder, array);
+			}
+			case Type.OBJECT: {
+				builder.append("L").append(subType.getInternalName()).append(";");
+				return builder.toString();
+			}
+			default:
+				return subType.getInternalName();
+		}
+	}
+
+	private void computeFramesNew() {
+		if (cfg.getEntries().size() != 1)
+			throw new IllegalStateException("CFG doesn't have exactly 1 entry");
+		BasicBlock entry = cfg.getEntries().iterator().next();
+
+		Map<BasicBlock, Frame> frameMap = new HashMap<>();
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			final Frame frame = new Frame(
+					skidfuscator,
+					vertex
+			);
+
+			frameMap.put(vertex, frame);
+		}
+
+		final Set<BasicBlock> visited = new HashSet<>();
+		final Stack<BasicBlock> bucket = new Stack<>();
+
+		/*
+		 * FRAME LOCALS
+		 */
+		bucket.add(entry);
+
+		final Frame entryFrame = frameMap.get(entry);
+		Arrays.fill(entryFrame.getInputTypes(), Type.VOID_TYPE);
+
+		int index = 0;
+		int protectedIndex = 0;
+		if (!cfg.getMethodNode().isStatic()) {
+			entryFrame.setInput(index, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
+			protectedIndex = index;
+			index++;
+		}
+
+		/* Method parameters ezzzz */
+		final Parameter parameter = new Parameter(cfg.getDesc());
+		for (int i = 0; i < parameter.getArgs().size(); i++) {
+			Type type = parameter.getArg(i);
+
+			if (type == Type.BOOLEAN_TYPE
+					|| type == Type.BYTE_TYPE
+					|| type == Type.CHAR_TYPE
+					|| type == Type.SHORT_TYPE) {
+				type = Type.INT_TYPE;
+			}
+
+			entryFrame.setInput(index, type);
+			protectedIndex = index;
+			index++;
+		}
+
+		final Type[] staticTypes = new Type[index];
+
+		for (int i = 0; i < staticTypes.length; i++) {
+			staticTypes[i] = entryFrame.getInputTypes()[i];
+		}
+
+		for (Frame value : frameMap.values()) {
+			value.setStaticFrame(staticTypes);
+		}
+
+		beginIndex = index;
+
+		// TODO:
+		while (!bucket.isEmpty()) {
+			/* Visit the top of the stack */
+			final BasicBlock popped = bucket.pop();
+			final Frame poppedFrame = frameMap.get(popped);
+			visited.add(popped);
+
+			final Set<BasicBlock> next = new HashSet<>();
+			for (Stmt stmt : popped) {
+				final Map<BasicBlock, Stmt> vars = new HashMap<>();
+
+				if (stmt instanceof SwitchStmt) {
+					final SwitchStmt switchStmt = (SwitchStmt) stmt;
+
+					for (BasicBlock value : switchStmt.getTargets().values()) {
+						vars.put(value, stmt);
+					}
+
+					vars.put(switchStmt.getDefaultTarget(), switchStmt);
+				} else if (stmt instanceof ConditionalJumpStmt) {
+					final ConditionalJumpStmt conditionalJumpStmt = (ConditionalJumpStmt) stmt;
+					vars.put(conditionalJumpStmt.getTrueSuccessor(), stmt);
+				} else if (stmt instanceof UnconditionalJumpStmt) {
+					final UnconditionalJumpStmt unconditionalJumpStmt = (UnconditionalJumpStmt) stmt;
+					vars.put(unconditionalJumpStmt.getTarget(), stmt);
+				}
+
+				next.addAll(vars.keySet());
+
+				vars.forEach((target, _stmt) -> {
+					final Frame targetFrame = frameMap.get(target);
+					targetFrame.addParent(poppedFrame, _stmt);
+				});
+			}
+
+			int finalProtectedIndex1 = protectedIndex;
+			cfg.getSuccessors(new Predicate<FlowEdge<BasicBlock>>() {
+				@Override
+				public boolean test(FlowEdge<BasicBlock> basicBlockFlowEdge) {
+					return basicBlockFlowEdge instanceof TryCatchEdge
+							&& ((TryCatchEdge) basicBlockFlowEdge)
+							.erange
+							.getNodes()
+							.contains(popped);
+				}
+			}, popped).forEach(e -> {
+				final BasicBlock value = e.dst();
+				final Frame targetFrame = frameMap.get(value);
+				targetFrame.addParent(poppedFrame, new SkidBogusStmt(SkidBogusStmt.BogusType.EXCEPTION));
+
+				next.add(value);
+			});
+
+			final BasicBlock value = cfg.getImmediate(popped);
+			if (value != null) {
+				final Frame targetFrame = frameMap.get(value);
+				targetFrame.addParent(poppedFrame, new SkidBogusStmt(SkidBogusStmt.BogusType.IMMEDIATE));
+
+				next.add(value);
+			}
+
+			cfg.getEdges(popped)
+					.stream()
+					.filter(e -> !next.contains(e.dst()))
+					.forEach(e -> {
+						System.out.println("Failed " + e + " (Despite "
+								+ Arrays.toString(next.stream().map(BasicBlock::getDisplayName).toArray())
+								+ ")"
+						);
+					});
+			//System.out.println("-----");
+
+			/* Add all the successor nodes */
+			/* Add it to the stack to be iterated again */
+			next.stream()
+					.filter(e -> !visited.contains(e))
+					.forEach(bucket::add);
+		}
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			if (!visited.contains(vertex)) {
+				System.err.println("Missed " + vertex.getDisplayName() + " on method " + cfg.getMethodNode().getOwner() + "#" + cfg.getMethodNode().getDisplayName());
+			}
+
+			final Frame vertexFrame = frameMap.get(vertex);
+			vertexFrame.preprocess();
+			vertexFrame.hackyMess();
+		}
+
+		final Stack<Frame> frameStack = new Stack<>();
+		final Set<Frame> visitedFrames = new HashSet<>();
+
+		/*
+		 * Iterate by the roots of the tree then
+		 * go up manually.
+		 */
+		frameMap.values()
+				.stream()
+				.filter(Frame::isTerminating)
+				.forEach(frameStack::add);
+
+		while (!frameStack.isEmpty()) {
+			final Frame frame = frameStack.pop();
+			visitedFrames.add(frame);
+
+			for (Integer use : frame.getUsesNoDefined()) {
+				frame.getParents()
+						.stream()
+						.filter(e -> !visitedFrames.contains(e))
+						.forEach(frameStack::add);
+			}
+		}
+
+		// TODO here: transmission like a disease
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			final Frame vertexFrame = frameMap.get(vertex);
+			vertexFrame.compute();
+
+			System.out.println(vertexFrame.toString());
+
+			SkidExpressionPool expressionPool = new SkidExpressionPool(vertexFrame.getFrame(), skidfuscator);
+			vertex.setPool(expressionPool);
+		}
+
+		/*
+		 * FRAME STACK
+		 */
+
+		for (ExceptionRange<BasicBlock> range : cfg.getRanges()) {
+			final TypeStack expressionStack = new SkidTypeStack(
+					cfg.getLocals().getMaxStack(),
+					skidfuscator
+			);
+			final Type type = getRangeType(range);
+
+			expressionStack.push(type);
+			range.getHandler().setStack(expressionStack);
+
+			visited.clear();
+			bucket.add(range.getHandler());
+
+			while (!bucket.isEmpty()) {
+				final BasicBlock popped = bucket.pop();
+				visited.add(popped);
+
+				if (popped.stream()
+						.flatMap(e -> Streams.stream(e.enumerateOnlyChildren()))
+						.filter(CaughtExceptionExpr.class::isInstance)
+						.map(CaughtExceptionExpr.class::cast)
+						.anyMatch(e -> e.getType().equals(type))) {
+					break;
+				}
+
+				cfg.getSuccessors(popped)
+						.filter(e -> !visited.contains(e))
+						.forEach(e -> {
+							e.setStack(popped.getStack().copy());
+							bucket.add(e);
+						});
+			}
+		}
+
+		for (BasicBlock vertex : cfg.vertices()) {
+			if (vertex.getStack() == null) {
+				vertex.setStack(
+						new SkidTypeStack(
+								cfg.getLocals().getMaxStack(),
+								skidfuscator
+						)
+				);
+			}
+		}
+		/*visited.clear();
+		bucket.add(entry);
+
+		ExpressionStack stack = new ExpressionStack(cfg.getLocals().getMaxStack() + 1);
+
+		entry.setStack(stack);
+
+		while (!bucket.isEmpty()) {
+			/* Visit the top of the stack *//*
+			final BasicBlock popped = bucket.pop();
+			visited.add(popped);
+
+			/* Iterate all the set statements to update the frame *//*
+			final ExpressionStack expressionPool = popped.getStack().copy();
+
+			AtomicReference<ExceptionRange<BasicBlock>> range = null;
+			iteration: {
+				for (Stmt stmt : popped) {
+					for (Expr expr : stmt.enumerateOnlyChildren()) {
+						if (expr instanceof CaughtExceptionExpr) {
+							expressionPool.pop();
+						}
+						if (stmt instanceof ThrowStmt) {
+							final ThrowStmt throwStmt = (ThrowStmt) stmt;
+							expressionPool.push(throwStmt.getExpression());
+
+
+							cfg.getEdges(popped)
+									.stream()
+									.filter(TryCatchEdge.class::isInstance)
+									.map(TryCatchEdge.class::cast)
+									.findFirst()
+									.ifPresent(e -> range.set(e.erange));
+
+							if (range == null) {
+								break iteration;
+							}
+
+
+							range.get().getHandler().setStack(expressionPool);
+
+						}
+					}
+				}
+
+				/* Add all the successor nodes *//*
+				cfg.getSuccessors(popped)
+						.filter(e -> !visited.contains(e))
+						.forEach(e -> {
+							/* Set the expected received pool
+							e.setPool(expressionPool);
+
+							/* Add it to the stack to be iterated again
+							bucket.add(e);
+						});
+			}
+		}*/
 	}
 
 	private void computeFrames() {
@@ -403,7 +771,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 				final Set<BasicBlock> targets = reverseDefMap.get(use);
 				if (targets.contains(popped) && targets.size() == 1) {
-					clone.set(index, Type.VOID_TYPE);
+					expressionPool.set(index, Type.VOID_TYPE);
 
 					scopeSetMap.put(use, false);
 				}
@@ -419,7 +787,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				targets.remove(popped);
 
 				if (targets.isEmpty() && maxDefHeight < use) {
-					clone.set(index, Type.VOID_TYPE);
+					expressionPool.set(index, Type.VOID_TYPE);
 				}
 			}
 
@@ -474,13 +842,15 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 						/* Merging pool values if it has previously been accessed */
 						if (value.getPool() != null) {
-							value.getPool().addParent(expressionPool);
+							//value.getPool().addParent(expressionPool);
+							pool.addParent(value.getPool());
 							final Type[] otherTypes = value.getPool().getTypes();
 							final Type[] selfTypes = expressionPool.getTypes();
 
 							for (int i = 0; i < pool.size(); i++) {
 								final Type otherType = value.getPool().get(i);
 								final Type selfType = expressionPool.get(i);
+
 								if (!otherType.equals(selfType)) {
 									/*
 									 * It should be physically impossible for
@@ -510,7 +880,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 									if (selfType.equals(Type.VOID_TYPE)) {
 										pool.set(i, otherType);
 									} else if (otherType.equals(Type.VOID_TYPE)) {
-										pool.set(i, Type.VOID_TYPE);
+										pool.set(i, selfType);
 									} else {
 										throw new IllegalStateException(
 												"Failed to compute frame: " +
@@ -539,7 +909,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 							final int maxHeight = Math.min(
 									expressionPool.computeSize(),
-									((SkidExpressionPool) value.getPool()).computeSize()
+									value.getPool().computeSize()
 							);
 
 							for (int i = maxHeight; i < pool.size(); i++) {
@@ -729,7 +1099,6 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 
 				value.setPool(pool);
-
 				next.add(value);
 			}
 

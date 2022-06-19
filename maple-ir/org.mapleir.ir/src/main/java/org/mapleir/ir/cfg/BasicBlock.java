@@ -194,7 +194,7 @@ public class BasicBlock implements FastGraphVertex, Collection<Stmt> {
 		return statements.isEmpty();
 	}
 
-	public int indexOf(Object o) {
+	public int indexOf(Stmt o) {
 		return statements.indexOf(o);
 	}
 

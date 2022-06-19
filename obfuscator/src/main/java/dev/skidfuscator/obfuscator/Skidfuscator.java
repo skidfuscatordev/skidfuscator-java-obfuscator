@@ -310,20 +310,18 @@ public class Skidfuscator {
          * Furthermore, since it computes classes which could be present in other
          * libraries, we set the priority to -1, making it the last fallback result.
          */
-        if (session.isPhantom()) {
-            this.classSource.addLibraries(new LibraryClassSource(
-                    new ApplicationClassSource(
-                            "phantom",
-                            true,
-                            downloader.getPhantomContents()
-                                    .getClassContents()
-                                    .stream()
-                                    .map(JarClassData::getClassNode)
-                                    .collect(Collectors.toList())
-                    ),
-                    -1
-            ));
-        }
+        this.classSource.addLibraries(new LibraryClassSource(
+                new ApplicationClassSource(
+                        "phantom",
+                        true,
+                        downloader.getPhantomContents()
+                                .getClassContents()
+                                .stream()
+                                .map(JarClassData::getClassNode)
+                                .collect(Collectors.toList())
+                ),
+                1
+        ));
         LOGGER.log("Finished importing classpath!");
 
         /* Import JVM */

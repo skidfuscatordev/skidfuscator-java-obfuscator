@@ -101,14 +101,23 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				try {
 					try {
 						cn = factory.create(db, name);
-						if(!data.containsKey(cn.getName())) {
-							contents.getClassContents().add(new JarClassData(
+
+						if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+							phantomContents.getClassContents().add(new JarClassData(
 									name,
 									db,
 									cn
 							));
 						} else {
-							throw new IllegalStateException("duplicate: " + cn.getName());
+							if(!data.containsKey(cn.getName())) {
+								contents.getClassContents().add(new JarClassData(
+										name,
+										db,
+										cn
+								));
+							} else {
+								throw new IllegalStateException("duplicate: " + cn.getName());
+							}
 						}
 					} catch (UnsupportedOperationException e) {
 						contents.getResourceContents().add(new JarResource(name, db));
