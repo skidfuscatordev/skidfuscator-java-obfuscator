@@ -108,6 +108,8 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 									db,
 									cn
 							));
+							JarResource resource = new JarResource(name, db);
+							contents.getResourceContents().add(resource);
 						} else {
 							if(!data.containsKey(cn.getName())) {
 								contents.getClassContents().add(new JarClassData(

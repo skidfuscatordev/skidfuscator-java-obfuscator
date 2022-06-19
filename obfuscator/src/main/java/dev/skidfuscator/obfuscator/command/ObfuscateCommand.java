@@ -83,7 +83,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 "|  $$$$$$/| $$ \\  $$| $$|  $$$$$$$| $$     |  $$$$$$/ /$$$$$$$/|  $$$$$$$|  $$$$$$$  |  $$$$/|  $$$$$$/| $$",
                 " \\______/ |__/  \\__/|__/ \\_______/|__/      \\______/ |_______/  \\_______/ \\_______/   \\___/   \\______/ |__/",
                 "",
-                "                       Author: Ghast     Version: 2.0.1     Today: " + new Date(Instant.now().toEpochMilli()).toGMTString(),
+                "                       Author: Ghast     Version: 2.0.2     Today: " + new Date(Instant.now().toEpochMilli()).toGMTString(),
                 "",
                 ""
         };
