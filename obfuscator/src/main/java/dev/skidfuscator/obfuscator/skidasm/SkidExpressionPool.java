@@ -52,7 +52,17 @@ public class SkidExpressionPool extends ExpressionPool {
         Type currentType = types[index];
 
         if (currentType != null) {
-            if (predicate != null && predicate.test(currentType) && parents.isEmpty()) {
+            /*
+             * If we have any sort of exemptions, and this is a root
+             * expression pool (no parents), and the type corresponds
+             * to the predicate
+             *
+             * --> then return null (and warn!)
+             *
+             * TODO: fix the parent thing being wrong (should iterate only
+             *      if the parents is null, not all scenarios)
+             */
+            if (parents.isEmpty() && predicate != null && predicate.test(currentType)) {
                 System.out.println(
                         "Failed to match predicate: " + currentType
                         +"\n Excluded: " + Arrays.toString(excludedTypes.toArray())
@@ -60,9 +70,21 @@ public class SkidExpressionPool extends ExpressionPool {
                 return null;
             }
 
+            /*
+             * cool, here we have computed a type which isn't excised
+             * and which is usable (not null)
+             */
             return currentType;
         }
 
+        /*
+         * No cache for the type in this pool. Okay. lets iterate through
+         * each parent (whilst making sure we don't double iterate by
+         * using a visitor set).
+         *
+         * If the type is found, check if it isn't the *spooky banned type*.
+         * If it is, then skip it and look for another in other parents
+         */
         for (ExpressionPool parent : parents) {
             if (visited.contains(parent))
                 continue;
@@ -72,6 +94,7 @@ public class SkidExpressionPool extends ExpressionPool {
             if (predicate != null && predicate.test(found))
                 continue;
 
+            /* Merge the types */
             currentType = TypeUtil.mergeTypes(
                     skidfuscator,
                     found,
@@ -82,6 +105,7 @@ public class SkidExpressionPool extends ExpressionPool {
         return currentType;
     }
 
+    @Deprecated
     public boolean isConflicting() {
         return conflict.values().stream().anyMatch(e -> e);
     }

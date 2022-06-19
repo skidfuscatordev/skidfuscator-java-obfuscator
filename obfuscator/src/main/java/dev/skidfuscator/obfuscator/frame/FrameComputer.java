@@ -56,19 +56,30 @@ public class FrameComputer {
 
         final Map<BasicBlock, FrameNode> frameMap = new HashMap<>();
 
+        /*
+         * Create a hot cache for a frame node for every
+         * frame assigned per block, then add it to the
+         * flame flow graph cuz it's useful for debugging.
+         */
         for (BasicBlock vertex : cfg.vertices()) {
             final SkidExpressionPool pool = new SkidExpressionPool(
                     new Type[cfg.getLocals().getMaxLocals() + 2],
                     skidfuscator
             );
+
+            final FrameNode frameNode = new FrameNode(vertex, pool);
             frameMap.put(
                     vertex,
-                    new FrameNode(vertex, pool)
+                    frameNode
             );
+            frameGraph.addVertex(frameNode);
         }
 
         final FrameNode entryFrame = frameMap.get(entry);
 
+        /*
+         * This is just shit for iterating.
+         */
         final Set<BasicBlock> visited = new HashSet<>();
         final Stack<BasicBlock> bucket = new Stack<>();
 
@@ -77,17 +88,30 @@ public class FrameComputer {
          */
         bucket.add(entry);
 
+        /*
+         * At the beginning, lets assume every variable has
+         * no definition
+         */
         entryFrame.fill(TypeUtil.UNDEFINED_TYPE);
 
         int index = 0;
         int protectedIndex = 0;
+
+        /*
+         * If the method is a non static, then it has a def
+         * of "this." which is itself
+         */
         if (!cfg.getMethodNode().isStatic()) {
             entryFrame.set(index, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
             protectedIndex = index;
             index++;
         }
 
-        /* Method parameters ezzzz */
+        /*
+         * Every method parameter reserves either:
+         * - 2 slots of locals for double and long types
+         * - 1 slot of locals for the rest
+         */
         final Parameter parameter = new Parameter(cfg.getDesc());
         for (int i = 0; i < parameter.getArgs().size(); i++) {
             Type type = parameter.getArg(i);
@@ -167,6 +191,14 @@ public class FrameComputer {
                     }
                 }
 
+                /*
+                 * When we'll proceed with the jump, we will be
+                 * using the details processed in this. If we
+                 * have an if conditon which checks if x or y
+                 * is null, we can update it so that it ONLY
+                 * updates anything after the jump, not any
+                 * other statement in the block.
+                 */
                 final SkidExpressionPool targetCurrentPool = new SkidExpressionPool(
                         currentPool,
                         skidfuscator
