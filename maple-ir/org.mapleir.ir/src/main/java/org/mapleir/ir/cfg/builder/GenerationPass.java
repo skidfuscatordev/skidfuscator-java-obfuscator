@@ -318,7 +318,8 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 						frameNode.local == null ? new Object[0] : frameNode.local.toArray(),
 						frameNode.stack == null ? new Object[0] : frameNode.stack.toArray()
 				);
-				break;
+
+				continue;
 			}
 		}
 

@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.hierarchy;
 
+import dev.skidfuscator.obfuscator.hierarchy.matching.ClassMethodHash;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
@@ -8,6 +9,8 @@ import java.util.List;
 
 public interface Hierarchy {
     void cache();
+
+    SkidGroup getGroup(final ClassMethodHash methodNode);
 
     SkidGroup getGroup(final SkidMethodNode methodNode);
 
