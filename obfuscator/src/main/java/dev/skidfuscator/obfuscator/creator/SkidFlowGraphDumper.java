@@ -335,6 +335,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		}
 	}
 
+	@Deprecated
 	private void computeFramesNew() {
 		if (cfg.getEntries().size() != 1)
 			throw new IllegalStateException("CFG doesn't have exactly 1 entry");
@@ -631,6 +632,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		}*/
 	}
 
+	@Deprecated
 	private void computeFrames() {
 		if (cfg.getEntries().size() != 1)
 			throw new IllegalStateException("CFG doesn't have exactly 1 entry");

@@ -14,6 +14,7 @@ import org.objectweb.asm.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class Frame {
     private final Skidfuscator skidfuscator;
     private final Map<Frame, Set<Stmt>> parents;
