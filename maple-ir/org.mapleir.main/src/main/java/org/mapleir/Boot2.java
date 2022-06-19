@@ -62,6 +62,7 @@ public class Boot2 {
 		String appName = f.getName().substring(0, f.getName().length() - 4);
 		ApplicationClassSource app = new ApplicationClassSource(
 				appName,
+				false,
 				dl.getJarContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
 		);
 //
