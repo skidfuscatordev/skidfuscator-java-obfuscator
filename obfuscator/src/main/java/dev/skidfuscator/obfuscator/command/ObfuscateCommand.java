@@ -2,10 +2,12 @@ package dev.skidfuscator.obfuscator.command;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
+import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.text.DateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.Callable;
@@ -83,10 +85,25 @@ public class ObfuscateCommand implements Callable<Integer> {
                         + String.format("%-19.19s", freeMemory + "mb");
 
         final long maxMemory = Math.round(Runtime.getRuntime().maxMemory() / 1E6);
-        final String topMemory =
+        final String memoryString = (maxMemory == Long.MAX_VALUE
+                ? ConsoleColors.GREEN + "no limit"
+                : maxMemory + "mb"
+        );
+        String topMemory =
                 String.format("%19.19s", "Max Memory:")
                         + "   "
-                        + String.format("%-19.19s", (maxMemory == Long.MAX_VALUE ? "no limit" : maxMemory) + "mb");
+                        + String.format("%-19.19s",
+                            memoryString + (maxMemory > 1500 ? "" : " ⚠️")
+                        );
+
+        topMemory = MiscUtil.replaceColor(
+                topMemory,
+                memoryString,
+                maxMemory > 1500 ? ConsoleColors.GREEN_BRIGHT : ConsoleColors.RED_BRIGHT
+        );
+        // slight fix for thing
+        topMemory = topMemory.replace("⚠️", "⚠️ ");
+
         final String[] logo = new String[] {
                 "",
                 "  /$$$$$$  /$$       /$$       /$$  /$$$$$$                                           /$$",
@@ -104,7 +121,8 @@ public class ObfuscateCommand implements Callable<Integer> {
                 "                               │ "              + topMemory +            " │",
                 "                               └───────────────────────────────────────────┘",
                 "",
-                "                      Author: Ghast     Version: 2.0.2     Today: " + new Date(Instant.now().toEpochMilli()).toGMTString(),
+                "                      Author: Ghast     Version: 2.0.2     Today: "
+                        + DateFormat.getDateTimeInstance().format(new Date(Instant.now().toEpochMilli())),
                 ""
         };
 

@@ -28,6 +28,14 @@ public class MiscUtil {
         return String.format("%1$"+length+ "s", string);
     }
 
+    public String appendColor(final String string, final String color) {
+        return color + string + "\033[0m" /* reset color ansi*/;
+    }
+
+    public String replaceColor(final String string, final String replace, final String color) {
+        return string.replace(replace, color + replace + "\033[0m" /* reset color ansi*/);
+    }
+
     public int getJavaVersion() {
         String version = System.getProperty("java.version");
         if(version.startsWith("1.")) {
