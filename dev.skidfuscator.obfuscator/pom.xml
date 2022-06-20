@@ -20,6 +20,7 @@
         <module>commons</module>
         <module>obfuscator</module>
         <module>client</module>
+        <module>client-maven</module>
     </modules>
 
     <build>
