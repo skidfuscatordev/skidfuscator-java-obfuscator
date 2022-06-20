@@ -23,9 +23,9 @@ jobs:
     - name: Build with Maven
       run: |
         mvn -B package --file pom.xml
-        mkdir staging/ && cp obfuscator/target/obfuscator-1.0.0-SNAPSHOT.jar staging
+        mkdir staging/ && cp dev/skidfuscator/obfuscator/client/target/client-1.0.0-SNAPSHOT.jar staging
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.0
       with:
         name: Skidfuscator.jar
-        path: staging/obfuscator-1.0.0-SNAPSHOT.jar
+        path: staging/client-1.0.0-SNAPSHOT.jar

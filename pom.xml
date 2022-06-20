@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.skidfuscator</groupId>
-    <artifactId>skidfuscator-enterprise</artifactId>
+    <artifactId>skidfuscator-master</artifactId>
     <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Skidfuscator-parent</name>
+    <name>Skidfuscator-master</name>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -16,8 +16,8 @@
     </properties>
 
     <modules>
-        <module>maple-ir</module>
-        <module>obfuscator</module>
+        <module>dev.skidfuscator.maple-ir</module>
+        <module>dev.skidfuscator.obfuscator</module>
     </modules>
 
 </project>
