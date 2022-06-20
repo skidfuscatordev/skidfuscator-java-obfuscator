@@ -24,6 +24,9 @@ public class MiscUtil {
 
         return -1;
     }
+    public String fixedLengthString(String string, int length) {
+        return String.format("%1$"+length+ "s", string);
+    }
 
     public int getJavaVersion() {
         String version = System.getProperty("java.version");

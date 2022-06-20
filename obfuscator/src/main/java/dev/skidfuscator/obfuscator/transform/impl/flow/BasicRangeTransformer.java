@@ -40,25 +40,32 @@ import java.util.*;
 /**
  * This transformer basically does some whacky stuff:
  *
- * Original flow:
+ * Original flow:       Obfuscated Flow:
  *
- *     A
- *     ↓
- *     B
+ * ┌─────────┐            ┌─────────┐
+ * │ Block A │            │ Block A │
+ * └────┬────┘            └────┬────┘
+ *      │                      │
+ * ┌────▼────┐         ┌───────▼────────┐
+ * │ Block B │         │ Random If Stmt │
+ * └─────────┘         └───────┬────────┘
+ *                             │
+ *                   ┌─────┐◄──┴───►┌─────┐
+ *                   │ Yes │        │ No  │
+ *                   └─────┘        └──┬──┘
+ *                                     │
+ *                               ┌─────▼─────┐
+ *                               │ Exception │
+ *                               └───────────┘
  *
- * Obfuscated flow:
- *
- *           A
- *           ↓
- *          Fake
- *        Condition
- *      /          \
- *    Trap       Exception
- *
- *
- *   [Exception catcher]
- *            ↓
- *            B
+ *                      ┌─────────────┐
+ *                      │  Exception  │
+ *                      │   Catcher   │
+ *                      └──────┬──────┘
+ *                             │
+ *                        ┌────▼────┐
+ *                        │ Block B │
+ *                        └─────────┘
  */
 public class BasicRangeTransformer extends AbstractTransformer {
     public BasicRangeTransformer(Skidfuscator skidfuscator) {
