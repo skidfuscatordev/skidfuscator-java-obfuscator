@@ -174,7 +174,8 @@ public class SkidHierarchy implements Hierarchy {
 
     private void setupInvoke() {
         try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
-            nodes.forEach(c -> {
+            nodes.parallelStream()
+                    .forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
                     final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
 

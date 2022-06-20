@@ -49,7 +49,7 @@ public class ClassNodeBuilder implements Builder<ClassNode> {
         classNode.name = this.name;
         classNode.access = this.access;
         classNode.version = Opcodes.V1_8;
-        if (interfaces.length > 0) {
+        if (interfaces != null && interfaces.length > 0) {
             classNode.interfaces = new ArrayList<>(Arrays.asList(interfaces));
         }
         classNode.signature = this.signature;

@@ -27,10 +27,8 @@ public class GhostClassNode implements GhostReader<ClassNode> {
     private List<GhostMethodNode> methods;
     @SerializedName("flds")
     private List<GhostFieldNode> fields;
-
     @SerializedName("vanns")
     private List<GhostAnnotationNode> visibleAnnotations;
-
     @SerializedName("invanns")
     private List<GhostAnnotationNode> invisibleAnnotations;
 

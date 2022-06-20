@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator.command;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
+import dev.skidfuscator.obfuscator.util.MiscUtil;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -59,12 +60,6 @@ public class ObfuscateCommand implements Callable<Integer> {
     private boolean phantom;
 
     @CommandLine.Option(
-            names = {"-jm", "--jmod"},
-            description = "Declare if jmod computation should be used"
-    )
-    private boolean jmod;
-
-    @CommandLine.Option(
             names = {"-fuckit", "--fuckit"},
             description = "Do not use!"
     )
@@ -101,7 +96,13 @@ public class ObfuscateCommand implements Callable<Integer> {
         }
 
         if (runtime == null) {
-            runtime = new File(System.getProperty("java.home"), "lib/rt.jar");
+            final String home = System.getProperty("java.home");
+            runtime = new File(
+                    home,
+                    MiscUtil.getJavaVersion() > 8
+                            ? "jmods"
+                            : "lib/rt.jar"
+            );
         }
 
         final SkidfuscatorSession skidInstance = SkidfuscatorSession.builder()
@@ -111,7 +112,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .runtime(runtime)
                 .exempt(exempt)
                 .phantom(phantom)
-                .jmod(jmod)
+                .jmod(MiscUtil.getJavaVersion() > 8)
                 .fuckit(fuckit)
                 .build();
 
@@ -120,4 +121,6 @@ public class ObfuscateCommand implements Callable<Integer> {
 
         return 0;
     }
+
+
 }

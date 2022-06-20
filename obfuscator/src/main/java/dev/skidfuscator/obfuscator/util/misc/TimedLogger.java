@@ -45,6 +45,10 @@ public class TimedLogger {
         logger.info(text);
     }
 
+    public void warn(String text) {
+        logger.warn(text);
+    }
+
     public void error(String text, Throwable e) {
         logger.error(text, e);
         //logger.debug("[Repeat] " + text, e);

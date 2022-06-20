@@ -1,8 +1,8 @@
 package org.mapleir.stdlib.collections.map;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class NullPermeableHashMap<K, V> extends HashMap<K, V> {
+public class NullPermeableHashMap<K, V> extends ConcurrentHashMap<K, V> {
 
 	private static final long serialVersionUID = 1L;
 

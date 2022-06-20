@@ -252,7 +252,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	@Override
 	public Set<InheritanceEdge> getEdges(ClassNode cn) {
 		if(!containsVertex(cn)) {
-			System.err.println("warn: implicit add of " + cn);
+			System.err.println("warn: implicit add of " + cn.getDisplayName());
 			addVertex(cn);
 		}
 		return super.getEdges(cn);
@@ -261,7 +261,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	@Override
 	public Set<InheritanceEdge> getReverseEdges(ClassNode cn) {
 		if(!containsVertex(cn)) {
-			System.err.println("warn(2): implicit add of " + cn);
+			System.err.println("warn(2): implicit add of " + cn.getDisplayName());
 			addVertex(cn);
 		}
 		return super.getReverseEdges(cn);

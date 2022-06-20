@@ -47,6 +47,7 @@ import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.LibraryClassSource;
+import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.context.AnalysisContext;
@@ -56,6 +57,7 @@ import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
+import org.topdank.banalysis.util.ClassUtil;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.AbstractJarDownloader;
 import org.topdank.byteio.in.SingleJarDownloader;
@@ -267,39 +269,14 @@ public class Skidfuscator {
             LOGGER.post("Importing " + libs.length + " libs...");
 
             for (File lib : libs) {
-                LOGGER.post("[+] " + lib.getAbsolutePath());
-
-                final GhostLibrary library = GhostHelper.createFromLibraryFile(lib);
-                final File output = new File(
-                        session.getLibs().getParent(), "mappings/" + lib.getName() + ".json"
-                );
-                output.getParentFile().mkdirs();
-
-                GhostHelper.saveLibraryFile(library, output);
-            }
-
-            try {
-                /* Download the libraries jar contents */
-                final AbstractJarDownloader<ClassNode> jar = MapleJarUtil.importJars(libs);
-
-                /* Create a new library class source with superior to default priority */
-                final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
-                        "libraries",
-                        session.isFuckIt(),
-                        jar.getJarContents().getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList())
-                );
-                LOGGER.post("Imported " + jar.getJarContents().getClassContents().size() + " library classes...");
-
+                final ApplicationClassSource libraryClassSource = GhostHelper.getLibrary(session, lib);
                 /* Add library source to class source */
                 classSource.addLibraries(new LibraryClassSource(
                         libraryClassSource,
                         5
                 ));
-                LOGGER.log("Finished importing libs!");
-            } catch (Throwable e) {
-                /* Failed to load libs as a whole */
-                LOGGER.error("Failed to load libs at path " + session.getLibs().getAbsolutePath(), e);
             }
+            LOGGER.log("✓ Finished importing libs!");
         }
 
         /*
@@ -337,21 +314,8 @@ public class Skidfuscator {
          * + I love J8,... death to "var" in Java
          */
         if (!session.isJmod()) {
-            LOGGER.post("↳ Trying to download " + session.getRuntime().toString());
-            final SingleJarDownloader<ClassNode> libs = MapleJarUtil.importJar(
-                    session.getRuntime(),
-                    this
-            );
             this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                    new ApplicationClassSource(
-                            "runtime",
-                            session.isPhantom(),
-                            libs.getJarContents()
-                                    .getClassContents()
-                                    .stream()
-                                    .map(JarClassData::getClassNode)
-                                    .collect(Collectors.toList())
-                    ),
+                    GhostHelper.getJvm(session, session.getRuntime()),
                     0
             )));
             LOGGER.post("✓ Success");
@@ -366,24 +330,12 @@ public class Skidfuscator {
             for (File file : session.getRuntime().listFiles()) {
                 if (!file.getAbsolutePath().endsWith(".jmod"))
                     continue;
-                LOGGER.post("↳ Trying to download " + file.toString());
-                final SingleJmodDownloader<ClassNode> libs = MapleJarUtil.importJmod(
-                        file
-                );
                 this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                        new ApplicationClassSource(
-                                file.getName(),
-                                session.isFuckIt(),
-                                libs.getJarContents().getClassContents()
-                                        .stream()
-                                        .map(JarClassData::getClassNode)
-                                        .collect(Collectors.toList())
-                        ),
+                        GhostHelper.getJvm(session, file),
                         0
                 )));
-                LOGGER.post("✓ Success");
             }
-
+            LOGGER.post("✓ Success");
         }
         LOGGER.log("Finished importing the JVM!");
 
@@ -410,7 +362,7 @@ public class Skidfuscator {
             }
             LOGGER.log("Finished verification!");
         } else {
-            LOGGER.post("Skipped verification...");
+            LOGGER.warn("Skipped verification...");
         }
 
         /* Resolve context */

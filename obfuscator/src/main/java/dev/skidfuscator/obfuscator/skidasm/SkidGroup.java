@@ -7,7 +7,9 @@ import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Data
 public class SkidGroup {
@@ -29,7 +31,7 @@ public class SkidGroup {
     public SkidGroup(List<MethodNode> methodNodeList, Skidfuscator skidfuscator) {
         this.methodNodeList = methodNodeList;
         this.skidfuscator = skidfuscator;
-        this.invokers = new ArrayList<>();
+        this.invokers = new LinkedList<>();
         this.predicate = skidfuscator
                 .getPredicateAnalysis()
                 .getMethodPredicate(this);
