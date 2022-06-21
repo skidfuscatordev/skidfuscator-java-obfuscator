@@ -163,7 +163,8 @@ public class ConditionalJumpStmt extends Stmt {
 				visitor.visitJumpInsn(type == ComparisonType.EQ ? Opcodes.IF_ACMPEQ : Opcodes.IF_ACMPNE, assembler.getLabel(trueSuccessor));
 			}
 		} else if (opType == Type.INT_TYPE) {
-			boolean canShorten = right instanceof ConstantExpr && ((ConstantExpr) right).getConstant() instanceof Number
+			boolean canShorten = right instanceof ConstantExpr
+					&& ((ConstantExpr) right).getConstant() instanceof Number
 					&& ((Number) ((ConstantExpr) right).getConstant()).intValue() == 0;
 
 			left.toCode(visitor, assembler);
@@ -224,6 +225,8 @@ public class ConditionalJumpStmt extends Stmt {
 			throw new IllegalArgumentException(opType.toString());
 		}
 	}
+
+
 
 	@Override
 	public boolean canChangeFlow() {

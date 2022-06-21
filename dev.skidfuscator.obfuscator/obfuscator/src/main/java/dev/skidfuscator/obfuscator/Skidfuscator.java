@@ -389,7 +389,7 @@ public class Skidfuscator {
         for (Listener o : Arrays.asList(
                 new StringTransformer(this),
                 //new NegationTransformer(this),
-                //new FlatteningFlowTransformer(this),
+                new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
                 new SwitchTransformer(this),
                 new BasicSimplifierTransformer(this),

@@ -82,6 +82,7 @@ public class FrameExporterUtils {
 			if (labelEdges) {
 				dotE.with(
 						ComplexLabel.of(simplifyEdges ? e.getClass().getSimpleName().replace("Edge", "") : e.toGraphString()),
+						ComplexLabel.of("Exempts: " + Arrays.toString(e.frame().getExcludedTypes().toArray())),
 						ComplexLabel.of(Arrays.toString(e.frame().getTypes()))
 				);
 			}

@@ -631,7 +631,6 @@ public class FrameComputer {
             System.out.println(FrameExporterUtils.makeDotGraph(frameGraph, dict).toString());
         }
 
-
         /*
          * FRAME STACK
          */

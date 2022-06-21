@@ -36,6 +36,7 @@ import org.mapleir.ir.locals.Local;
 import org.mapleir.ir.locals.impl.BasicLocal;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.BasicInterpreter;
@@ -71,7 +72,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
     }
 
     @Listen
-    void handle(final FinalMethodTransformEvent event) {
+    void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
         final Skidfuscator skidfuscator = event.getSkidfuscator();
 
@@ -102,16 +103,16 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
             exempt.add(range.getHandler());
         }
 
-        for (BasicBlock vertex : cfg.vertices()) {
+        /*for (BasicBlock vertex : cfg.vertices()) {
             if (vertex.getStack() == null)
                 exempt.add(vertex);
-        }
+        }*/
 
         if (cfg.vertices()
                 .stream()
-                .filter(exempt::contains)
+                .filter(e -> !exempt.contains(e) && !e.isEmpty())
                 .flatMap(Collection::stream)
-                .noneMatch(e -> e instanceof UnconditionalJumpStmt))
+                .noneMatch(e -> e instanceof ConditionalJumpStmt))
             return;
 
         final LinkedHashMap<Integer, BasicBlock> destinations = new LinkedHashMap<>();
@@ -217,23 +218,26 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
 
         new HashSet<>(cfg.vertices())
                 .stream()
-                .filter(e -> !exempt.contains(e))
+                .filter(e -> !exempt.contains(e) && !e.isEmpty())
                 .flatMap(Collection::stream)
-                .filter(e -> e instanceof UnconditionalJumpStmt && e.getBlock().getStack().isEmpty())
-                .map(e -> (UnconditionalJumpStmt) e)
+                .filter(e -> e instanceof ConditionalJumpStmt)
+                .map(e -> (ConditionalJumpStmt) e)
                 .forEach(e -> {
                     final SkidBlock currentBlock = (SkidBlock) e.getBlock();
-                    final SkidBlock oldTarget = (SkidBlock) e.getTarget();
+                    final SkidBlock oldTarget = (SkidBlock) e.getTrueSuccessor();
 
                     /* Replace target block */
-                    e.setTarget(dispatcherBlock);
+                    e.setTrueSuccessor(dispatcherBlock);
 
                     /* Replace edge */
-                    final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(
+                    final ConditionalJumpEdge<BasicBlock> edge = new ConditionalJumpEdge<>(
                             currentBlock,
-                            dispatcherBlock
+                            dispatcherBlock,
+                            e.getEdge() == null ? Opcodes.IFEQ : e.getEdge().opcode
                     );
-                    cfg.removeEdge(e.getEdge());
+
+                    if (e.getEdge() != null)
+                        cfg.removeEdge(e.getEdge());
                     cfg.addEdge(edge);
                     e.setEdge(edge);
 
@@ -242,8 +246,9 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
                     cfg.addEdge(new SwitchEdge<>(dispatcherBlock, oldTarget, seed));
                 });
 
-        final BasicBlock fuck = Blocks.exception(cfg, "We messed up bogo...");
+        // We put it here to prevent adding a dead block
 
+        final BasicBlock fuck = Blocks.exception(cfg, "We messed up bogo...");
         dispatcherBlock.add(new SwitchStmt(
                 getter.get(dispatcherBlock),
                 destinations,
@@ -252,7 +257,7 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
 
         cfg.addEdge(new DefaultSwitchEdge<>(dispatcherBlock, fuck));
 
-        if (IntegerBlockPredicateRenderer.DEBUG) {
+        /*if (IntegerBlockPredicateRenderer.DEBUG) {
             methodNode.dump();
 
             try {
@@ -261,6 +266,6 @@ public class FlatteningFlowTransformer extends AbstractTransformer {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 }

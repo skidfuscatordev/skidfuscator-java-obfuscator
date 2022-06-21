@@ -105,6 +105,29 @@ public class SkidExpressionPool extends ExpressionPool {
         return currentType;
     }
 
+    public Set<Type> getTypes(int index) {
+        return getTypes(index, new HashSet<>(), new HashSet<>());
+    }
+
+    protected Set<Type> getTypes(int index, Set<Type> computedTypes, Set<ExpressionPool> visited) {
+        visited.add(this);
+
+        final Type currentType = types[index];
+
+        if (currentType != null) {
+            computedTypes.add(currentType);
+        }
+
+        for (ExpressionPool parent : parents) {
+            if (visited.contains(parent))
+                continue;
+
+            computedTypes = ((SkidExpressionPool) parent).getTypes(index, computedTypes, visited);
+        }
+
+        return computedTypes;
+    }
+
     @Deprecated
     public boolean isConflicting() {
         return conflict.values().stream().anyMatch(e -> e);
