@@ -3,7 +3,7 @@ package dev.skidfuscator.obfuscator.creator;
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.frame.Frame;
-import dev.skidfuscator.obfuscator.frame.FrameComputer;
+import dev.skidfuscator.obfuscator.frame_V2.frame.FrameComputer;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidExpressionPool;
 import dev.skidfuscator.obfuscator.skidasm.SkidTypeStack;
@@ -90,7 +90,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 		// Compute frames
 		//computeFrames();
-		//new FrameComputer(skidfuscator).compute(cfg);
+		new FrameComputer(skidfuscator).compute(cfg);
 
 		// Stuff
 		/*

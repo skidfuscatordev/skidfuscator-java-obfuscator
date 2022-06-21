@@ -377,7 +377,7 @@ public class Skidfuscator {
 
         /* Register opaque predicate renderer and transformers */
         LOGGER.post("Loading transformers...");
-        EventBus.register(new IntegerBlockPredicateRenderer(this, null));
+        //EventBus.register(new IntegerBlockPredicateRenderer(this, null));
 
         /*
          * VAZIAK
@@ -389,7 +389,7 @@ public class Skidfuscator {
         for (Listener o : Arrays.asList(
                 new StringTransformer(this),
                 //new NegationTransformer(this),
-                new FlatteningFlowTransformer(this),
+                //new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
                 new SwitchTransformer(this),
                 new BasicSimplifierTransformer(this),
@@ -400,7 +400,7 @@ public class Skidfuscator {
                 //
                 //new FactoryMakerTransformer()
         )) {
-            EventBus.register(o);
+            //EventBus.register(o);
         }
 
         LOGGER.log("Finished loading transformers...");
