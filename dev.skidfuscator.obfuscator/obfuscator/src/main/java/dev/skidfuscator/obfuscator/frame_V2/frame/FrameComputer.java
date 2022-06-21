@@ -158,7 +158,7 @@ public class FrameComputer {
 
             TypeHeader currentPool = poppedFrame.getPool().createChild();
 
-            TypeHeader highestPoolNoRandoAssExpression = currentPool;
+            TypeHeader highestPoolNoRandoAssExpression = null;
             boolean yeahNo = false;
 
             for (Stmt stmt : popped) {
@@ -382,15 +382,18 @@ public class FrameComputer {
                 }
             }
 
-            final TypeHeader finalHighestPoolNoRandoAssExpression = cfg
+            /*final TypeHeader finalHighestPoolNoRandoAssExpression = cfg
                     .getReverseEdges(popped)
                     .stream()
                     .filter(TryCatchEdge.class::isInstance)
                     .map(e -> (TryCatchEdge<BasicBlock>) e)
                     .anyMatch(e -> e.erange.getHandler().equals(popped))
                         ? highestPoolNoRandoAssExpression.createChild()
-                        : poppedFrame.getPool().createChild();
+                        : poppedFrame.getPool().createChild();*/
 
+            final TypeHeader lastValidTryCatchPool = highestPoolNoRandoAssExpression == null
+                    ? currentPool.createChild()
+                    : highestPoolNoRandoAssExpression;
             cfg.getSuccessors(new Predicate<FlowEdge<BasicBlock>>() {
                 @Override
                 public boolean test(FlowEdge<BasicBlock> basicBlockFlowEdge) {
@@ -407,12 +410,12 @@ public class FrameComputer {
                 frameGraph.addEdge(new FrameEdge(
                         poppedFrame,
                         targetFrame,
-                        finalHighestPoolNoRandoAssExpression
+                        lastValidTryCatchPool
                 ));
 
                 // TODO:    Check if we should instead take the first
                 //          dominator index of the graph
-                targetFrame.getPool().addParent(finalHighestPoolNoRandoAssExpression);
+                targetFrame.getPool().addParent(lastValidTryCatchPool);
 
                 next.add(value);
             });
@@ -499,8 +502,9 @@ public class FrameComputer {
 
                         if (currentType.contains(desiredType)) {
                             poppedFrame.set(localIndex, desiredType);
-                        } else if (currentType.stream().anyMatch(c -> c.getSort() != Type.OBJECT)) {
+                        } else if (currentType.stream().allMatch(c -> c.getSort() == Type.OBJECT)) {
                             //final Type peekedType =
+                            poppedFrame.set(localIndex, desiredType);
                         }
                         // TODO: Var expr merging
                         /*if (currentType.equals(TypeUtil.OBJECT_TYPE)) {
@@ -655,6 +659,7 @@ public class FrameComputer {
             }
         }
 
+
         for (BasicBlock vertex : cfg.verticesInOrder()) {
             final FrameNode frameNode = frameMap.get(vertex);
 
@@ -716,6 +721,24 @@ public class FrameComputer {
             );
 
             vertex.setPool(expressionPool);
+        }
+
+        final Set<FrameEdge> visitedEdges = new HashSet<>();
+
+        for (FrameNode vertex : frameGraph.vertices()) {
+            visitedEdges.addAll(frameGraph.getEdges(vertex));
+        }
+
+        for (FrameEdge frameEdge : visitedEdges) {
+            final Type[] types = new Type[frameEdge.frame().size()];
+            for (int i = 0; i < types.length; i++) {
+                final Set<Type> computed = frameEdge.frame().get(i);
+                for (Type type : computed) {
+                    types[i] = TypeUtil.mergeTypes(skidfuscator, type, types[i]);
+                }
+
+                frameEdge.frame().set(i, types[i]);
+            }
         }
 
         if (cfg.getName().equals("exportLog")) {

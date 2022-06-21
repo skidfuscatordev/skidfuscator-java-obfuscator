@@ -141,7 +141,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			m.node.visitLabel(getLabel(b));
 
 			iter: {
-				if (b.isEmpty() || true)
+				if (b.isEmpty())
 					break iter;
 
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();

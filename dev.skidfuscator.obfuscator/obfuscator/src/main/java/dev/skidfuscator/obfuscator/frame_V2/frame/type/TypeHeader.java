@@ -1,6 +1,7 @@
 package dev.skidfuscator.obfuscator.frame_V2.frame.type;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.util.TypeUtil;
 import org.objectweb.asm.Type;
 
 import java.util.Arrays;
@@ -95,7 +96,7 @@ public class TypeHeader {
         final Set<Type> types = new HashSet<>();
 
         if (type != null && (excluded == null || !excluded.contains(type))) {
-            types.add(type);
+            return new HashSet<>(Collections.singleton(type));
         }
 
         for (TypeHeader parent : parents) {
@@ -110,6 +111,10 @@ public class TypeHeader {
 
                 types.add(parentType);
             }
+        }
+
+        if (types.isEmpty()) {
+            types.add(TypeUtil.UNDEFINED_TYPE);
         }
 
         return types;
