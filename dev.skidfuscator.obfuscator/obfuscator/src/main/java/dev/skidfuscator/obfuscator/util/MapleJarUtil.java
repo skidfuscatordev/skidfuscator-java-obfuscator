@@ -62,7 +62,7 @@ public class MapleJarUtil {
                 try {
                     out.putNextEntry(entry);
                     try {
-                        ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
+                        ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
                         cn.node.accept(writer);
                         out.write(writer.toByteArray());
                     } catch (Exception var8) {

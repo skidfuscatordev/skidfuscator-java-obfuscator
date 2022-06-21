@@ -90,7 +90,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 		// Compute frames
 		//computeFrames();
-		new FrameComputer(skidfuscator).compute(cfg);
+		//new FrameComputer(skidfuscator).compute(cfg);
 
 		// Stuff
 		/*
@@ -141,7 +141,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			m.node.visitLabel(getLabel(b));
 
 			iter: {
-				if (b.isEmpty())
+				if (b.isEmpty() || true)
 					break iter;
 
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
