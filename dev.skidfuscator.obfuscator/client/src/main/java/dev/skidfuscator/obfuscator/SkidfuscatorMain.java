@@ -48,6 +48,7 @@ public class SkidfuscatorMain {
                             new File(output),
                             null,
                             null,
+                            null,
                             new File(System.getProperty("java.home"), "lib/rt.jar"),
                             false,
                             false,
