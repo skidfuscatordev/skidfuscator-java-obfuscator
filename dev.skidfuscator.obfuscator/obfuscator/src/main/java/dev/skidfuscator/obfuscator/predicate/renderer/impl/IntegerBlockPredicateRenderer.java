@@ -52,6 +52,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     public IntegerBlockPredicateRenderer(Skidfuscator skidfuscator, List<Transformer> children) {
@@ -445,11 +446,35 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         Local local = null;
         String desc = null;
 
+        int indexGroup = -1;
+
+        final Parameter parameterGroup = new Parameter(skidGroup.getDesc());
+        if (skidGroup.getInvokers().stream().map(SkidInvocation::getExpr)
+                .anyMatch(DynamicInvocationExpr.class::isInstance)) {
+            final DynamicInvocationExpr invocationExpr = skidGroup
+                    .getInvokers()
+                    .stream()
+                    .map(SkidInvocation::getExpr)
+                    .filter(DynamicInvocationExpr.class::isInstance)
+                    .findFirst()
+                    .map(DynamicInvocationExpr.class::cast)
+                    .orElseThrow(IllegalStateException::new);
+
+            final Parameter bootstrappedParam = new Parameter(
+                    invocationExpr.getDesc()
+            );
+            indexGroup = bootstrappedParam.getArgs().size();
+        } else {
+            indexGroup = parameterGroup.getArgs().size();
+        }
+
+        parameterGroup.insertParameter(Type.INT_TYPE, indexGroup);
+
         for (MethodNode methodNode : skidGroup.getMethodNodeList()) {
             final SkidMethodNode skidMethodNode = (SkidMethodNode) methodNode;
 
-            stackHeight = OpcodeUtil.getArgumentsSizes(methodNode.getDesc());
-            if (methodNode.isStatic()) stackHeight -= 1;
+            stackHeight = parameterGroup.computeSize(indexGroup);
+            if (!methodNode.isStatic()) stackHeight += 1;
 
             final Map<String, Local> localMap = new HashMap<>();
             for (Map.Entry<String, Local> stringLocalEntry :
@@ -472,9 +497,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             skidMethodNode.getCfg().getLocals().getCache().clear();
             skidMethodNode.getCfg().getLocals().getCache().putAll(localMap);
 
-            final Parameter parameter = new Parameter(methodNode.getDesc());
-            parameter.addParameter(Type.INT_TYPE);
-            methodNode.node.desc = desc = parameter.getDesc();
+            methodNode.node.desc = desc = parameterGroup.getDesc();
 
             final ClassMethodHash classMethodHash = new ClassMethodHash(skidMethodNode);
 
@@ -518,14 +541,19 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             if (isDynamic) {
                 final Handle boundFunc = (Handle) ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1];
                 final Parameter handlerDesc = new Parameter(boundFunc.getDesc());
-                handlerDesc.addParameter(Type.INT_TYPE);
+                handlerDesc.insertParameter(Type.INT_TYPE, indexGroup);
                 final Handle newBoundFunc = new Handle(boundFunc.getTag(), boundFunc.getOwner(), boundFunc.getName(),
                         handlerDesc.getDesc(), boundFunc.isInterface());
 
                 final Parameter parameter = new Parameter(invoker.getExpr().getDesc());
-                parameter.addParameter(Type.INT_TYPE);
+                parameter.insertParameter(Type.INT_TYPE, indexGroup);
+                System.out.println("-----[ " + boundFunc.getOwner() + "#" + boundFunc.getName() + " ]-----");
+                System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getArgumentExprs()).map(Expr::getType).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
+                System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
+                System.out.println(invoker.getExpr().getDesc()  + " new: " + parameter.getDesc());
+                System.out.println(boundFunc.getDesc() + " new " + newBoundFunc.getDesc());
                 invoker.getExpr().setDesc(parameter.getDesc());
-                //System.out.println(((DynamicInvocationExpr) invoker.getExpr()).getDesc()  + " new: " + desc);
+
                 ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1] = newBoundFunc;
             } else {
                 invoker.getExpr().setDesc(desc);

@@ -36,6 +36,7 @@ public class TypeUtil {
 	public final Type NULL_TYPE = TypeUtils.NULL_TYPE;
 	public final Type UNDEFINED_TYPE = TypeUtils.UNDEFINED_TYPE;
 	public final Type STRING_TYPE = Type.getObjectType("java/lang/String");
+	public final Type THROWABLE_TYPE = Type.getType(Throwable.class);
 
 	/**
 	 * private sort denoting an object type, such as "com/Example" versus the

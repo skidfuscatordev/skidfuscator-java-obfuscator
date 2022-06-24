@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.skidasm;
 import lombok.Data;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.Invokable;
 
@@ -26,5 +27,9 @@ public class SkidInvocation {
 
     public Expr asExpr() {
         return (Expr) expr;
+    }
+
+    public boolean isDynamic() {
+        return expr instanceof DynamicInvocationExpr;
     }
 }

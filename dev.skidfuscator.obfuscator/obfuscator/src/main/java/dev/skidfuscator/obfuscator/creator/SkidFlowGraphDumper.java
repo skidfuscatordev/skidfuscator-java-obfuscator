@@ -90,7 +90,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 		// Compute frames
 		//computeFrames();
-		new FrameComputer(skidfuscator).compute(cfg);
+		//new FrameComputer(skidfuscator).compute(cfg);
 
 		// Stuff
 		/*
@@ -141,7 +141,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			m.node.visitLabel(getLabel(b));
 
 			iter: {
-				if (b.isEmpty() || cfg.getJumpReverseEdges(b).isEmpty())
+				if (b.isEmpty() || cfg.getJumpReverseEdges(b).isEmpty()|| true)
 					break iter;
 
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
@@ -1653,7 +1653,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				if (classNode == null) {
 					System.err.println("\r\nFailed to find class of type " + type1  + "!\n" );
 					try {
-						final ClassReader reader = new ClassReader(type1);
+						final ClassReader reader = new ClassReader(typec.getInternalName());
 						final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
 						reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 
@@ -1666,6 +1666,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 
 				classNodes.add(classNode);
+				skidfuscator.getClassSource()
+						.getClassTree()
+						.addVertex(classNode);
 			}
 
 			/* Simple DFS naive common ancestor algorithm */
@@ -1679,6 +1682,19 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 			if (commonAncestors.size() == 1) {
 				mostIdealAncestor = commonAncestors.iterator().next();
+
+				if (mostIdealAncestor.getName().equals("java/lang/Object")) {
+					System.out.println("[WARNING] Failed to find common ancestor between: " + classNodes.stream().map(ClassNode::getDisplayName).collect(Collectors.joining(",")));
+					classNodes.stream()
+							.flatMap(e -> skidfuscator.getClassSource()
+									.getClassTree().getEdges(e).stream())
+							.forEach(e -> System.out.println(e.src().getDisplayName() + " --> " + e.dst().getDisplayName()));
+					classNodes.stream()
+							.flatMap(e -> skidfuscator.getClassSource()
+									.getClassTree().getPredecessors(e))
+							.forEach(e -> System.out.println("<-- " + e.getDisplayName()));
+					return TypeUtil.THROWABLE_TYPE;
+				}
 			} else {
 				iteration: {
 					for (ClassNode commonAncestor : commonAncestors) {

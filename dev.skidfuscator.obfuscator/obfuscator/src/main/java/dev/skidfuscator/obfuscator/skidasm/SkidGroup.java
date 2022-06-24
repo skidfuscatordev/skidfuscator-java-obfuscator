@@ -79,7 +79,7 @@ public class SkidGroup {
     }
 
     public boolean isEntryPoint() {
-        return !application || this.getInvokers().isEmpty() || this.isAnnotation();
+        return !application || this.getInvokers().isEmpty() || this.getInvokers().stream().anyMatch(SkidInvocation::isDynamic) || this.isAnnotation();
     }
     @Override
     public boolean equals(Object o) {

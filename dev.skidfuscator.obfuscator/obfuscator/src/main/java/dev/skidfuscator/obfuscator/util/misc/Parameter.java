@@ -54,6 +54,20 @@ public class Parameter {
         return size;
     }
 
+    public int computeSize(final int untilIndex) {
+        int size = 0;
+
+        for (int i = 0; i < untilIndex; i++) {
+            size++;
+
+            final Type type = args.get(i);
+            if (type.equals(Type.DOUBLE_TYPE) || type.equals(Type.LONG_TYPE))
+                size++;
+        }
+
+        return size;
+    }
+
     public String getDesc() {
         final StringBuilder builder = new StringBuilder();
         builder.append("(");

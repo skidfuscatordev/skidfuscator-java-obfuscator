@@ -40,6 +40,7 @@ public class GhostClassNode implements GhostReader<ClassNode> {
         this.version = classNode.version;
         this.access = classNode.access;
         this.name = classNode.name;
+        this.superName = classNode.superName;
 
         this.fields = classNode.fields
                 .stream()
@@ -79,6 +80,7 @@ public class GhostClassNode implements GhostReader<ClassNode> {
 
         node.version = version;
         node.methods = new ArrayList<>();
+        node.superName = superName;
 
         for (GhostMethodNode methodNode : methods) {
             node.methods.add(methodNode.read());

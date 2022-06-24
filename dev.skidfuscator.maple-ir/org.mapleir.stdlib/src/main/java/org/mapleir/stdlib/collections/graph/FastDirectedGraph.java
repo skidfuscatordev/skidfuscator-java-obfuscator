@@ -245,11 +245,19 @@ public abstract class FastDirectedGraph<N extends FastGraphVertex, E extends Fas
 			int maxDepth = 0;
 			
 			List<N> above = new ArrayList<>();
+			/* Add the root node */
 			above.add(node);
 			
 			while (true) {
+				/* Create a temp stack */
 				final List<N> stack = new ArrayList<>(above);
+
+				/* Clear the heading */
 				above.clear();
+
+				/* Add all the successors to all the
+				   previous layers.
+				 */
 				for (N n : stack) {
 					this.getSuccessors(n).forEach(above::add);
 				}
