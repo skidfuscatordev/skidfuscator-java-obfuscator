@@ -57,4 +57,8 @@ public class GhostLibrary {
     public void setContents(GhostContents contents) {
         this.contents = contents;
     }
+
+    public void merge(final GhostLibrary library) {
+        this.getContents().getClasses().putAll(library.getContents().getClasses());
+    }
 }

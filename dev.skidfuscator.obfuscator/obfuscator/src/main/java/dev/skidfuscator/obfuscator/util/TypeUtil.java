@@ -247,16 +247,22 @@ public class TypeUtil {
 		 * If the parent type is null (undefined),
 		 * then just skip. We don't need this.
 		 */
-		if (head == null || newest != null && head.equals(UNDEFINED_TYPE))
+		if (head == null/* || newest != null && head.equals(UNDEFINED_TYPE)*/)
 			return newest;
 
 		/*
 		 * If the newest type is null (undefined),
 		 * then just return the head.
 		 */
-		if (newest == null || newest.equals(UNDEFINED_TYPE)) {
+		if (newest == null/* || newest.equals(UNDEFINED_TYPE)*/) {
 			return head;
 		}
+
+		/*
+		 * EEEEE
+		 */
+		if (head.equals(TypeUtil.UNDEFINED_TYPE) || newest.equals(TypeUtil.UNDEFINED_TYPE))
+			return TypeUtil.UNDEFINED_TYPE;
 
 		/*
 		 * If the proposed type is identical, we
@@ -279,7 +285,8 @@ public class TypeUtil {
 		 * todo: array support
 		 */
 		if (head.getSort() == Type.OBJECT && newest.getSort() == Type.OBJECT
-				&& !head.equals(TypeUtil.NULL_TYPE) && !newest.equals(TypeUtil.NULL_TYPE)) {
+				&& !head.equals(TypeUtil.NULL_TYPE) && !newest.equals(TypeUtil.NULL_TYPE)
+				&& !head.equals(TypeUtil.UNDEFINED_TYPE) && !newest.equals(TypeUtil.UNDEFINED_TYPE)) {
 			final ClassNode selfClassNode = skidfuscator
 					.getClassSource()
 					.findClassNode(head.getInternalName());

@@ -13,6 +13,7 @@ public class SkidfuscatorSession {
     private File input;
     private File output;
     private File libs;
+    private File mappings;
     private File exempt;
     private File runtime;
     private boolean phantom;

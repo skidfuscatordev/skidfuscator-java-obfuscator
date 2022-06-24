@@ -387,6 +387,16 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 		return jes;
 	}
 
+	public List<BasicBlock> getJumpReverseEdges(BasicBlock b) {
+		List<BasicBlock> jes = new ArrayList<>();
+		for (FlowEdge<BasicBlock> e : getReverseEdges(b)) {
+			if (!(e instanceof ImmediateEdge)) {
+				jes.add(e.dst());
+			}
+		}
+		return jes;
+	}
+
 	public boolean isHandler(BasicBlock b) {
 		for(FlowEdge<BasicBlock> e : getReverseEdges(b)) {
 			if(e instanceof TryCatchEdge) {

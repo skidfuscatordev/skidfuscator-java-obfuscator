@@ -90,7 +90,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 		// Compute frames
 		//computeFrames();
-		//new FrameComputer(skidfuscator).compute(cfg);
+		new FrameComputer(skidfuscator).compute(cfg);
 
 		// Stuff
 		/*
@@ -141,7 +141,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			m.node.visitLabel(getLabel(b));
 
 			iter: {
-				if (b.isEmpty() || true)
+				if (b.isEmpty() || cfg.getJumpReverseEdges(b).isEmpty())
 					break iter;
 
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
@@ -167,7 +167,8 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 					}
 				}
 
-				final int frameComputedSize = frameTypes.computeSize();
+				int eeee = isStatic ? 0 : 1 + parameterSize;
+				final int frameComputedSize = Math.max(frameTypes.computeSize(), eeee);
 
 				/* Implicit frame */
 				/*if (initialFrame.length >= frameComputedSize)
@@ -256,7 +257,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 					} else {
 						m.node.visitFrame(Opcodes.F_FULL, frame.length, frame, stack.length, stack);
-						m.node.visitInsn(Opcodes.NOP);
+						//m.node.visitInsn(Opcodes.NOP);
 					}
 				}
 

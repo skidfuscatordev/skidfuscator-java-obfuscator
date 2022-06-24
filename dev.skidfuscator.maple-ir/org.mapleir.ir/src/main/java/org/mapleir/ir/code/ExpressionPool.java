@@ -1,5 +1,6 @@
 package org.mapleir.ir.code;
 
+import org.mapleir.ir.TypeUtils;
 import org.objectweb.asm.Type;
 
 import javax.lang.model.util.Types;
@@ -151,7 +152,9 @@ public class ExpressionPool implements Iterable<Type> {
         int lastExist = 0;
 
         for (int i = size(); i > 0; i--) {
-            if (!get(i - 1).equals(Type.VOID_TYPE)) {
+            final Type grab = get(i - 1);
+            final boolean skip = grab.equals(Type.VOID_TYPE) || grab.equals(TypeUtils.UNDEFINED_TYPE);
+            if (!skip) {
                 lastExist = i;
                 break;
             }
