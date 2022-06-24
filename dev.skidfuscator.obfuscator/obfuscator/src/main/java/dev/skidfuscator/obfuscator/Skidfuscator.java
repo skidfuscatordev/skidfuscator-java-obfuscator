@@ -1,6 +1,8 @@
 package dev.skidfuscator.obfuscator;
 
+import dev.skidfuscator.jghost.Ghost;
 import dev.skidfuscator.jghost.GhostHelper;
+import dev.skidfuscator.jghost.tree.GhostLibrary;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
@@ -254,7 +256,24 @@ public class Skidfuscator {
          * This would allow for a lot of cool stuff, including tracking
          * and remote HWIDs.
          */
-        if (session.getLibs() != null && session.getLibs().listFiles() != null) {
+        if (session.getMappings() != null) {
+            final File[] libs = Arrays.stream(session.getMappings().listFiles())
+                    .filter(e -> e.getAbsolutePath().endsWith(".json"))
+                    .toArray(File[]::new);
+
+            LOGGER.post("Importing " + libs.length + " mappings...");
+
+            for (File lib : libs) {
+                final GhostLibrary library = GhostHelper.readFromLibraryFile(lib);
+                final ApplicationClassSource libraryClassSource = GhostHelper.importFile(session, library);
+                /* Add library source to class source */
+                classSource.addLibraries(new LibraryClassSource(
+                        libraryClassSource,
+                        5
+                ));
+            }
+            LOGGER.log("✓ Finished importing mappings!");
+        } else if (session.getLibs() != null && session.getLibs().listFiles() != null) {
             final File[] libs = Arrays.stream(session.getLibs().listFiles())
                     .filter(e -> e.getAbsolutePath().endsWith(".jar"))
                     .toArray(File[]::new);

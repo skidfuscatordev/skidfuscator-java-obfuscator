@@ -56,6 +56,10 @@ public class GhostHelper {
             library = GhostHelper.readFromLibraryFile(output);
         }
 
+        return importFile(session, library);
+    }
+
+    public ApplicationClassSource importFile(final SkidfuscatorSession session, final GhostLibrary library) {
         /* Create a new library class source with superior to default priority */
         final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                 "libraries",
@@ -67,7 +71,6 @@ public class GhostHelper {
                         .map(e -> ClassHelper.create(e.read())).collect(Collectors.toList())
         );
         LOGGER.info("[✓] Imported " + library.getContents().getClasses().size() + " library classes...");
-
 
         return libraryClassSource;
     }

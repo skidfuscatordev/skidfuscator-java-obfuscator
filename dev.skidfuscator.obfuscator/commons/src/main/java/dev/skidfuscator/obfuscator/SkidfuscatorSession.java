@@ -43,6 +43,13 @@ public class SkidfuscatorSession {
     }
 
     /**
+     * @return the mappings file
+     */
+    public File getMappings() {
+        return mappings;
+    }
+
+    /**
      * @return the exempt
      */
     public File getExempt() {

@@ -10,11 +10,12 @@ import java.util.zip.Inflater;
 
 @UtilityClass
 public class SkidInflator {
-    private final int ARRAY_SIZE = 1024;
+    private final int ARRAY_SIZE = 1024 * 8;
 
     public byte[] compress(byte[] data) throws IOException {
         final Deflater deflater = new Deflater();
         deflater.setInput(data);
+        deflater.finish();
 
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
         final byte[] buffer = new byte[ARRAY_SIZE];
@@ -24,6 +25,7 @@ public class SkidInflator {
             outputStream.write(buffer, 0, count);
         }
         outputStream.close();
+        deflater.end();
 
         final byte[] output = outputStream.toByteArray();
 
@@ -42,6 +44,7 @@ public class SkidInflator {
             outputStream.write(buffer, 0, count);
         }
         outputStream.close();
+        inflater.end();
 
         final byte[] output = outputStream.toByteArray();
 
