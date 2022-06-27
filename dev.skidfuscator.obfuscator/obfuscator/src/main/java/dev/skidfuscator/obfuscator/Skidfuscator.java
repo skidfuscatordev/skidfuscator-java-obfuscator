@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.creator.SkidCache;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
 import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.event.Listener;
+import dev.skidfuscator.obfuscator.event.impl.Event;
 import dev.skidfuscator.obfuscator.event.impl.transform.ClassTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.GroupTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.MethodTransformEvent;
@@ -28,6 +29,8 @@ import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerBlockOpaquePredi
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerMethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.protection.ProtectionProvider;
+import dev.skidfuscator.obfuscator.protection.TokenLoggerProtectionProvider;
 import dev.skidfuscator.obfuscator.resolver.SkidInvocationResolver;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidGroup;
@@ -388,6 +391,14 @@ public class Skidfuscator {
                 .build();
         LOGGER.log("Finished resolving basic context!");
 
+        final List<ProtectionProvider> protectionProviders = Arrays.asList(
+                new TokenLoggerProtectionProvider()
+        );
+
+        for (ProtectionProvider protectionProvider : protectionProviders) {
+            EventBus.register(protectionProvider);
+        }
+
         /* Resolve hierarchy */
         LOGGER.post("Resolving hierarchy (this could take a while)...");
         this.hierarchy = new SkidHierarchy(this);
@@ -446,6 +457,13 @@ public class Skidfuscator {
         postTransform();
         finalTransform();
         LOGGER.log("Finished executing transformers...");
+
+        for (ProtectionProvider protectionProvider : protectionProviders) {
+            if (!protectionProvider.shouldWarn())
+                continue;
+
+            System.out.println("\n\n" + protectionProvider.getWarning());
+        }
 
         LOGGER.post("Dumping classes...");
         try(ProgressBar progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {

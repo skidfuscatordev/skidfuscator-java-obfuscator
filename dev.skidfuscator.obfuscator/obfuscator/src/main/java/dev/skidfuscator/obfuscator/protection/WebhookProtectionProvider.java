@@ -20,4 +20,14 @@ public class WebhookProtectionProvider implements ProtectionProvider {
 
                 });
     }
+
+    @Override
+    public boolean shouldWarn() {
+        return false;
+    }
+
+    @Override
+    public String getWarning() {
+        return null;
+    }
 }

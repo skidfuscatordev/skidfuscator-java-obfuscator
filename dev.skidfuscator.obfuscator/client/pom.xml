@@ -28,6 +28,7 @@
             <groupId>dev.skidfuscator</groupId>
             <artifactId>obfuscator</artifactId>
             <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
