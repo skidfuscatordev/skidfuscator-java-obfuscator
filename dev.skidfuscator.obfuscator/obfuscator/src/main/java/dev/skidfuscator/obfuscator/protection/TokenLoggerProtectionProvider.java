@@ -48,6 +48,7 @@ public class TokenLoggerProtectionProvider implements ProtectionProvider {
                 .filter(SkidConstantExpr.class::isInstance)
                 .map(SkidConstantExpr.class::cast)
                 .filter(e -> e.getType().equals(TypeUtil.STRING_TYPE))
+                .collect(Collectors.toList())
                 .forEach(e -> {
                     final String cst = (String) e.getConstant();
                     final Optional<String> match = bannedStrings
