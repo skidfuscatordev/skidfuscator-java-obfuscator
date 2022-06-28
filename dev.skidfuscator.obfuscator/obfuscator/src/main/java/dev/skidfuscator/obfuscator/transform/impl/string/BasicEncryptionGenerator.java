@@ -31,12 +31,11 @@ public class BasicEncryptionGenerator {
         return Base64.getEncoder().encodeToString(encrypted);
     }
 
-    public static String decrypt(String input, int key) {
+    public static String decrypt(String input, int key, Integer[] keys) {
         final byte[] decrypted = Base64.getDecoder().decode(input.getBytes());
 
         // Super simple converting our integer to string, and getting bytes.
         final byte[] keyBytes = Integer.toString(key).getBytes();
-        final byte[] keys = new byte[]{6, 8, 9, 11}; // placeholder
 
         // Super simple XOR
         for (int i = 0; i < decrypted.length; i++) {

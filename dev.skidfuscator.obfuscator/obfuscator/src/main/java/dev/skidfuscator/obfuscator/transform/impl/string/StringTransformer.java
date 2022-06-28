@@ -73,7 +73,8 @@ public class StringTransformer extends AbstractTransformer {
                  *
                  */
                 .filter(SkidConstantExpr.class::isInstance)
-                .map(ConstantExpr.class::cast)
+                .map(SkidConstantExpr.class::cast)
+                .filter(e -> !e.isExempt())
                 .filter(constantExpr -> constantExpr.getConstant() instanceof String)
                 /*
                  * We collect since we're modifying the expression stream
