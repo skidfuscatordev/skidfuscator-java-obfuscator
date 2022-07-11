@@ -76,7 +76,6 @@ public class SwitchTransformer extends AbstractTransformer {
                     expr.unlink();
 
                     final DynamicLocal local = cfg.getDynamicLocals().newLocal(Type.INT_TYPE);
-                    //local.setType(Type.INT_TYPE);
                     final SkidCopyVarStmt copyVarStmt = new SkidCopyVarStmt(
                             cfg,
                             new SkidVarExpr(cfg, local, Type.INT_TYPE),

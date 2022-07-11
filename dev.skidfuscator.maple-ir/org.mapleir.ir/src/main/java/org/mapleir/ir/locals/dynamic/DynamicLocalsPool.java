@@ -16,7 +16,6 @@ import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Parameter;
 import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.BasicLocal;
-import org.mapleir.ir.locals.dynamic.DynamicLocal;
 import org.mapleir.ir.locals.impl.StaticMethodLocalsPool;
 import org.mapleir.ir.locals.impl.VirtualMethodLocalsPool;
 import org.mapleir.ir.utils.CFGUtils;
