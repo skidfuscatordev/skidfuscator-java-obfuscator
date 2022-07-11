@@ -5,15 +5,13 @@ import dev.skidfuscator.obfuscator.hierarchy.matching.ClassMethodHash;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
+import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.AnnotationNode;
 
@@ -64,7 +62,18 @@ public class SkidHierarchy implements Hierarchy {
                 }
             }
 
-            node.getMethods().forEach(method -> {
+            node.getMethods().stream().sorted(new Comparator<MethodNode>() {
+                @Override
+                public int compare(MethodNode o1, MethodNode o2) {
+                    final Parameter parameter1 = new Parameter(o1.getDesc());
+                    final Parameter parameter2 = new Parameter(o2.getDesc());
+
+                    final List<Type> args1 = parameter1.getArgs();
+                    final List<Type> args2 = parameter2.getArgs();
+
+                    return args1.size() - args2.size();
+                }
+            }).forEach(method -> {
                 getGroup(skidfuscator, method);
 
                 if (method.node.visibleAnnotations != null) {
