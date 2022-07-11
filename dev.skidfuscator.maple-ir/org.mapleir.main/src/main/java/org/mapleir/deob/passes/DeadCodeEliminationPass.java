@@ -17,7 +17,7 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 import org.mapleir.asm.ClassNode;
@@ -34,7 +34,7 @@ public class DeadCodeEliminationPass implements IPass {
 	public int deadLocals = 0;
 	
 	public void process(ControlFlowGraph cfg) {
-		LocalsPool lp = cfg.getLocals();
+		SSALocalsPool lp = cfg.getLocals();
 		
 		boolean c;
 		
@@ -116,7 +116,7 @@ public class DeadCodeEliminationPass implements IPass {
 							}
 							
 							Local l = copy.getVariable().getLocal();
-							LocalsPool pool = cfg.getLocals();
+							SSALocalsPool pool = cfg.getLocals();
 
 							if (!(l instanceof VersionedLocal) || pool == null || pool.uses.get(l) == null)
 								continue;

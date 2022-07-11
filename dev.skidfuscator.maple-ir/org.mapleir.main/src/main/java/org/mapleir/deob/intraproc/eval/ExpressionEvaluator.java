@@ -9,7 +9,7 @@ import org.mapleir.ir.code.expr.ArithmeticExpr.Operator;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 import org.mapleir.stdlib.collections.taint.TaintableSet;
 import org.mapleir.stdlib.util.Pair;
@@ -30,7 +30,7 @@ public class ExpressionEvaluator {
 		this.factory = factory;
 	}
 	
-	public ConstantExpr eval(LocalsPool pool, Expr e) {
+	public ConstantExpr eval(SSALocalsPool pool, Expr e) {
 		if(e.getOpcode() == CONST_LOAD) {
 			return ((ConstantExpr) e).copy();
 		} else if(e.getOpcode() == ARITHMETIC) {
@@ -303,7 +303,7 @@ public class ExpressionEvaluator {
 		return val;
 	}
 	
-	private Expr simplifyMultiplication(LocalsPool pool, ArithmeticExpr e) {
+	private Expr simplifyMultiplication(SSALocalsPool pool, ArithmeticExpr e) {
 		if (e.getOperator() != Operator.MUL)
 			throw new IllegalArgumentException("Only works on multiplication exprs");
 		
@@ -326,7 +326,7 @@ public class ExpressionEvaluator {
 		return null;
 	}
 	
-	private ArithmeticExpr simplifyAddition(LocalsPool pool, ArithmeticExpr ae) {
+	private ArithmeticExpr simplifyAddition(SSALocalsPool pool, ArithmeticExpr ae) {
 		if (ae.getOperator() != Operator.ADD)
 			throw new IllegalArgumentException("Only works on addition exprs");
 		
@@ -349,7 +349,7 @@ public class ExpressionEvaluator {
 		return null;
 	}
 	
-	private ArithmeticExpr reassociate(LocalsPool pool, ArithmeticExpr ae) {
+	private ArithmeticExpr reassociate(SSALocalsPool pool, ArithmeticExpr ae) {
 		ArithmeticExpr leftAe = (ArithmeticExpr) ae.getLeft();
 		Operator operatorA = leftAe.getOperator();
 		Operator operatorB = ae.getOperator();
@@ -377,7 +377,7 @@ public class ExpressionEvaluator {
 		return null;
 	}
 	
-	public Expr simplifyArithmetic(LocalsPool pool, ArithmeticExpr ae) {
+	public Expr simplifyArithmetic(SSALocalsPool pool, ArithmeticExpr ae) {
 		Expr e2 = null;
 		if (ae.getOperator() == MUL) { // try to simplify multiplication
 			e2 = simplifyMultiplication(pool, ae);

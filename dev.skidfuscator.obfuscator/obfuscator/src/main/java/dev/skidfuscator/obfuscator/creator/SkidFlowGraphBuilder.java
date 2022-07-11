@@ -40,6 +40,7 @@ public class SkidFlowGraphBuilder extends ControlFlowGraphBuilder {
         final ControlFlowGraph cfg = builder.buildImpl();
         BoissinotDestructor.leaveSSA(cfg);
         SkidLocalsReallocator.realloc(skidfuscator, cfg);
+        //cfg.getDynamicLocals().create();
 
         return cfg;
     }

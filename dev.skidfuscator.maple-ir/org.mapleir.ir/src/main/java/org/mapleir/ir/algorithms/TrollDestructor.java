@@ -18,7 +18,7 @@ import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.BasicLocal;
 import org.mapleir.ir.utils.CFGUtils;
 import org.mapleir.stdlib.collections.bitset.BitSetIndexer;
@@ -39,7 +39,7 @@ import static org.mapleir.ir.code.Opcode.LOCAL_LOAD;
 public class TrollDestructor {
 
 	private final ControlFlowGraph cfg;
-	private final LocalsPool locals;
+	private final SSALocalsPool locals;
 	private SSABlockLivenessAnalyser liveness;
 	private SSADefUseMap defuse;
 

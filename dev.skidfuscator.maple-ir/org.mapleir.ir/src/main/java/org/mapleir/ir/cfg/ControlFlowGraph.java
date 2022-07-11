@@ -16,7 +16,8 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.PhiExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.dynamic.DynamicLocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.ir.utils.CFGExporterUtils;
 import org.mapleir.ir.utils.CFGUtils;
@@ -36,7 +37,8 @@ import static org.mapleir.ir.code.Opcode.PHI_STORE;
 
 public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>> implements IHasJavaDesc {
 	
-	private final LocalsPool locals;
+	private final SSALocalsPool locals;
+	protected DynamicLocalsPool dynamicLocals;
 	private final MethodNode methodNode;
 	private final JavaDesc javaDesc;
 
@@ -44,7 +46,7 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 	// fyi, we start at one arbitrarily.
 	private int blockCounter = 1;
 
-	public ControlFlowGraph(LocalsPool locals, MethodNode methodNode) {
+	public ControlFlowGraph(SSALocalsPool locals, MethodNode methodNode) {
 		this.locals = locals;
 		this.methodNode = methodNode;
 		this.javaDesc = methodNode.getJavaDesc();
@@ -53,6 +55,7 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 	public ControlFlowGraph(ControlFlowGraph cfg) {
 		super(cfg);
 		locals = cfg.locals;
+		dynamicLocals = cfg.dynamicLocals;
 		methodNode = cfg.methodNode;
 		javaDesc = cfg.javaDesc;
 	}
@@ -152,7 +155,7 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 		return sw.toString();
 	}
 
-	public LocalsPool getLocals() {
+	public SSALocalsPool getLocals() {
 		return locals;
 	}
 
@@ -183,6 +186,10 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 
 	public MethodNode getMethodNode() {
 		return methodNode;
+	}
+
+	public DynamicLocalsPool getDynamicLocals() {
+		return dynamicLocals;
 	}
 
 	@Override

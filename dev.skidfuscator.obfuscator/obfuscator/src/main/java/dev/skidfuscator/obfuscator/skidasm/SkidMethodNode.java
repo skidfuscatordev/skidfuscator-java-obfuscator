@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicate
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlockFactory;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidVarExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import lombok.Getter;
@@ -22,7 +23,7 @@ import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
-import org.mapleir.ir.locals.Local;
+import org.mapleir.ir.locals.dynamic.DynamicLocal;
 import org.mapleir.ir.utils.CFGUtils;
 import org.objectweb.asm.Type;
 
@@ -232,11 +233,12 @@ public class SkidMethodNode extends MethodNode {
 
         cfg.getPredecessors(initBlock).forEach(vertex -> {
             if (IntegerBlockPredicateRenderer.DEBUG) {
-                final Local debugLocal = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+                final DynamicLocal debugLocal = cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
                 vertex.add(
                         0,
                         new SkidCopyVarStmt(
-                                new VarExpr(debugLocal, Type.getType(String.class)),
+                                cfg,
+                                new SkidVarExpr(cfg, debugLocal, Type.getType(String.class)),
                                 new ConstantExpr(
                                         "<-> Opaque protected <->",
                                         TypeUtil.STRING_TYPE
@@ -246,7 +248,8 @@ public class SkidMethodNode extends MethodNode {
 
                 vertex.add(
                         new SkidCopyVarStmt(
-                                new VarExpr(debugLocal, Type.getType(String.class)),
+                                cfg,
+                                new SkidVarExpr(cfg, debugLocal, Type.getType(String.class)),
                                 new ConstantExpr(
                                         "<-> Opaque Unprotected <->",
                                         TypeUtil.STRING_TYPE
@@ -259,11 +262,12 @@ public class SkidMethodNode extends MethodNode {
         });
 
         if (IntegerBlockPredicateRenderer.DEBUG) {
-            final Local debugLocal = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+            final DynamicLocal debugLocal = cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
             initBlock.add(
                     0,
                     new SkidCopyVarStmt(
-                            new VarExpr(debugLocal, Type.getType(String.class)),
+                            cfg,
+                            new SkidVarExpr(cfg, debugLocal, Type.getType(String.class)),
                             new ConstantExpr(
                                     "<-> Opaque protected [INIT START] <->",
                                     TypeUtil.STRING_TYPE
@@ -273,7 +277,8 @@ public class SkidMethodNode extends MethodNode {
 
             initBlock.add(
                     new SkidCopyVarStmt(
-                            new VarExpr(debugLocal, Type.getType(String.class)),
+                            cfg,
+                            new SkidVarExpr(cfg, debugLocal, Type.getType(String.class)),
                             new ConstantExpr(
                                     "<-> Opaque Unprotected [INIT END] <->",
                                     TypeUtil.STRING_TYPE
@@ -285,11 +290,12 @@ public class SkidMethodNode extends MethodNode {
         //System.out.println("Selected" + CFGUtils.printBlock(initBlock));
 
         if (IntegerBlockPredicateRenderer.DEBUG) {
-            final Local debugLocal = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+            final DynamicLocal debugLocal = cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
             newEntry.add(
                     0,
                     new SkidCopyVarStmt(
-                            new VarExpr(debugLocal, Type.getType(String.class)),
+                            cfg,
+                            new SkidVarExpr(cfg, debugLocal, Type.getType(String.class)),
                             new ConstantExpr(
                                     "<-> Opaque Unprotected [START] <->",
                                     TypeUtil.STRING_TYPE
@@ -298,7 +304,8 @@ public class SkidMethodNode extends MethodNode {
             );
             newEntry.add(
                     new SkidCopyVarStmt(
-                            new VarExpr(debugLocal, Type.getType(String.class)),
+                            cfg,
+                            new SkidVarExpr(cfg, debugLocal, Type.getType(String.class)),
                             new ConstantExpr(
                                     "<-> Opaque Unprotected [END] <->",
                                     TypeUtil.STRING_TYPE

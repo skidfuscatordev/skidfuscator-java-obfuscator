@@ -3,26 +3,23 @@ package dev.skidfuscator.obfuscator.transform.impl.number;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
-import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
-import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidVarExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
-import dev.skidfuscator.obfuscator.transform.TransformResult;
 import dev.skidfuscator.obfuscator.transform.Transformer;
+import dev.skidfuscator.obfuscator.util.TypeUtil;
 import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ConstantExpr;
-import org.mapleir.ir.code.expr.VarExpr;
-import org.mapleir.ir.locals.Local;
+import org.mapleir.ir.locals.dynamic.DynamicLocal;
 import org.objectweb.asm.Type;
 
 import java.util.Arrays;
@@ -30,7 +27,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class NumberTransformer extends AbstractTransformer {
     public NumberTransformer(Skidfuscator skidfuscator) {
@@ -99,11 +95,12 @@ public class NumberTransformer extends AbstractTransformer {
                     parent.overwrite(constantExpr, modified);
 
                     if (IntegerBlockPredicateRenderer.DEBUG) {
-                        final Local local1 = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
+                        final DynamicLocal local1 = cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
                         vertex.add(
                                 vertex.indexOf(stmt) + 1,
                                 new SkidCopyVarStmt(
-                                        new VarExpr(local1, Type.getType(String.class)),
+                                        cfg,
+                                        new SkidVarExpr(cfg, local1, Type.getType(String.class)),
                                         new ConstantExpr(
                                                 "[Constant] "
                                                         + constantExpr.getConstant()

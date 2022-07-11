@@ -8,7 +8,7 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 
@@ -29,7 +29,7 @@ public class DefUseVerifier implements Opcode {
 	}
 	
 	public static void verify0(ControlFlowGraph cfg) {
-		LocalsPool lp = cfg.getLocals();
+		SSALocalsPool lp = cfg.getLocals();
 		
 		Map<Local, AbstractCopyStmt> defs = new HashMap<>();
 		NullPermeableHashMap<VersionedLocal, Set<VarExpr>> uses = new NullPermeableHashMap<>(HashSet::new);

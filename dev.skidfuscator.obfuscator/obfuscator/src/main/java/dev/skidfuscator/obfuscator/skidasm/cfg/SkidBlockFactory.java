@@ -18,7 +18,7 @@ import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.StaticMethodLocalsPool;
 import org.objectweb.asm.Type;
 
@@ -203,11 +203,11 @@ public class SkidBlockFactory extends DefaultBlockFactory {
     @Override
     public CfgBuilder cfg() {
         return new CfgBuilder() {
-            private LocalsPool localsPool;
+            private SSALocalsPool localsPool;
             private MethodNode methodNode;
 
             @Override
-            public CfgBuilder localsPool(LocalsPool localsPool) {
+            public CfgBuilder localsPool(SSALocalsPool localsPool) {
                 this.localsPool = localsPool;
                 return this;
             }
@@ -224,7 +224,10 @@ public class SkidBlockFactory extends DefaultBlockFactory {
                 assert methodNode != null : "MethodNode cannot be null";
                 assert localsPool instanceof StaticMethodLocalsPool == methodNode.isStatic()
                         : "LocalsPool has to have a corresponding assignment (StaticMethodLocalsPool if method is static)";
-                return new SkidControlFlowGraph(localsPool, methodNode);
+                final SkidControlFlowGraph graph = new SkidControlFlowGraph(localsPool, methodNode);
+                //graph.setDynamicPool(skidfuscator.getClassSource());
+
+                return graph;
             }
         };
     }

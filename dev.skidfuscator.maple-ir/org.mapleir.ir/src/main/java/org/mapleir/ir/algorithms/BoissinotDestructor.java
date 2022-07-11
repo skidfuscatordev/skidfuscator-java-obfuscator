@@ -13,7 +13,7 @@ import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.ir.utils.CFGUtils;
 import org.mapleir.stdlib.collections.bitset.GenericBitSet;
@@ -46,7 +46,7 @@ public class BoissinotDestructor {
 	}
 
 	private final ControlFlowGraph cfg;
-	private final LocalsPool locals;
+	private final SSALocalsPool locals;
 	private final BasicBlock entry;
 
 	private final DominanceLivenessAnalyser resolver;
@@ -266,21 +266,21 @@ public class BoissinotDestructor {
 		List<BasicBlock> topoorder = dom_dfs.getTopoOrder();
 		assert (topoorder.size() >= cfg.vertices().size());
 		
-		for (BasicBlock bl : topoorder) {
-			for (Stmt stmt : bl) {
+		for (BasicBlock block : topoorder) {
+			for (Stmt stmt : block) {
 				int opcode = stmt.getOpcode();
 				if (opcode == Opcode.LOCAL_STORE) {
 					CopyVarStmt copy = (CopyVarStmt) stmt;
-					Expr e = copy.getExpression();
-					Local b = copy.getVariable().getLocal();
+					Expr expr = copy.getExpression();
+					Local local = copy.getVariable().getLocal();
 
 					// Expression has to be a VarExpr
-					if (!copy.isSynthetic() && e.getOpcode() == Opcode.LOCAL_LOAD) {
-						LinkedHashSet<Local> vc = values.get(((VarExpr) e).getLocal());
-						vc.add(b);
-						values.put(b, vc);
+					if (!copy.isSynthetic() && expr.getOpcode() == Opcode.LOCAL_LOAD) {
+						LinkedHashSet<Local> vc = values.get(((VarExpr) expr).getLocal());
+						vc.add(local);
+						values.put(local, vc);
 					} else {
-						values.getNonNull(b);
+						values.getNonNull(local);
 					}
 				} else if (opcode == Opcode.PHI_STORE) {
 					CopyPhiStmt copy = (CopyPhiStmt) stmt;

@@ -1,14 +1,7 @@
 package org.mapleir.ir.locals;
 
-import org.mapleir.ir.TypeUtils;
-import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.Opcode;
-import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
-import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.impl.BasicLocal;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.stdlib.collections.bitset.BitSetIndexer;
@@ -16,13 +9,11 @@ import org.mapleir.stdlib.collections.bitset.GenericBitSet;
 import org.mapleir.stdlib.collections.bitset.IncrementalBitSetIndexer;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 import org.mapleir.stdlib.collections.map.ValueCreator;
-import org.objectweb.asm.Type;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.function.Predicate;
 
-public abstract class LocalsPool implements ValueCreator<GenericBitSet<Local>> {
+public abstract class SSALocalsPool implements ValueCreator<GenericBitSet<Local>> {
 
 	private final Map<String, Local> cache;
 	private final Map<BasicLocal, VersionedLocal> latest;
@@ -32,7 +23,7 @@ public abstract class LocalsPool implements ValueCreator<GenericBitSet<Local>> {
 	public final Map<VersionedLocal, AbstractCopyStmt> defs;
 	public final NullPermeableHashMap<VersionedLocal, Set<VarExpr>> uses;
 
-	public LocalsPool() {
+	public SSALocalsPool() {
 		cache = new HashMap<>();
 		latest = new HashMap<>();
 		indexer = new IncrementalBitSetIndexer<>();
@@ -43,9 +34,9 @@ public abstract class LocalsPool implements ValueCreator<GenericBitSet<Local>> {
 	}
 
 	public abstract boolean isReservedRegister(Local l);
-	
+
 	public abstract boolean isImplicitRegister(Local l);
-	
+
 	public Set<Local> getAll(Predicate<Local> p)  {
 		Set<Local> set = new HashSet<>();
 		for(Local l : cache.values()) {

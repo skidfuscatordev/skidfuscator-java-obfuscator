@@ -19,7 +19,7 @@ import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.StaticMethodLocalsPool;
 import org.objectweb.asm.Type;
 
@@ -32,11 +32,11 @@ public class DefaultBlockFactory implements SSAFactory {
     @Override
     public CfgBuilder cfg() {
         return new CfgBuilder() {
-            private LocalsPool localsPool;
+            private SSALocalsPool localsPool;
             private MethodNode methodNode;
 
             @Override
-            public CfgBuilder localsPool(LocalsPool localsPool) {
+            public CfgBuilder localsPool(SSALocalsPool localsPool) {
                 this.localsPool = localsPool;
                 return this;
             }

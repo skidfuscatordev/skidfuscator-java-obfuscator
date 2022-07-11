@@ -10,7 +10,7 @@ import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.stdlib.collections.bitset.BitSetIndexer;
 import org.mapleir.stdlib.collections.bitset.GenericBitSet;
 import org.mapleir.stdlib.collections.bitset.IncrementalBitSetIndexer;
@@ -33,7 +33,7 @@ import static org.mapleir.ir.code.Opcode.LOCAL_LOAD;
 public class SreedharDestructor {
 
 	private final ControlFlowGraph cfg;
-	private final LocalsPool locals;
+	private final SSALocalsPool locals;
 	private SSABlockLivenessAnalyser liveness;
 	private SSADefUseMap defuse;
 

@@ -9,7 +9,7 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 import org.objectweb.asm.Type;
@@ -18,7 +18,7 @@ import java.util.*;
 
 public class LocalsReallocator {
     public static int realloc(ControlFlowGraph cfg) {
-        LocalsPool locals = cfg.getLocals();
+        SSALocalsPool locals = cfg.getLocals();
         NullPermeableHashMap<Local, Set<Type>> types = new NullPermeableHashMap<>(HashSet::new);
         int min = 0;
         Set<Local> safe = new HashSet<>();
@@ -156,7 +156,7 @@ public class LocalsReallocator {
                 }
             }
         }
-        LocalsPool pool = cfg.getLocals();
+        SSALocalsPool pool = cfg.getLocals();
         for (Map.Entry<? extends Local, ? extends Local> e : remap.entrySet()) {
             if (e.getKey() instanceof VersionedLocal) {
                 VersionedLocal from = (VersionedLocal) e.getKey();

@@ -5,24 +5,22 @@ import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
-import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidVarExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidSwitchStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
-import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
-import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
-import org.mapleir.ir.locals.Local;
+import org.mapleir.ir.locals.dynamic.DynamicLocal;
 import org.objectweb.asm.Type;
 
 import java.util.*;
@@ -77,13 +75,11 @@ public class SwitchTransformer extends AbstractTransformer {
                     final Expr expr = unit.getExpression();
                     expr.unlink();
 
-                    final Local local = cfg.getLocals().get(
-                            cfg.getLocals().getMaxLocals() + 2,
-                            true
-                    );
-                    local.setType(Type.INT_TYPE);
-                    final CopyVarStmt copyVarStmt = new CopyVarStmt(
-                            new VarExpr(local, Type.INT_TYPE),
+                    final DynamicLocal local = cfg.getDynamicLocals().newLocal(Type.INT_TYPE);
+                    //local.setType(Type.INT_TYPE);
+                    final SkidCopyVarStmt copyVarStmt = new SkidCopyVarStmt(
+                            cfg,
+                            new SkidVarExpr(cfg, local, Type.INT_TYPE),
                             new FakeArithmeticExpr(
                                     expr,
                                     blockOpaquePredicate.getGetter().get(unit.getBlock()),
@@ -95,7 +91,7 @@ public class SwitchTransformer extends AbstractTransformer {
                     unit.setExpression(hasher.hash(unit.getBlock(), new PredicateFlowGetter() {
                         @Override
                         public Expr get(final BasicBlock vertex) {
-                            return new VarExpr(local, Type.INT_TYPE);
+                            return new SkidVarExpr(vertex.cfg, local, Type.INT_TYPE);
                         }
                     }));
                 });

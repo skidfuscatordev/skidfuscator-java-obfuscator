@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.mapleir.flowgraph.edges.FlowEdge;
-import org.mapleir.flowgraph.edges.FlowEdges;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
@@ -17,7 +16,7 @@ import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.stdlib.collections.bitset.GenericBitSet;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 
@@ -37,7 +36,7 @@ public class SSABlockLivenessAnalyser implements Liveness<BasicBlock> {
 	private final NullPermeableHashMap<BasicBlock, GenericBitSet<Local>> in;
 
 	private final Queue<BasicBlock> queue;
-	private final LocalsPool locals;
+	private final SSALocalsPool locals;
 
 	private final ControlFlowGraph cfg;
 

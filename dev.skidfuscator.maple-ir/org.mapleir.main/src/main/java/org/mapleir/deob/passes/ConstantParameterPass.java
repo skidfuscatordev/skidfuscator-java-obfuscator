@@ -32,7 +32,7 @@ import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.ir.utils.CFGUtils;
 import org.objectweb.asm.Type;
@@ -396,7 +396,7 @@ public class ConstantParameterPass implements IPass, Opcode {
 		 * here as we would also need to change the
 		 * method desc and we can't do that until
 		 * later so we defer it. */
-		LocalsPool pool = cfg.getLocals();
+		SSALocalsPool pool = cfg.getLocals();
 
 		/* create the spill variable but not the
 		 * actual definition yet. */
@@ -458,7 +458,7 @@ public class ConstantParameterPass implements IPass, Opcode {
 	}
 	
 	private void demoteDeadParamters(IPAnalysis constAnalysis, ControlFlowGraph cfg, MethodNode n, boolean[] dead) {
-		LocalsPool pool = cfg.getLocals();
+		SSALocalsPool pool = cfg.getLocals();
 		BasicBlock entry = cfg.getEntries().iterator().next();
 		
 		for(int i=0; i < dead.length; i++) {

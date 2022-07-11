@@ -34,7 +34,7 @@ import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.stdlib.collections.taint.TaintableSet;
 import org.objectweb.asm.Type;
 import org.mapleir.asm.ClassNode;
@@ -112,7 +112,7 @@ public class ConstantExpressionEvaluatorPass implements IPass, Opcode {
 		}
 	}
 	
-	private Expr simplifyArithmetic(LocalsPool pool, Expr e) {
+	private Expr simplifyArithmetic(SSALocalsPool pool, Expr e) {
 		// no point evaluating constants
 		if (e.getOpcode() == CONST_LOAD) {
 			return null;
@@ -232,7 +232,7 @@ public class ConstantExpressionEvaluatorPass implements IPass, Opcode {
 		}
 
 		
-		private boolean isVirtual(LocalsPool pool) {
+		private boolean isVirtual(SSALocalsPool pool) {
 			Local lvar0_0 = pool.get(0, 0, false);
 			return pool.isImplicitRegister(lvar0_0);
 		}
@@ -241,7 +241,7 @@ public class ConstantExpressionEvaluatorPass implements IPass, Opcode {
 		public TaintableSet<Expr> getValues(ControlFlowGraph cfg, Local l) {
 			TaintableSet<Expr> set = new TaintableSet<>();
 			
-			LocalsPool pool = cfg.getLocals();
+			SSALocalsPool pool = cfg.getLocals();
 			AbstractCopyStmt copy = pool.defs.get(l);
 			if(copy.isSynthetic()) {
 				VarExpr vE = (VarExpr) copy.getExpression();

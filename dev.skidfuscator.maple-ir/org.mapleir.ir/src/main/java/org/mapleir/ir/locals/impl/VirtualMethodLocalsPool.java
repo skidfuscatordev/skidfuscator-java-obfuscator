@@ -1,9 +1,9 @@
 package org.mapleir.ir.locals.impl;
 
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 
-public class VirtualMethodLocalsPool extends LocalsPool {
+public class VirtualMethodLocalsPool extends SSALocalsPool {
 
 	public VirtualMethodLocalsPool() {
 		super();

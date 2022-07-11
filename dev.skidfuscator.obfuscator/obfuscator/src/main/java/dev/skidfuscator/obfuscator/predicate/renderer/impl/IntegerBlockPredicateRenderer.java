@@ -19,6 +19,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidVarExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeBlock;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
@@ -36,7 +37,6 @@ import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.Opcode;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
@@ -45,8 +45,8 @@ import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.*;
-import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
+import org.mapleir.ir.locals.dynamic.DynamicLocal;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -59,7 +59,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
 
     /**
      * Method called when the class methods are iterated over and initialized.
@@ -83,10 +83,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
          * +3 -> Safety net to allow for "long" to be used (I don't really know
          *       this fixed all my issues)
          */
-        final Local local = methodNode
+        final DynamicLocal local = methodNode
                 .getCfg()
-                .getLocals()
-                .get(methodNode.getCfg().getLocals().getMaxLocals() + 3);
+                .getDynamicLocals()
+                .newLocal(Type.INT_TYPE);
 
         /*
          * The getter right now is quite simple:
@@ -105,14 +105,14 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     return new ConstantExpr(flowPredicate.get((SkidBlock) block), Type.INT_TYPE);
                 }
 
-                return new VarExpr(local, Type.INT_TYPE);
+                return new SkidVarExpr(block.cfg, local, Type.INT_TYPE);
             }
         });
 
         flowPredicate.setSetter(new PredicateFlowSetter() {
             @Override
             public Stmt apply(Expr expr) {
-                return new CopyVarStmt(new VarExpr(local, Type.INT_TYPE), expr);
+                return new SkidCopyVarStmt(expr.getBlock().cfg, new SkidVarExpr(expr.getBlock().cfg, local, Type.INT_TYPE), expr);
             }
         });
 
@@ -632,7 +632,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         entryPoint,
                         getter
                 );
-
+        loadedChanged.setBlock(entryPoint);
         final Stmt copyVarStmt = localSetter.apply(loadedChanged);
         entryPoint.add(0, copyVarStmt);
         if (DEBUG) {
@@ -648,7 +648,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             entryPoint.add(1, jumpStmt);
         }
 
-        if (DEBUG) {
+        /*if (DEBUG) {
             final int seed = methodNode.getPredicate().getPrivate();
             final BasicBlock exception = Blocks.exception(cfg, "Failed to match entry seed of value " + seed + " of entry " + methodNode.getPredicate().getPublic());
             final Stmt jumpStmt = new FakeConditionalJumpStmt(
@@ -659,7 +659,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             );
             cfg.addEdge(new ConditionalJumpEdge<>(entryPoint, exception, Opcodes.IFNE));
             entryPoint.add(0, jumpStmt);
-        }
+        }*/
 
 
         /*
@@ -710,9 +710,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         );
 
                         if (DEBUG) {
-                            final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+                            final DynamicLocal local1 = block.cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
                             block.add(index, new SkidCopyVarStmt(
-                                            new VarExpr(local1, Type.getType(String.class)),
+                                            block.cfg,
+                                            new SkidVarExpr(block.cfg, local1, Type.getType(String.class)),
                                             new ConstantExpr(
                                                     block.getDisplayName()
                                                             + " -> " + targetSeededBlock.getDisplayName()
@@ -781,11 +782,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         basicBlock.cfg.addEdge(new ConditionalJumpEdge<>(block, basicBlock, Opcodes.IF_ICMPEQ));
 
                         if (DEBUG) {
-                            final Local local1 = basicBlock.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
+                            final DynamicLocal local1 = basicBlock.cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
                             basicBlock.add(
                                     1,
                                     new SkidCopyVarStmt(
-                                            new VarExpr(local1, Type.getType(String.class)),
+                                            basicBlock.cfg,
+                                            new SkidVarExpr(basicBlock.cfg, local1, Type.getType(String.class)),
                                             new ConstantExpr(
                                                     block.getDisplayName()
                                                     + " -> " + targetSeeded.getDisplayName()
@@ -876,11 +878,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                             basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
 
                             if (DEBUG) {
-                                final Local local1 = basicBlock.cfg.getLocals().get(seededBlock.cfg.getLocals().getMaxLocals() + 2);
+                                final DynamicLocal local1 = basicBlock.cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
                                 basicBlock.add(
                                         1,
                                         new SkidCopyVarStmt(
-                                                new VarExpr(local1, Type.getType(String.class)),
+                                                basicBlock.cfg,
+                                                new SkidVarExpr(basicBlock.cfg, local1, Type.getType(String.class)),
                                                 new ConstantExpr(
                                                         seededBlock.getDisplayName()
                                                                 + " -> " + target.getDisplayName()
@@ -923,11 +926,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
 
                         if (DEBUG) {
-                            final Local local1 = basicBlock.cfg.getLocals().get(seededBlock.cfg.getLocals().getMaxLocals() + 2);
+                            final DynamicLocal local1 = basicBlock.cfg.getDynamicLocals().newLocal(TypeUtil.STRING_TYPE);
                             basicBlock.add(
                                     1,
                                     new SkidCopyVarStmt(
-                                            new VarExpr(local1, Type.getType(String.class)),
+                                            basicBlock.cfg,
+                                            new SkidVarExpr(basicBlock.cfg, local1, Type.getType(String.class)),
                                             new ConstantExpr(
                                                     seededBlock.getDisplayName()
                                                             + " -> " + target.getDisplayName()
@@ -1074,6 +1078,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 block,
                 getter
         );
+        load.setBlock(block);
         final Stmt set = local.apply(load);
 
         block.add(

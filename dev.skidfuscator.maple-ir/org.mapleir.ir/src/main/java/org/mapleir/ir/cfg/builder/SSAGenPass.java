@@ -23,7 +23,7 @@ import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.locals.LocalsPool;
+import org.mapleir.ir.locals.SSALocalsPool;
 import org.mapleir.ir.locals.impl.BasicLocal;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.ir.utils.CFGUtils;
@@ -60,7 +60,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 	private final Set<VersionedLocal> deferred;
 	private final NullPermeableHashMap<VersionedLocal, Set<VersionedLocal>> shadowed;
 
-	private LocalsPool pool;
+	private SSALocalsPool pool;
 	private LT79Dom<BasicBlock, FlowEdge<BasicBlock>> doms;
 	
 	private Liveness<BasicBlock> liveness;
@@ -472,7 +472,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		int index = oldLocal.getIndex();
 		boolean isStack = oldLocal.isStack();
 		
-		LocalsPool handler = builder.graph.getLocals();
+		SSALocalsPool handler = builder.graph.getLocals();
 		Local l = handler.get(index, isStack);
 		int subscript = counters.get(l);
 		stacks.get(l).push(subscript);
@@ -986,7 +986,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 	}
 
 	private VersionedLocal latest(int index, boolean isStack) {
-		LocalsPool handler = builder.graph.getLocals();
+		SSALocalsPool handler = builder.graph.getLocals();
 		Local l = handler.get(index, isStack);
 
 		Stack<Integer> stack = stacks.get(l);
