@@ -204,7 +204,8 @@ public class SkidHierarchy implements Hierarchy {
 
                                     if (!e.getOwner().equals("java/lang/invoke/LambdaMetafactory")
                                             || !e.getName().equals("metafactory")) {
-                                        throw new IllegalStateException("Invalid invoke dynamic!");
+                                        return;
+                                        //throw new IllegalStateException("Invalid invoke dynamic!");
                                     }
 
                                     assert (e.getBootstrapArgs().length == 3 && e.getBootstrapArgs()[1] instanceof Handle);

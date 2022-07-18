@@ -66,12 +66,12 @@
         </executions>
       </plugin>
 
-      <plugin>
+      <!--<plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.0.1</version>
         <configuration>
-          <!-- If you want the build to *just work*. -->
+          <!- If you want the build to *just work*.
           <doclint>none</doclint>
         </configuration>
         <executions>
@@ -82,7 +82,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
     </plugins>
   </build>
 </project>
