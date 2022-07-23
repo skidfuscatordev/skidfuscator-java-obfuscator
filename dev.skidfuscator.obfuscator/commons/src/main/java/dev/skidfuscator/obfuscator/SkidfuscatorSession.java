@@ -20,6 +20,8 @@ public class SkidfuscatorSession {
     private boolean jmod;
     private boolean fuckit;
 
+    private boolean analytics;
+
     /**
      *
      * @return the input
@@ -83,5 +85,9 @@ public class SkidfuscatorSession {
      */
     public boolean isFuckIt() {
         return fuckit;
+    }
+
+    public boolean isAnalytics() {
+        return analytics;
     }
 }

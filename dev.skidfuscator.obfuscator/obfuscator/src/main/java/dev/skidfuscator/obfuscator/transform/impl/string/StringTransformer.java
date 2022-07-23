@@ -52,10 +52,10 @@ public class StringTransformer extends AbstractTransformer {
         Integer[] keysT = keyMap.get(parentNode);
 
         if (keysT == null) {
-            final int size = RandomUtil.nextInt(128);
+            final int size = RandomUtil.nextInt(127) + 1;
             keysT = new Integer[size];
             for (int i = 0; i < size; i++) {
-                keysT[i] = RandomUtil.nextInt(128);
+                keysT[i] = RandomUtil.nextInt(127) + 1;
             }
 
             keyMap.put(parentNode, keysT);

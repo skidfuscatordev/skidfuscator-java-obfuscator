@@ -67,6 +67,12 @@ public class ObfuscateCommand implements Callable<Integer> {
     )
     private boolean fuckit;
 
+    @CommandLine.Option(
+            names = {"-notrack", "--notrack"},
+            description = "If you do not wish to be part of analytics!"
+    )
+    private boolean notrack;
+
     @Override
     public Integer call()  {
         /* Total number of processors or cores available to the JVM */
@@ -157,6 +163,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .phantom(phantom)
                 .jmod(MiscUtil.getJavaVersion() > 8)
                 .fuckit(fuckit)
+                .analytics(!notrack)
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(skidInstance);

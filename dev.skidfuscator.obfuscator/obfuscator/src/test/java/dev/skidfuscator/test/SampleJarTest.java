@@ -44,6 +44,7 @@ public class SampleJarTest {
                 .output(output)
                 .runtime(new File(System.getProperty("java.home"), "lib/rt.jar"))
                 .phantom(true)
+                .analytics(false)
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(session);

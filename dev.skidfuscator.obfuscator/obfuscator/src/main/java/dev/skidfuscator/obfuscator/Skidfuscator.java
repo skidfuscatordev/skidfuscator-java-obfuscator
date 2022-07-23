@@ -41,6 +41,7 @@ import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
+import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Counter;
 import dev.skidfuscator.obfuscator.util.misc.TimedLogger;
@@ -58,6 +59,9 @@ import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
+import org.piwik.java.tracking.CustomVariable;
+import org.piwik.java.tracking.PiwikRequest;
+import org.piwik.java.tracking.PiwikTracker;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.AbstractJarDownloader;
 
@@ -65,6 +69,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -106,6 +111,33 @@ public class Skidfuscator {
      */
     public void run() {
         LOGGER.post("Beginning Skidfuscator Community...");
+
+        if (session.isAnalytics()) {
+            try {
+                final PiwikTracker tracker = new PiwikTracker(
+                        "https://analytics.skidfuscator.dev/matomo.php"
+                );
+
+                final PiwikRequest request = new PiwikRequest(
+                        1,
+                            null
+                );
+
+                final URL url = new URL("https://app.skidfuscator.dev");
+                request.setActionUrl(url);
+                request.setActionName("skidfuscator/launch");
+
+
+                request.setEventAction("launch");
+                request.setEventCategory("skidfuscator/community");
+                request.setEventName("Java");
+                request.setEventValue(MiscUtil.getJavaVersion());
+
+                tracker.sendRequestAsync(request);
+            } catch (Exception e){
+                //e.printStackTrace();
+            }
+        }
 
         /*
          * Initializes a null skid directory. This skid directory is used as a

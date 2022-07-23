@@ -38,6 +38,11 @@
             <version>0.9.3</version>
         </dependency>
         <dependency>
+            <groupId>com.github.matomo-org</groupId>
+            <artifactId>matomo-java-tracker</artifactId>
+            <version>v1.7</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.Col-E</groupId>
             <artifactId>jphantom</artifactId>
             <version>1.4.3</version>
