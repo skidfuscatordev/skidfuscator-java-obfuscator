@@ -141,7 +141,7 @@ public class ObfuscateCommand implements Callable<Integer> {
         }
 
         if (output == null) {
-            output = new File(input.getPath() + "-out.jar");
+            output = new File(input.getPath().replace(".jar", "") + "-out.jar");
         }
 
         if (runtime == null) {
