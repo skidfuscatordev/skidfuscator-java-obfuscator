@@ -156,7 +156,7 @@ public class Boot {
 		}
 
 		section("Rewriting jar.");
-		dumpJar(app, dl, masterGroup, args[0] + "-out.jar");
+		dumpJar(app, dl, masterGroup, args[0].replace(".jar", "") + "-out.jar");
 
 		section("Finished.");
 	}
