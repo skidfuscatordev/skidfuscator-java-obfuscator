@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator;
 import dev.skidfuscator.jghost.Ghost;
 import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
+import dev.skidfuscator.obfuscator.analytics.SkidTracker;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
@@ -47,6 +48,8 @@ import dev.skidfuscator.obfuscator.util.misc.Counter;
 import dev.skidfuscator.obfuscator.util.misc.TimedLogger;
 import lombok.Getter;
 import me.tongfei.progressbar.ProgressBar;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
 import org.mapleir.app.service.ApplicationClassSource;
@@ -71,6 +74,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -111,10 +115,9 @@ public class Skidfuscator {
      */
     public void run() {
         LOGGER.post("Beginning Skidfuscator Community...");
-
         if (session.isAnalytics()) {
             try {
-                final PiwikTracker tracker = new PiwikTracker(
+                final SkidTracker tracker = new SkidTracker(
                         "https://analytics.skidfuscator.dev/matomo.php"
                 );
 
@@ -134,6 +137,8 @@ public class Skidfuscator {
                 request.setEventValue(MiscUtil.getJavaVersion());
 
                 tracker.sendRequestAsync(request);
+                tracker.getHttpClient().getConnectionManager().shutdown();
+                tracker.getHttpAsyncClient().close();
             } catch (Exception e){
                 //e.printStackTrace();
             }

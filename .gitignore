@@ -38,4 +38,4 @@ dev.skidfuscator.obfuscator/obfuscator/src/test/resources/test-out.jar
 mappings/*
 
 *.jar
-*/dependency-reduced-pom.xml
+**/dependency-reduced-pom.xml

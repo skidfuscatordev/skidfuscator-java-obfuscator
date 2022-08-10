@@ -42,8 +42,7 @@ import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.FieldLoadExpr;
 import org.mapleir.ir.code.expr.VarExpr;
-import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
-import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
+import org.mapleir.ir.code.expr.invoke.*;
 import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
@@ -339,11 +338,54 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .build();
 
             final SkidMethodNode clinit = classNode.getClassInit();
+
+            final long seed = RandomUtil.nextInt();
+            final Random random = new Random(seed);
+            final int nextInt = random.nextInt();
+
+            final Local local = clinit
+                    .getCfg()
+                    .getLocals()
+                    .get(clinit.getCfg().getLocals().getMaxLocals() + 2);
+
             clinit.getEntryBlock().add(
                     0,
+                    new SkidCopyVarStmt(
+                            new VarExpr(local, Type.INT_TYPE),
+                            new VirtualInvocationExpr(
+                                    InvocationExpr.CallType.VIRTUAL,
+                                    new Expr[]{
+                                            new InitialisedObjectExpr(
+                                                    "java/util/Random",
+                                                    "(J)V",
+                                                    new Expr[]{
+                                                            new ConstantExpr(seed, Type.LONG_TYPE)
+                                                    }
+                                            )
+                                    },
+                                    "java/util/Random",
+                                    "nextInt",
+                                    "()I"
+                            )
+
+                    )
+            );
+
+            clinit.getEntryBlock().add(
+                    1,
                     new FieldStoreStmt(
                         null,
-                        new ConstantExpr(clazzStaticPredicate.get(), Type.INT_TYPE),
+                        new XorNumberTransformer().getNumber(
+                                clazzInstancePredicate.get(),
+                                nextInt,
+                                clinit.getEntryBlock(),
+                                new PredicateFlowGetter() {
+                                    @Override
+                                    public Expr get(BasicBlock vertex) {
+                                        return new VarExpr(local, Type.INT_TYPE);
+                                    }
+                                }
+                        ),
                         classNode.getName(),
                         staticFieldNode.getName(),
                         staticFieldNode.getDesc(),
@@ -403,7 +445,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .anyMatch(e -> !e.isClinit() && e.isStatic());
 
-            if (addStatic) {
+            if (true || addStatic) {
                 createDynamicStatic.run();
             } else {
                 createConstantStatic.run();
@@ -510,53 +552,55 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             }
         }
 
-        for (SkidInvocation invoker : skidGroup.getInvokers()) {
-            assert invoker != null : String.format("Invoker %s is null!", Arrays.toString(skidGroup.getInvokers().toArray()));
-            assert invoker.getExpr() != null : String.format("Invoker %s is null!", invoker.getOwner().getDisplayName());
-            final boolean isDynamic = invoker.getExpr() instanceof DynamicInvocationExpr;
+        if (!skidGroup.getInvokers().isEmpty()) {
+            for (SkidInvocation invoker : skidGroup.getInvokers()) {
+                assert invoker != null : String.format("Invoker %s is null!", Arrays.toString(skidGroup.getInvokers().toArray()));
+                assert invoker.getExpr() != null : String.format("Invoker %s is null!", invoker.getOwner().getDisplayName());
+                final boolean isDynamic = invoker.getExpr() instanceof DynamicInvocationExpr;
 
-            int index = 0;
-            final Expr[] params = /*isDynamic
+                int index = 0;
+                final Expr[] params = /*isDynamic
                     ? ((DynamicInvocationExpr) invoker.getExpr()).getPrintedArgs()
                     : */invoker.getExpr().getArgumentExprs();
-            for (Expr argumentExpr : params) {
-                assert argumentExpr != null : "Argument of index " + index + " is null!";
-                index++;
-            }
+                for (Expr argumentExpr : params) {
+                    assert argumentExpr != null : "Argument of index " + index + " is null!";
+                    index++;
+                }
 
-            final Expr[] args = new Expr[params.length + 1];
-            System.arraycopy(
-                    params,
-                    0,
-                    args,
-                    0,
-                    params.length
-            );
+                final Expr[] args = new Expr[params.length + 1];
+                System.arraycopy(
+                        params,
+                        0,
+                        args,
+                        0,
+                        params.length
+                );
 
-            final ConstantExpr constant = new SkidConstantExpr(skidGroup.getPredicate().getPublic());
-            args[args.length - 1] = constant;
+                final ConstantExpr constant = new SkidConstantExpr(skidGroup.getPredicate().getPublic());
+                args[args.length - 1] = constant;
 
-            invoker.getExpr().setArgumentExprs(args);
+                invoker.getExpr().setArgumentExprs(args);
 
-            if (isDynamic) {
-                final Handle boundFunc = (Handle) ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1];
-                final Parameter handlerDesc = new Parameter(boundFunc.getDesc());
-                handlerDesc.insertParameter(Type.INT_TYPE, indexGroup);
-                final Handle newBoundFunc = new Handle(boundFunc.getTag(), boundFunc.getOwner(), boundFunc.getName(),
-                        handlerDesc.getDesc(), boundFunc.isInterface());
+                if (isDynamic) {
+                    final Handle boundFunc = (Handle) ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1];
+                    final Parameter handlerDesc = new Parameter(boundFunc.getDesc());
+                    handlerDesc.insertParameter(Type.INT_TYPE, indexGroup);
+                    final Handle newBoundFunc = new Handle(boundFunc.getTag(), boundFunc.getOwner(), boundFunc.getName(),
+                            handlerDesc.getDesc(), boundFunc.isInterface());
 
-                final Parameter parameter = new Parameter(invoker.getExpr().getDesc());
-                parameter.insertParameter(Type.INT_TYPE, indexGroup);
-                System.out.println("-----[ " + boundFunc.getOwner() + "#" + boundFunc.getName() + " ]-----");
-                System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getArgumentExprs()).map(Expr::getType).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
-                System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
-                System.out.println(invoker.getExpr().getDesc()  + " new: " + parameter.getDesc());
-                System.out.println(boundFunc.getDesc() + " new " + newBoundFunc.getDesc());
-                invoker.getExpr().setDesc(parameter.getDesc());
+                    final Parameter parameter = new Parameter(invoker.getExpr().getDesc());
+                    parameter.insertParameter(Type.INT_TYPE, indexGroup);
+                    System.out.println("-----[ " + boundFunc.getOwner() + "#" + boundFunc.getName() + " ]-----");
+                    System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getArgumentExprs()).map(Expr::getType).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
+                    System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
+                    System.out.println(invoker.getExpr().getDesc()  + " new: " + parameter.getDesc());
+                    System.out.println(boundFunc.getDesc() + " new " + newBoundFunc.getDesc());
+                    invoker.getExpr().setDesc(parameter.getDesc());
 
-                ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1] = newBoundFunc;
-            } else {
-                invoker.getExpr().setDesc(desc);
+                    ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1] = newBoundFunc;
+                } else {
+                    invoker.getExpr().setDesc(desc);
+                }
             }
         }
 
