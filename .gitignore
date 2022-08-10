@@ -34,3 +34,8 @@ obfuscator/src/test/resources/test-out.jar
 obfuscator/src/test/resources/test-bozar.jar
 
 dev.skidfuscator.obfuscator/obfuscator/src/test/resources/test-out.jar
+
+mappings/*
+
+*.jar
+*/dependency-reduced-pom.xml
