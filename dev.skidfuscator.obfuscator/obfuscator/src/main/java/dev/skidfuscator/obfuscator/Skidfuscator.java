@@ -23,6 +23,7 @@ import dev.skidfuscator.obfuscator.exempt.SimpleExemptAnalysis;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
+import dev.skidfuscator.obfuscator.order.priority.MethodPriority;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
@@ -618,7 +619,13 @@ public class Skidfuscator {
                     continue;
                 }
 
-                for (MethodNode cmth : classNode.getMethods()) {
+
+                final List<MethodNode> methodNodes = classNode.getMethods()
+                        .stream()
+                        .sorted(MethodPriority.COMPARATOR)
+                        .collect(Collectors.toList());
+
+                for (MethodNode cmth : methodNodes) {
                     final SkidMethodNode methodNode = (SkidMethodNode) cmth;
 
                     if (methodNode.isAbstract() || methodNode.isNative()) {

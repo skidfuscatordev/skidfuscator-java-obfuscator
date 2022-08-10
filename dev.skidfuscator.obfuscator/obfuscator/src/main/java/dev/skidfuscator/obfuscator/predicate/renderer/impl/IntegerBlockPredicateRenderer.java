@@ -19,6 +19,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
+import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeBlock;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
@@ -242,12 +243,13 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
              * Contrary to the previous getter, this one store the value in a field. This
              * should make things harder for individuals to fuck around with.
              */
+            final int troll = clazzInstancePredicate.get() ^ clazzStaticPredicate.get();
             final SkidFieldNode fieldNode = classNode
                     .createField()
                     .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT)
                     .name(RandomUtil.randomIsoString(10))
                     .desc("I")
-                    .value(clazzInstancePredicate.get())
+                    .value(troll)
                     .build();
 
             clazzInstancePredicate.setGetter(new PredicateFlowGetter() {
@@ -290,8 +292,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .filter(SkidMethodNode.class::isInstance)
                     .map(SkidMethodNode.class::cast)
                     .forEach(skidMethodNode -> {
-                        final Expr expr = new ConstantExpr(
-                                clazzInstancePredicate.get()
+                        final Expr expr = new FakeArithmeticExpr(
+                                new ConstantExpr(troll, Type.INT_TYPE),
+                                clazzStaticPredicate.getGetter().get(skidMethodNode.getEntryBlock()),
+                                ArithmeticExpr.Operator.XOR
                         );
                         expr.setBlock(skidMethodNode.getEntryBlock());
                         skidMethodNode.getEntryBlock().add(
@@ -329,7 +333,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             });
         };
 
-        final Runnable createDynamicStatic = () -> {
+        final Runnable createDynamicStatic2 = () -> {
             final SkidFieldNode staticFieldNode = classNode.createField()
                     .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)
                     .name(RandomUtil.randomIsoString(10))
@@ -339,14 +343,14 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
             final SkidMethodNode clinit = classNode.getClassInit();
 
-            final long seed = RandomUtil.nextInt();
+            final long seed = RandomUtil.nextLong();
             final Random random = new Random(seed);
             final int nextInt = random.nextInt();
 
             final Local local = clinit
                     .getCfg()
                     .getLocals()
-                    .get(clinit.getCfg().getLocals().getMaxLocals() + 2);
+                    .get(clinit.getCfg().getLocals().getMaxLocals() + 3);
 
             clinit.getEntryBlock().add(
                     0,
@@ -376,7 +380,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     new FieldStoreStmt(
                         null,
                         new XorNumberTransformer().getNumber(
-                                clazzInstancePredicate.get(),
+                                clazzStaticPredicate.get(),
                                 nextInt,
                                 clinit.getEntryBlock(),
                                 new PredicateFlowGetter() {
@@ -430,6 +434,16 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         }
 
         else {
+            final boolean addStatic = classNode.getMethods()
+                    .stream()
+                    .anyMatch(e -> !e.isClinit() && e.isStatic());
+
+            if (addStatic) {
+                createDynamicStatic2.run();
+            } else {
+                createConstantStatic.run();
+            }
+
             final boolean addInstance = classNode.getMethods()
                     .stream()
                     .anyMatch(e -> !e.isInit() && !e.isStatic());
@@ -439,16 +453,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 createDynamicInstance.run();
             } else {
                 createConstantInstance.run();
-            }
-
-            final boolean addStatic = classNode.getMethods()
-                    .stream()
-                    .anyMatch(e -> !e.isClinit() && e.isStatic());
-
-            if (true || addStatic) {
-                createDynamicStatic.run();
-            } else {
-                createConstantStatic.run();
             }
         }
     }
@@ -543,7 +547,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
             final ClassMethodHash classMethodHash = new ClassMethodHash(skidMethodNode);
 
-            if (skidfuscator.getHierarchy().getGroup(classMethodHash) != null) {
+            if (skidfuscator.getHierarchy().getGroup(classMethodHash) != null && !skidGroup.getName().contains("<")) {
                 skidGroup.setName(skidGroup.getName() + "$" + RandomUtil.nextInt());
             }
 

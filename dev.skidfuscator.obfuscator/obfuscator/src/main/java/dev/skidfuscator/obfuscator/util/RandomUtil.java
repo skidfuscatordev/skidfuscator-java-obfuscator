@@ -18,6 +18,10 @@ public class RandomUtil {
         return random.nextInt(bound);
     }
 
+    public long nextLong() {
+        return random.nextLong();
+    }
+
     public String randomIsoString(int size) {
         final int leftLimit = 48; // numeral '0'
         final int rightLimit = 122; // letter 'z'
