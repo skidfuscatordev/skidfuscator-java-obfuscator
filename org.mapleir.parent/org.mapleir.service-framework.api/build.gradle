@@ -1,0 +1,10 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    api project(':property-framework')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-service-provider-api'

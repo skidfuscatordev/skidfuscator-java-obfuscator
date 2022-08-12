@@ -1,0 +1,11 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation project(':service-framework-api')
+    implementation project(':service-framework-impl')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-service-util'

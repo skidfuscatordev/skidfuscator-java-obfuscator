@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+    id 'java-library'
+}
+
+dependencies {
+    api 'log4j:log4j:1.2.17'
+    api project(':modasm')
+    api project(':topdank-services')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-app-services'

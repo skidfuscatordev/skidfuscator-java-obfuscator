@@ -35,7 +35,53 @@ obfuscator/src/test/resources/test-bozar.jar
 
 dev.skidfuscator.obfuscator/obfuscator/src/test/resources/test-out.jar
 
+# Maven files that shouldn't be pushed.
+dev.skidfuscator.obfuscator/client/dependency-reduced-pom.xml
+dev.skidfuscator.obfuscator/commons/dependency-reduced-pom.xml
+dev.skidfuscator.obfuscator/obfuscator/dependency-reduced-pom.xml
 mappings/*
 
 *.jar
 **/dependency-reduced-pom.xml
+
+gradle
+**/build/
+!src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrappper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+# Created by https://www.gitignore.io/api/java,gradle
+
+### Java ###
+*.class
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+### Gradle ###
+.gradle
+/build/
+
+*/.DS_Store
+*/mappings/

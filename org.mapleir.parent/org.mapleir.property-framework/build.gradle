@@ -1,0 +1,10 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    api 'com.google.guava:guava:31.1-jre'
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-property-framework'

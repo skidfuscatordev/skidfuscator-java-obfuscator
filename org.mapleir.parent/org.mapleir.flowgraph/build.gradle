@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation project(':stdlib')
+    implementation project(':modasm')
+    testImplementation project(':stdlib')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-flowgraph'

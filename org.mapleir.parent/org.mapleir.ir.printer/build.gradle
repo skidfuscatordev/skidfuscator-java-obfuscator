@@ -1,0 +1,11 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    api project(':ir')
+    api project(':property-framework')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-ir.printer'

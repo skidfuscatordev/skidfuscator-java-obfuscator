@@ -1,0 +1,12 @@
+dependencies {
+    api project(':modasm')
+    api project(':ir')
+    api project(':app-services')
+    api project(':topdank-services')
+    api project(':service-util')
+    api project(':service-framework-api')
+    api project(':ir.printer')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-main'

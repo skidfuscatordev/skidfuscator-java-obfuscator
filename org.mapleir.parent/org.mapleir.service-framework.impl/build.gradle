@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    api 'log4j:log4j:1.2.17'
+    api project(':property-framework')
+    api project(':service-framework-api')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-service-provider-impl'

@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+    id 'java-library'
+}
+
+dependencies {
+    api 'com.google.code.gson:gson:2.9.0'
+    api 'org.danilopianini:urlclassloader-util:0.1.1'
+    api project(':modasm')
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-topdank-services'
+

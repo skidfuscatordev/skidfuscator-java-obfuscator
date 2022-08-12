@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+
+    api project(':commons')
+    implementation 'me.tongfei:progressbar:0.9.3'
+    implementation 'com.github.matomo-org:matomo-java-tracker:v1.7'
+    implementation 'com.github.Col-E:jphantom:1.4.3'
+    implementation 'dev.dirs:directories:26'
+
+    testImplementation 'com.github.xxDark:SSVM:1.7.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+}
+
+test {
+    useJUnitPlatform()
+}

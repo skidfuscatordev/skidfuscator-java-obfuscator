@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    api project(':dot4j')
+    api project(':property-framework')
+    testImplementation 'junit:junit:3.8.2'
+}
+
+group = 'dev.skidfuscator.mapleir'
+description = 'MapleIR-stdlib'
+
+tasks.register('testsJar', Jar) {
+    archiveClassifier = 'tests'
+    from(sourceSets.test.output)
+}
+
