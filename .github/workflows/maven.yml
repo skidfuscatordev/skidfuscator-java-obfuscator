@@ -1,7 +1,7 @@
 # This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CI with Maven
+name: Java CI with Gradle
 
 on:
   push:
@@ -20,10 +20,10 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
         #cache: maven
-    - name: Build with Maven
+    - name: Build with Gradle
       run: |
-        mvn -B package --file pom.xml
-        mkdir staging/ && cp dev.skidfuscator.obfuscator/client/target/client-1.0.0-SNAPSHOT.jar staging
+        ./gradlew shadowJar --no-daemon
+        mkdir staging/ && cp dev.skidfuscator.client.standalone/build/libs/client-standalone-all.jar staging
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.0
       with:
