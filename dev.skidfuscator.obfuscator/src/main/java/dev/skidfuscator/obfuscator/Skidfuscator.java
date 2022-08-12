@@ -108,7 +108,7 @@ public class Skidfuscator {
      * Runs the execution of the obfuscator.
      */
     public void run() {
-        LOGGER.post("Beginning Skidfuscator Enterprise...");
+        LOGGER.post("Beginning Skidfuscator Community...");
         if (session.isAnalytics()) {
             try {
                 final SkidTracker tracker = new SkidTracker(
@@ -124,13 +124,13 @@ public class Skidfuscator {
                 request.setActionUrl(url);
                 request.setActionName("skidfuscator/launch");
 
-                request.setCampaignName("enterprise");
+                request.setCampaignName("community");
                 request.setCampaignKeyword("launch");
 
                 request.setPluginJava(true);
 
                 request.setEventAction("launch");
-                request.setEventCategory("skidfuscator/enterprise");
+                request.setEventCategory("skidfuscator/community");
                 request.setEventName("Java");
                 request.setEventValue(MiscUtil.getJavaVersion());
 
