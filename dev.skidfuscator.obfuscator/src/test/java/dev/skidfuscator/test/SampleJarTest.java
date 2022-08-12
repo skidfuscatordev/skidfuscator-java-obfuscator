@@ -3,6 +3,8 @@ package dev.skidfuscator.test;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
+import dev.skidfuscator.test.ssvm.SsvmIntegration;
+import dev.skidfuscator.test.util.VmUtil;
 import dev.xdark.ssvm.VirtualMachine;
 import dev.xdark.ssvm.api.VMInterface;
 import dev.xdark.ssvm.asm.Modifier;
@@ -12,9 +14,15 @@ import dev.xdark.ssvm.fs.HostFileDescriptorManager;
 import dev.xdark.ssvm.jit.JitClass;
 import dev.xdark.ssvm.jit.JitCompiler;
 import dev.xdark.ssvm.jit.JitInstaller;
+import dev.xdark.ssvm.memory.allocation.MemoryAllocator;
+import dev.xdark.ssvm.memory.allocation.SynchronizedMemoryAllocator;
+import dev.xdark.ssvm.memory.management.MemoryManager;
+import dev.xdark.ssvm.memory.management.SynchronizedMemoryManager;
 import dev.xdark.ssvm.mirror.InstanceJavaClass;
 import dev.xdark.ssvm.mirror.JavaMethod;
 import dev.xdark.ssvm.symbol.VMSymbols;
+import dev.xdark.ssvm.thread.NativeThreadManager;
+import dev.xdark.ssvm.thread.ThreadManager;
 import dev.xdark.ssvm.util.VMHelper;
 import dev.xdark.ssvm.value.InstanceValue;
 import dev.xdark.ssvm.value.ObjectValue;
@@ -59,91 +67,28 @@ public class SampleJarTest {
         skidfuscator.run();
 
         // TODO: Fix SSVM
-        if (true)
-            return;
-
-        VirtualMachine vm = new VirtualMachine();
-        VMHelper helper = vm.getHelper();
+        final SsvmIntegration integration = new SsvmIntegration(skidfuscator);
+        final VirtualMachine machine = integration.createVM(true, e -> {});
+        final VmUtil util = VmUtil.create(machine);
+        final VMHelper helper = new VMHelper(machine);
+        final VMSymbols symbols = machine.getSymbols();
         try {
-            VMInterface vmi = vm.getInterface();
-            // Enable JIT, if needed
-            JitClassLoader definer = new JitClassLoader();
-            vmi.registerMethodEnter(
-                    ctx -> {
-                        JavaMethod jm = ctx.getMethod();
-                        int count = jm.getInvocationCount();
-                        if (count == 256 && !Modifier.isCompiledMethod(jm.getAccess())) {
-                            if (JitCompiler.isCompilable(jm)) {
-                                try {
-                                    JitClass jit = JitCompiler.compile(jm, 3);
-                                    JitInstaller.install(jm, definer, jit);
-                                } catch (MethodTooLargeException ex) {
-                                    MethodNode node = jm.getNode();
-                                    node.access |= Modifier.ACC_JIT;
-                                } catch (Throwable ex) {
-                                    throw new IllegalStateException("Could not install JIT class for " + jm, ex);
-                                }
-                            }
-                        }
-                    });
-            // Bootstrap VM
-            vm.bootstrap();
-            VMSymbols symbols = vm.getSymbols();
 
-            // Add jar to system class loader
-            Value cl = helper
-                            .invokeStatic(
-                                    symbols.java_lang_ClassLoader(),
-                                    "getSystemClassLoader",
-                                    "()Ljava/lang/ClassLoader;",
-                                    new Value[0],
-                                    new Value[0])
-                            .getResult();
-            assert cl instanceof ObjectValue : "ClassLoader must be ObjectValue";
-            addURL(vm, cl, output.getPath());
+            util.addUrl(output.getAbsolutePath());
 
             // Invoke main, setup hooks to do stuff, etc
-            InstanceJavaClass klass = (InstanceJavaClass) helper.findClass((ObjectValue) cl, "dev.sim0n.evaluator.Main", true);
+            InstanceJavaClass klass = (InstanceJavaClass) machine.findClass(
+                    util.getSystemClassLoader(),
+                    "dev.sim0n.evaluator.Main",
+                    true
+            );
             JavaMethod method = klass.getStaticMethod("main", "([Ljava/lang/String;)V");
 
-            helper.invokeStatic(
-                    klass, method, new Value[0], new Value[] {helper.emptyArray(symbols.java_lang_String())});
+            util.invokeStatic(
+                    klass, method.getName(), method.getDesc(), helper.emptyArray(symbols.java_lang_String()));
         } catch (VMException ex) {
-            helper.invokeVirtual("printStackTrace", "()V", new Value[0], new Value[] {ex.getOop()});
+            util.invokeVirtual("printStackTrace", "()V", ex.getOop());
             throw ex;
         }
     }
-
-    private static final class JitClassLoader extends ClassLoader
-            implements JitInstaller.ClassDefiner {
-
-        @Override
-        public Class<?> define(JitClass jitClass) {
-            byte[] code = jitClass.getCode();
-            return defineClass(jitClass.getClassName().replace('/', '.'), code, 0, code.length);
-        }
-    }
-
-    private static void addURL(VirtualMachine vm, Value loader, String path) {
-        // ((URLClassLoader)loader).addURL(new File(path).toURI().toURL());
-        VMHelper helper = vm.getHelper();
-        InstanceJavaClass fileClass = (InstanceJavaClass) vm.findBootstrapClass("java/io/File", true);
-        InstanceValue file = vm.getMemoryManager().newInstance(fileClass);
-        helper.invokeExact(
-                fileClass,
-                "<init>",
-                "(Ljava/lang/String;)V",
-                new Value[0],
-                new Value[] {file, helper.newUtf8(path)});
-        Value uri =
-                helper
-                        .invokeVirtual("toURI", "()Ljava/net/URI;", new Value[0], new Value[] {file})
-                        .getResult();
-        Value url =
-                helper
-                        .invokeVirtual("toURL", "()Ljava/net/URL;", new Value[0], new Value[] {uri})
-                        .getResult();
-        helper.invokeVirtual("addURL", "(Ljava/net/URL;)V", new Value[0], new Value[] {loader, url});
-    }
-
 }

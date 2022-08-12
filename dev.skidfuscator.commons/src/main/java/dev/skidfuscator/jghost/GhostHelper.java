@@ -54,7 +54,9 @@ public class GhostHelper {
             GhostHelper.saveLibraryFile(library, output);
             LOGGER.info("[✓] Creating mappings for " + lib.getAbsolutePath() + "!");
         } else {
+            LOGGER.info("[✓] Found mappings at " + output.getAbsolutePath() + "!");
             library = GhostHelper.readFromLibraryFile(output);
+            assert library != null : "Failed! Library is null!";
         }
 
         return library;
@@ -87,8 +89,10 @@ public class GhostHelper {
                     .gson()
                     .fromJson(fileReader, GhostLibrary.class);
             fileReader.close();
+            assert library != null : "Read library is null?";
             return library;
         } catch (IOException e) {
+            e.printStackTrace();
             LOGGER.error("Failed to download library cache", e);
             return null;
         }

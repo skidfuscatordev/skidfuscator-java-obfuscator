@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mapleir.propertyframework.api.IPropertyDictionary;
 import org.mapleir.serviceframework.api.IServiceContext;
 import org.mapleir.serviceframework.api.IServiceFactory;
@@ -20,7 +21,7 @@ import org.mapleir.serviceframework.util.ClassServiceQuery;
 // FIXME: synchronise data structures
 public class ServiceRegistryImpl implements IServiceRegistry {
 
-	private static final Logger LOGGER = Logger.getLogger(ServiceRegistryImpl.class);
+	private static final Logger LOGGER = LogManager.getLogger(ServiceRegistryImpl.class);
 
 	private final ContextLookupHelper map = new ContextLookupHelper();
 	private final IServiceReferenceHandlerFactory serviceReferenceFactoryHandler = new ServiceReferenceHandlerFactoryImpl();
