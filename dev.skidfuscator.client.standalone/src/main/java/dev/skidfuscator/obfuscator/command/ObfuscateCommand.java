@@ -127,7 +127,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 "                               │ "              + topMemory +            " │",
                 "                               └───────────────────────────────────────────┘",
                 "",
-                "                      Author: Ghast     Version: 2.0.3     Today: "
+                "                      Author: Ghast     Version: 2.0.5     Today: "
                         + DateFormat.getDateTimeInstance().format(new Date(Instant.now().toEpochMilli())),
                 ""
         };
