@@ -1,4 +1,4 @@
-package dev.skidfuscator.test.bytecode;
+package dev.skidfuscator.test.opaque;
 
 import dev.skidfuscator.core.SkidTest;
 import dev.skidfuscator.testclasses.TestRun;

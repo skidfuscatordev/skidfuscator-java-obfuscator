@@ -1,6 +1,6 @@
 package dev.skidfuscator.core;
 
-import dev.skidfuscator.test.classloader.SkidClassLoader;
+import dev.skidfuscator.core.classloader.SkidClassLoader;
 import dev.skidfuscator.testclasses.TestRun;
 import org.junit.jupiter.api.Test;
 

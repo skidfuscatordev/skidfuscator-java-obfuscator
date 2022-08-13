@@ -1,4 +1,4 @@
-package dev.skidfuscator.test;
+package dev.skidfuscator.test.evaluator;
 
 import dev.skidfuscator.core.SkidTest;
 import dev.skidfuscator.testclasses.TestRun;

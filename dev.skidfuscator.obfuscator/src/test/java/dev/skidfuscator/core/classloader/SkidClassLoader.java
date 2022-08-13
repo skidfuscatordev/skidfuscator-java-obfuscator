@@ -1,4 +1,4 @@
-package dev.skidfuscator.test.classloader;
+package dev.skidfuscator.core.classloader;
 
 import java.net.URL;
 import java.net.URLStreamHandlerFactory;

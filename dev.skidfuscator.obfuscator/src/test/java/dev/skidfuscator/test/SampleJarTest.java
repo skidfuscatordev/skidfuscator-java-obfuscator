@@ -3,7 +3,7 @@ package dev.skidfuscator.test;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
-import dev.skidfuscator.test.classloader.SkidClassLoader;
+import dev.skidfuscator.core.classloader.SkidClassLoader;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 

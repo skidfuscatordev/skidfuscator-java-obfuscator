@@ -12,7 +12,7 @@
  *
  */
 
-package dev.skidfuscator.test.classloader;
+package dev.skidfuscator.core.classloader;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
