@@ -3,8 +3,15 @@ package dev.skidfuscator.test.opaque;
 import dev.skidfuscator.core.SkidTest;
 import dev.skidfuscator.testclasses.TestRun;
 import dev.skidfuscator.testclasses.opaque.OpaqueConditionClazz;
+import org.junit.jupiter.api.RepeatedTest;
 
 public class OpaqueConditionTest extends SkidTest {
+
+    @Override
+    public void test() {
+        super.test();
+    }
+
     @Override
     public Class<? extends TestRun> getMainClass() {
         return OpaqueConditionClazz.class;

@@ -6,6 +6,7 @@ import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
+import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
@@ -186,13 +187,13 @@ public class SkidHierarchy implements Hierarchy {
         this.nodes = new ArrayList<>();
         this.annotations = new HashMap<>();
 
-        try (ProgressBar progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
+        try (ProgressWrapper progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
             nodes = skidfuscator.getClassSource()
                     .getClassTree()
                     .vertices()
-                    .parallelStream()
+                    .stream()
                     .filter(e -> {
-                        progressBar.step();
+                        progressBar.tick();
                         return skidfuscator.getClassSource().isApplicationClass(e.getName());
                     })
                     .collect(Collectors.toList());
@@ -201,10 +202,10 @@ public class SkidHierarchy implements Hierarchy {
         Skidfuscator.LOGGER.log("[#]     > Cached over " + nodes.size() + " classes!");
         Skidfuscator.LOGGER.post("[#] Establishing inheritance...");
 
-        try (ProgressBar progressBar = ProgressUtil.progress(nodes.size())){
+        try (ProgressWrapper progressBar = ProgressUtil.progress(nodes.size())){
             nodes.forEach(e -> {
                 executor.accept(e);
-                progressBar.step();
+                progressBar.tick();
             });
         }
         Skidfuscator.LOGGER.log("[#]     > Cached over " + methodToGroupMap.size() + " method groups!");
@@ -223,10 +224,10 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     private void setupInvoke() {
-        try (ProgressBar invocationBar = ProgressUtil.progress(nodes.size())) {
-            nodes.parallelStream()
-                    .forEach(c -> {
+        try (ProgressWrapper invocationBar = ProgressUtil.progress(nodes.size())) {
+            nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
+
                     final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
 
                     if (cfg == null) {
@@ -238,6 +239,7 @@ public class SkidHierarchy implements Hierarchy {
                             .filter(e -> e instanceof Invokable)
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
+
                                 final ClassMethodHash target;
 
                                 if (invocation instanceof DynamicInvocationExpr) {
@@ -290,7 +292,7 @@ public class SkidHierarchy implements Hierarchy {
                                 }
                             });
                 }
-                invocationBar.step();
+                invocationBar.tick();
             });
         }
     }
@@ -408,7 +410,6 @@ public class SkidHierarchy implements Hierarchy {
             return group;
 
         cfg.allExprStream()
-                .parallel()
                 .filter(e -> e instanceof Invokable && !(e instanceof DynamicInvocationExpr))
                 .map(e -> (Invocation) e)
                 .forEach(invocation -> {

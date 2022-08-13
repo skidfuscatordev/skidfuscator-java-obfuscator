@@ -6,9 +6,7 @@ import lombok.Data;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Data
@@ -16,7 +14,7 @@ public class SkidGroup {
     private final List<MethodNode> methodNodeList;
     private final Skidfuscator skidfuscator;
     private final MethodOpaquePredicate predicate;
-    private final List<SkidInvocation> invokers;
+    private final Set<SkidInvocation> invokers;
 
     private boolean annotation;
     private boolean statical;
@@ -31,7 +29,7 @@ public class SkidGroup {
     public SkidGroup(List<MethodNode> methodNodeList, Skidfuscator skidfuscator) {
         this.methodNodeList = methodNodeList;
         this.skidfuscator = skidfuscator;
-        this.invokers = new LinkedList<>();
+        this.invokers = new HashSet<>();
         this.predicate = skidfuscator
                 .getPredicateAnalysis()
                 .getMethodPredicate(this);

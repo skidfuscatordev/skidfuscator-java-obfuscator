@@ -163,11 +163,11 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 				);
 
 				assert i < argTypes.length : String.format(
-						"Failed on class %s to match argTypes (%s)\ndesc: %s\n\n  \\-->",
+						"Failed on class %s to match argTypes (%s)\ndesc: %s\n\n  \\-->%s",
 						this.getClass().getName(),
 						Arrays.toString(argTypes),
 						desc,
-						Arrays.stream(args).map(Object::toString).collect(Collectors.joining("\n  \\-->"))
+						Arrays.stream(args).map(CodeUnit::toString).collect(Collectors.joining("\n  \\-->"))
 				);
 				int[] cast = TypeUtils.getPrimitiveCastOpcodes(args[i].getType(), argTypes[i]);
 				for (int a = 0; a < cast.length; a++) {

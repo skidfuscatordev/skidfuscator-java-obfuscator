@@ -130,7 +130,7 @@ public class EventBus {
          * @return Returns a boolean of whether the listener can process the event
          */
         boolean check(final Object event) {
-            return type.isAssignableFrom(event.getClass());
+            return type.isInstance(event);
         }
 
         /**

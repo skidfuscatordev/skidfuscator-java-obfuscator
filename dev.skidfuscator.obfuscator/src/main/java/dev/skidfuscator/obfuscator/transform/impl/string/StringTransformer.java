@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class StringTransformer extends AbstractTransformer {
     private final Map<ClassNode, Integer[]> keyMap = new HashMap<>();
-    private final Set<ClassNode> INJECTED = new HashSet<>();
+    private final Set<String> INJECTED = new HashSet<>();
 
     public StringTransformer(Skidfuscator skidfuscator) {
         this(skidfuscator, Collections.emptyList());
@@ -47,7 +47,7 @@ public class StringTransformer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        final ClassNode parentNode = methodNode.owner;
+        final ClassNode parentNode = methodNode.getParent();
 
         Integer[] keysT = keyMap.get(parentNode);
 
@@ -63,9 +63,9 @@ public class StringTransformer extends AbstractTransformer {
 
         final Integer[] keys = keysT;
 
-        if (!INJECTED.contains(parentNode)) {
+        if (!INJECTED.contains(parentNode.getName())) {
             BasicEncryptionGenerator.visit((SkidClassNode) methodNode.owner, BasicEncryptionGenerator.METHOD_NAME, keys);
-            INJECTED.add(parentNode);
+            INJECTED.add(parentNode.getName());
         }
 
         cfg.allExprStream()

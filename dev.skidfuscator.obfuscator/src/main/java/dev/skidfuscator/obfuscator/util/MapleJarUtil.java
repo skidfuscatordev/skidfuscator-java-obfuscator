@@ -5,6 +5,7 @@ import dev.skidfuscator.obfuscator.creator.SkidASMFactory;
 import dev.skidfuscator.obfuscator.creator.SkidLibASMFactory;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
+import dev.skidfuscator.obfuscator.verifier.Verifier;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.asm.ClassNode;
@@ -37,6 +38,7 @@ public class MapleJarUtil {
             @Override
             public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
                 ClassNode cn = classData.getClassNode();
+
                 JarEntry entry = new JarEntry(classData.getName());
 
                 if (skidfuscator.getExemptAnalysis().isExempt(cn)) {

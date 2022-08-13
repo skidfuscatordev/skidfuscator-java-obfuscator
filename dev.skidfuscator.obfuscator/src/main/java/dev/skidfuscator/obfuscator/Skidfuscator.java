@@ -45,6 +45,7 @@ import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Counter;
 import dev.skidfuscator.obfuscator.util.misc.TimedLogger;
+import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import lombok.Getter;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.log4j.LogManager;
@@ -250,14 +251,14 @@ public class Skidfuscator {
 
         LOGGER.post("Hot-loading exempt cache...");
         int exempt = 0;
-        try (ProgressBar progressBar = ProgressUtil.progress(hierarchy.getClasses().size())) {
+        try (ProgressWrapper progressBar = ProgressUtil.progress(hierarchy.getClasses().size())) {
             for (ClassNode ccls : hierarchy.getClasses()) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
                 if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
                     exempt++;
                 }
-                progressBar.step();
+                progressBar.tick();
             }
         }
         LOGGER.log("Finished caching " + exempt + " exempted classes...");
@@ -279,13 +280,13 @@ public class Skidfuscator {
         }
 
         LOGGER.post("Dumping classes...");
-        try(ProgressBar progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {
+        try(ProgressWrapper progressBar = ProgressUtil.progress(cxt.getIRCache().size())) {
             for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(this.getIrFactory().entrySet())) {
                 SkidMethodNode mn = (SkidMethodNode) e.getKey();
                 ControlFlowGraph cfg = e.getValue();
 
                 if (mn.owner.isAnnoyingVersion() || mn.isNative() || mn.isAbstract()) {
-                    progressBar.step();
+                    progressBar.tick();
                     continue;
                 }
 
@@ -298,12 +299,14 @@ public class Skidfuscator {
                     }
                     ex.printStackTrace();
                 }
-                progressBar.step();
+                progressBar.tick();
             }
         }
         LOGGER.log("Finished dumping classes...");
 
         _dump();
+
+        EventBus.end();
 
         LOGGER.post("Goodbye!");
     }
@@ -365,10 +368,10 @@ public class Skidfuscator {
                  * simply just call the exempt analysis which builds the
                  * exclusion call and caches it.
                  */
-                try(ProgressBar progressBar = ProgressUtil.progress(exclusions.size())) {
+                try(ProgressWrapper progressBar = ProgressUtil.progress(exclusions.size())) {
                     for (String s : exclusions) {
                         exemptAnalysis.add(s);
-                        progressBar.step();
+                        progressBar.tick();
                     }
                 }
             } catch (IOException ex) {
@@ -549,7 +552,6 @@ public class Skidfuscator {
 
     protected void _dump() {
         LOGGER.post("Dumping jar...");
-        EventBus.end();
         try {
             MapleJarUtil.dumpJar(
                     this,
@@ -599,47 +601,50 @@ public class Skidfuscator {
     }
 
     private void run(final Caller caller) {
-        EventBus.call(caller.callBase());
+        final SkidTransformEvent event = caller.callBase();
+        EventBus.call(event);
 
-        try (ProgressBar progressBar = ProgressUtil.progress(hierarchy.getClasses().size())){
+        try (ProgressWrapper progressBar = ProgressUtil.progress(hierarchy.getClasses().size())){
             for (ClassNode ccls : hierarchy.getClasses()) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
                 if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
-                    progressBar.step();
+                    progressBar.tick();
                     continue;
                 }
 
                 EventBus.call(caller.callClass(classNode));
-                progressBar.step();
+                progressBar.tick();
             }
         }
 
-        try (ProgressBar progressBar = ProgressUtil.progress(hierarchy.getGroups().size())){
+        try (ProgressWrapper progressBar = ProgressUtil.progress(hierarchy.getGroups().size())){
             for (SkidGroup group : hierarchy.getGroups()) {
                 if (group.getMethodNodeList().stream().anyMatch(e -> exemptAnalysis.isExempt(e))) {
-                    progressBar.step();
+                    progressBar.tick();
                     continue;
                 }
 
                 EventBus.call(caller.callGroup(group));
-                progressBar.step();
+                progressBar.tick();
             }
         }
 
         final int size = hierarchy.getClasses().stream().mapToInt(e -> e.getMethods().size()).sum();
 
-        try (ProgressBar progressBar = ProgressUtil.progress(size)){
+        try (ProgressWrapper progressBar = ProgressUtil.progress(size)){
             for (ClassNode ccls : hierarchy.getClasses()) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
                 if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
-                    progressBar.stepBy(classNode.getMethods().size());
+                    progressBar.tick(classNode.getMethods().size());
                     continue;
                 }
 
+                LOGGER.post("Phase: " + event.getClass().getName());
 
-                final List<MethodNode> methodNodes = classNode.getMethods()
+                final List<MethodNode> methodNodes = classNode
+                        .getMethods()
                         .stream()
                         .sorted(MethodPriority.COMPARATOR)
                         .collect(Collectors.toList());
@@ -648,17 +653,17 @@ public class Skidfuscator {
                     final SkidMethodNode methodNode = (SkidMethodNode) cmth;
 
                     if (methodNode.isAbstract() || methodNode.isNative()) {
-                        progressBar.step();
+                        progressBar.tick();
                         continue;
                     }
 
                     if (exemptAnalysis.isExempt(methodNode)) {
-                        progressBar.step();
+                        progressBar.tick();
                         continue;
                     }
 
                     EventBus.call(caller.callMethod(methodNode));
-                    progressBar.step();
+                    progressBar.tick();
                 }
             }
         }

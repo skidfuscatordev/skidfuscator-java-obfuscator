@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
+import dev.skidfuscator.obfuscator.verifier.Verifier;
 import dev.skidfuscator.testclasses.TestRun;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
@@ -80,7 +81,6 @@ public class TestSkidfuscator extends Skidfuscator {
                 continue;
 
             imported.add(clazz.getName());
-            System.out.println("Importing " + clazz.getName());
 
             try {
                 mapleNode = ClassHelper.create(clazz.getName());
@@ -99,25 +99,25 @@ public class TestSkidfuscator extends Skidfuscator {
 
             if (classNode.node.innerClasses != null) {
                 for (InnerClassNode innerClass : classNode.node.innerClasses) {
-                    if (innerClass.name.contains("java"))
+                    if (innerClass.name.startsWith("java"))
                         continue;
                     try {
                         final Class<?> subClazz = Class.forName(
                                 innerClass.name.replace("/", ".")
                         );
+                        if (imported.contains(subClazz.getName()))
+                            continue;
 
                         iterate.add(subClazz);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-                System.out.println("Ooooo" + classNode.node.innerClasses.stream()
-                        .map(e -> e.name)
-                        .collect(Collectors.joining(", ")));
             }
 
             jarContents.getClassContents().add(data);
         }
+
 
         this.classSource = new SkidApplicationClassSource(
                 "test source",
@@ -142,6 +142,8 @@ public class TestSkidfuscator extends Skidfuscator {
         order.stream()
                 .filter(e -> this.classSource.isApplicationClass(e.getName()))
                 .forEach(e -> {
+                    Verifier.verify(e.node);
+
                     final AtomicReference<byte[]> bytes = new AtomicReference<>();
                     try {
                         final ClassWriter writer = resolver.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);

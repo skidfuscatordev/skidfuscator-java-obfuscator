@@ -8,7 +8,7 @@ public class WeirdLoopTest implements TestHandler {
     private int index;
     @Override
     public void handle() {
-        int[] targets = new int[new Random().nextInt(100)];
+        int[] targets = new int[new Random().nextInt(100) + 1];
 
         assert targets.length < 100 : "Targets must be less than 100 in size!";
         for (int i = 0; i < targets.length; i++) {

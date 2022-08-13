@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Files;
+import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import lombok.SneakyThrows;
 import me.tongfei.progressbar.ProgressBar;
 import org.apache.log4j.LogManager;
@@ -95,7 +96,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 * Create all the classes necessary based on the data we cached.
 		 */
 		logger.info("[$] Generating classes...");
-		try (ProgressBar progressBar = ProgressUtil.progress(data.size())){
+		try (ProgressWrapper progressBar = ProgressUtil.progress(data.size())){
 			data.forEach((name, db) -> {
 				C cn;
 				try {
@@ -128,7 +129,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 					e.printStackTrace();
 				}
 
-				progressBar.step();
+				progressBar.tick();
 			});
 		}
 
@@ -166,11 +167,11 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		ClassMembers members = ClassMembers.fromJar(new JarFile(input), hierarchy);
 
 		logger.info("[$] Beginning Phantom Extraction...");
-		try (ProgressBar progressBar = ProgressUtil.progress(data.size())){
+		try (ProgressWrapper progressBar = ProgressUtil.progress(data.size())){
 			data.values().forEach(c -> {
 				ClassReader cr = new ClassReader(c);
 				if (cr.getClassName().contains("$")) {
-					progressBar.step();
+					progressBar.tick();
 					return;
 				}
 
@@ -180,7 +181,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 					logger.debug("Phantom extraction failed: {}", t);
 				}
 
-				progressBar.step();
+				progressBar.tick();
 			});
 		}
 
@@ -194,11 +195,11 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 
 		logger.info("[$] Beginning Phantom Execution...");
 		JPhantom phantom;
-		try (ProgressBar progressBar = ProgressUtil.progress(1)){
+		try (ProgressWrapper progressBar = ProgressUtil.progress(1)){
 			// Execute and populate the current resource with generated classes
 			phantom = new JPhantom(typeMap, hierarchy, members);
 			phantom.run();
-			progressBar.step();
+			progressBar.tick();
 		}
 
 		/*
@@ -208,7 +209,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		logger.info("[$] Outputting phantom classes...");
 		final Map<String, JarClassData> namedMap = contents.getClassContents().namedMap();
 
-		try (ProgressBar progressBar = ProgressUtil.progress(phantom.getGenerated().size())){
+		try (ProgressWrapper progressBar = ProgressUtil.progress(phantom.getGenerated().size())){
 			phantom.getGenerated().forEach((k, v) -> {
 				final byte[] bytes = decorate(v);
 				final ClassReader reader = new ClassReader(bytes);
@@ -226,7 +227,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 						v,
 						classNode
 				));
-				progressBar.step();
+				progressBar.tick();
 			});
 		}
 

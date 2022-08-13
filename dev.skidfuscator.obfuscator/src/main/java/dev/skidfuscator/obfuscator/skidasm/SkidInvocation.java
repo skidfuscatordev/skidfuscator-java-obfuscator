@@ -11,6 +11,7 @@ import org.mapleir.ir.code.expr.invoke.Invokable;
 public class SkidInvocation {
     private final MethodNode owner;
     private Invokable expr;
+    private boolean tainted;
 
     public SkidInvocation(MethodNode owner, Invokable expr) {
         this.owner = owner;
@@ -31,5 +32,13 @@ public class SkidInvocation {
 
     public boolean isDynamic() {
         return expr instanceof DynamicInvocationExpr;
+    }
+
+    public boolean isTainted() {
+        return tainted;
+    }
+
+    public void setTainted(boolean tainted) {
+        this.tainted = tainted;
     }
 }

@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.phantom.jphantom;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
+import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
@@ -60,7 +61,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		int classesDumped = 0;
 		int resourcesDumped = 0;
 
-		try (ProgressBar progressBar = ProgressUtil.progress(contents.getClassContents().size() + contents.getResourceContents().size())) {
+		try (ProgressWrapper progressBar = ProgressUtil.progress(contents.getClassContents().size() + contents.getResourceContents().size())) {
 			for (JarClassData cn : contents.getClassContents()) {
 				try {
 					classesDumped += dumpClass(jos, cn);
@@ -69,12 +70,12 @@ public class PhantomResolvingJarDumper implements JarDumper {
 					throw e;
 				}
 
-				progressBar.step();
+				progressBar.tick();
 			}
 
 			for (JarResource res : contents.getResourceContents()) {
 				resourcesDumped += dumpResource(jos, res.getName(), res.getData());
-				progressBar.step();
+				progressBar.tick();
 			}
 		}
 

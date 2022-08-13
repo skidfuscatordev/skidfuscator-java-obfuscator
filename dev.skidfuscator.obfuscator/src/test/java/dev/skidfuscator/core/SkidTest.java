@@ -59,11 +59,6 @@ public abstract class SkidTest implements TestCase {
         skidfuscator.run();
     }
 
-    @AfterEach
-    public void end() {
-        EventBus.end();
-    }
-
     @Override
     public void receiveAndExecute(List<Map.Entry<String, byte[]>> output) {
         final URL[] urls = new URL[0];

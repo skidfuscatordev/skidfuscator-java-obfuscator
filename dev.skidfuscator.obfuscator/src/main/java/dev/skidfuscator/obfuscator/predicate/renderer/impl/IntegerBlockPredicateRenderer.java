@@ -559,6 +559,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         if (!skidGroup.getInvokers().isEmpty()) {
             for (SkidInvocation invoker : skidGroup.getInvokers()) {
                 assert invoker != null : String.format("Invoker %s is null!", Arrays.toString(skidGroup.getInvokers().toArray()));
+
+                if (invoker.isTainted()) {
+                    System.out.println("Warning! Almost duplicated call on " + invoker.asExpr().toString());
+                    continue;
+                }
+
                 assert invoker.getExpr() != null : String.format("Invoker %s is null!", invoker.getOwner().getDisplayName());
                 final boolean isDynamic = invoker.getExpr() instanceof DynamicInvocationExpr;
 
@@ -584,6 +590,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 args[args.length - 1] = constant;
 
                 invoker.getExpr().setArgumentExprs(args);
+                invoker.setTainted(true);
 
                 if (isDynamic) {
                     final Handle boundFunc = (Handle) ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1];
