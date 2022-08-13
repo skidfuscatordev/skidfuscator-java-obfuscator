@@ -1,14 +1,17 @@
-package dev.skidfuscator.test.bytecode;
+package dev.skidfuscator.testclasses.opaque;
+
+import dev.skidfuscator.testclasses.TestRun;
 
 import javax.crypto.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class OpaqueConditionClazz {
+public class OpaqueConditionClazz implements TestRun {
 
     private static final byte[] data = new byte[] {0, 1, 4, 3, 2};
 
-    public void handle() {
+    @Override
+    public void run() {
         int stage = 0;
         try {
             // Begin stage

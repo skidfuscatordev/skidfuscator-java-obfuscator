@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.SneakyThrows;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 
@@ -32,6 +33,11 @@ public class ClassHelper {
 			map.put(cn.getName(), cn);
 		}
 		return map;
+	}
+
+	@SneakyThrows
+	public static ClassNode create(Class<?> clazz)  {
+		return create(clazz.getName());
 	}
 
 	public static ClassNode create(byte[] bytes) {

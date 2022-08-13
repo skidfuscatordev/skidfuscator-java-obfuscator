@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.creator;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.data.JarClassData;
+import org.topdank.byteengineer.commons.data.JarContents;
 import org.topdank.byteengineer.commons.data.LocateableJarContents;
 
 import java.util.Collection;
@@ -12,11 +13,11 @@ import java.util.stream.Collectors;
 public class SkidApplicationClassSource extends ApplicationClassSource {
     //private final LocateableJarContents<ClassNode> nodes;
 
-    public SkidApplicationClassSource(String name, boolean phantom, LocateableJarContents nodes) {
+    public SkidApplicationClassSource(String name, boolean phantom, JarContents nodes) {
         super(name, phantom, nodes.getClassContents().stream().map(JarClassData::getClassNode).collect(Collectors.toList()));
     }
 
-    public SkidApplicationClassSource(String name, boolean phantom, Map<String, ClassNode> nodeMap, LocateableJarContents nodes) {
+    public SkidApplicationClassSource(String name, boolean phantom, Map<String, ClassNode> nodeMap) {
         super(name, phantom, nodeMap);
     }
 

@@ -33,9 +33,15 @@ public class GhostHelper {
         return getLibraryClassSource(session, file, true);
     }
 
-    public GhostLibrary getLibrary(final File lib, boolean jre) {
-        LOGGER.info("[+] " + lib.getAbsolutePath());
+    public ApplicationClassSource getJvm(final boolean fuckit, final File file) {
+        return getLibraryClassSource(fuckit, file, true);
+    }
 
+    public ApplicationClassSource getJvm(final boolean fuckit, final File file, final File mappings) {
+        return getLibraryClassSource(fuckit, file, mappings, true);
+    }
+
+    public GhostLibrary getLibrary(final File lib, boolean jre) {
         final StringBuilder outputPath = new StringBuilder("mappings/");
         if (jre) {
             outputPath.append("jvm/");
@@ -45,6 +51,29 @@ public class GhostHelper {
         outputPath.append(".json");
 
         final File output = new File(outputPath.toString());
+
+        return getLibrary(lib, output, jre);
+    }
+
+    public GhostLibrary getLibrary(final File lib, final File folder, boolean jre) {
+        LOGGER.info("[+] " + lib.getAbsolutePath());
+
+        final StringBuilder outputPath = new StringBuilder();
+        if (folder != null) {
+            outputPath.append(folder.getAbsolutePath()).append("/");
+        } else {
+            outputPath.append("mappings/");
+        }
+
+        if (jre) {
+            outputPath.append("jvm/");
+        }
+
+        outputPath.append(lib.getName());
+        outputPath.append(".json");
+
+        final File output = new File(outputPath.toString());
+
         final GhostLibrary library;
 
         if (!output.exists()) {
@@ -61,14 +90,26 @@ public class GhostHelper {
     }
 
     public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final File lib, boolean jvm) {
-        return importFile(session, getLibrary(lib, jvm));
+        return importFile(session.isFuckIt(), getLibrary(lib, jvm));
     }
 
-    public ApplicationClassSource importFile(final SkidfuscatorSession session, final GhostLibrary library) {
+    public ApplicationClassSource getLibraryClassSource(final boolean fuckIt, final File lib, boolean jvm) {
+        return importFile(fuckIt, getLibrary(lib, jvm));
+    }
+
+    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final File lib, final File mappings, final boolean jvm) {
+        return importFile(session.isFuckIt(), getLibrary(lib, mappings, jvm));
+    }
+
+    public ApplicationClassSource getLibraryClassSource(final boolean fuckit, final File lib, final File mappings, final boolean jvm) {
+        return importFile(fuckit, getLibrary(lib, mappings, jvm));
+    }
+
+    public ApplicationClassSource importFile(final boolean fuckit, final GhostLibrary library) {
         /* Create a new library class source with superior to default priority */
         final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                 "libraries",
-                session.isFuckIt(),
+                fuckit,
                 library.getContents()
                         .getClasses()
                         .values()

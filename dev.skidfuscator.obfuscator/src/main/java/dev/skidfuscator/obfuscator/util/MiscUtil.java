@@ -45,4 +45,8 @@ public class MiscUtil {
             if(dot != -1) { version = version.substring(0, dot); }
         } return Integer.parseInt(version);
     }
+
+    public boolean isJmod() {
+        return MiscUtil.getJavaVersion() > 8;
+    }
 }

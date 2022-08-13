@@ -61,7 +61,7 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
 import org.piwik.java.tracking.PiwikRequest;
 import org.topdank.byteengineer.commons.data.JarClassData;
-import org.topdank.byteio.in.AbstractJarDownloader;
+import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -81,9 +81,9 @@ public class Skidfuscator {
 
     private final SkidfuscatorSession session;
 
-    private SkidApplicationClassSource classSource;
+    protected SkidApplicationClassSource classSource;
     private LibraryClassSource jvmClassSource;
-    private AbstractJarDownloader<ClassNode> jarDownloader;
+    protected JarContents jarContents;
     private SkidCache irFactory;
     private AnalysisContext cxt;
 
@@ -110,36 +110,7 @@ public class Skidfuscator {
     public void run() {
         LOGGER.post("Beginning Skidfuscator Community...");
         if (session.isAnalytics()) {
-            try {
-                final SkidTracker tracker = new SkidTracker(
-                        "https://analytics.skidfuscator.dev/matomo.php"
-                );
-
-                final PiwikRequest request = new PiwikRequest(
-                        1,
-                            null
-                );
-
-                final URL url = new URL("https://app.skidfuscator.dev");
-                request.setActionUrl(url);
-                request.setActionName("skidfuscator/launch");
-
-                request.setCampaignName("community");
-                request.setCampaignKeyword("launch");
-
-                request.setPluginJava(true);
-
-                request.setEventAction("launch");
-                request.setEventCategory("skidfuscator/community");
-                request.setEventName("Java");
-                request.setEventValue(MiscUtil.getJavaVersion());
-
-                tracker.sendRequestAsync(request);
-                tracker.getHttpClient().getConnectionManager().shutdown();
-                tracker.getHttpAsyncClient().close();
-            } catch (Exception e){
-                //e.printStackTrace();
-            }
+            _runAnalytics();
         }
 
         /*
@@ -213,204 +184,12 @@ public class Skidfuscator {
                 .build();
         LOGGER.log("Finished resolving predicate analysis!");
 
-        /* Importation and exemptions */
-        LOGGER.post("Importing exemptions...");
-        if (session.getExempt() != null) {
-            try {
-                final List<String> exclusions = new ArrayList<>();
+        _importExempt();
+        _importClasspath();
+        _importJvm();
 
-                /*
-                 * This method is really scuffed but temporary for now. As
-                 * of right now we read every line from a .txt file, cache
-                 * them into an array list then pass them off to parsing.
-                 */
-                final FileReader fileReader = new FileReader(session.getExempt());
-                final BufferedReader br = new BufferedReader(fileReader);
-                String exclusion;
-                while ((exclusion = br.readLine()) != null) {
-                    exclusions.add(exclusion);
-                }
-
-                /*
-                 * This is the parsing bit. We initiate a progress bar and
-                 * simply just call the exempt analysis which builds the
-                 * exclusion call and caches it.
-                 */
-                try(ProgressBar progressBar = ProgressUtil.progress(exclusions.size())) {
-                    for (String s : exclusions) {
-                        exemptAnalysis.add(s);
-                        progressBar.step();
-                    }
-                }
-            } catch (IOException ex) {
-                /*
-                 * If there's any error, it can pose significant issues with
-                 * Skidfuscator. It's best to exit the program as of now.
-                 *
-                 * TODO:    Add better syntax highlighting for issues/parsing
-                 *          failure or exceptions
-                 */
-                LOGGER.error("Error reading exclusions file", ex);
-                System.exit(1);
-            }
-        }
-        LOGGER.log("Finished importing exemptions");
-
-
-        LOGGER.post("Importing jar...");
-        /*
-         * This is the main jar download. We'll be keeping a cache of the jar
-         * download as it will simplify our output methods. In several cases,
-         * many jars have classes with names that do not align with their
-         * respective ClassNode#getName, causing conflicts, hence why the cache
-         * of the jar downloader.
-         */
-        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
-                session.getInput(),
-                this
-        );
-        this.jarDownloader = downloader;
-        this.classSource = new SkidApplicationClassSource(
-                session.getInput().getName(),
-                session.isFuckIt(),
-                downloader.getJarContents()
-        );
-        LOGGER.log("Finished importing jar.");
-
-        /*
-         * Caching the libs is a fucking disaster - and I apologize
-         * As of right now for anyone who may be trying to read this.
-         * Currently, we have to re-cache entire class files and
-         * repeatedly read over and over again thousands of class files
-         * for extremely minimal information.
-         *
-         * Soon - hopefully - I'll create a mapping format or nick it
-         * from an OS project and convert libs to this mapping format,
-         * then cache the libs md5 and sha1/sha256 hashes, alongside
-         * any maven packaging. My objective is to be able to host an
-         * entire database of mappings in sub 1Gb of storage to allow
-         * for all of Skidfuscator Enterprise to be hosted on the cloud.
-         *
-         * This would allow for a lot of cool stuff, including tracking
-         * and remote HWIDs.
-         */
-        if (session.getMappings() != null) {
-            final File[] libs = Arrays.stream(session.getMappings().listFiles())
-                    .filter(e -> e.getAbsolutePath().endsWith(".json"))
-                    .toArray(File[]::new);
-
-            LOGGER.post("Importing " + libs.length + " mappings...");
-
-            for (File lib : libs) {
-                final GhostLibrary library = GhostHelper.readFromLibraryFile(lib);
-                final ApplicationClassSource libraryClassSource = GhostHelper.importFile(session, library);
-                /* Add library source to class source */
-                classSource.addLibraries(new LibraryClassSource(
-                        libraryClassSource,
-                        5
-                ));
-            }
-            LOGGER.log("✓ Finished importing mappings!");
-        } else if (session.getLibs() != null && session.getLibs().listFiles() != null) {
-            final File[] libs = Arrays.stream(session.getLibs().listFiles())
-                    .filter(e -> e.getAbsolutePath().endsWith(".jar"))
-                    .toArray(File[]::new);
-
-            LOGGER.post("Importing " + libs.length + " libs...");
-
-            for (File lib : libs) {
-                final ApplicationClassSource libraryClassSource = GhostHelper.getLibraryClassSource(session, lib);
-                /* Add library source to class source */
-                classSource.addLibraries(new LibraryClassSource(
-                        libraryClassSource,
-                        5
-                ));
-            }
-            LOGGER.log("✓ Finished importing libs!");
-        }
-
-        /*
-         * Exclusively run this if JPhantom is activated. JPhantom computes some
-         * stuff really well, albeit it just necks itself the moment the software
-         * grows in size.
-         *
-         * Furthermore, since it computes classes which could be present in other
-         * libraries, we set the priority to -1, making it the last fallback result.
-         */
-        this.classSource.addLibraries(new LibraryClassSource(
-                new ApplicationClassSource(
-                        "phantom",
-                        true,
-                        downloader.getPhantomContents()
-                                .getClassContents()
-                                .stream()
-                                .map(JarClassData::getClassNode)
-                                .collect(Collectors.toList())
-                ),
-                1
-        ));
-        LOGGER.log("Finished importing classpath!");
-
-        /* Import JVM */
-        LOGGER.post("Beginning importing of the JVM...");
-
-        /*
-         * Pardon my inverse condition, although the order will make sense in
-         * a second. Before J9/J11, Java had all of its libraries compiled in
-         * a single jar called rt.jar. This is no longer the case, although
-         * since J8 is still the most predominantly used version of Java, it
-         * is a no-brainer to support it.
-         *
-         * + I love J8,... death to "var" in Java
-         */
-        if (!session.isJmod()) {
-            this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                    GhostHelper.getJvm(session, session.getRuntime()),
-                    0
-            )));
-            LOGGER.post("✓ Success");
-        }
-        /*
-         * The choice of JMod in Java is so odd. Same "zip" format as other Jars,
-         * but completely and utterly discoostin. Oh well whatever. Here we try
-         * to download these fancily to be able to resolve all the classes in
-         * what used to be rt.jar.
-         */
-        else {
-            for (File file : session.getRuntime().listFiles()) {
-                if (!file.getAbsolutePath().endsWith(".jmod"))
-                    continue;
-                this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
-                        GhostHelper.getJvm(session, file),
-                        0
-                )));
-            }
-            LOGGER.post("✓ Success");
-        }
-        LOGGER.log("Finished importing the JVM!");
-
-        /* Checking for errors */
         if (!session.isFuckIt()) {
-            LOGGER.post("Starting verification");
-            try {
-                classSource.getClassTree().verify();
-            } catch (Exception e) {
-                System.out.println(
-                        "-----------------------------------------------------\n"
-                                + "/!\\ Skidfuscator failed to compute some libraries!\n"
-                                + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
-                                + "\n"
-                                + "Error: " + e.getMessage() + "\n" +
-                                (e.getCause() == null
-                                        ? "\n"
-                                        : "      " + e.getCause().getMessage() + "\n"
-                                )
-                                + "-----------------------------------------------------\n"
-                );
-                System.exit(1);
-                return;
-            }
-            LOGGER.log("Finished verification!");
+            _verify();
         } else {
             LOGGER.warn("Skipped verification...");
         }
@@ -524,6 +303,251 @@ public class Skidfuscator {
         }
         LOGGER.log("Finished dumping classes...");
 
+        _dump();
+
+        LOGGER.post("Goodbye!");
+    }
+
+    private void _runAnalytics() {
+        try {
+            final SkidTracker tracker = new SkidTracker(
+                    "https://analytics.skidfuscator.dev/matomo.php"
+            );
+
+            final PiwikRequest request = new PiwikRequest(
+                    1,
+                    null
+            );
+
+            final URL url = new URL("https://app.skidfuscator.dev");
+            request.setActionUrl(url);
+            request.setActionName("skidfuscator/launch");
+
+            request.setCampaignName("community");
+            request.setCampaignKeyword("launch");
+
+            request.setPluginJava(true);
+
+            request.setEventAction("launch");
+            request.setEventCategory("skidfuscator/community");
+            request.setEventName("Java");
+            request.setEventValue(MiscUtil.getJavaVersion());
+
+            tracker.sendRequestAsync(request);
+            tracker.getHttpClient().getConnectionManager().shutdown();
+            tracker.getHttpAsyncClient().close();
+        } catch (Exception e){
+            //e.printStackTrace();
+        }
+    }
+
+    protected void _importExempt() {
+        /* Importation and exemptions */
+        LOGGER.post("Importing exemptions...");
+        if (session.getExempt() != null) {
+            try {
+                final List<String> exclusions = new ArrayList<>();
+
+                /*
+                 * This method is really scuffed but temporary for now. As
+                 * of right now we read every line from a .txt file, cache
+                 * them into an array list then pass them off to parsing.
+                 */
+                final FileReader fileReader = new FileReader(session.getExempt());
+                final BufferedReader br = new BufferedReader(fileReader);
+                String exclusion;
+                while ((exclusion = br.readLine()) != null) {
+                    exclusions.add(exclusion);
+                }
+
+                /*
+                 * This is the parsing bit. We initiate a progress bar and
+                 * simply just call the exempt analysis which builds the
+                 * exclusion call and caches it.
+                 */
+                try(ProgressBar progressBar = ProgressUtil.progress(exclusions.size())) {
+                    for (String s : exclusions) {
+                        exemptAnalysis.add(s);
+                        progressBar.step();
+                    }
+                }
+            } catch (IOException ex) {
+                /*
+                 * If there's any error, it can pose significant issues with
+                 * Skidfuscator. It's best to exit the program as of now.
+                 *
+                 * TODO:    Add better syntax highlighting for issues/parsing
+                 *          failure or exceptions
+                 */
+                LOGGER.error("Error reading exclusions file", ex);
+                System.exit(1);
+            }
+        }
+        LOGGER.log("Finished importing exemptions");
+    }
+
+    protected void _importJvm() {
+        /* Import JVM */
+        LOGGER.post("Beginning importing of the JVM...");
+
+        /*
+         * Pardon my inverse condition, although the order will make sense in
+         * a second. Before J9/J11, Java had all of its libraries compiled in
+         * a single jar called rt.jar. This is no longer the case, although
+         * since J8 is still the most predominantly used version of Java, it
+         * is a no-brainer to support it.
+         *
+         * + I love J8,... death to "var" in Java
+         */
+        if (!session.isJmod()) {
+            this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                    GhostHelper.getJvm(session, session.getRuntime()),
+                    0
+            )));
+            LOGGER.post("✓ Success");
+        }
+        /*
+         * The choice of JMod in Java is so odd. Same "zip" format as other Jars,
+         * but completely and utterly discoostin. Oh well whatever. Here we try
+         * to download these fancily to be able to resolve all the classes in
+         * what used to be rt.jar.
+         */
+        else {
+            for (File file : session.getRuntime().listFiles()) {
+                if (!file.getAbsolutePath().endsWith(".jmod"))
+                    continue;
+                this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                        GhostHelper.getJvm(session, file),
+                        0
+                )));
+            }
+            LOGGER.post("✓ Success");
+        }
+        LOGGER.log(
+                "Finished importing the JVM!");
+    }
+
+    protected void _importClasspath() {
+        LOGGER.post("Importing jar...");
+        /*
+         * This is the main jar download. We'll be keeping a cache of the jar
+         * download as it will simplify our output methods. In several cases,
+         * many jars have classes with names that do not align with their
+         * respective ClassNode#getName, causing conflicts, hence why the cache
+         * of the jar downloader.
+         */
+        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
+                session.getInput(),
+                this
+        );
+        this.jarContents = downloader.getJarContents();
+        this.classSource = new SkidApplicationClassSource(
+                session.getInput().getName(),
+                session.isFuckIt(),
+                downloader.getJarContents()
+        );
+        LOGGER.log("Finished importing jar.");
+
+        /*
+         * Caching the libs is a fucking disaster - and I apologize
+         * As of right now for anyone who may be trying to read this.
+         * Currently, we have to re-cache entire class files and
+         * repeatedly read over and over again thousands of class files
+         * for extremely minimal information.
+         *
+         * Soon - hopefully - I'll create a mapping format or nick it
+         * from an OS project and convert libs to this mapping format,
+         * then cache the libs md5 and sha1/sha256 hashes, alongside
+         * any maven packaging. My objective is to be able to host an
+         * entire database of mappings in sub 1Gb of storage to allow
+         * for all of Skidfuscator Enterprise to be hosted on the cloud.
+         *
+         * This would allow for a lot of cool stuff, including tracking
+         * and remote HWIDs.
+         */
+        if (session.getMappings() != null) {
+            final File[] libs = Arrays.stream(session.getMappings().listFiles())
+                    .filter(e -> e.getAbsolutePath().endsWith(".json"))
+                    .toArray(File[]::new);
+
+            LOGGER.post("Importing " + libs.length + " mappings...");
+
+            for (File lib : libs) {
+                final GhostLibrary library = GhostHelper.readFromLibraryFile(lib);
+                final ApplicationClassSource libraryClassSource = GhostHelper.importFile(session.isFuckIt(), library);
+                /* Add library source to class source */
+                classSource.addLibraries(new LibraryClassSource(
+                        libraryClassSource,
+                        5
+                ));
+            }
+            LOGGER.log("✓ Finished importing mappings!");
+        } else if (session.getLibs() != null && session.getLibs().listFiles() != null) {
+            final File[] libs = Arrays.stream(session.getLibs().listFiles())
+                    .filter(e -> e.getAbsolutePath().endsWith(".jar"))
+                    .toArray(File[]::new);
+
+            LOGGER.post("Importing " + libs.length + " libs...");
+
+            for (File lib : libs) {
+                final ApplicationClassSource libraryClassSource = GhostHelper.getLibraryClassSource(session, lib);
+                /* Add library source to class source */
+                classSource.addLibraries(new LibraryClassSource(
+                        libraryClassSource,
+                        5
+                ));
+            }
+            LOGGER.log("✓ Finished importing libs!");
+        }
+
+        /*
+         * Exclusively run this if JPhantom is activated. JPhantom computes some
+         * stuff really well, albeit it just necks itself the moment the software
+         * grows in size.
+         *
+         * Furthermore, since it computes classes which could be present in other
+         * libraries, we set the priority to -1, making it the last fallback result.
+         */
+        this.classSource.addLibraries(new LibraryClassSource(
+                new ApplicationClassSource(
+                        "phantom",
+                        true,
+                        downloader.getPhantomContents()
+                                .getClassContents()
+                                .stream()
+                                .map(JarClassData::getClassNode)
+                                .collect(Collectors.toList())
+                ),
+                1
+        ));
+        LOGGER.log("Finished importing classpath!");
+    }
+
+    private void _verify() {
+        /* Checking for errors */
+        LOGGER.post("Starting verification");
+        try {
+            classSource.getClassTree().verify();
+        } catch (Exception e) {
+            System.out.println(
+                    "-----------------------------------------------------\n"
+                            + "/!\\ Skidfuscator failed to compute some libraries!\n"
+                            + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
+                            + "\n"
+                            + "Error: " + e.getMessage() + "\n" +
+                            (e.getCause() == null
+                                    ? "\n"
+                                    : "      " + e.getCause().getMessage() + "\n"
+                            )
+                            + "-----------------------------------------------------\n"
+            );
+            System.exit(1);
+            return;
+        }
+        LOGGER.log("Finished verification!");
+    }
+
+    protected void _dump() {
         LOGGER.post("Dumping jar...");
         EventBus.end();
         try {
@@ -536,7 +560,6 @@ public class Skidfuscator {
             e.printStackTrace();
         }
         LOGGER.log("Finished dumping jar...");
-        LOGGER.post("Goodbye!");
     }
 
     /**

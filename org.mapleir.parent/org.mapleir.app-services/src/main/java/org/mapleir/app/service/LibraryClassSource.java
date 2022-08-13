@@ -7,7 +7,7 @@ import org.mapleir.asm.ClassNode;
 
 public class LibraryClassSource extends ClassSource {
 
-	protected final ApplicationClassSource parent;
+	protected ApplicationClassSource parent;
 	protected final int priority;
 
 	public LibraryClassSource(Collection<ClassNode> classes, ApplicationClassSource parent, int priority) {
@@ -27,7 +27,7 @@ public class LibraryClassSource extends ClassSource {
 	}
 
 	/* public lookup method, polls parent first (which can
-	 * call it's children to look for the */
+	 * call its children to look for the */
 	@Override
 	public LocateableClassNode findClass(String name) {
 		if(name == null) {

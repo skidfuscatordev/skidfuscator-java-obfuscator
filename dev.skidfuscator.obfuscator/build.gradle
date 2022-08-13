@@ -7,7 +7,12 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
+configurations {
+    testCompile.extendsFrom compileOnly
+}
+
 dependencies {
+    testCompileOnly 'org.projectlombok:lombok:1.18.24'
     compileOnly 'org.projectlombok:lombok:1.18.24'
 
     api project(':commons')
@@ -15,6 +20,7 @@ dependencies {
     implementation 'com.github.matomo-org:matomo-java-tracker:v1.7'
     implementation 'com.github.Col-E:jphantom:1.4.3'
     implementation 'dev.dirs:directories:26'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
 
     testImplementation 'com.github.xxDark:SSVM:1.7.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'

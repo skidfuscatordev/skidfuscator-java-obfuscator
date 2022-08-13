@@ -1,13 +1,11 @@
 package dev.skidfuscator.obfuscator.phantom.jphantom;
 
-import com.google.common.collect.Lists;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
-import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.objectweb.asm.ClassReader;
@@ -18,15 +16,12 @@ import org.topdank.byteengineer.commons.data.JarResource;
 import org.topdank.byteio.out.JarDumper;
 import org.topdank.byteio.util.Debug;
 
-import javax.crypto.BadPaddingException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import java.util.zip.ZipError;
 import java.util.zip.ZipException;
 
 /**
@@ -106,7 +101,6 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
 			out.write(
 					skidfuscator
-					.getJarDownloader()
 					.getJarContents()
 					.getClassContents()
 					.namedMap()

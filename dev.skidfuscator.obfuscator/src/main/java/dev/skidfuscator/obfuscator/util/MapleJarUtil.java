@@ -32,7 +32,7 @@ public class MapleJarUtil {
     }
 
     public static void dumpJar(Skidfuscator skidfuscator, PassGroup masterGroup, String outputFile) throws IOException {
-        (new PhantomResolvingJarDumper(skidfuscator, skidfuscator.getJarDownloader().getJarContents(), skidfuscator.getClassSource()) {
+        (new PhantomResolvingJarDumper(skidfuscator, skidfuscator.getJarContents(), skidfuscator.getClassSource()) {
 
             @Override
             public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
@@ -41,7 +41,6 @@ public class MapleJarUtil {
 
                 if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
                     final JarClassData resource = skidfuscator
-                            .getJarDownloader()
                             .getJarContents()
                             .getClassContents()
                             .namedMap()
