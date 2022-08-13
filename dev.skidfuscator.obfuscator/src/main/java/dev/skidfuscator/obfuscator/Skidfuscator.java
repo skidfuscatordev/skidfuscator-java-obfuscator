@@ -303,10 +303,10 @@ public class Skidfuscator {
             }
         }
         LOGGER.log("Finished dumping classes...");
+        EventBus.end();
 
         _dump();
 
-        EventBus.end();
 
         LOGGER.post("Goodbye!");
     }

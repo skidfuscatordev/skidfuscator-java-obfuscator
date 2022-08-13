@@ -10,6 +10,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.verifier.Verifier;
 import dev.skidfuscator.testclasses.TestRun;
+import org.junit.jupiter.api.AfterEach;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.app.service.LibraryClassSource;
