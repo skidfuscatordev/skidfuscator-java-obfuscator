@@ -1,7 +1,7 @@
 package dev.skidfuscator.testclasses.evaluator.manager;
 
 import dev.skidfuscator.testclasses.evaluator.EvaluatorMain;
-import dev.skidfuscator.testclasses.evaluator.test.Test;
+import dev.skidfuscator.testclasses.evaluator.test.TestHandler;
 import dev.skidfuscator.testclasses.evaluator.test.impl.annotation.AnnotationTest;
 import dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest;
 import dev.skidfuscator.testclasses.evaluator.test.impl.flow.WeirdLoopTest;
@@ -12,14 +12,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TestManager {
-    private static final List<Class<? extends Test>> TEST_CLASSES = Arrays.asList(
+    private static final List<Class<? extends TestHandler>> TEST_CLASSES = Arrays.asList(
             AnnotationTest.class,
             OpaqueConditionTest.class,
             WeirdLoopTest.class,
             StringTest.class
     );
 
-    private final List<Test> tests = new ArrayList<>();
+    private final List<TestHandler> tests = new ArrayList<>();
 
     public TestManager() {
         TEST_CLASSES.forEach(clazz -> {
@@ -34,6 +34,6 @@ public class TestManager {
     }
 
     public void handleTests() {
-        tests.forEach(Test::handle);
+        tests.forEach(TestHandler::handle);
     }
 }

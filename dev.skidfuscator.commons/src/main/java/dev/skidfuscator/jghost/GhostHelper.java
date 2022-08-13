@@ -42,17 +42,7 @@ public class GhostHelper {
     }
 
     public GhostLibrary getLibrary(final File lib, boolean jre) {
-        final StringBuilder outputPath = new StringBuilder("mappings/");
-        if (jre) {
-            outputPath.append("jvm/");
-        }
-
-        outputPath.append(lib.getName());
-        outputPath.append(".json");
-
-        final File output = new File(outputPath.toString());
-
-        return getLibrary(lib, output, jre);
+        return getLibrary(lib, null, jre);
     }
 
     public GhostLibrary getLibrary(final File lib, final File folder, boolean jre) {
@@ -79,6 +69,7 @@ public class GhostHelper {
         if (!output.exists()) {
             LOGGER.info("[?] Could not find mappings for " + lib.getAbsolutePath() + "... Creating...");
             output.getParentFile().mkdirs();
+            output.getParentFile().mkdir();
             library = GhostHelper.createFromLibraryFile(lib);
             GhostHelper.saveLibraryFile(library, output);
             LOGGER.info("[✓] Creating mappings for " + lib.getAbsolutePath() + "!");

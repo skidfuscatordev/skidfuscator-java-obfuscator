@@ -2,6 +2,7 @@ package dev.skidfuscator.core;
 
 import dev.skidfuscator.testclasses.TestRun;
 
+import java.util.List;
 import java.util.Map;
 
 public interface TestCase {
@@ -9,6 +10,6 @@ public interface TestCase {
 
     Class<?>[] getClasses();
 
-    void receiveAndExecute(final Map<String, byte[]> output);
+    void receiveAndExecute(final List<Map.Entry<String, byte[]>> output);
 }
 

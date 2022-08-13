@@ -1,10 +1,10 @@
 package dev.skidfuscator.testclasses.evaluator.test.impl.annotation;
 
 import dev.skidfuscator.testclasses.evaluator.EvaluatorMain;
-import dev.skidfuscator.testclasses.evaluator.test.Test;
+import dev.skidfuscator.testclasses.evaluator.test.TestHandler;
 
 @TestAnnotation(string = "Test", doubleValue = 0.36, intValue = 36)
-public class AnnotationTest implements Test {
+public class AnnotationTest implements TestHandler {
 
     @Override
     public void handle() {

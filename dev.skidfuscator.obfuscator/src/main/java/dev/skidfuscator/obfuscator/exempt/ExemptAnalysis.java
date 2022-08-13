@@ -22,6 +22,16 @@ public interface ExemptAnalysis {
      */
     void add(final String exclusion);
 
+    /**
+     * @param exclusion Exclusion string
+     */
+    void add(final ClassNode exclusion);
+
+    /**
+     * @param exclusion Exclusion string
+     */
+    void add(final MethodNode exclusion);
+
 
     /**
      * Strictly for debugging purposes

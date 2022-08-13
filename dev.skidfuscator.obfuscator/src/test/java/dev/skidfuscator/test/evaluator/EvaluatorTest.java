@@ -7,7 +7,7 @@ import dev.skidfuscator.testclasses.evaluator.manager.TestManager;
 import dev.skidfuscator.testclasses.evaluator.operation.DoubleMathOperation;
 import dev.skidfuscator.testclasses.evaluator.operation.IntMathOperation;
 import dev.skidfuscator.testclasses.evaluator.operation.Operation;
-import dev.skidfuscator.testclasses.evaluator.test.Test;
+import dev.skidfuscator.testclasses.evaluator.test.TestHandler;
 import dev.skidfuscator.testclasses.evaluator.test.impl.Test2;
 import dev.skidfuscator.testclasses.evaluator.test.impl.annotation.AnnotationTest;
 import dev.skidfuscator.testclasses.evaluator.test.impl.annotation.TestAnnotation;
@@ -34,7 +34,7 @@ public class EvaluatorTest extends SkidTest {
                 DoubleMathOperation.class,
                 IntMathOperation.class,
                 Operation.class,
-                Test.class,
+                TestHandler.class,
                 Test2.class,
                 AnnotationTest.class,
                 TestAnnotation.class,

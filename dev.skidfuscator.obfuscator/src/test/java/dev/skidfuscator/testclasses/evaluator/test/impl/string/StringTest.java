@@ -1,10 +1,10 @@
 package dev.skidfuscator.testclasses.evaluator.test.impl.string;
 
-import dev.skidfuscator.testclasses.evaluator.test.Test;
+import dev.skidfuscator.testclasses.evaluator.test.TestHandler;
 
 import java.util.Base64;
 
-public class StringTest implements Test {
+public class StringTest implements TestHandler {
     private static final String realString = "xZLDvMOow6nigqzDrMOgw7I=";
 
     @Override

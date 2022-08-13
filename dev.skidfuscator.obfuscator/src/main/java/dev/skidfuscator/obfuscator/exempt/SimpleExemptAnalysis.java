@@ -27,6 +27,16 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
     }
 
     @Override
+    public void add(ClassNode exclusion) {
+        classCache.put(exclusion, true);
+    }
+
+    @Override
+    public void add(MethodNode exclusion) {
+        methodCache.put(exclusion, true);
+    }
+
+    @Override
     public boolean isExempt(MethodNode methodNode) {
         final Boolean var = methodCache.get(methodNode);
 

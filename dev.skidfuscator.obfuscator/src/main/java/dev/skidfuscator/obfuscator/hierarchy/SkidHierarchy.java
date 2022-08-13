@@ -14,6 +14,7 @@ import org.mapleir.ir.code.expr.invoke.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.AnnotationNode;
+import org.objectweb.asm.tree.TypeAnnotationNode;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,24 +41,44 @@ public class SkidHierarchy implements Hierarchy {
         @Override
         public void accept(ClassNode node) {
             if (node.node.visibleAnnotations != null) {
-                for (AnnotationNode annotation : node.node.visibleAnnotations) {
+                for (AnnotationNode annotation : new ArrayList<>(node.node.visibleAnnotations)) {
+                    if (checkExclude(annotation)) {
+                        skidfuscator.getExemptAnalysis().add(node);
+                        node.node.visibleAnnotations.remove(annotation);
+                        continue;
+                    }
                     getAnnotation(annotation, SkidAnnotation.AnnotationType.VISIBLE);
                 }
             }
 
             if (node.node.invisibleAnnotations != null) {
-                for (AnnotationNode annotation : node.node.invisibleAnnotations) {
+                for (AnnotationNode annotation : new ArrayList<>(node.node.invisibleAnnotations)) {
+                    if (checkExclude(annotation)) {
+                        skidfuscator.getExemptAnalysis().add(node);
+                        node.node.invisibleAnnotations.remove(annotation);
+                        continue;
+                    }
                     getAnnotation(annotation, SkidAnnotation.AnnotationType.INVISIBLE);
                 }
             }
 
             if (node.node.visibleTypeAnnotations != null) {
-                for (AnnotationNode annotation : node.node.visibleTypeAnnotations) {
+                for (AnnotationNode annotation : new ArrayList<>(node.node.visibleTypeAnnotations)) {
+                    if (checkExclude(annotation)) {
+                        skidfuscator.getExemptAnalysis().add(node);
+                        node.node.visibleAnnotations.remove(annotation);
+                        continue;
+                    }
                     getAnnotation(annotation, SkidAnnotation.AnnotationType.TYPE_VISIBLE);
                 }
             }
             if (node.node.invisibleTypeAnnotations != null) {
-                for (AnnotationNode annotation : node.node.invisibleTypeAnnotations) {
+                for (AnnotationNode annotation : new ArrayList<>(node.node.invisibleTypeAnnotations)) {
+                    if (checkExclude(annotation)) {
+                        skidfuscator.getExemptAnalysis().add(node);
+                        node.node.visibleAnnotations.remove(annotation);
+                        continue;
+                    }
                     getAnnotation(annotation, SkidAnnotation.AnnotationType.TYPE_INVISIBLE);
                 }
             }
@@ -77,26 +98,46 @@ public class SkidHierarchy implements Hierarchy {
                 getGroup(skidfuscator, method);
 
                 if (method.node.visibleAnnotations != null) {
-                    for (AnnotationNode annotation : method.node.visibleAnnotations) {
+                    for (AnnotationNode annotation : new ArrayList<>(method.node.visibleAnnotations)) {
+                        if (checkExclude(annotation)) {
+                            skidfuscator.getExemptAnalysis().add(method);
+                            method.node.visibleAnnotations.remove(annotation);
+                            continue;
+                        }
                         getAnnotation(annotation, SkidAnnotation.AnnotationType.VISIBLE);
 
                     }
                 }
 
                 if (method.node.invisibleAnnotations != null) {
-                    for (AnnotationNode annotation : method.node.invisibleAnnotations) {
+                    for (AnnotationNode annotation : new ArrayList<>(method.node.invisibleAnnotations)) {
+                        if (checkExclude(annotation)) {
+                            skidfuscator.getExemptAnalysis().add(method);
+                            method.node.invisibleAnnotations.remove(annotation);
+                            continue;
+                        }
                         getAnnotation(annotation, SkidAnnotation.AnnotationType.INVISIBLE);
                     }
                 }
 
                 if (method.node.visibleTypeAnnotations != null) {
-                    for (AnnotationNode annotation : method.node.visibleTypeAnnotations) {
+                    for (TypeAnnotationNode annotation : new ArrayList<>(method.node.visibleTypeAnnotations)) {
+                        if (checkExclude(annotation)) {
+                            skidfuscator.getExemptAnalysis().add(method);
+                            method.node.visibleTypeAnnotations.remove(annotation);
+                            continue;
+                        }
                         getAnnotation(annotation, SkidAnnotation.AnnotationType.TYPE_VISIBLE);
 
                     }
                 }
                 if (method.node.invisibleTypeAnnotations != null) {
-                    for (AnnotationNode annotation : method.node.invisibleTypeAnnotations) {
+                    for (TypeAnnotationNode annotation : new ArrayList<>(method.node.invisibleTypeAnnotations)) {
+                        if (checkExclude(annotation)) {
+                            skidfuscator.getExemptAnalysis().add(method);
+                            method.node.invisibleTypeAnnotations.remove(annotation);
+                            continue;
+                        }
                         getAnnotation(annotation, SkidAnnotation.AnnotationType.TYPE_INVISIBLE);
 
                     }
@@ -306,9 +347,17 @@ public class SkidHierarchy implements Hierarchy {
         return group;
     }
 
+    private boolean checkExclude(final AnnotationNode node) {
+        final String filteredNamePre = node.desc.substring(1);
+        final String filteredNamePost = filteredNamePre.substring(0, filteredNamePre.length() - 1);
+
+        return filteredNamePost.equals("dev/skidfuscator/annotations/Exclude");
+    }
+
     private void getAnnotation(final AnnotationNode node, final SkidAnnotation.AnnotationType type) {
         final String filteredNamePre = node.desc.substring(1);
         final String filteredNamePost = filteredNamePre.substring(0, filteredNamePre.length() - 1);
+
         final ClassNode parent = skidfuscator
                 .getClassSource()
                 .findClassNode(filteredNamePost);

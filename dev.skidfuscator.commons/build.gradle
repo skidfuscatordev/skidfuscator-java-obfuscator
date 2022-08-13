@@ -9,6 +9,7 @@ repositories {
 dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.24'
 
+    api project(":annotations")
     api project(':main')
 }
 

@@ -37,10 +37,12 @@ void initMaple() {
 }
 
 void initBase() {
+    include(':annotations')
     include ':commons'
     include ':obfuscator'
     include ':client-standalone'
 
+    project(":annotations").projectDir = file('dev.skidfuscator.annotations')
     project(":commons").projectDir = file('dev.skidfuscator.commons')
     project(":obfuscator").projectDir = file('dev.skidfuscator.obfuscator')
     project(":client-standalone").projectDir = file('dev.skidfuscator.client.standalone')
@@ -48,5 +50,4 @@ void initBase() {
 
 initMaple()
 initBase()
-
 

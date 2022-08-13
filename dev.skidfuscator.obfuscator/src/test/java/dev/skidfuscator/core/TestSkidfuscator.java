@@ -4,35 +4,45 @@ import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
+import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
+import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
+import dev.skidfuscator.testclasses.TestRun;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.app.service.LibraryClassSource;
 import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.tree.InnerClassNode;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Shit code but heck I'm trying to speed code a test suite
  */
 public class TestSkidfuscator extends Skidfuscator {
-    private final TestCase test;
-    public TestSkidfuscator(TestCase test) {
+    private final Class<?>[] test;
+    private final Consumer<List<Map.Entry<String, byte[]>>> callback;
+    public TestSkidfuscator(Class<?>[] test, Consumer<List<Map.Entry<String, byte[]>>> callback) {
         super(SkidfuscatorSession
                 .builder()
                 .jmod(MiscUtil.isJmod())
                 .analytics(false)
                 .build());
         this.test = test;
+        this.callback = callback;
     }
 
     @Override
@@ -60,24 +70,60 @@ public class TestSkidfuscator extends Skidfuscator {
     protected void _importClasspath() {
         LOGGER.post("Beginning to import classpath...");
         this.jarContents = new JarContents();
+
+        final Set<String> imported = new HashSet<>();
+        final Queue<Class<?>> iterate = new LinkedBlockingDeque<>(Arrays.asList(test));
+        for (final Class<?> clazz : iterate) {
+            final ClassNode mapleNode;
+
+            if (imported.contains(clazz.getName()))
+                continue;
+
+            imported.add(clazz.getName());
+            System.out.println("Importing " + clazz.getName());
+
+            try {
+                mapleNode = ClassHelper.create(clazz.getName());
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to read runtime test class", e);
+            }
+
+            final SkidClassNode classNode = new SkidClassNode(mapleNode.node, this);
+            final byte[] bytes = ClassHelper.toByteArray(classNode);
+
+            final JarClassData data = new JarClassData(
+                    classNode.getName() + ".class",
+                    bytes,
+                    classNode
+            );
+
+            if (classNode.node.innerClasses != null) {
+                for (InnerClassNode innerClass : classNode.node.innerClasses) {
+                    if (innerClass.name.contains("java"))
+                        continue;
+                    try {
+                        final Class<?> subClazz = Class.forName(
+                                innerClass.name.replace("/", ".")
+                        );
+
+                        iterate.add(subClazz);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                System.out.println("Ooooo" + classNode.node.innerClasses.stream()
+                        .map(e -> e.name)
+                        .collect(Collectors.joining(", ")));
+            }
+
+            jarContents.getClassContents().add(data);
+        }
+
         this.classSource = new SkidApplicationClassSource(
                 "test source",
                 true,
                 jarContents
         );
-
-        for (Class<?> clazz : test.getClasses()) {
-            final ClassNode classNode = ClassHelper.create(clazz);
-            final byte[] bytes = ClassHelper.toByteArray(classNode);
-
-            final JarClassData data = new JarClassData(
-                    classNode.getName(),
-                    bytes,
-                    classNode
-            );
-
-            jarContents.getClassContents().add(data);
-        }
         LOGGER.log("Finished importing classpath!");
     }
 
@@ -89,19 +135,47 @@ public class TestSkidfuscator extends Skidfuscator {
                 classSource
         );
         final ClassTree tree = this.getClassSource().getClassTree();
-        final Map<String, byte[]> dataMap = new HashMap<>();
+        final List<Map.Entry<String, byte[]>> dataMap = new ArrayList<>();
 
-        for (ClassNode classNode : this.classSource.iterate()) {
-            final ClassWriter writer = resolver.buildClassWriter(
-                    tree,
-                    ClassWriter.COMPUTE_FRAMES
-            );
-            classNode.node.accept(writer);
+        final List<ClassNode> order = tree.getAllChildren(tree.getRootNode());
+        Collections.reverse(order);
+        order.stream()
+                .filter(e -> this.classSource.isApplicationClass(e.getName()))
+                .forEach(e -> {
+                    final AtomicReference<byte[]> bytes = new AtomicReference<>();
+                    try {
+                        final ClassWriter writer = resolver.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
+                        e.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
+                        bytes.set(writer.toByteArray());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
 
-            dataMap.put(classNode.getName(), writer.toByteArray());
-        }
+                        final ClassWriter writer = resolver.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
+                        e.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
+                        bytes.set(writer.toByteArray());
+                        System.err.println("\rFailed to write " + e.getName()
+                                + "! Writing with COMPUTE_MAXS, " +
+                                "which may cause runtime abnormalities\n");
+                    }
+                    dataMap.add(new Map.Entry<String, byte[]>() {
+                        @Override
+                        public String getKey() {
+                            return e.getName();
+                        }
 
-        test.receiveAndExecute(dataMap);
+                        @Override
+                        public byte[] getValue() {
+                            return bytes.get();
+                        }
+
+                        @Override
+                        public byte[] setValue(byte[] value) {
+                            throw new IllegalStateException("wtf");
+                        }
+                    });
+                });
+
+        callback.accept(dataMap);
     }
 
     private static boolean cached;
@@ -149,6 +223,20 @@ public class TestSkidfuscator extends Skidfuscator {
             }
             LOGGER.post("✓ Success");
         }
+
+        final ClassNode classNode = ClassHelper.create(TestRun.class);
+        final byte[] bytes = ClassHelper.toByteArray(classNode);
+        final JarContents testContents = new JarContents();
+        testContents.getClassContents().add(
+                new JarClassData(
+                        classNode.getName(),
+                        bytes,
+                        classNode
+                )
+        );
+
+        libs.add(new SkidApplicationClassSource("test-classes", false, testContents));
+
         LOGGER.log("Finished importing the JVM!");
         cached = true;
     }

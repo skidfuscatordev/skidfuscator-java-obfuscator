@@ -184,9 +184,9 @@ public class Skidfuscator {
                 .build();
         LOGGER.log("Finished resolving predicate analysis!");
 
-        _importExempt();
         _importClasspath();
         _importJvm();
+        _importExempt();
 
         if (!session.isFuckIt()) {
             _verify();

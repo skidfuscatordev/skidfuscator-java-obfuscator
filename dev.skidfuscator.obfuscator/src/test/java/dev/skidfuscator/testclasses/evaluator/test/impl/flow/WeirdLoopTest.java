@@ -1,10 +1,10 @@
 package dev.skidfuscator.testclasses.evaluator.test.impl.flow;
 
-import dev.skidfuscator.testclasses.evaluator.test.Test;
+import dev.skidfuscator.testclasses.evaluator.test.TestHandler;
 
 import java.util.Random;
 
-public class WeirdLoopTest implements Test {
+public class WeirdLoopTest implements TestHandler {
     private int index;
     @Override
     public void handle() {

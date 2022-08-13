@@ -12,6 +12,10 @@ public class SkidClassLoader extends AccessClassLoader {
         super(urls);
     }
 
+    public SkidClassLoader() {
+        super(new URL[0]);
+    }
+
     public SkidClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
     }
@@ -27,7 +31,7 @@ public class SkidClassLoader extends AccessClassLoader {
     }
 
     @Override
-    public Class<?> defineClass(String name, byte[] bytes)throws ClassFormatError {
-        return super.defineClass(name, bytes);
+    public Class<?> defineClass(String name, byte[] bytes) throws ClassFormatError {
+        return super.defineClass(name.replace("/", "."), bytes);
     }
 }

@@ -1,6 +1,6 @@
 package dev.skidfuscator.testclasses.evaluator.test;
 
-public interface Test {
+public interface TestHandler {
 
     void handle();
 

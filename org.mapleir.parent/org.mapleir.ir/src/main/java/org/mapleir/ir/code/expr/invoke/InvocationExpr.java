@@ -8,8 +8,11 @@ import org.mapleir.stdlib.util.*;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc {
 	public enum CallType {
@@ -153,6 +156,19 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 		for (int i = 0; i < args.length; i++) {
 			args[i].toCode(visitor, assembler);
 			if (TypeUtils.isPrimitive(args[i].getType())) {
+				assert i < args.length : String.format(
+						"Failed on class %s to match args (%s)",
+						this.getClass().getName(),
+						Arrays.toString(args)
+				);
+
+				assert i < argTypes.length : String.format(
+						"Failed on class %s to match argTypes (%s)\ndesc: %s\n\n  \\-->",
+						this.getClass().getName(),
+						Arrays.toString(argTypes),
+						desc,
+						Arrays.stream(args).map(Object::toString).collect(Collectors.joining("\n  \\-->"))
+				);
 				int[] cast = TypeUtils.getPrimitiveCastOpcodes(args[i].getType(), argTypes[i]);
 				for (int a = 0; a < cast.length; a++) {
 					visitor.visitInsn(cast[a]);

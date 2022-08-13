@@ -1,6 +1,6 @@
 package dev.skidfuscator.testclasses.evaluator.test.impl.flow;
 
-import dev.skidfuscator.testclasses.evaluator.test.Test;
+import dev.skidfuscator.testclasses.evaluator.test.TestHandler;
 import dev.skidfuscator.testclasses.evaluator.util.crypto.AES;
 
 import javax.crypto.BadPaddingException;
@@ -9,7 +9,7 @@ import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class OpaqueConditionTest implements Test {
+public class OpaqueConditionTest implements TestHandler {
 
     private static final byte[] data = new byte[] {0, 1, 4, 3, 2};
 
