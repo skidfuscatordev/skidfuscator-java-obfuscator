@@ -231,21 +231,7 @@ public class Skidfuscator {
          *
          * Here though shall puteth all your transformers. Enjoy!
          */
-        for (Listener o : Arrays.asList(
-                new StringTransformer(this),
-                //new NegationTransformer(this),
-                //new FlatteningFlowTransformer(this),
-                new NumberTransformer(this),
-                new SwitchTransformer(this),
-                new BasicSimplifierTransformer(this),
-                new BasicConditionTransformer(this),
-                new BasicExceptionTransformer(this),
-                new BasicRangeTransformer(this),
-                new AhegaoTransformer(this)
-                //
-        )) {
-            EventBus.register(o);
-        }
+        _loadTransformer();
 
         LOGGER.log("Finished loading transformers...");
 
@@ -307,7 +293,7 @@ public class Skidfuscator {
 
         _dump();
 
-
+        IntegerBlockPredicateRenderer.DEBUG = false;
         LOGGER.post("Goodbye!");
     }
 
@@ -524,6 +510,24 @@ public class Skidfuscator {
                 1
         ));
         LOGGER.log("Finished importing classpath!");
+    }
+
+    protected void _loadTransformer() {
+        for (Listener o : Arrays.asList(
+                new StringTransformer(this),
+                //new NegationTransformer(this),
+                //new FlatteningFlowTransformer(this),
+                new NumberTransformer(this),
+                new SwitchTransformer(this),
+                new BasicSimplifierTransformer(this),
+                new BasicConditionTransformer(this),
+                new BasicExceptionTransformer(this),
+                new BasicRangeTransformer(this),
+                new AhegaoTransformer(this)
+                //
+        )) {
+            EventBus.register(o);
+        }
     }
 
     private void _verify() {

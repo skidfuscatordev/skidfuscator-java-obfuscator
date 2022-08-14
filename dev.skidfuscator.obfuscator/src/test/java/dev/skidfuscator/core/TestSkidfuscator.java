@@ -6,6 +6,7 @@ import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
+import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.verifier.Verifier;
@@ -45,7 +46,11 @@ public class TestSkidfuscator extends Skidfuscator {
                 .build());
         this.test = test;
         this.callback = callback;
+
+        IntegerBlockPredicateRenderer.DEBUG = true;
     }
+
+    public static boolean SKIP = false;
 
     @Override
     protected void _importExempt() {
@@ -126,6 +131,14 @@ public class TestSkidfuscator extends Skidfuscator {
                 jarContents
         );
         LOGGER.log("Finished importing classpath!");
+    }
+
+    @Override
+    protected void _loadTransformer() {
+        if (SKIP)
+            return;
+
+        super._loadTransformer();
     }
 
     @Override

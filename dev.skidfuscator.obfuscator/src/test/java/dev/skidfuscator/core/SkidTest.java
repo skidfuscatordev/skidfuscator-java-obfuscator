@@ -10,6 +10,7 @@ import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.testclasses.TestRun;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mapleir.asm.ClassHelper;
 import org.mapleir.deob.PassGroup;
@@ -74,7 +75,24 @@ public abstract class SkidTest implements TestCase {
             final Class<?> clazz = classLoader.loadClass(this.getMainClass().getName());
             final TestRun run = (TestRun) clazz.newInstance();
             run.run();
+
+            if (TestSkidfuscator.SKIP) {
+                TestSkidfuscator.SKIP = false;
+                Assertions.fail("Transformers are causing the issue!");
+            }
         } catch (Throwable e) {
+            System.out.println("------");
+            e.printStackTrace();
+            System.out.println("------");
+
+            if (!TestSkidfuscator.SKIP) {
+                TestSkidfuscator.SKIP = true;
+
+                test();
+            } else {
+                TestSkidfuscator.SKIP = false;
+            }
+
             try {
                 skidfuscator.getJarContents().getClassContents().add(
                         new JarClassData(
@@ -120,7 +138,7 @@ public abstract class SkidTest implements TestCase {
                 ie.printStackTrace();
             }
 
-            throw new IllegalStateException("Failed execution", e);
+            throw new IllegalStateException("Failed execution: " + e.getMessage(), e);
         }
     }
 

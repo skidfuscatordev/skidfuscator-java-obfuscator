@@ -59,7 +59,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static final boolean DEBUG = false;
+    public static boolean DEBUG = false;
 
     /**
      * Method called when the class methods are iterated over and initialized.
@@ -761,7 +761,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                 localGetter,
                                 localSetter,
                                 methodNode.getBlockPredicate(seededBlock),
-                                methodNode.getBlockPredicate(targetSeededBlock)
+                                methodNode.getBlockPredicate(targetSeededBlock),
+                                "Unconditional"
                         );
 
                         if (DEBUG) {
@@ -822,7 +823,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                 localGetter,
                                 localSetter,
                                 methodNode.getBlockPredicate(seededBlock),
-                                methodNode.getBlockPredicate(targetSeeded)
+                                methodNode.getBlockPredicate(targetSeeded),
+                                "Conditional"
                         );
                         final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
                         basicBlock.add(new UnconditionalJumpStmt(target, edge));
@@ -897,6 +899,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .forEach(stmt -> {
                         final SkidBlock seededBlock = (SkidBlock) vertex;
 
+                        final LinkedHashMap<Integer, BasicBlock> targets = new LinkedHashMap<>();
+
                         for (Map.Entry<Integer, BasicBlock> entry : stmt.getTargets().entrySet()) {
                             final int seed = entry.getKey();
                             final BasicBlock value = entry.getValue();
@@ -917,7 +921,9 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                     localGetter,
                                     localSetter,
                                     methodNode.getBlockPredicate(seededBlock),
-                                    methodNode.getBlockPredicate(target)
+                                    methodNode.getBlockPredicate(target),
+                                    "Switch Entry [" + entry.getKey() + ", og:" + target.getDisplayName()
+                                            + ", redirected: " + basicBlock.getDisplayName() + ")"
                             );
                             final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
                             basicBlock.add(new UnconditionalJumpStmt(target, edge));
@@ -927,7 +933,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                             basicBlock.cfg.addEdge(edge);
 
                             // Replace successor
-                            stmt.getTargets().replace(seed, basicBlock);
+                            targets.put(seed, basicBlock);
                             basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
 
                             if (DEBUG) {
@@ -947,6 +953,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                             }
                         }
 
+                        stmt.setTargets(targets);
+
                         if (stmt.getDefaultTarget() == null || stmt.getDefaultTarget() == vertex)
                             return;
 
@@ -964,7 +972,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                 localGetter,
                                 localSetter,
                                 methodNode.getBlockPredicate(seededBlock),
-                                methodNode.getBlockPredicate(target)
+                                methodNode.getBlockPredicate(target),
+                                "Switch Default"
                         );
                         final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
                         basicBlock.add(new UnconditionalJumpStmt(target, edge));
@@ -1040,7 +1049,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                         localGetter,
                         localSetter,
                         methodNode.getBlockPredicate(internal),
-                        methodNode.getBlockPredicate(handler)
+                        methodNode.getBlockPredicate(handler),
+                        "Exception Range " + Arrays.toString(blockRange.getTypes().toArray())
                 );
 
                 // Jump to handler
@@ -1121,8 +1131,32 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         return;
     }
 
+    /**
+     * WIP
+     */
+    private BasicBlock createRedirector(final BasicBlock block,
+                                        final BasicBlock targetBlock,
+                                        final PredicateFlowGetter getter,
+                                        final PredicateFlowSetter setter,
+                                        final int value,
+                                        final int target,
+                                        final String type
+    ) {
+        final BasicBlock redirector = new BasicBlock(block.cfg);
+        block.cfg.addVertex(redirector);
+        return null;
+    }
 
-    private void addSeedLoader(final BasicBlock block, final BasicBlock targetBlock, final int index, final PredicateFlowGetter getter, final PredicateFlowSetter local, final int value, final int target) {
+
+    private void addSeedLoader(final BasicBlock block,
+                               final BasicBlock targetBlock,
+                               final int index,
+                               final PredicateFlowGetter getter,
+                               final PredicateFlowSetter local,
+                               final int value,
+                               final int target,
+                               final String type
+    ) {
         final Expr load = NumberManager.encrypt(
                 target,
                 value,
@@ -1138,7 +1172,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         if (DEBUG) {
             final BasicBlock exception = Blocks.exception(
                     block.cfg,
-                    "Failed to match seed of value " + target
+                    block.getDisplayName() + " --> "
+                            + targetBlock.getDisplayName()
+                            + " # Failed to match seed of type "
+                            + type
+                            + " and value "
+                            + target
             );
 
             final Stmt jumpStmt = new FakeConditionalJumpStmt(

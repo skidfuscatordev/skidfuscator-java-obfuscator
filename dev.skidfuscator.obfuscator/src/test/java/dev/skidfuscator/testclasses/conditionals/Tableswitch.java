@@ -1,15 +1,17 @@
 package dev.skidfuscator.testclasses.conditionals;
 
-
 import dev.skidfuscator.annotations.Exclude;
 import dev.skidfuscator.testclasses.TestRun;
 
 public class Tableswitch implements TestRun {
     @Override
     public void run() {
+        System.out.println("Beginning test!");
         for (char i = 0; i < 16; i++) {
+            System.out.println("Running exec " + (int) i);
             assert exec(i) == exec_real(i) : "Failed equality check";
         }
+        System.out.println("Ending test!");
     }
 
     public int exec(char a) {
