@@ -235,7 +235,7 @@ public class TestSkidfuscator extends Skidfuscator {
                 if (!file.getAbsolutePath().endsWith(".jmod"))
                     continue;
 
-                libs.add(GhostHelper.getJvm(true, runtime, folder));
+                libs.add(GhostHelper.getJvm(true, file, folder));
             }
             LOGGER.post("✓ Success");
         }
