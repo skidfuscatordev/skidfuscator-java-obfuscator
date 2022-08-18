@@ -224,7 +224,7 @@ public class SkidHierarchy implements Hierarchy {
 
     private void setupInvoke() {
         try (ProgressWrapper invocationBar = ProgressUtil.progress(nodes.size())) {
-            nodes.parallelStream().forEach(c -> {
+            nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
 
                     final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
@@ -290,9 +290,6 @@ public class SkidHierarchy implements Hierarchy {
                                     });
                                 }
                             });
-
-                    if (skidfuscator.getIrFactory().size() > 100)
-                        skidfuscator.getIrFactory().clear();
                 }
                 invocationBar.tick();
             });
