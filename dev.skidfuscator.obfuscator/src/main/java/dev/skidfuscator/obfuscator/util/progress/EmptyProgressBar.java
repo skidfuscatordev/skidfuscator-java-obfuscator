@@ -1,7 +1,5 @@
 package dev.skidfuscator.obfuscator.util.progress;
 
-import me.tongfei.progressbar.ProgressBar;
-
 
 public class EmptyProgressBar implements ProgressWrapper, AutoCloseable {
     public EmptyProgressBar() {

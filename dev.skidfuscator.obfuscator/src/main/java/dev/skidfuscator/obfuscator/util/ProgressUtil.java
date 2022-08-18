@@ -2,27 +2,43 @@ package dev.skidfuscator.obfuscator.util;
 
 import dev.skidfuscator.obfuscator.util.progress.EmptyProgressBar;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
-import dev.skidfuscator.obfuscator.util.progress.StupidProgressBarBuilder;
+import dev.skidfuscator.obfuscator.util.progress.TaskServiceBuilder;
+import dev.skidfuscator.obfuscator.util.progress.components.SComponents;
 import lombok.experimental.UtilityClass;
-import me.tongfei.progressbar.ProgressBar;
-import me.tongfei.progressbar.ProgressBarBuilder;
-import me.tongfei.progressbar.ProgressBarStyle;
+import lukfor.progress.Components;
+import lukfor.progress.renderer.IProgressRenderer;
 
-import java.text.DecimalFormat;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
+import java.util.function.Consumer;
 
 @UtilityClass
 public class ProgressUtil {
     public ProgressWrapper progress(final int count) {
         return isRunningTest()
                 ? new EmptyProgressBar()
-                : new StupidProgressBarBuilder()
-                .setTaskName("Executing...").setInitialMax(count)
-                .setUpdateIntervalMillis(1000)
-                .setStyle(ProgressBarStyle.ASCII)
-                .setSpeedUnit(ChronoUnit.SECONDS)
-                .setUnit("", 1L)
+                : new TaskServiceBuilder()
+                .name("Executing...")//.setInitialMax(count)
+                //.setUpdateIntervalMillis(1000)
+                //.setStyle(ProgressBarStyle.ASCII)
+                //.setSpeedUnit(ChronoUnit.SECONDS)
+                //.setUnit("", 1L)
+                .style(SComponents.FINISH,
+                        SComponents.SPINNER,
+                        SComponents.SPACE,
+                        SComponents.TASK_NAME,
+                        SComponents.SPACE,
+                        SComponents.PROGRESS_BAR,
+                        SComponents.PROGRESS_LABEL,
+                        SComponents.SPACE,
+                        SComponents.TIME,
+                        SComponents.SPACE,
+                        SComponents.RAM
+                )
+                .animated(true)
+                .count(count)
+                .target(System.out)
+                .callback(renderer -> {
+                    renderer.setComponents(SComponents.FINISH);
+                })
                 .build();
     }
 

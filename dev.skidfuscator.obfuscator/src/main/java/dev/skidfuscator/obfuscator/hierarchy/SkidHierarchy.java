@@ -7,7 +7,6 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
-import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -225,7 +224,7 @@ public class SkidHierarchy implements Hierarchy {
 
     private void setupInvoke() {
         try (ProgressWrapper invocationBar = ProgressUtil.progress(nodes.size())) {
-            nodes.forEach(c -> {
+            nodes.parallelStream().forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
 
                     final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
@@ -291,6 +290,9 @@ public class SkidHierarchy implements Hierarchy {
                                     });
                                 }
                             });
+
+                    if (skidfuscator.getIrFactory().size() > 100)
+                        skidfuscator.getIrFactory().clear();
                 }
                 invocationBar.tick();
             });

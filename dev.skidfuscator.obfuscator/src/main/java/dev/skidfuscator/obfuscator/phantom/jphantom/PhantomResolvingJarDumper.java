@@ -4,7 +4,6 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
-import me.tongfei.progressbar.ProgressBar;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.asm.ClassNode;

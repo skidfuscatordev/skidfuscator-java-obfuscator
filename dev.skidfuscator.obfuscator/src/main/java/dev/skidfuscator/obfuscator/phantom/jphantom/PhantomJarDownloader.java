@@ -10,7 +10,6 @@ import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Files;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import lombok.SneakyThrows;
-import me.tongfei.progressbar.ProgressBar;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.clyze.jphantom.ClassMembers;

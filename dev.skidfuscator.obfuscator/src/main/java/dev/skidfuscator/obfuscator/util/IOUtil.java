@@ -1,7 +1,5 @@
 package dev.skidfuscator.obfuscator.util;
 
-import org.jline.utils.Log;
-
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
@@ -390,7 +388,7 @@ public final class IOUtil {
             }
         } catch (IOException e) {
             // fallback to the method above
-            Log.warn("Could not determine file type of path: {}", path.getFileName());
+            System.err.printf("Could not determine file type of path: %s%n", path.getFileName());
             return getExtension(path);
         }
         if (isZipHeader(header)) {
@@ -423,7 +421,7 @@ public final class IOUtil {
                 return "zip";
             } catch (IOException e) {
                 // fallback to the method above
-                Log.warn("Could not determine file type of path: {}", path.getFileName());
+                System.err.printf("Could not determine file type of path: %s", path.getFileName());
                 return getExtension(path);
             }
         }

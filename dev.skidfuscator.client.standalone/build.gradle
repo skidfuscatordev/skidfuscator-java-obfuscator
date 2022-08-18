@@ -14,6 +14,9 @@ application {
 dependencies {
     implementation 'info.picocli:picocli:4.6.3'
     implementation 'org.jline:jline:3.21.0'
+    implementation 'com.jgoodies:jgoodies-forms:1.9.0'
+    implementation 'com.github.vlsi.mxgraph:jgraphx:4.2.2'
+
     implementation project(':obfuscator')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'

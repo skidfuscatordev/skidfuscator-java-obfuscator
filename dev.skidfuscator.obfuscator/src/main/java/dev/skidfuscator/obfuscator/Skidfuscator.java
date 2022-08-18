@@ -46,8 +46,8 @@ import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Counter;
 import dev.skidfuscator.obfuscator.util.misc.TimedLogger;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
+import dev.skidfuscator.obfuscator.util.progress.SkidProgressBar;
 import lombok.Getter;
-import me.tongfei.progressbar.ProgressBar;
 import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
 import org.mapleir.app.service.ApplicationClassSource;
@@ -293,6 +293,7 @@ public class Skidfuscator {
 
         _dump();
 
+        SkidProgressBar.RENDER_THREAD.shutdown();
         IntegerBlockPredicateRenderer.DEBUG = false;
         LOGGER.post("Goodbye!");
     }
@@ -644,8 +645,6 @@ public class Skidfuscator {
                     progressBar.tick(classNode.getMethods().size());
                     continue;
                 }
-
-                LOGGER.post("Phase: " + event.getClass().getName());
 
                 final List<MethodNode> methodNodes = classNode
                         .getMethods()
