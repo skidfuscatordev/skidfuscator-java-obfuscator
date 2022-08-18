@@ -230,7 +230,8 @@ public class SkidMethodNode extends MethodNode {
 
         initBlock.setFlag(SkidBlock.FLAG_NO_OPAQUE, true);
 
-        cfg.getPredecessors(initBlock).forEach(vertex -> {
+
+        cfg.getAllChildren(initBlock).forEach(vertex -> {
             if (IntegerBlockPredicateRenderer.DEBUG) {
                 final Local debugLocal = cfg.getLocals().get(cfg.getLocals().getMaxLocals() + 2);
                 vertex.add(

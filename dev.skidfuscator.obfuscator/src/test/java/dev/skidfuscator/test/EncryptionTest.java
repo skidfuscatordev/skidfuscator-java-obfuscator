@@ -11,10 +11,12 @@ public class EncryptionTest {
         final String string = RandomUtil.randomAlphabeticalString(10);
 
         final Integer[] keysT = this._genKeys();
+
+        final BasicEncryptionGenerator generator = new BasicEncryptionGenerator(keysT);
         final int seed = this._genSeed();
 
-        final String encrypted = BasicEncryptionGenerator.encrypt(string, seed, keysT);
-        final String decrypted = BasicEncryptionGenerator.decrypt(encrypted, seed, keysT);
+        final String encrypted = generator.encrypt(string, seed);
+        final String decrypted = generator.decrypt(encrypted, seed);
 
         assert string.equals(decrypted) : "Encrypted string failed: " + string + " became " + decrypted;
         System.out.println("Passed Encryption Test #1");
@@ -25,10 +27,11 @@ public class EncryptionTest {
         final String string = "Œüèé€ìàò";
 
         final Integer[] keysT = this._genKeys();
+        final BasicEncryptionGenerator generator = new BasicEncryptionGenerator(keysT);
         final int seed = this._genSeed();
 
-        final String encrypted = BasicEncryptionGenerator.encrypt(string, seed, keysT);
-        final String decrypted = BasicEncryptionGenerator.decrypt(encrypted, seed, keysT);
+        final String encrypted = generator.encrypt(string, seed);
+        final String decrypted = generator.decrypt(encrypted, seed);
 
         assert string.equals(decrypted) : "Encrypted string failed: " + string + " became " + decrypted;
         System.out.println("Passed Encryption Test #2");

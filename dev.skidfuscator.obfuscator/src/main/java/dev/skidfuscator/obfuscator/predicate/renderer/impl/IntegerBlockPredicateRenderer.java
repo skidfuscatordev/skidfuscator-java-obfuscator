@@ -88,6 +88,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 .getLocals()
                 .get(methodNode.getCfg().getLocals().getMaxLocals() + 3);
 
+        methodNode.getEntryBlock();
+
         /*
          * The getter right now is quite simple:
          *

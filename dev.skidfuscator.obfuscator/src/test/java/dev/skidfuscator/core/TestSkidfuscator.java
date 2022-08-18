@@ -166,12 +166,20 @@ public class TestSkidfuscator extends Skidfuscator {
                     } catch (Exception ex) {
                         ex.printStackTrace();
 
-                        final ClassWriter writer = resolver.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
-                        e.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
-                        bytes.set(writer.toByteArray());
-                        System.err.println("\rFailed to write " + e.getName()
-                                + "! Writing with COMPUTE_MAXS, " +
-                                "which may cause runtime abnormalities\n");
+                        try {
+                            final ClassWriter writer = resolver.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
+                            e.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
+                            bytes.set(writer.toByteArray());
+                            System.err.println("\rFailed to write " + e.getName()
+                                    + "! Writing with COMPUTE_MAXS, " +
+                                    "which may cause runtime abnormalities\n");
+                        } catch (Exception ex2) {
+                            System.err.println("\rFailed to write " + e.getName()
+                                    + "!");
+
+                            bytes.set(jarContents.getClassContents().namedMap().get(e.getName() + ".class").getData());
+                        }
+
                     }
                     dataMap.add(new Map.Entry<String, byte[]>() {
                         @Override

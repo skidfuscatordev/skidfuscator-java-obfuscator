@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import org.mapleir.dot4j.model.DotGraph;
 import org.mapleir.propertyframework.api.IPropertyDictionary;
+import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 
 public abstract class FastDirectedGraph<N extends FastGraphVertex, E extends FastGraphEdge<N>> implements FastGraph<N, E>{
 
@@ -159,6 +160,20 @@ public abstract class FastDirectedGraph<N extends FastGraphVertex, E extends Fas
 
 	public Stream<N> getPredecessors(N v) {
 		return getReverseEdges(v).stream().map(E::src);
+	}
+
+	public List<N> getAllParents(N d) {
+		if(!containsVertex(d)) {
+			return new ArrayList<>();
+		}
+		return SimpleDfs.topoorder(this, d, false);
+	}
+
+	public List<N> getAllChildren(N d) {
+		if(!containsVertex(d)) {
+			return new ArrayList<>();
+		}
+		return SimpleDfs.postorder(this, d, true);
 	}
 
 	@Override
