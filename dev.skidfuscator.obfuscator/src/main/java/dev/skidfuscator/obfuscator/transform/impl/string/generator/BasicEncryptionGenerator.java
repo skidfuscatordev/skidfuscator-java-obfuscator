@@ -1,4 +1,4 @@
-package dev.skidfuscator.obfuscator.transform.impl.string;
+package dev.skidfuscator.obfuscator.transform.impl.string.generator;
 
 import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.InitMethodTransformEvent;
@@ -12,10 +12,16 @@ import java.util.Base64;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class BasicEncryptionGenerator {
+public class BasicEncryptionGenerator implements EncryptionGenerator {
     public static final String METHOD_NAME = "thisIsAInsaneEncryptionMethod";
+    private final Integer[] keys;
 
-    public static String encrypt(String input, int key, Integer[] keys) {
+    public BasicEncryptionGenerator(Integer[] keys) {
+        this.keys = keys;
+    }
+
+    @Override
+    public String encrypt(String input, int key) {
         final byte[] encrypted = input.getBytes();
 
         // Super simple converting our integer to string, and getting bytes.
@@ -31,7 +37,8 @@ public class BasicEncryptionGenerator {
         return Base64.getEncoder().encodeToString(encrypted);
     }
 
-    public static String decrypt(String input, int key, Integer[] keys) {
+    @Override
+    public String decrypt(String input, int key) {
         final byte[] decrypted = Base64.getDecoder().decode(input.getBytes());
 
         // Super simple converting our integer to string, and getting bytes.
@@ -47,7 +54,8 @@ public class BasicEncryptionGenerator {
         return new String(decrypted);
     }
 
-    public static void visit(final SkidClassNode node, String name, Integer[] integerKeys) {
+    @Override
+    public void visit(final SkidClassNode node, String name) {
         // TODO: Fix the retardness and make it so that all
         //       generated methods can be properly genned
         final SkidMethodNode skidMethodNode = node.createMethod()
@@ -77,13 +85,13 @@ public class BasicEncryptionGenerator {
         Label label2 = new Label();
         methodVisitor.visitLabel(label2);
         methodVisitor.visitLineNumber(37, label2);
-        methodVisitor.visitIntInsn(BIPUSH, integerKeys.length);
+        methodVisitor.visitIntInsn(BIPUSH, keys.length);
         methodVisitor.visitIntInsn(NEWARRAY, T_BYTE);
 
-        for (int i = 0; i < integerKeys.length; i++) {
+        for (int i = 0; i < keys.length; i++) {
             methodVisitor.visitInsn(DUP);
             methodVisitor.visitIntInsn(BIPUSH, i);
-            methodVisitor.visitIntInsn(BIPUSH, integerKeys[i]);
+            methodVisitor.visitIntInsn(BIPUSH, keys[i]);
             methodVisitor.visitInsn(BASTORE);
         }
 

@@ -9,6 +9,7 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.BasicEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -21,7 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StringTransformer extends AbstractTransformer {
-    private final Map<ClassNode, Integer[]> keyMap = new HashMap<>();
+    private final Map<ClassNode, BasicEncryptionGenerator> keyMap = new HashMap<>();
     private final Set<String> INJECTED = new HashSet<>();
 
     public StringTransformer(Skidfuscator skidfuscator) {
@@ -49,25 +50,25 @@ public class StringTransformer extends AbstractTransformer {
 
         final ClassNode parentNode = methodNode.getParent();
 
-        Integer[] keysT = keyMap.get(parentNode);
+        BasicEncryptionGenerator generator = keyMap.get(parentNode);
 
-        if (keysT == null) {
+        if (generator == null) {
             final int size = RandomUtil.nextInt(127) + 1;
-            keysT = new Integer[size];
+            final Integer[] keys = new Integer[size];
+
             for (int i = 0; i < size; i++) {
-                keysT[i] = RandomUtil.nextInt(127) + 1;
+                keys[i] = RandomUtil.nextInt(127) + 1;
             }
 
-            keyMap.put(parentNode, keysT);
+            keyMap.put(parentNode, (generator = new BasicEncryptionGenerator(keys)));
         }
 
-        final Integer[] keys = keysT;
-
         if (!INJECTED.contains(parentNode.getName())) {
-            BasicEncryptionGenerator.visit((SkidClassNode) methodNode.owner, BasicEncryptionGenerator.METHOD_NAME, keys);
+            generator.visit((SkidClassNode) methodNode.owner, BasicEncryptionGenerator.METHOD_NAME);
             INJECTED.add(parentNode.getName());
         }
 
+        BasicEncryptionGenerator finalGenerator = generator;
         cfg.allExprStream()
                 /*
                  *
@@ -87,7 +88,7 @@ public class StringTransformer extends AbstractTransformer {
 
                     final String constant = (String) unit.getConstant();
                     final int value = methodNode.getBlockPredicate((SkidBlock) unit.getBlock());
-                    final String encrypted = BasicEncryptionGenerator.encrypt(constant, value, keys);
+                    final String encrypted = finalGenerator.encrypt(constant, value);
 
                     final ConstantExpr encryptedExpr = new ConstantExpr(encrypted);
                     final Expr loadExpr = methodNode.getFlowPredicate().getGetter().get(unit.getBlock());

@@ -1,9 +1,8 @@
 package dev.skidfuscator.test;
 
-import dev.skidfuscator.obfuscator.transform.impl.string.BasicEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.BasicEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 public class EncryptionTest {
 
