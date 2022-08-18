@@ -238,7 +238,6 @@ public class SkidHierarchy implements Hierarchy {
                             .filter(e -> e instanceof Invokable)
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
-
                                 final ClassMethodHash target;
 
                                 if (invocation instanceof DynamicInvocationExpr) {

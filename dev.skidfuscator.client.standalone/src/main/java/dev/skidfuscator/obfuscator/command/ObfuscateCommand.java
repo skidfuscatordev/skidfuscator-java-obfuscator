@@ -1,5 +1,8 @@
 package dev.skidfuscator.obfuscator.command;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigParseOptions;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
@@ -75,6 +78,15 @@ public class ObfuscateCommand implements Callable<Integer> {
 
     @Override
     public Integer call()  {
+        if (!input.getPath().endsWith(".jar")) {
+            Config config = ConfigFactory.parseFile(input);
+            Config template = ConfigFactory.parseFile(
+                    new File("/Users/mariejuneja/Documents/Github/skidfuscator-java-obfuscator/dev.skidfuscator.obfuscator/src/test/resources/skidfuscator.conf")
+            );
+            config.checkValid(template);
+            return 0;
+        }
+
         /* Total number of processors or cores available to the JVM */
         final String processors =
                 String.format("%19.19s", "Processors:")
