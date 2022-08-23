@@ -119,7 +119,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 
 		try {
 			try {
-				ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
+				ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
 				cn.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
 				out.write(writer.toByteArray());
 			} catch (Exception e) {

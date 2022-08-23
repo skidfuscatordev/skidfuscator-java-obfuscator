@@ -4,7 +4,9 @@ import com.google.common.collect.Streams;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidExpressionPool;
+import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidTypeStack;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import org.mapleir.asm.ClassNode;
@@ -50,7 +52,12 @@ public class FrameComputer {
     public void compute(final ControlFlowGraph cfg) {
         if (cfg.getEntries().size() != 1)
             throw new IllegalStateException("CFG doesn't have exactly 1 entry");
+
+        
+
         final BasicBlock entry = cfg.getEntries().iterator().next();
+        final boolean isInit = cfg.getMethodNode().isInit();
+
         final FrameGraph frameGraph = new FrameGraph();
 
         final Map<BasicBlock, FrameNode> frameMap = new HashMap<>();
@@ -101,7 +108,18 @@ public class FrameComputer {
          * of "this." which is itself
          */
         if (!cfg.getMethodNode().isStatic()) {
-            entryFrame.set(index, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
+            if (isInit) {
+                ((SkidMethodNode) cfg.getMethodNode()).getEntryBlock();
+                frameMap.forEach((block, frame) -> {
+                    entryFrame.set(0,
+                            block.isFlagSet(SkidBlock.FLAG_NO_OPAQUE)
+                            ? TypeUtil.UNINITIALIZED_THIS
+                            : cfg.getMethodNode().getOwnerType()
+                    );
+                });
+            } else {
+                entryFrame.set(index, Type.getType("L" + cfg.getMethodNode().owner.getName() + ";"));
+            }
             protectedIndex = index;
             index++;
         }

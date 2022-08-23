@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator.util;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.creator.SkidASMFactory;
+import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.creator.SkidLibASMFactory;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
@@ -67,7 +68,12 @@ public class MapleJarUtil {
                 try {
                     out.putNextEntry(entry);
                     try {
-                        ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
+                        ClassWriter writer = this.buildClassWriter(
+                                tree,
+                                SkidFlowGraphDumper.TEST_COMPUTE
+                                    ? ClassWriter.COMPUTE_MAXS
+                                    : ClassWriter.COMPUTE_FRAMES
+                        );
                         cn.node.accept(writer);
                         out.write(writer.toByteArray());
                     } catch (Exception var8) {

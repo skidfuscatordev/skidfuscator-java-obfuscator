@@ -24,7 +24,6 @@ import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.stdlib.collections.graph.*;
-import org.mapleir.stdlib.collections.graph.algorithms.LT79Dom;
 import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 import org.mapleir.stdlib.collections.graph.algorithms.TarjanSCC;
 import org.mapleir.stdlib.collections.list.IndexedList;
@@ -55,6 +54,8 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private Map<BasicBlock, Type[]> localFrames = new HashMap<>();
 
 	private int beginIndex;
+
+	public static boolean TEST_COMPUTE = true;
 
 	public SkidFlowGraphDumper(Skidfuscator skidfuscator, ControlFlowGraph cfg, MethodNode m) {
 		this.skidfuscator = skidfuscator;
@@ -90,7 +91,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 		// Compute frames
 		//computeFrames();
-		//new FrameComputer(skidfuscator).compute(cfg);
+		if (TEST_COMPUTE) {
+			new FrameComputer(skidfuscator).compute(cfg);
+		}
 
 		// Stuff
 		/*
@@ -141,7 +144,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			m.node.visitLabel(getLabel(b));
 
 			iter: {
-				if (b.isEmpty() || cfg.getJumpReverseEdges(b).isEmpty()|| true)
+				if (b.isEmpty() || cfg.getJumpReverseEdges(b).isEmpty() || !TEST_COMPUTE)
 					break iter;
 
 				final SkidExpressionPool frameTypes = (SkidExpressionPool) b.getPool();
@@ -312,6 +315,8 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			frameType = Opcodes.NULL;
 		} else if (type.getSort() == Type.ARRAY) {
 			frameType = type.getDescriptor();
+		} else if (type == TypeUtil.UNINITIALIZED_THIS) {
+			frameType = Opcodes.UNINITIALIZED_THIS;
 		} else {
 			frameType = type.getInternalName();
 		}

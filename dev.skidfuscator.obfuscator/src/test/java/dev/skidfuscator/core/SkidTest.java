@@ -77,21 +77,12 @@ public abstract class SkidTest implements TestCase {
             run.run();
 
             if (TestSkidfuscator.SKIP) {
-                TestSkidfuscator.SKIP = false;
                 Assertions.fail("Transformers are causing the issue!");
             }
         } catch (Throwable e) {
             System.out.println("------");
             e.printStackTrace();
             System.out.println("------");
-
-            if (!TestSkidfuscator.SKIP) {
-                TestSkidfuscator.SKIP = true;
-
-                test();
-            } else {
-                TestSkidfuscator.SKIP = false;
-            }
 
             try {
                 skidfuscator.getJarContents().getClassContents().add(
@@ -132,8 +123,17 @@ public abstract class SkidTest implements TestCase {
                 MapleJarUtil.dumpJar(
                         skidfuscator,
                         new PassGroup("Output"),
-                        "dump.jar"
+                        TestSkidfuscator.SKIP ? "dump.jar" : "dump-transformers.jar"
                 );
+
+                if (!TestSkidfuscator.SKIP) {
+                    TestSkidfuscator.SKIP = true;
+
+                    test();
+                } else {
+                    TestSkidfuscator.SKIP = false;
+                }
+
             } catch (IOException ie) {
                 ie.printStackTrace();
             }
@@ -159,13 +159,13 @@ public abstract class SkidTest implements TestCase {
         );
 
         final SkidMethodNode methodNode = skidClassNode.createMethod()
-                        .access(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
-                        .name("main")
-                        .desc("([Ljava/lang/String;)V")
-                        .exceptions(new String[0])
-                        .phantom(true)
-                        .signature(null)
-                        .build();
+                .access(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)
+                .name("main")
+                .desc("([Ljava/lang/String;)V")
+                .exceptions(new String[0])
+                .phantom(true)
+                .signature(null)
+                .build();
         final String parent = this.getMainClass().getName().replace(".", "/");
 
         final BasicBlock entry = methodNode.getEntryBlock();

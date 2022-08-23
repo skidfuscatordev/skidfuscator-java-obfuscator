@@ -4,6 +4,7 @@ import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
+import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
@@ -160,7 +161,12 @@ public class TestSkidfuscator extends Skidfuscator {
 
                     final AtomicReference<byte[]> bytes = new AtomicReference<>();
                     try {
-                        final ClassWriter writer = resolver.buildClassWriter(tree, ClassWriter.COMPUTE_FRAMES);
+                        final ClassWriter writer = resolver.buildClassWriter(
+                                tree,
+                                SkidFlowGraphDumper.TEST_COMPUTE
+                                        ? ClassWriter.COMPUTE_MAXS
+                                        : ClassWriter.COMPUTE_FRAMES
+                        );
                         e.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
                         bytes.set(writer.toByteArray());
                     } catch (Exception ex) {

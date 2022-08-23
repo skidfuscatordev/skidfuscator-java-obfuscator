@@ -9,6 +9,7 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.Invocation;
 import org.mapleir.ir.code.expr.invoke.Invokable;
+import org.mapleir.ir.locals.Local;
 import org.mapleir.ir.locals.LocalsPool;
 
 import java.util.Collection;
@@ -45,5 +46,15 @@ public class SkidControlFlowGraph extends ControlFlowGraph {
                 .flatMap(Collection::stream)
                 .map(Stmt::enumerateWithSelf)
                 .flatMap(Streams::stream);
+    }
+
+    public Local getSelfLocal() {
+        assert !getMethodNode().isStatic() : "Trying to get instance local on static method";
+
+        return getLocals().get(0);
+    }
+
+    public BasicBlock getEntry() {
+        return getEntries().iterator().next();
     }
 }

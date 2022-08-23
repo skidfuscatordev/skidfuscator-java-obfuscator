@@ -35,10 +35,12 @@ import dev.skidfuscator.obfuscator.resolver.SkidInvocationResolver;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidGroup;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
+import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.*;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.outliner.SimpleOutlinerTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
@@ -103,6 +105,7 @@ public class Skidfuscator {
      */
     public Skidfuscator(SkidfuscatorSession session) {
         this.session = session;
+        this.exemptAnalysis = new SimpleExemptAnalysis();
     }
 
     /**
@@ -123,13 +126,11 @@ public class Skidfuscator {
         SkiddedDirectory.init(null);
 
         /*
-         * Here is initialized both the exempt analysis and the skid cache.
+         * Here is initialized the skid cache.
          *
          * The SkidCache is an extension of MapleIR's IRCache
-         * The ExemptAnalysis is a manager which handles exemptions
          */
         this.irFactory = new SkidCache(this);
-        this.exemptAnalysis = new SimpleExemptAnalysis();
 
         /*
          * Here we initialize our opaque predicate type. As of right now
@@ -514,8 +515,14 @@ public class Skidfuscator {
     }
 
     protected void _loadTransformer() {
-        for (Listener o : Arrays.asList(
-                new StringTransformer(this),
+        for (Listener o : this.getTransformers()) {
+            EventBus.register(o);
+        }
+    }
+
+    public List<Transformer> getTransformers() {
+        return Arrays.asList(
+                /*new StringTransformer(this),
                 //new NegationTransformer(this),
                 //new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
@@ -524,11 +531,10 @@ public class Skidfuscator {
                 new BasicConditionTransformer(this),
                 new BasicExceptionTransformer(this),
                 new BasicRangeTransformer(this),
-                new AhegaoTransformer(this)
+                new AhegaoTransformer(this)*/
+                //new SimpleOutlinerTransformer()
                 //
-        )) {
-            EventBus.register(o);
-        }
+        );
     }
 
     private void _verify() {

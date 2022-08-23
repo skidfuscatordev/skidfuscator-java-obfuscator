@@ -1,7 +1,6 @@
 package dev.skidfuscator.obfuscator.util;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
-import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import lombok.experimental.UtilityClass;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.TypeUtils;
@@ -35,6 +34,8 @@ public class TypeUtil {
 	public final Type OBJECT_TYPE = Type.getObjectType("java/lang/Object");
 	public final Type NULL_TYPE = TypeUtils.NULL_TYPE;
 	public final Type UNDEFINED_TYPE = TypeUtils.UNDEFINED_TYPE;
+
+	public final Type UNINITIALIZED_THIS = TypeUtils.UNINITIALIZED_TYPE;
 	public final Type STRING_TYPE = Type.getObjectType("java/lang/String");
 	public final Type THROWABLE_TYPE = Type.getType(Throwable.class);
 
@@ -187,6 +188,22 @@ public class TypeUtil {
 	 */
 	public int sortToSize(int sort) {
 		switch(sort) {
+			case Type.LONG:
+			case Type.DOUBLE:
+				return 2;
+			default:
+				return 1;
+		}
+	}
+
+	/**
+	 * @param sort
+	 * 		Type sort<i>(kind)</i>
+	 *
+	 * @return Size of type.
+	 */
+	public int size(Type sort) {
+		switch(sort.getSort()) {
 			case Type.LONG:
 			case Type.DOUBLE:
 				return 2;

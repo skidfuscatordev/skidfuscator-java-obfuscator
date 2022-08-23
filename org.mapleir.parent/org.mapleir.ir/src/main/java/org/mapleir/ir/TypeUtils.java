@@ -37,6 +37,7 @@ public class TypeUtils {
 	public static final Type THROWABLE = Type.getType(Throwable.class);
 	public static final Type NULL_TYPE = Type.getType(Null.class);
 	public static final Type UNDEFINED_TYPE = Type.getType(Undefined.class);
+	public static final Type UNINITIALIZED_TYPE = Type.getType(Uninitialized.class);
 
 
 	// TODO: remove
