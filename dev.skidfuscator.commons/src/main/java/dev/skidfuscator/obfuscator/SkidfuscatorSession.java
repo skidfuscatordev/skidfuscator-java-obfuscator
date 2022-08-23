@@ -12,7 +12,7 @@ import java.io.File;
 public class SkidfuscatorSession {
     private File input;
     private File output;
-    private File libs;
+    private File[] libs;
     private File mappings;
     private File exempt;
     private File runtime;
@@ -40,7 +40,7 @@ public class SkidfuscatorSession {
     /**
      * @return the libs
      */
-    public File getLibs() {
+    public File[] getLibs() {
         return libs;
     }
 

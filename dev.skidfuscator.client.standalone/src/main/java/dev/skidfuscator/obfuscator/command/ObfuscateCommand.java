@@ -41,7 +41,7 @@ public class ObfuscateCommand implements Callable<Integer> {
             names = {"-li", "--libs"},
             description = "Path to the libs folder"
     )
-    private File libs;
+    private File libFolder;
 
     @CommandLine.Option(
             names = {"-ex", "--exempt"},
@@ -152,6 +152,13 @@ public class ObfuscateCommand implements Callable<Integer> {
                             ? "jmods"
                             : "lib/rt.jar"
             );
+        }
+
+        final File[] libs;
+        if (libFolder != null) {
+            libs = libFolder.listFiles();
+        } else {
+            libs = new File[0];
         }
 
         final SkidfuscatorSession skidInstance = SkidfuscatorSession.builder()

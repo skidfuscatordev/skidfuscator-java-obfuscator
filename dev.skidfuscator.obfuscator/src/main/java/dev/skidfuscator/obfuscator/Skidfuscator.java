@@ -472,8 +472,8 @@ public class Skidfuscator {
                 ));
             }
             LOGGER.log("✓ Finished importing mappings!");
-        } else if (session.getLibs() != null && session.getLibs().listFiles() != null) {
-            final File[] libs = Arrays.stream(session.getLibs().listFiles())
+        } else if (session.getLibs() != null && session.getLibs().length > 0) {
+            final File[] libs = Arrays.stream(session.getLibs())
                     .filter(e -> e.getAbsolutePath().endsWith(".jar"))
                     .toArray(File[]::new);
 
