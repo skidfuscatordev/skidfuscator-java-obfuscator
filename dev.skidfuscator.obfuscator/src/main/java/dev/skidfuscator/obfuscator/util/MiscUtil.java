@@ -38,6 +38,10 @@ public class MiscUtil {
 
     public int getJavaVersion() {
         String version = System.getProperty("java.version");
+        return decodeJvmVersion(version);
+    }
+
+    public int decodeJvmVersion(String version) {
         if(version.startsWith("1.")) {
             version = version.substring(2, 3);
         } else {
