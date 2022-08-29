@@ -3,6 +3,7 @@ plugins {
     id 'com.gradle.plugin-publish' version '0.14.0'
 }
 
+group = 'dev.skidfuscator'
 version = '0.1'
 
 gradlePlugin {
@@ -25,6 +26,11 @@ pluginBundle {
             vcsUrl = 'https://github.com/terminalsin/skidfuscator-java-obfuscator'
         }
     }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {

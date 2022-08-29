@@ -15,6 +15,7 @@ import org.gradle.jvm.tasks.Jar;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class SkidfuscatorGradlePlugin implements Plugin<Project> {
@@ -39,7 +40,7 @@ public class SkidfuscatorGradlePlugin implements Plugin<Project> {
         project.getPlugins().withType(GroovyPlugin.class, plugin -> this.handlePlugin(project, "groovy"));
         project.getPlugins().withType(ScalaPlugin.class, plugin -> this.handlePlugin(project, "scala"));
         project.getPlugins().withId("org.jetbrains.kotlin.jvm", plugin -> this.handlePlugin(project, "kotlin"));
-        // compute session and obfuscator right after jar task
+        // compute session and obfuscate right after jar task
         project.getTasks().withType(Jar.class, jar -> {
             final String home = System.getProperty("java.home");
             final File runtime;
@@ -56,8 +57,8 @@ public class SkidfuscatorGradlePlugin implements Plugin<Project> {
                 );
             }
 
-            if (extension.getExemption().isPresent()) {
-                exemption = extension.getExemption().get().getAsFile();;
+            if (extension.getExemptionFile().isPresent()) {
+                exemption = extension.getExemptionFile().get().getAsFile();
             } else {
                 exemption = null;
             }
@@ -78,7 +79,11 @@ public class SkidfuscatorGradlePlugin implements Plugin<Project> {
                     .libs(this.classpath.toArray(new File[0]))
                     .build();
 
-            SkidfuscatorCompileAction action = project.getObjects().newInstance(SkidfuscatorCompileAction.class, session, extension.getExemptionString().getOrNull());
+            SkidfuscatorCompileAction action = project.getObjects().newInstance(
+                    SkidfuscatorCompileAction.class,
+                    session,
+                    extension.getExcludes().getOrElse(Collections.emptyList())
+            );
             jar.doLast("skidfuscator", action);
         });
     }

@@ -1,8 +1,9 @@
 package dev.skidfuscator.gradle;
 
 import lombok.Getter;
-import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 
 import javax.inject.Inject;
@@ -14,19 +15,35 @@ public class SkidfuscatorExtension {
     private final Property<Boolean> notrack;
     private final Property<Boolean> fuckit;
     private final Property<String> classifier;
-    private final Property<String> exemptionString;
-    private final Property<RegularFile> runtime;
-    private final Property<RegularFile> exemption;
+    private final ListProperty<String> excludes;
+    private final RegularFileProperty runtime;
+    private final RegularFileProperty exemptionFile;
 
     @Inject
     public SkidfuscatorExtension(ObjectFactory objectFactory) {
         this.phantom = objectFactory.property(Boolean.class).convention(false);
         this.notrack = objectFactory.property(Boolean.class).convention(false);
         this.fuckit = objectFactory.property(Boolean.class).convention(false);
-        this.runtime = objectFactory.property(RegularFile.class);
+        this.runtime = objectFactory.fileProperty();
         this.classifier = objectFactory.property(String.class).convention("-obfuscated");
-        this.exemptionString = objectFactory.property(String.class);
-        this.exemption = objectFactory.property(RegularFile.class);
+        this.excludes = objectFactory.listProperty(String.class).empty();
+        this.exemptionFile = objectFactory.fileProperty();
+    }
+
+    public void exclude(String... exludes) {
+        this.excludes.addAll(exludes);
+    }
+
+    public void phantom() {
+        this.phantom.set(true);
+    }
+
+    public void notrack() {
+        this.notrack.set(true);
+    }
+
+    public void fuckit() {
+        this.fuckit.set(true);
     }
 
 }
