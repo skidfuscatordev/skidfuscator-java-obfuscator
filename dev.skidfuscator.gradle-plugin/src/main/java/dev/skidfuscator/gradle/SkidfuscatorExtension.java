@@ -11,6 +11,7 @@ import javax.inject.Inject;
 @Getter
 public class SkidfuscatorExtension {
 
+    private final Property<String> version;
     private final Property<Boolean> phantom;
     private final Property<Boolean> notrack;
     private final Property<Boolean> fuckit;
@@ -21,6 +22,7 @@ public class SkidfuscatorExtension {
 
     @Inject
     public SkidfuscatorExtension(ObjectFactory objectFactory) {
+        this.version = objectFactory.property(String.class).convention("2.0.0-SNAPSHOT"); // automatically fetching?
         this.phantom = objectFactory.property(Boolean.class).convention(false);
         this.notrack = objectFactory.property(Boolean.class).convention(false);
         this.fuckit = objectFactory.property(Boolean.class).convention(false);

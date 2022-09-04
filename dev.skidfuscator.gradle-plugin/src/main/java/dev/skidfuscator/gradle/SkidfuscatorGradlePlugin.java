@@ -1,7 +1,6 @@
 package dev.skidfuscator.gradle;
 
-import dev.skidfuscator.obfuscator.SkidfuscatorSession;
-import dev.skidfuscator.obfuscator.util.MiscUtil;
+import dev.skidfuscator.gradle.util.MiscUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -15,7 +14,6 @@ import org.gradle.jvm.tasks.Jar;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class SkidfuscatorGradlePlugin implements Plugin<Project> {
@@ -43,13 +41,13 @@ public class SkidfuscatorGradlePlugin implements Plugin<Project> {
         // compute session and obfuscate right after jar task
         project.getTasks().withType(Jar.class, jar -> {
             final String home = System.getProperty("java.home");
-            final File runtime;
+            final File javaRuntime;
             final File exemption;
 
             if (extension.getRuntime().isPresent()) {
-                runtime = extension.getRuntime().get().getAsFile();
+                javaRuntime = extension.getRuntime().get().getAsFile();
             } else {
-                runtime = new File(
+                javaRuntime = new File(
                         home,
                         MiscUtil.getJavaVersion() > 8
                                 ? "jmods"
@@ -67,23 +65,25 @@ public class SkidfuscatorGradlePlugin implements Plugin<Project> {
             File directory = input.getParentFile();
 
             File output = new File(directory, FilenameUtils.getName(input.getName()) + extension.getClassifier().get() + FilenameUtils.getExtension(input.getName()));
-            SkidfuscatorSession session = SkidfuscatorSession.builder()
+            SkidfuscatorSpec spec = SkidfuscatorSpec.builder()
                     .input(input)
                     .output(output)
                     .fuckit(extension.getFuckit().get())
                     .phantom(extension.getPhantom().get())
                     .analytics(!extension.getNotrack().get())
-                    .runtime(runtime)
+                    .runtime(javaRuntime)
                     .exempt(exemption)
                     .jmod(this.jvm > 8)
                     .libs(this.classpath.toArray(new File[0]))
+                    .excludes(extension.getExcludes().getOrNull())
                     .build();
-
+            SkidfuscatorRuntime runtime = new SkidfuscatorRuntime(project, extension.getVersion().get());
             SkidfuscatorCompileAction action = project.getObjects().newInstance(
                     SkidfuscatorCompileAction.class,
-                    session,
-                    extension.getExcludes().getOrElse(Collections.emptyList())
+                    spec,
+                    runtime
             );
+
             jar.doLast("skidfuscator", action);
         });
     }

@@ -37,6 +37,5 @@ dependencies {
     compileOnly gradleApi()
     compileOnly 'org.codehaus.groovy:groovy-all:3.0.9'
 
-    implementation project(':obfuscator')
     implementation 'commons-io:commons-io:2.11.0'
 }
