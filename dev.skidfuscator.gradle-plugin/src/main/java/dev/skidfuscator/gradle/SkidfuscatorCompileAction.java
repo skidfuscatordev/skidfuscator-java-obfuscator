@@ -79,7 +79,16 @@ public class SkidfuscatorCompileAction implements Action<Task> {
                 boolean.class // analytics
         );
         return constructor.newInstance(
-                spec.getInput(), spec.getOutput(), spec.getLibs(), spec.getMappings(), spec.getExempt(), spec.getRuntime(),
-                spec.isPhantom(), spec.isJmod(), spec.isFuckit(), spec.isAnalytics());
+                spec.getInput(),
+                spec.getOutput(),
+                spec.getLibs(),
+                spec.getMappings(),
+                spec.getExempt(),
+                spec.getRuntime(),
+                spec.isPhantom(),
+                spec.isJmod(),
+                spec.isFuckit(),
+                spec.isAnalytics()
+        );
     }
 }

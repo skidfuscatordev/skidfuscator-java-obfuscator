@@ -1267,7 +1267,14 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 			case Opcodes.INVOKEVIRTUAL:
 			case Opcodes.INVOKEINTERFACE:
 			case Opcodes.INVOKESPECIAL:
-				callExpr = new VirtualInvocationExpr(VirtualInvocationExpr.resolveCallType(op), args, owner, name, desc);
+				callExpr = builder.factory
+						.virtual_invoke_expr()
+						.callType(VirtualInvocationExpr.resolveCallType(op))
+						.args(args)
+						.owner(owner)
+						.name(name)
+						.desc(desc)
+						.build();
 				break;
 			case Opcodes.INVOKESTATIC:
 				callExpr = builder.factory
@@ -1732,10 +1739,8 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 			 * if the given descriptor isn't intended for getType
 			 * (getObjectType instead), shouldn't have this problem now.*/
 			erange.addType(tc.type != null ? Type.getType("L" + tc.type + ";") : TypeUtils.THROWABLE);
-			
-			ListIterator<BasicBlock> lit = range.listIterator();
-			while(lit.hasNext()) {
-				BasicBlock block = lit.next();
+
+			for (BasicBlock block : range) {
 				builder.graph.addEdge(new TryCatchEdge<>(block, erange));
 			}
 		}

@@ -4,12 +4,12 @@ plugins {
 }
 
 group = 'dev.skidfuscator'
-version = '0.1'
+version = '1.0.0'
 
 gradlePlugin {
     plugins {
         skidfuscator {
-            id = 'dev.skidfuscator'
+            id = 'io.github.terminalsin'
             implementationClass = 'dev.skidfuscator.gradle.SkidfuscatorGradlePlugin'
         }
     }
