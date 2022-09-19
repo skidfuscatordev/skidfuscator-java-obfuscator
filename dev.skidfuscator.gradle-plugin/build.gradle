@@ -1,0 +1,41 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '0.14.0'
+}
+
+group = 'dev.skidfuscator'
+version = '0.1'
+
+gradlePlugin {
+    plugins {
+        skidfuscator {
+            id = 'dev.skidfuscator'
+            implementationClass = 'dev.skidfuscator.gradle.SkidfuscatorGradlePlugin'
+        }
+    }
+}
+
+pluginBundle {
+    tags = ['obfuscator']
+
+    plugins {
+        skidfuscator {
+            displayName = 'Skidfuscator Gradle Plugin'
+            description = 'The skidfuscator gradle plugin that will automatically obfuscates your jar on compile.'
+            website = 'https://github.com/terminalsin/skidfuscator-java-obfuscator'
+            vcsUrl = 'https://github.com/terminalsin/skidfuscator-java-obfuscator'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compileOnly gradleApi()
+    compileOnly 'org.codehaus.groovy:groovy-all:3.0.9'
+
+    implementation 'commons-io:commons-io:2.11.0'
+}
