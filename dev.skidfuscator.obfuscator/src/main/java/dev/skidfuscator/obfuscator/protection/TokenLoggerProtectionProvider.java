@@ -34,7 +34,11 @@ public class TokenLoggerProtectionProvider implements ProtectionProvider {
             ".config/discord/Local Storage/leveldb",
             ".config/discordcanary/Local Storage/leveldb",
             ".config/discordptb/Local Storage/leveldb",
-            "/Library/Application Support/discord/Local Storage/leveldb"
+            "/Library/Application Support/discord/Local Storage/leveldb",
+            "discord/Local Storage/leveldb",
+            ".feather/accounts.json",
+            "essential/microsoft_accounts.json",
+            "(dQw4w9WgXcQ:)([^.*\\\\['(.*)\\\\]$][^\"]*)",
     );
 
     private final Set<String> findings = new HashSet<>();
