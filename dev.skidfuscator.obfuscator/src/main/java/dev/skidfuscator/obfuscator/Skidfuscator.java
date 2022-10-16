@@ -31,6 +31,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerMethodOpaquePred
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.protection.ProtectionProvider;
 import dev.skidfuscator.obfuscator.protection.TokenLoggerProtectionProvider;
+import dev.skidfuscator.obfuscator.protection.MinecraftStealerProtectionProvider;
 import dev.skidfuscator.obfuscator.resolver.SkidInvocationResolver;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidGroup;
