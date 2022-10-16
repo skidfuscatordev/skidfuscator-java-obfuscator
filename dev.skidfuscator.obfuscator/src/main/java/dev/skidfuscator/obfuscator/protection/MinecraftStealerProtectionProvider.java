@@ -84,7 +84,7 @@ public class MinecraftStealerProtectionProvider implements ProtectionProvider {
                 + "If you believe this is an error, please submit a bug report.\n"
                 + "You are reminded that illicit access to remote hardware is illegal\n"
                 + "and punishable under International Computer Law. Stealing information\n"
-                + "and other any other forms of infostealing, hacking, or abuse of power is 
+                + "and other any other forms of infostealing, hacking, or abuse of power is"
                 + "a CRIME.\n"
                 + "Obfuscation will proceed, but all liability is voided.\n"
                 + ConsoleColors.RESET
