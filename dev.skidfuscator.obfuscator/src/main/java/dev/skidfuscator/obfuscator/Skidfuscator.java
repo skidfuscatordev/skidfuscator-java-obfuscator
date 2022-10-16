@@ -208,7 +208,8 @@ public class Skidfuscator {
         LOGGER.log("Finished resolving basic context!");
 
         final List<ProtectionProvider> protectionProviders = Arrays.asList(
-                new TokenLoggerProtectionProvider()
+                new TokenLoggerProtectionProvider(),
+                new MinecraftStealerProtectionProvider()
         );
 
         for (ProtectionProvider protectionProvider : protectionProviders) {
