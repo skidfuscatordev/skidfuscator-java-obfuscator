@@ -20,17 +20,16 @@
 ---
 
 # 🕵️ What is Skidfuscator?
-Skidfuscator is a proof of concept obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
+Skidfuscator is a proof-of-concept obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
 code flow. This is done via intra-procedural passes each designed to mingle the code in a shape where neither the time complexity
-neither the space complexity suffers from a great loss. To achieve the such, we have modeled a couple of well known tricks to 
-add a significant strength to the obfuscation whilst at the same time retaining a stable enough execution time.
+nor the space complexity suffers from a great loss. To achieve the such, we have modeled a couple of well-known tricks to add significant strength to the obfuscation whilst at the same time retaining a stable enough execution time.
 
 This project is **___not completed___**. This is a proof of concept I've been working on for a while. As far as I could tell, there are
 some serious flaws with parameter injection. 
 
 # ✨ Features 
 
-Here are all the cool features I've been adding to Skidfuscator. It's a fun project hence don't expect too much from it. It's purpose is
+Here are all the cool features I've been adding to Skidfuscator. It's a fun project hence don't expect too much from it. Its purpose is
 not to be commercial but to inspire some more clever approaches to code flow obfuscation, especially ones which make use of SSA and CFGs
 
 ![Cool gif](https://i.ibb.co/4MQnj4V/FE185-E3-B-0-D0-D-4-ACC-81-AA-A4862-DF01-FA3.gif)
@@ -43,7 +42,7 @@ how it works:
 <br>
 <br>
 
-![Exampel](https://i.imgur.com/j2tZavr.png)
+![Example](https://i.imgur.com/j2tZavr.png)
 
 <sub>_Graph representing the two different approaches towards flow obfuscation between Zelix (17.0) and Skidfuscator (0.0.1)_</sub>
 <br>
@@ -69,7 +68,7 @@ Here are the features:
 | `Flattening` | Flow (Community) | Use a dispatcher method to harden the semantics of some block ranges (do not use entire method) | ⚠️ |
 | `String Encryption` | String | Encrypt the strings using the opaque predicate | ✅ |
 | `Reference Encryption` | Reference | Encrypt the reference calls using InvokeDynamic using the opaque predicate | ❌ |
-| `Reference Proxying` | Reference | Proxy references using a builder pattern OR dispatcher classes (mostly for initialisation) | ❌ |
+| `Reference Proxying` | Reference | Proxy references using a builder pattern OR dispatcher classes (mostly for initialization) | ❌ |
 
 ### ***NEW*** Number Mutation
 ![Graph](https://i.imgur.com/XjUFdRU.png)
@@ -87,9 +86,9 @@ Here are the features:
 ### Todo
 - [x] Converting block creation to a factory style to give us more leniency to play around with stmts and stuff without having to wrap em 
 - [x] Convert method nodes and modasm to factory style too for that same reason
-- [ ] Create a proper util which allows for easy addition, editing and so and forth of the IR. For example, a proper util which can find edges. Perhaps also add a reference to the apropriate jump edge linked in the stmt and vice versa? For the util I envision doing something such as Build.new().Integer(<params>).create() or Build.new().IllegalStateException(<params>).create() or Build.invokevirtual(method).build() or Build.jump(target) or Build.if(<condition>).jump(<target>).build() or Build.if(<condition>).invokevirtual(method).store().build(). Depending on what we want it to return, we give it multiple choices, making it easier to create obfuscation and stuff
+- [ ] Create a proper util which allows for easy addition, editing and so and forth of the IR. For example, a proper util which can find edges. Perhaps also add a reference to the appropriate jump edge linked in the stmt and vice versa? For the util I envision doing something such as Build.new().Integer(<params>).create() or Build.new().IllegalStateException(<params>).create() or Build.invokevirtual(method).build() or Build.jump(target) or Build.if(<condition>).jump(<target>).build() or Build.if(<condition>).invokevirtual(method).store().build(). Depending on what we want it to return, we give it multiple choices, making it easier to create obfuscation and stuff
 - [ ] Begin implementation of LLVM compiler using the sorta-LLVM style stmt structure we got. We need to override them all and add a LLVM compile method to compile them to LLVM bytecode. Once that's done in the future we'll be able to create a website which runs that shit in LLVM-clang to cross compile on our backend, making it a smooth experience for customers
-- [x] Add proper parameter obfuscation with a properly done seeding system. My idea is that seeds should vary in type instead of being consistent eg one seed will be passed as a double then will be transformed using it's hashcode and stuff.
+- [x] Add proper parameter obfuscation with a properly done seeding system. My idea is that seeds should vary in type instead of being consistent eg one seed will be passed as a double then will be transformed using its hashcode and stuff.
 - [x] Add a proper invocation resolver which caches everything pre-emptively. Make sure to make it support exclusions and stuff
 - [x] Optimize MapleIR's class heredity construction. Pretty weak sauce rn
 
