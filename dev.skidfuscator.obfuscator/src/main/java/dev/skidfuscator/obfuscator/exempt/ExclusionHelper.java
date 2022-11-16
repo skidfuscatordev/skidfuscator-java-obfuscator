@@ -78,12 +78,9 @@ public class ExclusionHelper {
                                             .match("private", var.isPrivate())
                                             .check();
 
-                                    if (!initialMatch) {
-                                        System.out.println("Oh?");
-                                    }
 
                                     return initialMatch
-                                            && regex.matcher(var.getName()).find();
+                                            && (regex.matcher(var.getName()).find() || parsed.equals(var.getName()));
                                 }
                             });
 
@@ -116,7 +113,7 @@ public class ExclusionHelper {
                                         return false;
                                     }
 
-                                    return regexMethod.matcher(var.getName()).find();
+                                    return regexMethod.matcher(var.getName()).find() || parsed.equals(var.getName());
                                             //&& regexClazz.matcher(var.owner.getDisplayName()).matches();
                                 }
 
