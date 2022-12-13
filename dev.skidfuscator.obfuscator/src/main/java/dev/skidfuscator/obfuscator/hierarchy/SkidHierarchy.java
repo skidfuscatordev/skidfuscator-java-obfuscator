@@ -83,7 +83,10 @@ public class SkidHierarchy implements Hierarchy {
                 }
             }
 
-            node.getMethods().stream().sorted(new Comparator<MethodNode>() {
+            node.getMethods()
+                    .stream()
+                    .filter(e -> !skidfuscator.getExemptAnalysis().isExempt(e))
+                    .sorted(new Comparator<MethodNode>() {
                 @Override
                 public int compare(MethodNode o1, MethodNode o2) {
                     final Parameter parameter1 = new Parameter(o1.getDesc());
@@ -187,7 +190,8 @@ public class SkidHierarchy implements Hierarchy {
         this.annotations = new HashMap<>();
 
         try (ProgressWrapper progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
-            nodes = skidfuscator.getClassSource()
+            nodes = skidfuscator
+                    .getClassSource()
                     .getClassTree()
                     .vertices()
                     .stream()
@@ -195,6 +199,7 @@ public class SkidHierarchy implements Hierarchy {
                         progressBar.tick();
                         return skidfuscator.getClassSource().isApplicationClass(e.getName());
                     })
+                    .filter(e -> !skidfuscator.getExemptAnalysis().isExempt(e))
                     .collect(Collectors.toList());
         }
 

@@ -186,9 +186,9 @@ public class Skidfuscator {
                 .build();
         LOGGER.log("Finished resolving predicate analysis!");
 
+        _importExempt();
         _importClasspath();
         _importJvm();
-        _importExempt();
 
         if (!session.isFuckIt()) {
             _verify();
@@ -292,6 +292,7 @@ public class Skidfuscator {
         LOGGER.log("Finished dumping classes...");
         EventBus.end();
 
+        _cleanup();
         _dump();
 
         SkidProgressBar.RENDER_THREAD.shutdown();
@@ -362,6 +363,7 @@ public class Skidfuscator {
                         progressBar.tick();
                     }
                 }
+                LOGGER.log("Imported: \n " + exemptAnalysis.toString());
             } catch (IOException ex) {
                 /*
                  * If there's any error, it can pose significant issues with
@@ -522,7 +524,7 @@ public class Skidfuscator {
 
     public List<Transformer> getTransformers() {
         return Arrays.asList(
-                /*new StringTransformer(this),
+                new StringTransformer(this),
                 //new NegationTransformer(this),
                 //new FlatteningFlowTransformer(this),
                 new NumberTransformer(this),
@@ -531,7 +533,7 @@ public class Skidfuscator {
                 new BasicConditionTransformer(this),
                 new BasicExceptionTransformer(this),
                 new BasicRangeTransformer(this),
-                new AhegaoTransformer(this)*/
+                new AhegaoTransformer(this)
                 //new SimpleOutlinerTransformer()
                 //
         );
@@ -559,6 +561,13 @@ public class Skidfuscator {
             return;
         }
         LOGGER.log("Finished verification!");
+    }
+
+    protected void _cleanup() {
+        this.hierarchy = null;
+        this.irFactory = null;
+        this.predicateAnalysis = null;
+        System.gc();
     }
 
     protected void _dump() {
