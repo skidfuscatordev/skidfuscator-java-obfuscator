@@ -143,6 +143,11 @@ public class TestSkidfuscator extends Skidfuscator {
     }
 
     @Override
+    protected void _cleanup() {
+
+    }
+
+    @Override
     protected void _dump() {
         final PhantomResolvingJarDumper resolver = new PhantomResolvingJarDumper(
                 this,

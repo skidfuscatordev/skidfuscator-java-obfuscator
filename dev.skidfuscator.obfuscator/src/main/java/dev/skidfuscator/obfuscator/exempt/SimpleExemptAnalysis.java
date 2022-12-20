@@ -51,6 +51,7 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
                 }
             } catch (AssertionError e) {
                 // Do nothing
+                e.printStackTrace();
             }
         }
 

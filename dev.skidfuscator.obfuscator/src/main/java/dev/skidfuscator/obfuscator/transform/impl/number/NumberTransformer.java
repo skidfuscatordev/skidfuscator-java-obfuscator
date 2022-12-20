@@ -70,7 +70,7 @@ public class NumberTransformer extends AbstractTransformer {
 
             for (Stmt stmt : new HashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
-                    if (!(expr instanceof ConstantExpr))
+                    if (!(expr instanceof ConstantExpr) || expr instanceof SkidConstantExpr)
                         continue;
 
                     final ConstantExpr constantExpr = (ConstantExpr) expr;

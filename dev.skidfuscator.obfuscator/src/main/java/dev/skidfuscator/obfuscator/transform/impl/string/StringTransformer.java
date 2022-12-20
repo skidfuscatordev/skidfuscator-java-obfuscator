@@ -1,28 +1,40 @@
 package dev.skidfuscator.obfuscator.transform.impl.string;
 
+import dev.skidfuscator.builder.FieldNodeBuilder;
+import dev.skidfuscator.builder.MethodNodeBuilder;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
+import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
+import dev.skidfuscator.obfuscator.skidasm.builder.SkidMethodNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.BasicEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.BytesEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.ClassNode;
+import org.mapleir.asm.FieldNode;
+import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
+import org.mapleir.ir.code.expr.NewArrayExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
+import org.mapleir.ir.code.stmt.ReturnStmt;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class StringTransformer extends AbstractTransformer {
-    private final Map<ClassNode, BasicEncryptionGenerator> keyMap = new HashMap<>();
+    private final Map<ClassNode, BytesEncryptionGenerator> keyMap = new HashMap<>();
+
     private final Set<String> INJECTED = new HashSet<>();
 
     public StringTransformer(Skidfuscator skidfuscator) {
@@ -48,9 +60,9 @@ public class StringTransformer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        final ClassNode parentNode = methodNode.getParent();
+        final SkidClassNode parentNode = methodNode.getParent();
 
-        BasicEncryptionGenerator generator = keyMap.get(parentNode);
+        BytesEncryptionGenerator generator = keyMap.get(parentNode);
 
         if (generator == null) {
             final int size = RandomUtil.nextInt(127) + 1;
@@ -60,7 +72,7 @@ public class StringTransformer extends AbstractTransformer {
                 keys[i] = RandomUtil.nextInt(127) + 1;
             }
 
-            keyMap.put(parentNode, (generator = new BasicEncryptionGenerator(keys)));
+            keyMap.put(parentNode, (generator = new BytesEncryptionGenerator(keys)));
         }
 
         if (!INJECTED.contains(parentNode.getName())) {
@@ -68,7 +80,7 @@ public class StringTransformer extends AbstractTransformer {
             INJECTED.add(parentNode.getName());
         }
 
-        BasicEncryptionGenerator finalGenerator = generator;
+        BytesEncryptionGenerator finalGenerator = generator;
         cfg.allExprStream()
                 /*
                  *
@@ -87,15 +99,43 @@ public class StringTransformer extends AbstractTransformer {
                     final CodeUnit parent = unit.getParent();
 
                     final String constant = (String) unit.getConstant();
+
+
                     final int value = methodNode.getBlockPredicate((SkidBlock) unit.getBlock());
-                    final String encrypted = finalGenerator.encrypt(constant, value);
+                    final byte[] encrypted = finalGenerator.encrypt(constant, value);
 
-                    final ConstantExpr encryptedExpr = new ConstantExpr(encrypted);
+                    final SkidMethodNode injector = new SkidMethodNodeBuilder(skidfuscator, parentNode)
+                            .access(Opcodes.ACC_STATIC | Opcodes.ACC_TRANSIENT | Opcodes.ACC_PRIVATE)
+                            .name(RandomUtil.randomAlphabeticalString(15))
+                            .desc("()[B")
+                            .phantom(true)
+                            .build();
+
+
+                    final Expr[] csts = new Expr[encrypted.length];
+                    for (int i = 0; i < encrypted.length; i++) {
+                        csts[i] = new SkidConstantExpr(encrypted[i], Type.BYTE_TYPE);
+                    }
+
+                    final NewArrayExpr encryptedExpr = new NewArrayExpr(
+                            new Expr[]{new ConstantExpr(encrypted.length, Type.INT_TYPE)},
+                            Type.getType(byte[].class),
+                            csts
+                    );
+
+                    injector.getCfg()
+                            .getEntry()
+                            .add(new ReturnStmt(Type.getType(byte[].class), encryptedExpr));
+
                     final Expr loadExpr = methodNode.getFlowPredicate().getGetter().get(unit.getBlock());
-
-                    final Expr modified = new StaticInvocationExpr(new Expr[]{encryptedExpr, loadExpr},
+                    final Expr modified = new StaticInvocationExpr(new Expr[]{new StaticInvocationExpr(
+                            new Expr[0],
+                            parentNode.getName(),
+                            injector.getName(),
+                            injector.getDesc()
+                    ), loadExpr},
                             methodNode.getOwner(), BasicEncryptionGenerator.METHOD_NAME,
-                            "(Ljava/lang/String;I)Ljava/lang/String;");
+                            "([BI)Ljava/lang/String;");
 
                     try {
                         parent.overwrite(unit, modified);

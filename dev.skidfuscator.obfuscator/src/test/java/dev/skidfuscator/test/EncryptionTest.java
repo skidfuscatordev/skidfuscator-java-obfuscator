@@ -1,6 +1,7 @@
 package dev.skidfuscator.test;
 
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.BasicEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.BytesEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.junit.jupiter.api.Test;
 
@@ -12,10 +13,10 @@ public class EncryptionTest {
 
         final Integer[] keysT = this._genKeys();
 
-        final BasicEncryptionGenerator generator = new BasicEncryptionGenerator(keysT);
+        final BytesEncryptionGenerator generator = new BytesEncryptionGenerator(keysT);
         final int seed = this._genSeed();
 
-        final String encrypted = generator.encrypt(string, seed);
+        final byte[] encrypted = generator.encrypt(string, seed);
         final String decrypted = generator.decrypt(encrypted, seed);
 
         assert string.equals(decrypted) : "Encrypted string failed: " + string + " became " + decrypted;
@@ -27,10 +28,10 @@ public class EncryptionTest {
         final String string = "Œüèé€ìàò";
 
         final Integer[] keysT = this._genKeys();
-        final BasicEncryptionGenerator generator = new BasicEncryptionGenerator(keysT);
+        final BytesEncryptionGenerator generator = new BytesEncryptionGenerator(keysT);
         final int seed = this._genSeed();
 
-        final String encrypted = generator.encrypt(string, seed);
+        final byte[] encrypted = generator.encrypt(string, seed);
         final String decrypted = generator.decrypt(encrypted, seed);
 
         assert string.equals(decrypted) : "Encrypted string failed: " + string + " became " + decrypted;
