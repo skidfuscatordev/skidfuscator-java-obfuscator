@@ -1,5 +1,7 @@
 package dev.skidfuscator.test;
 
+import com.esotericsoftware.asm.Type;
+import dev.skidfuscator.core.TestSkidfuscator;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
@@ -9,6 +11,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URL;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
 /**
  * @author Ghast
@@ -19,7 +23,6 @@ import java.net.URL;
 public class SampleJarTest {
 
     @Test
-    @Disabled
     public void test2() throws Exception {
         final File input = new File("src/test/resources/test.jar");
         final File output = new File("src/test/resources/test-out.jar");
@@ -36,6 +39,7 @@ public class SampleJarTest {
                 .input(input)
                 .output(output)
                 .runtime(runtime)
+                .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
                 .jmod(MiscUtil.getJavaVersion() > 8)
                 .phantom(true)
                 .analytics(false)
@@ -44,12 +48,30 @@ public class SampleJarTest {
         final Skidfuscator skidfuscator = new Skidfuscator(session);
         skidfuscator.run();
 
+        assert !skidfuscator.getConfig().isDriver() : "Compiled with driver when config says no";
+
         final URL[] urls = new URL[]{
                 output.toURL()
         };
 
+        /*for (URL url : urls) {
+            try (JarInputStream jarInputStream = new JarInputStream(url.openStream())) {
+                JarEntry entry;
+                while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                    System.out.println(entry.getName());
+                }
+            }
+
+        }*/
+
         try(SkidClassLoader classLoader = new SkidClassLoader(urls)) {
-            final Class<?> clazz = classLoader.loadClass("dev.skidfuscator.testclasses.evaluator.EvaluatorMain");
+            System.out.println(skidfuscator.getClassRemapper());
+            final String name = skidfuscator
+                    .getClassRemapper()
+                    .map(Type.getObjectType("dev/sim0n/evaluator/Main").getInternalName());
+            System.out.println("Found named " + name);
+            final String replaced = name == null ? "dev.sim0n.evaluator.Main" : name.replace("/", ".");
+            final Class<?> clazz = classLoader.loadClass(replaced);
             clazz.getDeclaredMethod("main", String[].class).invoke(null, (Object) new String[0]);
         }
     }

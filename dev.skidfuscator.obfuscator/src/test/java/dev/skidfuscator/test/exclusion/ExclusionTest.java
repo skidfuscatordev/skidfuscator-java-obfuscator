@@ -37,9 +37,12 @@ public class ExclusionTest {
             final String name = entry.getKey();
             final byte[] obfed = entry.getValue();
 
-            final byte[] stored = storage
-                    .get(name + ".class")
-                    .getData();
+            final JarClassData data = storage.get(name + ".class");
+
+            // Assertion to debug errors and issues at the class name level
+            assert data != null : "Failed to find output class of name " + name;
+
+            final byte[] stored = data.getData();
 
             switch (name) {
                 case "dev/skidfuscator/testclasses/exclusion/ObfuscatedTestClass": {

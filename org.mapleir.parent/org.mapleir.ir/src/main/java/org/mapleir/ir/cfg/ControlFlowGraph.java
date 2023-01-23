@@ -5,16 +5,16 @@ import org.mapleir.asm.MethodNode;
 import org.mapleir.dot4j.model.DotGraph;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.FlowGraph;
-import org.mapleir.flowgraph.edges.FlowEdge;
-import org.mapleir.flowgraph.edges.FlowEdges;
-import org.mapleir.flowgraph.edges.ImmediateEdge;
-import org.mapleir.flowgraph.edges.TryCatchEdge;
+import org.mapleir.flowgraph.edges.*;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.Opcode;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.PhiExpr;
 import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
+import org.mapleir.ir.code.stmt.SwitchStmt;
+import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.CopyPhiStmt;
 import org.mapleir.ir.locals.LocalsPool;
 import org.mapleir.ir.locals.impl.VersionedLocal;
@@ -243,10 +243,7 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 				maxId = b.getNumericId();
 
 			if (getReverseEdges(b).size() == 0 && !getEntries().contains(b)) {
-				throw new IllegalStateException("dead incoming: " + b
-						+ " outbound=" + Arrays.toString(getEdges(b).toArray())
-						+ " stmts=" + Streams.stream(b.iterator()).map(Stmt::toString).collect(Collectors.joining("\n"))
-				);
+				throw new IllegalStateException("dead incoming: " + CFGUtils.printBlock(b));
 			}
 
 			for (FlowEdge<BasicBlock> fe : getEdges(b)) {
@@ -313,6 +310,94 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 				if (!found) {
 					throw new RuntimeException("mismatch: " + b + " to " + er + " ; " + getEdges(b));
 				}
+			}
+		}
+	}
+
+	public void recomputeEdges() {
+		final List<ImmediateEdge<BasicBlock>> immediateEdges = new ArrayList<>();
+
+		for (BasicBlock vertex : vertices()) {
+			final ImmediateEdge<BasicBlock> immediate = getImmediateEdge(vertex);
+
+			if (immediate == null)
+				continue;
+
+			immediateEdges.add(immediate);
+		}
+
+		for (BasicBlock vertex : vertices()) {
+			final ImmediateEdge<BasicBlock> immediate = getIncomingImmediateEdge(vertex);
+
+			if (immediate == null)
+				continue;
+
+			assert immediateEdges.contains(immediate) : "Failed to find incoming immediate!";
+		}
+
+		// Clear all edges
+		for (Set<FlowEdge<BasicBlock>> value : map.values()) {
+			value.clear();
+		}
+		for (Set<FlowEdge<BasicBlock>> value : reverseMap.values()) {
+			value.clear();
+		}
+
+		// Add all immediates
+		for (ImmediateEdge<BasicBlock> immediateEdge : immediateEdges) {
+			addEdge(immediateEdge);
+		}
+
+		// Add all call based edges
+		for (BasicBlock vertex : vertices()) {
+			vertex.forEach(stmt -> {
+				if (stmt instanceof UnconditionalJumpStmt) {
+					final UnconditionalJumpStmt jmp = (UnconditionalJumpStmt) stmt;
+
+					final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(
+							vertex,
+							jmp.getTarget()
+					);
+
+					jmp.setEdge(edge);
+					addEdge(edge);
+				} else if (stmt instanceof ConditionalJumpStmt) {
+					final ConditionalJumpStmt jmp = (ConditionalJumpStmt) stmt;
+
+					final ConditionalJumpEdge<BasicBlock> edge = new ConditionalJumpEdge<>(
+							vertex,
+							jmp.getTrueSuccessor(),
+							jmp.toOpcode()
+					);
+
+					jmp.setEdge(edge);
+					addEdge(edge);
+				} else if (stmt instanceof SwitchStmt) {
+					final SwitchStmt jmp = (SwitchStmt) stmt;
+
+					final DefaultSwitchEdge<BasicBlock> edge = new DefaultSwitchEdge<>(
+							vertex,
+							jmp.getDefaultTarget()
+					);
+					addEdge(edge);
+
+					jmp.getTargets().entrySet().forEach(e -> {
+						addEdge(new SwitchEdge<>(
+								vertex,
+								e.getValue(),
+								e.getKey()
+						));
+					});
+				}
+			});
+		}
+
+		for (ExceptionRange<BasicBlock> range : ranges) {
+			for (BasicBlock node : range.getNodes()) {
+				addEdge(new TryCatchEdge<>(
+						node,
+						range
+				));
 			}
 		}
 	}

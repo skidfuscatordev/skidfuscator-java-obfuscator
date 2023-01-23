@@ -1,9 +1,11 @@
 package dev.skidfuscator.obfuscator.util;
 
+import com.google.common.base.CaseFormat;
 import lombok.experimental.UtilityClass;
 
 import java.lang.reflect.Array;
 import java.util.List;
+import java.util.Locale;
 
 @UtilityClass
 public class MiscUtil {
@@ -52,5 +54,12 @@ public class MiscUtil {
 
     public boolean isJmod() {
         return MiscUtil.getJavaVersion() > 8;
+    }
+
+    public String toCamelCase(final String s) {
+        return CaseFormat.UPPER_UNDERSCORE.to(
+                CaseFormat.LOWER_CAMEL,
+                s.toUpperCase(Locale.ROOT).replace(' ', '_')
+        );
     }
 }

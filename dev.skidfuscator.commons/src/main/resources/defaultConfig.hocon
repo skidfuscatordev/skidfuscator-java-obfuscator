@@ -1,0 +1,82 @@
+exempt: [
+%%INJECT%%
+]
+
+libs: []
+
+stringEncryption {
+  type: STANDARD
+  enabled: true
+  exempt: []
+}
+
+numberEncryption {
+  enabled: true
+  exempt: []
+}
+
+intAnnotationEncryption {
+  enabled: true
+  exempt: []
+}
+
+stringAnnotationEncryption {
+  enabled: true
+  exempt: []
+}
+
+flowCondition {
+  enabled: true
+  exempt: []
+}
+
+flowException {
+  enabled: true
+  strength: AGGRESSIVE
+  exempt: []
+}
+
+flowRange {
+  enabled: true
+  exempt: []
+}
+
+flowFactoryMaker {
+  enabled: true
+  exempt: []
+}
+
+flowSwitch {
+  enabled: true
+  exempt: []
+}
+
+outliner {
+  enabled: true
+  exempt: []
+}
+
+ahegao {
+  enabled: true
+  exempt: []
+}
+
+native: {
+  enabled: false
+  exempt: []
+}
+
+classRenamer {
+  enabled: false
+  exempt: []
+}
+
+methodRenamer {
+  enabled: false
+  exempt: []
+}
+
+fieldRenamer {
+  enabled: false
+  exempt: []
+}

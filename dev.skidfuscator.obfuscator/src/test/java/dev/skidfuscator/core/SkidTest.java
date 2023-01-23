@@ -40,7 +40,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public abstract class SkidTest implements TestCase {
-    private Skidfuscator skidfuscator;
+    protected Skidfuscator skidfuscator;
     @Test
     public void test() {
         final URL[] urls = new URL[0];

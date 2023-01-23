@@ -119,7 +119,7 @@ public class CFGUtils {
 				int op = last.getOpcode();
 				if (e instanceof ConditionalJumpEdge) {
 					if (op != Opcode.COND_JUMP)
-						throw new IllegalArgumentException("wrong flow instruction");
+						throw new IllegalArgumentException("wrong flow instruction: Got " + Opcode.opname(op) + " Expected: COND_JUMP");
 					ConditionalJumpStmt j = (ConditionalJumpStmt) last;
 //					assertTarget(last, j.getTrueSuccessor(), b);
 					if (j.getTrueSuccessor() == b)
@@ -218,6 +218,57 @@ public class CFGUtils {
 		BasicBlock newBlock = factory.block().cfg(cfg).build();
 		cfg.addVertex(newBlock);
 		b.transferUpto(newBlock, to);
+		return newBlock;
+	}
+
+	/**
+	 * Splits block up to index `to`, exclusively. Doesn't update edges, etc.
+	 * @return The new block, containing the split-off instructions
+	 */
+	public static BasicBlock splitBlockReverseFactory(SSAFactory factory, ControlFlowGraph cfg, BasicBlock b, int to) {
+		//System.out.println("Old block: \n" + printBlock(b));
+		BasicBlock newBlock = factory.block().cfg(cfg).build();
+		cfg.addVertex(newBlock);
+
+		final int size = b.size() - to;
+
+		for (int i = 0; i < size; i++) {
+			Stmt s = b.remove(b.size() - 1);
+
+			newBlock.add(0, s);
+			assert (s.getBlock() == newBlock);
+		}
+
+
+		if (cfg.getImmediateEdge(b) != null) {
+			final ImmediateEdge<BasicBlock> dest = cfg.getImmediateEdge(b);
+			cfg.removeEdge(dest);
+
+			cfg.addEdge(new ImmediateEdge<>(
+					newBlock,
+					dest.dst()
+			));
+		}
+
+		cfg.addEdge(new ImmediateEdge<>(
+				b,
+				newBlock
+		));
+
+		for (ExceptionRange<BasicBlock> protectingRange : cfg.getProtectingRanges(b)) {
+			protectingRange.addVertex(newBlock);
+			cfg.addEdge(new TryCatchEdge<>(
+					newBlock,
+					protectingRange
+			));
+		}
+
+		//System.out.println("New old block: \n" + printBlock(b));
+		//System.out.println("New block: \n" + printBlock(newBlock));
+
+		//cfg.recomputeEdges();
+		cfg.verify();
+
 		return newBlock;
 	}
 

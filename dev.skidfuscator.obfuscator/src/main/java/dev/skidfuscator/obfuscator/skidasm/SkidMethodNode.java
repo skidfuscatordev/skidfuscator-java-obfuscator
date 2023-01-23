@@ -4,11 +4,12 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlockFactory;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
+import dev.skidfuscator.obfuscator.transform.exempt.MethodExempt;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import lombok.Getter;
 import org.mapleir.asm.ClassNode;
@@ -37,6 +38,8 @@ public class SkidMethodNode extends MethodNode {
     private MethodOpaquePredicate predicate;
     private SkidGroup group;
     private transient BasicBlock initBlock;
+
+    private transient boolean extruded;
 
     public SkidMethodNode(org.objectweb.asm.tree.MethodNode node, ClassNode owner, Skidfuscator skidfuscator) {
         super(node, owner);
@@ -310,6 +313,18 @@ public class SkidMethodNode extends MethodNode {
         }
 
         return (this.initBlock = newEntry);
+    }
+
+    public boolean isExtruded() {
+        return extruded;
+    }
+
+    public void setExtruded(boolean extruded) {
+        this.extruded = extruded;
+    }
+
+    public boolean isExempt(final MethodExempt... exemptions) {
+        return MethodExempt.isExempt(this, exemptions);
     }
 
     /**

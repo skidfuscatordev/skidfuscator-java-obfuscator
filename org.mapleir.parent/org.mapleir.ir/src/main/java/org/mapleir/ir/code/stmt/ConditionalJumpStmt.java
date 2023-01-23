@@ -226,7 +226,40 @@ public class ConditionalJumpStmt extends Stmt {
 		}
 	}
 
+	public int toOpcode() {
+		Type opType = TypeUtils.resolveBinOpType(left.getType(), right.getType());
 
+		if (TypeUtils.isObjectRef(opType)) {
+			boolean isNull = right instanceof ConstantExpr && ((ConstantExpr) right).getConstant() == null;
+			if (type != ComparisonType.EQ && type != ComparisonType.NE) {
+				throw new IllegalArgumentException(type.toString());
+			}
+
+			if (isNull) {
+				return type == ComparisonType.EQ ? Opcodes.IFNULL : Opcodes.IFNONNULL;
+			} else {
+				return type == ComparisonType.EQ ? Opcodes.IF_ACMPEQ : Opcodes.IF_ACMPNE;
+			}
+		} else if (opType == Type.INT_TYPE) {
+			boolean canShorten = right instanceof ConstantExpr
+					&& ((ConstantExpr) right).getConstant() instanceof Number
+					&& ((Number) ((ConstantExpr) right).getConstant()).intValue() == 0;
+
+			if (canShorten) {
+				return Opcodes.IFEQ + type.ordinal();
+			} else {
+				return Opcodes.IF_ICMPEQ + type.ordinal();
+			}
+		} else if (opType == Type.LONG_TYPE) {
+			return Opcodes.IFEQ + type.ordinal();
+		} else if (opType == Type.FLOAT_TYPE) {
+			return Opcodes.IFEQ + type.ordinal();
+		} else if (opType == Type.DOUBLE_TYPE) {
+			return Opcodes.IFEQ + type.ordinal();
+		} else {
+			throw new IllegalArgumentException(opType.toString());
+		}
+	}
 
 	@Override
 	public boolean canChangeFlow() {

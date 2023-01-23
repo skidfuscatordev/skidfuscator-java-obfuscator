@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.command;
 
+import dev.skidfuscator.migration.ExemptToConfigMigration;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
@@ -56,6 +57,12 @@ public class ObfuscateCommand implements Callable<Integer> {
     private File output;
 
     @CommandLine.Option(
+            names = {"-cfg", "--config"},
+            description = "Path to the config file"
+    )
+    private File config;
+
+    @CommandLine.Option(
             names = {"-ph", "--phantom"},
             description = "Declare if phantom computation should be used"
     )
@@ -72,6 +79,12 @@ public class ObfuscateCommand implements Callable<Integer> {
             description = "If you do not wish to be part of analytics!"
     )
     private boolean notrack;
+
+    @CommandLine.Option(
+            names = {"-re", "--renamer"},
+            description = "Enables renamer for the obfuscation"
+    )
+    private boolean renamer;
 
     @Override
     public Integer call()  {
@@ -154,6 +167,28 @@ public class ObfuscateCommand implements Callable<Integer> {
             );
         }
 
+        if (exempt != null) {
+            final File converted = new File(exempt.getAbsolutePath()
+                    .substring(0, exempt.getAbsolutePath().lastIndexOf("/")) + "/config.hocon");
+            final String warning = "\n" + ConsoleColors.YELLOW
+                    + "██╗    ██╗ █████╗ ██████╗ ███╗   ██╗██╗███╗   ██╗ ██████╗ \n"
+                    + "██║    ██║██╔══██╗██╔══██╗████╗  ██║██║████╗  ██║██╔════╝ \n"
+                    + "██║ █╗ ██║███████║██████╔╝██╔██╗ ██║██║██╔██╗ ██║██║  ███╗\n"
+                    + "██║███╗██║██╔══██║██╔══██╗██║╚██╗██║██║██║╚██╗██║██║   ██║\n"
+                    + "╚███╔███╔╝██║  ██║██║  ██║██║ ╚████║██║██║ ╚████║╚██████╔╝\n"
+                    + " ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝ \n"
+                    + "\n"
+                    + "⚠️  Warning! Skidfuscator has deprecated the exempt file!\n"
+                    + ConsoleColors.RESET
+                    + "\n  Launching migrator service..."
+                    + "\n  Config will be found at " + converted
+                    + "\n";
+            Skidfuscator.LOGGER.post(warning);
+            new ExemptToConfigMigration().migrate(exempt, converted);
+
+            config = converted;
+        }
+
         final File[] libs;
         if (libFolder != null) {
             libs = libFolder.listFiles();
@@ -170,6 +205,8 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .phantom(phantom)
                 .jmod(MiscUtil.getJavaVersion() > 8)
                 .fuckit(fuckit)
+                .config(config)
+                .renamer(renamer)
                 .analytics(!notrack)
                 .build();
 

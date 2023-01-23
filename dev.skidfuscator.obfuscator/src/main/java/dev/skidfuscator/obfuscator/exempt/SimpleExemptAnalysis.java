@@ -7,16 +7,18 @@ import org.mapleir.asm.MethodNode;
 import java.util.*;
 
 public class SimpleExemptAnalysis implements ExemptAnalysis {
+    private final Class<? extends Transformer> transformer;
     private final List<Exclusion> exclusions;
     private final Map<MethodNode, Boolean> methodCache = new HashMap<>();
     private final Map<ClassNode, Boolean> classCache = new HashMap<>();
 
-    public SimpleExemptAnalysis(List<Exclusion> exclusionList) {
-        this.exclusions = exclusionList;
+    public SimpleExemptAnalysis(Class<? extends Transformer> transformer) {
+        this(transformer, new ArrayList<>());
     }
 
-    public SimpleExemptAnalysis() {
-        this(new ArrayList<>());
+    public SimpleExemptAnalysis(Class<? extends Transformer> transformer, List<Exclusion> exclusions) {
+        this.transformer = transformer;
+        this.exclusions = exclusions;
     }
 
     public void add(final String exclusionStr) {

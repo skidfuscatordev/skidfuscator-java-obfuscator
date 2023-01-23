@@ -11,7 +11,7 @@ public class StringExclusionTest {
 
     @BeforeEach
     public void init() {
-        this.analysis = new SimpleExemptAnalysis();
+        //this.analysis = new SimpleExemptAnalysis();
     }
 
     @Test

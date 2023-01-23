@@ -34,7 +34,7 @@ public class SwitchTransformer extends AbstractTransformer {
     }
 
     public SwitchTransformer(Skidfuscator skidfuscator, List<Transformer> children) {
-        super(skidfuscator,"Switch Transformer", children);
+        super(skidfuscator,"Flow Switch", children);
     }
 
     @Listen

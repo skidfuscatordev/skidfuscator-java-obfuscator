@@ -34,4 +34,15 @@ public class ClassMethodHash extends MethodHash {
     public int hashCode() {
         return Objects.hash(super.hashCode(), clazz);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ClassMethodHash)) return false;
+        if (!super.equals(o)) return false;
+
+        ClassMethodHash that = (ClassMethodHash) o;
+
+        return clazz.equals(that.clazz);
+    }
 }

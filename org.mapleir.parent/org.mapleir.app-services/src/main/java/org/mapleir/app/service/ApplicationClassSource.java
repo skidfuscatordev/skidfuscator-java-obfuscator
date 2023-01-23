@@ -10,8 +10,8 @@ public class ApplicationClassSource extends ClassSource {
 
 	private final String name;
 	private final List<LibraryClassSource> libraries;
-	private ClassTree classTree;
-	private boolean phantom;
+	protected ClassTree classTree;
+	protected boolean phantom;
 	
 	public ApplicationClassSource(String name, boolean phantom, Collection<ClassNode> classes) {
 		this(name, phantom, ClassHelper.convertToMap(classes));

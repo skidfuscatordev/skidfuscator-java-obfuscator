@@ -36,9 +36,6 @@ public class ProgressUtil {
                 .animated(true)
                 .count(count)
                 .target(System.out)
-                .callback(renderer -> {
-                    renderer.setComponents(SComponents.FINISH);
-                })
                 .build();
     }
 

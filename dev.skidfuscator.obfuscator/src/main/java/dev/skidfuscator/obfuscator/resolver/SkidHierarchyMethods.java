@@ -216,6 +216,12 @@ public class SkidHierarchyMethods {
 		for (ClassNode viable : toSearch) {
 			foundMethods.addAll(findMethods(viable, name, desc, exact? EXACT_TYPES : CONGRUENT_TYPES, VIRTUAL_METHOD | Modifier.ABSTRACT | Opcodes.ACC_BRIDGE, 0));
 		}
+
+		for (MethodNode foundMethod : new HashSet<>(foundMethods)) {
+			for (ClassNode allChild : structures.getAllChildren(foundMethod.owner)) {
+				foundMethods.addAll(findMethods(allChild, name, desc, exact? EXACT_TYPES : CONGRUENT_TYPES, VIRTUAL_METHOD | Modifier.ABSTRACT | Opcodes.ACC_BRIDGE, 0));
+			}
+		}
 		return foundMethods;
 	}
 }

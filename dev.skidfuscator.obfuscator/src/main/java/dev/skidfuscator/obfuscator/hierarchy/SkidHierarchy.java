@@ -7,6 +7,7 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
+import lukfor.progress.Collection;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -244,6 +245,11 @@ public class SkidHierarchy implements Hierarchy {
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
 
+                                if (invocation.getName().equals("handle")) {
+                                    System.out.println("Invoking " + invocation.getOwner() + "#"
+                                            + invocation.getName() + invocation.getDesc());
+                                }
+
                                 final ClassMethodHash target;
 
                                 if (invocation instanceof DynamicInvocationExpr) {
@@ -258,6 +264,10 @@ public class SkidHierarchy implements Hierarchy {
                                     assert (e.getBootstrapArgs().length == 3 && e.getBootstrapArgs()[1] instanceof Handle);
                                     final Handle boundFunc = (Handle) e.getBootstrapArgs()[1];
 
+                                    if (boundFunc.getName().equals("handle")) {
+                                        /*System.out.println("Invoking dynamic " + invocation.getOwner() + "#"
+                                                + invocation.getName() + invocation.getDesc());*/
+                                    }
                                     target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
 
                                 } else if (invocation instanceof InvocationExpr) {
@@ -276,10 +286,18 @@ public class SkidHierarchy implements Hierarchy {
                                 );
 
                                 final SkidGroup targetGroup = hashToGroupMap.get(target);
+
                                 if (targetGroup != null) {
+                                    /*if (method.getName().equals("onEnable")) {
+                                        System.out.println("Found target group of name " + targetGroup.getName());
+                                    }*/
                                     invocationToGroupMap.put(invocation, targetGroup);
 
                                     targetGroup.getInvokers().add(skidInvocation);
+                                } else {
+                                    /*if (method.getName().equals("onEnable")) {
+                                        System.out.println("Failed to find target group for " + target.getDisplayName());
+                                    }*/
                                 }
 
                                 final MethodNode targetMethod = hashToMethodMap.get(target);
@@ -293,6 +311,10 @@ public class SkidHierarchy implements Hierarchy {
                                     methodToInvocationsMap.computeIfAbsent(targetMethod, e -> {
                                         return new ArrayList<>(Collections.singleton(skidInvocation));
                                     });
+                                } else {
+                                    if (method.getName().equals("onEnable")) {
+                                        //System.out.println("Failed to find target method for " + target.getDisplayName());
+                                    }
                                 }
                             });
                 }
@@ -310,24 +332,82 @@ public class SkidHierarchy implements Hierarchy {
         SkidGroup group = methodToGroupMap.get(methodNode);
 
         if (group == null) {
-            final Set<MethodNode> h = session
+            if (methodNode.getName().equals("evaluate")) {
+                /*System.out.println(
+                        skidfuscator.getClassSource().getClassTree().getAllBranches(methodNode.owner).stream()
+                        .map(e -> e.getName() + "\n  -->" + e.getMethods()
+                                .stream()
+                                .map(f -> f.getName() + f.getDesc())
+                                .collect(Collectors.joining("\n  -->  ")))
+                        .collect(Collectors.joining("\n"))
+                );
+
+                /*System.out.println(
+                        skidfuscator.getClassSource().getClassTree().getAllParents(methodNode.owner).stream()
+                                .map(e -> e.getName() + "\n  -->" + e.getMethods()
+                                        .stream()
+                                        .map(f -> f.getName() + f.getDesc())
+                                        .collect(Collectors.joining("\n  -->  ")))
+                                .collect(Collectors.joining("\n"))
+                );*/
+            }
+            final Set<MethodNode> h = methodNode.isStatic()
+                    ? new HashSet<>(Collections.singleton(methodNode))
+
+                    : session
                     .getCxt()
                     .getInvocationResolver()
                     .getHierarchyMethodChain(
                             methodNode.owner,
                             methodNode.getName(),
                             methodNode.getDesc(),
-                            true
+                            false
                     );
+
+                    /* session
+                        .getClassSource()
+                        .getClassTree()
+                        .getAllBranches(methodNode.owner)
+                        .stream()
+                        .filter(e -> e.getMethods().stream()
+                                .anyMatch(f -> f.getName().equals(methodNode.getName())
+                                            && f.getDesc().equals(methodNode.getDesc()))
+                        )
+                        .map(e -> e.getMethods().stream()
+                                .filter(f -> f.getName().equals(methodNode.getName())
+                                        && f.getDesc().equals(methodNode.getDesc()))
+                                .findFirst()
+                                .get()
+                        )
+                        .collect(Collectors.toSet());*/
+            /*final Set<MethodNode> h = session
+                    .getCxt()
+                    .getInvocationResolver()
+                    .getHierarchyMethodChain(
+                            methodNode.owner,
+                            methodNode.getName(),
+                            methodNode.getDesc(),
+                            false
+                    );*/
             h.add(methodNode);
 
             final List<MethodNode> methods = new ArrayList<>(h);
+
+            if (false && methodNode.getName().equals("handle")) {
+                System.out.println("Creating group of name " + methodNode.getName() + methodNode.getDesc());
+
+                for (MethodNode method : methods) {
+                    System.out.println("  --> " + method.getOwner() + "#" + method.getName() + method.getDesc());
+                }
+            }
+
 
             group = new SkidGroup(methods, skidfuscator);
             group.setAnnotation(((SkidClassNode) methodNode.owner).isAnnotation());
             group.setStatical(((SkidMethodNode) methodNode).isStatic());
             group.setName(methodNode.getName());
             group.setDesc(methodNode.getDesc());
+            group.setSynthetic(methodNode.isSynthetic());
             //System.out.println(group.getDesc());
 
             for (MethodNode method : methods) {
@@ -345,6 +425,18 @@ public class SkidHierarchy implements Hierarchy {
 
                 hashToGroupMap.put(hash, group);
                 hashToMethodMap.put(hash, method);
+
+            }
+
+            for (MethodNode node : h) {
+                for (ClassNode allChild : skidfuscator.getClassSource().getClassTree().getAllChildren(node.owner)) {
+                    final ClassMethodHash hash = new ClassMethodHash(
+                            methodNode.getName(),
+                            methodNode.getDesc(),
+                            allChild.getName()
+                    );
+                    hashToGroupMap.put(hash, group);
+                }
             }
 
             groups.add(group);
@@ -401,8 +493,8 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     @Override
-    public List<SkidInvocation> getInvokers(MethodNode methodNode) {
-        return methodToInvocationsMap.get(methodNode);
+    public Set<SkidInvocation> getInvokers(MethodNode methodNode) {
+        return getGroup(skidfuscator, methodNode).getInvokers();
     }
 
     @Override
@@ -463,7 +555,7 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     @Override
-    public SkidGroup getGroup(SkidMethodNode methodNode) {
+    public SkidGroup getGroup(MethodNode methodNode) {
         return getGroup(skidfuscator, methodNode);
     }
 }

@@ -2,6 +2,7 @@ package org.mapleir.app.service;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.mapleir.app.service.ClassTree.InheritanceEdge;
@@ -40,7 +41,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 		addVertex(rootNode);
 	}
 	
-	protected void init() {
+	public void init() {
 		for (ClassNode node : source.iterateWithLibraries()) {
 			addVertex(node);
 		}
@@ -123,23 +124,31 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	 * @return every class connected to the class in any way.
 	 */
 	public Collection<ClassNode> getAllBranches(ClassNode cn) {
-		Collection<ClassNode> results = new HashSet<>();
+		Collection<ClassNode> finalResults = new HashSet<>();
+
+		Collection<ClassNode> resultsChild = new HashSet<>();
 		Queue<ClassNode> queue = new LinkedList<>();
 		queue.add(cn);
 		while (!queue.isEmpty()) {
 			ClassNode next = queue.remove();
-			if (results.add(next) && next != rootNode) {
+			if (resultsChild.add(next) && next != rootNode) {
 				queue.addAll(getAllChildren(next));
 			}
 		}
 		queue.add(cn);
+
+		Collection<ClassNode> resultsAdult = new HashSet<>();
 		while (!queue.isEmpty()) {
 			ClassNode next = queue.remove();
-			if (results.add(next) && next != rootNode) {
+			if (resultsAdult.add(next) && !rootNode.equals(next)) {
 				queue.addAll(getAllParents(next));
+				//System.out.println("Queued parents: \n -" + queue.stream().map(ClassNode::getName).collect(Collectors.joining("\n -")));
 			}
 		}
-		return results;
+
+		finalResults.addAll(resultsChild);
+		finalResults.addAll(resultsAdult);
+		return finalResults;
 	}
 	
 	public ClassNode getSuper(ClassNode cn) {

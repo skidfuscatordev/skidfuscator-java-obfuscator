@@ -63,6 +63,8 @@ public class ControlFlowGraphDumper implements BytecodeFrontend {
 		// Sanity check linearization
 		verifyOrdering();
 
+		cfg.verify();
+
 		// Dump code
 		for (BasicBlock b : order) {
 			m.node.visitLabel(getLabel(b));

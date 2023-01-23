@@ -4,7 +4,9 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import lombok.Data;
 import org.mapleir.asm.MethodNode;
+import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
+import org.objectweb.asm.Handle;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,6 +20,10 @@ public class SkidGroup {
 
     private boolean annotation;
     private boolean statical;
+    private boolean synthetic;
+    private boolean natived;
+    private boolean mixin;
+    private boolean enumerator;
     private String name;
     private String desc;
 
@@ -40,12 +46,39 @@ public class SkidGroup {
                         && !skidfuscator.getExemptAnalysis().isExempt(e)
                         && !skidfuscator.getExemptAnalysis().isExempt(e.owner)
                 );
+
+        this.enumerator = methodNodeList
+                .stream()
+                .anyMatch(e -> e.owner.isEnum());
+
+        this.natived = methodNodeList
+                .stream()
+                .anyMatch(e -> e.owner.isNative());
+
+        this.mixin = methodNodeList
+                .stream()
+                .filter(e -> e.owner instanceof SkidClassNode)
+                .map(e -> e.owner)
+                .map(SkidClassNode.class::cast)
+                .anyMatch(SkidClassNode::isMixin);
     }
 
     public void setStatical(boolean statical) {
         assert !statical || methodNodeList.size() == 1 : "Method group has multiple methods despite being static";
 
         this.statical = statical;
+    }
+
+    public void setSynthetic(boolean synthetic) {
+        this.synthetic = synthetic;
+    }
+
+    public boolean isInit() {
+        return name.equals("<init>");
+    }
+
+    public boolean isClinit() {
+        return name.equals("<clinit>");
     }
 
     public void setDesc(final String desc) {
@@ -68,7 +101,21 @@ public class SkidGroup {
         }
 
         for (SkidInvocation invoker : invokers) {
-            invoker.getExpr().setName(name);
+            if (invoker.isDynamic()) {
+                final DynamicInvocationExpr expr = (DynamicInvocationExpr) invoker.asExpr();
+                final Handle boundFunc = (Handle) expr.getBootstrapArgs()[1];
+                final Handle updatedBoundFunc = new Handle(
+                        boundFunc.getTag(),
+                        boundFunc.getOwner(),
+                        name,
+                        boundFunc.getDesc(),
+                        boundFunc.isInterface()
+                );
+
+                expr.getBootstrapArgs()[1] = updatedBoundFunc;
+            } else {
+                invoker.getExpr().setName(name);
+            }
         }
     }
 
@@ -77,7 +124,11 @@ public class SkidGroup {
     }
 
     public boolean isEntryPoint() {
-        return !application || this.getInvokers().isEmpty() || this.getInvokers().stream().anyMatch(SkidInvocation::isDynamic) || this.isAnnotation();
+        return !application
+                || this.getInvokers().isEmpty()
+                || this.getInvokers().stream().anyMatch(SkidInvocation::isDynamic)
+                || this.isAnnotation()
+                || this.isEnumerator();
     }
     @Override
     public boolean equals(Object o) {

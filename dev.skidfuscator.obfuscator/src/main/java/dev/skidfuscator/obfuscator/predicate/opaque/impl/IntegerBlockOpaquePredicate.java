@@ -3,16 +3,12 @@ package dev.skidfuscator.obfuscator.predicate.opaque.impl;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowSetter;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
-import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
-import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.BasicBlock;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class IntegerBlockOpaquePredicate implements BlockOpaquePredicate {

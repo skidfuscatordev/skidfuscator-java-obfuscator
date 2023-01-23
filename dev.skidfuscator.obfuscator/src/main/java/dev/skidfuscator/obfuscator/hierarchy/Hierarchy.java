@@ -6,13 +6,14 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 
 import java.util.List;
+import java.util.Set;
 
 public interface Hierarchy {
     void cache();
 
     SkidGroup getGroup(final ClassMethodHash methodNode);
 
-    SkidGroup getGroup(final SkidMethodNode methodNode);
+    SkidGroup getGroup(final MethodNode methodNode);
 
     List<ClassNode> getClasses();
 
@@ -26,7 +27,7 @@ public interface Hierarchy {
      */
     List<SkidAnnotation> getAnnotations(final ClassNode classNode);
 
-    List<SkidInvocation> getInvokers(final MethodNode methodNode);
+    Set<SkidInvocation> getInvokers(final MethodNode methodNode);
 
     void recacheInvokes();
 

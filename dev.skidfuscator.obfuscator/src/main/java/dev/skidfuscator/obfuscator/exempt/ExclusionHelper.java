@@ -58,7 +58,7 @@ public class ExclusionHelper {
 
             else {
                 if (c == '}') {
-                    final String matcher = padded.toString().toLowerCase(Locale.ROOT);
+                    final String matcher = padded.toString();
                     final String[] split = matcher.contains(" ")
                             ? matcher.split(" ")
                             : new String[]{matcher};

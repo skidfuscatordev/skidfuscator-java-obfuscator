@@ -54,6 +54,12 @@ public class BasicSimplifierTransformer extends AbstractTransformer {
             cfg.addEdge(edge);
             block.add(new UnconditionalJumpStmt(immediate, edge));
         }
+
+        cfg.recomputeEdges();
+
+        for (BasicBlock vertex : cfg.vertices()) {
+            assert cfg.getImmediateEdge(vertex) == null : "Block has an immediate edge after removal?";
+        }
     }
 
 }

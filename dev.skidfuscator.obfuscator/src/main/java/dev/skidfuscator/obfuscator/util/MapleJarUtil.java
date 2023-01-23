@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.util;
 
+import com.esotericsoftware.asm.Type;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.creator.SkidASMFactory;
 import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
@@ -13,6 +14,7 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.deob.PassGroup;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.commons.ClassRemapper;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteio.in.MultiJarDownloader;
@@ -39,8 +41,14 @@ public class MapleJarUtil {
             @Override
             public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
                 ClassNode cn = classData.getClassNode();
+                for (org.objectweb.asm.tree.MethodNode method : cn.node.methods) {
+                    method.localVariables = null;
+                }
 
                 JarEntry entry = new JarEntry(classData.getName());
+                ClassTree tree = skidfuscator.getClassSource().getClassTree();
+
+                //Skidfuscator.LOGGER.post("Writing " + entry.getName());
 
                 if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
                     final JarClassData resource = skidfuscator
@@ -53,20 +61,39 @@ public class MapleJarUtil {
                         throw new IllegalStateException("Failed to find class source for " + cn.getName());
                     }
                     out.putNextEntry(entry);
-                    out.write(resource.getData());
+
+                    ClassWriter writer = this.buildClassWriter(
+                            tree,
+                            0
+                    );
+                    ClassRemapper remapper = new ClassRemapper(
+                            writer,
+                            skidfuscator.getClassRemapper()
+                    );
+                    cn.node.accept(remapper);
+                    out.write(writer.toByteArray());
+                    //out.write(resource.getData());
                     return 1;
                 }
 
-                ClassTree tree = skidfuscator.getClassSource().getClassTree();
 
                 for (MethodNode m : cn.getMethods()) {
                     if (m.node.instructions.size() > 10000) {
-                        System.out.println("\rlarge method: " + m + " @" + m.node.instructions.size() + "\n");
+                        Skidfuscator.LOGGER.warn("large method: " + m + " @" + m.node.instructions.size() + "\n");
                     }
                 }
 
                 try {
+                    final String name = skidfuscator.getClassRemapper()
+                            .mapOrDefault(Type.getObjectType(classData.getName()
+                                    .replace(".class", "")
+                                    .replace(".", "/")).getInternalName());
+                    entry = new JarEntry(
+                                    name.replace(".", "/")
+                                    + ".class"
+                    );
                     out.putNextEntry(entry);
+                    //Skidfuscator.LOGGER.post("Wrote " + entry.getName());
                     try {
                         ClassWriter writer = this.buildClassWriter(
                                 tree,
@@ -74,7 +101,8 @@ public class MapleJarUtil {
                                     ? ClassWriter.COMPUTE_MAXS
                                     : ClassWriter.COMPUTE_FRAMES
                         );
-                        cn.node.accept(writer);
+                        ClassRemapper remapper = new ClassRemapper(writer, skidfuscator.getClassRemapper());
+                        cn.node.accept(remapper);
                         out.write(writer.toByteArray());
                     } catch (Exception var8) {
                         ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
@@ -87,7 +115,6 @@ public class MapleJarUtil {
                     System.err.println("\rFailed to write " + cn.getName() + "! Skipping class...\n");
                     var9.printStackTrace();
                 }
-
                 return 1;
             }
         }).dump(new File(outputFile));

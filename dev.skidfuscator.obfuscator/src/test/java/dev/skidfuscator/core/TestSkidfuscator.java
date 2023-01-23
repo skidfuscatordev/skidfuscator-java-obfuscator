@@ -5,20 +5,17 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
-import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
-import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.verifier.Verifier;
 import dev.skidfuscator.testclasses.TestRun;
-import org.junit.jupiter.api.AfterEach;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.app.service.LibraryClassSource;
 import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.topdank.byteengineer.commons.data.JarClassData;
@@ -29,9 +26,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Shit code but heck I'm trying to speed code a test suite
@@ -44,6 +39,7 @@ public class TestSkidfuscator extends Skidfuscator {
                 .builder()
                 .jmod(MiscUtil.isJmod())
                 .analytics(false)
+                .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
                 .build());
         this.test = test;
         this.callback = callback;
@@ -62,7 +58,7 @@ public class TestSkidfuscator extends Skidfuscator {
     protected void _importJvm() {
         LOGGER.post("Beginning to import JVM...");
         if (!cached) {
-            _cacheJvm();
+            _cacheJvm(this);
         }
 
         for (ApplicationClassSource lib : libs) {
@@ -129,7 +125,8 @@ public class TestSkidfuscator extends Skidfuscator {
         this.classSource = new SkidApplicationClassSource(
                 "test source",
                 true,
-                jarContents
+                jarContents,
+                this
         );
         LOGGER.log("Finished importing classpath!");
     }
@@ -145,6 +142,11 @@ public class TestSkidfuscator extends Skidfuscator {
     @Override
     protected void _cleanup() {
 
+    }
+
+    @Override
+    protected void _pack() {
+        
     }
 
     @Override
@@ -216,7 +218,7 @@ public class TestSkidfuscator extends Skidfuscator {
     private static boolean cached;
     private static final List<ApplicationClassSource> libs = new ArrayList<>();
 
-    private static void _cacheJvm() {
+    private static void _cacheJvm(final Skidfuscator skidfuscator) {
         /* Import JVM */
         LOGGER.post("Beginning importing of the JVM...");
 
@@ -270,7 +272,7 @@ public class TestSkidfuscator extends Skidfuscator {
                 )
         );
 
-        libs.add(new SkidApplicationClassSource("test-classes", false, testContents));
+        libs.add(new SkidApplicationClassSource("test-classes", false, testContents, skidfuscator));
 
         LOGGER.log("Finished importing the JVM!");
         cached = true;

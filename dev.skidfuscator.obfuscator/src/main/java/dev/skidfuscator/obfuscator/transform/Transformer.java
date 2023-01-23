@@ -1,6 +1,6 @@
 package dev.skidfuscator.obfuscator.transform;
 
-import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.config.DefaultTransformerConfig;
 import dev.skidfuscator.obfuscator.event.Listener;
 
 import java.util.List;
@@ -12,9 +12,18 @@ public interface Transformer extends Listener  {
     String getName();
 
     /**
+     * @return Config of a transformer
+     */
+    <T extends DefaultTransformerConfig> T getConfig();
+
+    /**
      * @return List of all the children transfomers to this transformer (for example flow
      * is dependent on a specific type of transformation)
      */
     List<Transformer> getChildren();
 
+    /**
+     * Registers the listener
+     */
+    void register();
 }

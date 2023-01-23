@@ -99,6 +99,10 @@ public class ClassNode implements FastGraphVertex {
         return (node.access & Opcodes.ACC_INTERFACE) != 0;
     }
 
+    public boolean isNative() {
+        return (node.access & Opcodes.ACC_NATIVE) != 0;
+    }
+
     public boolean isAnnoyingVersion() {
         return (node.version & 0xFFFF) < Opcodes.V1_8;
     }

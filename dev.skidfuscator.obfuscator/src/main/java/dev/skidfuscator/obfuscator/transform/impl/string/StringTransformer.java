@@ -1,20 +1,20 @@
 package dev.skidfuscator.obfuscator.transform.impl.string;
 
-import dev.skidfuscator.builder.FieldNodeBuilder;
-import dev.skidfuscator.builder.MethodNodeBuilder;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
-import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidMethodNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
-import dev.skidfuscator.obfuscator.transform.impl.string.generator.BasicEncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.BytesEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.EncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.AESEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.CaesarEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.basic.BasicEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.FieldNode;
@@ -33,7 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StringTransformer extends AbstractTransformer {
-    private final Map<ClassNode, BytesEncryptionGenerator> keyMap = new HashMap<>();
+    private final Map<ClassNode, EncryptionGenerator> keyMap = new HashMap<>();
 
     private final Set<String> INJECTED = new HashSet<>();
 
@@ -42,14 +42,15 @@ public class StringTransformer extends AbstractTransformer {
     }
 
     public StringTransformer(Skidfuscator skidfuscator, List<Transformer> children) {
-        super(skidfuscator, "String Transformer", children);
+        super(skidfuscator, "String Encryption", children);
     }
 
     @Listen
     void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
 
-        if (methodNode.isAbstract() || methodNode.isInit())
+        if (methodNode.isAbstract()
+                || methodNode.isInit())
             return;
 
         if (methodNode.node.instructions.size() > 10000)
@@ -62,17 +63,38 @@ public class StringTransformer extends AbstractTransformer {
 
         final SkidClassNode parentNode = methodNode.getParent();
 
-        BytesEncryptionGenerator generator = keyMap.get(parentNode);
+        EncryptionGenerator generator = keyMap.get(parentNode);
 
         if (generator == null) {
-            final int size = RandomUtil.nextInt(127) + 1;
-            final Integer[] keys = new Integer[size];
+            switch (RandomUtil.nextInt(1)) {
+                case 1: {
+                    final String iv = RandomUtil.randomAlphabeticalString(16);
+                    keyMap.put(parentNode, (generator = new AESEncryptionGenerator(iv)));
+                    break;
+                }
+                case 2: {
+                    final int size = RandomUtil.nextInt(127) + 1;
+                    final Integer[] keys = new Integer[size];
 
-            for (int i = 0; i < size; i++) {
-                keys[i] = RandomUtil.nextInt(127) + 1;
+                    for (int i = 0; i < size; i++) {
+                        keys[i] = RandomUtil.nextInt(127) + 1;
+                    }
+
+                    keyMap.put(parentNode, (generator = new CaesarEncryptionGenerator(keys)));
+                    break;
+                }
+                default: {
+                    final int size = RandomUtil.nextInt(127) + 1;
+                    final Integer[] keys = new Integer[size];
+
+                    for (int i = 0; i < size; i++) {
+                        keys[i] = RandomUtil.nextInt(127) + 1;
+                    }
+
+                    keyMap.put(parentNode, (generator = new BytesEncryptionGenerator(keys)));
+                    break;
+                }
             }
-
-            keyMap.put(parentNode, (generator = new BytesEncryptionGenerator(keys)));
         }
 
         if (!INJECTED.contains(parentNode.getName())) {
@@ -80,7 +102,7 @@ public class StringTransformer extends AbstractTransformer {
             INJECTED.add(parentNode.getName());
         }
 
-        BytesEncryptionGenerator finalGenerator = generator;
+        EncryptionGenerator finalGenerator = generator;
         cfg.allExprStream()
                 /*
                  *
@@ -114,7 +136,7 @@ public class StringTransformer extends AbstractTransformer {
 
                     final Expr[] csts = new Expr[encrypted.length];
                     for (int i = 0; i < encrypted.length; i++) {
-                        csts[i] = new SkidConstantExpr(encrypted[i], Type.BYTE_TYPE);
+                        csts[i] = new ConstantExpr(encrypted[i], Type.BYTE_TYPE);
                     }
 
                     final NewArrayExpr encryptedExpr = new NewArrayExpr(

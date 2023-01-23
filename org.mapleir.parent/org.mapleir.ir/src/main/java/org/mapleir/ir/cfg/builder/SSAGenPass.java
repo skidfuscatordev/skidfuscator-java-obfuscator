@@ -192,6 +192,8 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		int i = 0;
 		for(Local l : builder.locals) {
 			i++;
+
+			assert builder.assigns.get(l) != null : "Failed to find assigns for " + l + "\n\n" + builder.graph.toString();
 			
 			LinkedList<BasicBlock> queue = new LinkedList<>();
 			for(BasicBlock b : builder.assigns.get(l)) {
@@ -369,7 +371,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		
 		unstackDefs(b);
 		
-		if(optimise) {
+		if(optimise || false) {
 			optimisePhis(b);
 		}
 	}
@@ -480,7 +482,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		
 		VersionedLocal ssaL = handler.get(index, subscript, isStack);
 		
-		if(optimise) {
+		if(optimise || true) {
 			makeValue(copy, ssaL);
 		}
 		
@@ -932,7 +934,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		}
 
 		if(exists) {
-			if(optimise) {
+			if(optimise || false) {
 				/* If we removed the local load expression,
 				 * check to see if we need to update the
 				 * use-map.*/
@@ -1001,6 +1003,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 	}
 	
 	private void aggregateInitialisers() {
+		//System.out.println(builder.graph.toString());
 		for(BasicBlock b : builder.graph.vertices()) {
 			for(Stmt stmt : new ArrayList<>(b)) {
 				if (stmt.getOpcode() == Opcode.POP) {
@@ -1010,6 +1013,7 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 						InvocationExpr invoke = (InvocationExpr) expr;
 						if (invoke.getCallType() == InvocationExpr.CallType.SPECIAL && invoke.getName().equals("<init>")) {
 							Expr inst = invoke.getPhysicalReceiver();
+
 							if (inst.getOpcode() == Opcode.LOCAL_LOAD) {
 								VarExpr var = (VarExpr) inst;
 								VersionedLocal local = (VersionedLocal) var.getLocal();
@@ -1017,55 +1021,9 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 								AbstractCopyStmt def = pool.defs.get(local);
 
 								Expr rhs = def.getExpression();
-								if (rhs.getOpcode() == Opcode.ALLOC_OBJ) {
-									// replace pop(x.<init>()) with x := new Klass();
-									// remove x := new Klass;
-									
-									// here we are assuming that the new object
-									// can't be used until it is initialised.
-									Expr[] args = invoke.getParameterExprs();
-									
-									// we want to reuse the exprs, so free it first.
-									pop.deleteAt(0);
-									for(int i=args.length-1; i >= 0; i--) {
-										args[i].unlink();
-									}
-									
-									// remove the old def
-									def.getBlock().remove(def);
-									
-									int index = b.indexOf(pop);
-									
-									// add a copy statement before the pop (x = newExpr)
-									InitialisedObjectExpr newExpr = new InitialisedObjectExpr(
-											invoke.getOwner(),
-											invoke.getDesc(),
-											args
-									);
-									CopyVarStmt newCvs = builder.factory.copy_var_stmt()
-											.var(var)
-											.expr(newExpr)
-											.build();
-									pool.defs.put(local, newCvs);
-									pool.uses.get(local).remove(var);
-									b.add(index, newCvs);
 
-									// remove the pop statement
-									b.remove(pop);
-									
-									// update the latestval constraints
-									LatestValue lval = latest.get(local);
-									if(lval.hasConstraints()) {
-										/* need to check this out (shouldn't happen) */
-										System.out.println("Constraints:");
-										for(Constraint c : lval.getConstraints()) {
-											System.out.println("  " + c);
-										}
-										throw new IllegalStateException(lval.toString());
-									} else {
-										lval.makeConstraints(newExpr);
-									}
-								}
+								//System.out.println("def : " + stmt + " from " + rhs);
+
 							} else if(inst.getOpcode() == Opcode.ALLOC_OBJ) {
 								// replace pop(new Klass.<init>(args)) with pop(new Klass(args))
 								// UninitialisedObjectExpr obj = (UninitialisedObjectExpr) inst;
@@ -1407,11 +1365,12 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		doms = new LT79Dom<>(builder.graph, builder.head);
 		insertPhis();
 		rename();
-		
+
+		resolveShadowedLocals();
+		aggregateInitialisers();
 		if(optimise) {
-			resolveShadowedLocals();
-			aggregateInitialisers();
-			
+
+
 			int i;
 			do {
 				i = 0;

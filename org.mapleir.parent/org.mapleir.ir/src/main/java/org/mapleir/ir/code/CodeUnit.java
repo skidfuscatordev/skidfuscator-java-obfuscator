@@ -119,6 +119,9 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 
 		for(Expr s : children) {
 			if(s != null) {
+				if (s == this) {
+					throw new IllegalStateException("Self hierarchy? " + this);
+				}
 				s.setBlock(block);
 			}
 		}

@@ -56,12 +56,13 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		if (file.exists())
 			file.delete();
 		file.createNewFile();
-		JarOutputStream jos = new JarOutputStream(new FileOutputStream(file));
+		final JarOutputStream jos = new JarOutputStream(new FileOutputStream(file));
 		int classesDumped = 0;
 		int resourcesDumped = 0;
 
+
 		try (ProgressWrapper progressBar = ProgressUtil.progress(contents.getClassContents().size() + contents.getResourceContents().size())) {
-			for (JarClassData cn : contents.getClassContents()) {
+			for (JarClassData cn : new LinkedList<>(contents.getClassContents())) {
 				try {
 					classesDumped += dumpClass(jos, cn);
 				} catch (ZipException e) {
@@ -69,18 +70,22 @@ public class PhantomResolvingJarDumper implements JarDumper {
 					throw e;
 				}
 
+				contents.getClassContents().remove(cn);
+				jos.flush();
 				progressBar.tick();
 			}
 
-			for (JarResource res : contents.getResourceContents()) {
+			for (JarResource res : new LinkedList<>(contents.getResourceContents())) {
 				resourcesDumped += dumpResource(jos, res.getName(), res.getData());
+
+				contents.getResourceContents().remove(res);
 				progressBar.tick();
 			}
 		}
 
 		if(!Debug.debugging)
 			System.out.println("Dumped " + classesDumped + " classes and " + resourcesDumped + " resources to " + file.getAbsolutePath());
-		
+		jos.flush();
 		jos.close();
 	}
 
