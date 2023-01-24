@@ -4,15 +4,11 @@ exempt: [
 
 driver: false
 
-classRenamer {
+flowRange {
     enabled: true
-}
-
-methodRenamer {
-    enabled: false
 }
 
 flowException {
-    enabled: true
+    enabled: false
     exempt: []
 }

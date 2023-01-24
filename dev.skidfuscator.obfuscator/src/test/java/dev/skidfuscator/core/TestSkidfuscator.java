@@ -145,11 +145,6 @@ public class TestSkidfuscator extends Skidfuscator {
     }
 
     @Override
-    protected void _pack() {
-        
-    }
-
-    @Override
     protected void _dump() {
         final PhantomResolvingJarDumper resolver = new PhantomResolvingJarDumper(
                 this,

@@ -4,8 +4,8 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.renamer.ClassRenamerTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.renamer.MethodRenamerTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.BasicRangeTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -39,46 +39,46 @@ public class ConfigTest {
 
         // Specific enabled check
         // This is *stated* to be enabled
-        final ClassRenamerTransformer classRenamerTransformer = new ClassRenamerTransformer(
+        final BasicRangeTransformer rangeTransformer = new BasicRangeTransformer(
                 skidfuscator
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().hasPath("classRenamer")
+                skidfuscator.getTsConfig().hasPath("flowRange")
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().hasPath("classRenamer.enabled")
+                skidfuscator.getTsConfig().hasPath("flowRange.enabled")
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().getBoolean("classRenamer.enabled")
+                skidfuscator.getTsConfig().getBoolean("flowRange.enabled")
         );
         assertEquals(
                 true,
-                classRenamerTransformer.getConfig().isEnabled()
+                rangeTransformer.getConfig().isEnabled()
         );
 
         // Specific disabled check
         // This is *stated* to be disabled
-        final MethodRenamerTransformer methodRenamerTransformer = new MethodRenamerTransformer(
+        final BasicExceptionTransformer exceptionTransformer = new BasicExceptionTransformer(
                 skidfuscator
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().hasPath("methodRenamer")
+                skidfuscator.getTsConfig().hasPath("flowException")
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().hasPath("methodRenamer.enabled")
+                skidfuscator.getTsConfig().hasPath("flowException.enabled")
         );
         assertEquals(
                 false,
-                skidfuscator.getTsConfig().getBoolean("methodRenamer.enabled")
+                skidfuscator.getTsConfig().getBoolean("flowException.enabled")
         );
         assertEquals(
                 false,
-                methodRenamerTransformer.getConfig().isEnabled()
+                exceptionTransformer.getConfig().isEnabled()
         );
 
         // General enabled check

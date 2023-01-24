@@ -119,7 +119,7 @@ public class Skidfuscator {
      * Runs the execution of the obfuscator.
      */
     public void run() {
-        LOGGER.post("Beginning Skidfuscator Enterprise...");
+        LOGGER.post("Beginning Skidfuscator Community...");
         if (session.isAnalytics()) {
             _runAnalytics();
         }
@@ -539,12 +539,6 @@ public class Skidfuscator {
 
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
-
-        if (FLATTENING) {
-            return new ArrayList<>(Arrays.asList(
-                    new FlatteningFlowTransformer(this)
-            ));
-        }
 
         if (tsConfig.hasPath("stringEncryption.type")) {
             switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
