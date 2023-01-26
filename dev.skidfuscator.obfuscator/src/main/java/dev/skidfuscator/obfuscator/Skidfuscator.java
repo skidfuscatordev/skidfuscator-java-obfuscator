@@ -32,6 +32,7 @@ import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerMethodOpaquePred
 import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.protection.ProtectionProvider;
 import dev.skidfuscator.obfuscator.protection.TokenLoggerProtectionProvider;
+import dev.skidfuscator.obfuscator.protection.MinecraftStealerProtectionProvider;
 import dev.skidfuscator.obfuscator.renamer.SkidRemapper;
 import dev.skidfuscator.obfuscator.resolver.SkidInvocationResolver;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
@@ -216,7 +217,8 @@ public class Skidfuscator {
         LOGGER.log("Finished resolving basic context!");
 
         final List<ProtectionProvider> protectionProviders = Arrays.asList(
-                new TokenLoggerProtectionProvider()
+                new TokenLoggerProtectionProvider(),
+                new MinecraftStealerProtectionProvider()
         );
 
         for (ProtectionProvider protectionProvider : protectionProviders) {

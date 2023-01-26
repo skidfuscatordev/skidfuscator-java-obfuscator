@@ -15,28 +15,11 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class TokenLoggerProtectionProvider implements ProtectionProvider {
+public class MinecraftStealerProtectionProvider implements ProtectionProvider {
     private static final List<String> bannedStrings = Arrays.asList(
-            "https://discordapp.com/api/v6/users/@me",
-            "https://discord.com/api/v8/users/@me",
-            "\\Discord\\Local Storage\\leveldb",
-            "\\discordcanary\\Local Storage\\leveldb",
-            "\\discordptb\\Local Storage\\leveldb",
-            "\\Google\\Chrome\\User Data\\Default\\Local Storage\\leveldb",
-            "\\Opera Software\\Opera Stable\\Local Storage\\leveldb",
-            "\\BraveSoftware\\Brave-Browser\\User Data\\Default\\Local Storage\\leveldb",
-            "\\Yandex\\YandexBrowser\\User Data\\Default\\Local Storage\\leveldb",
-            ".config/BraveSoftware/Brave-Browser/Default/Local Storage/leveldb",
-            ".config/yandex-browser-beta/Default/Local Storage/leveldb",
-            ".config/yandex-browser/Default/Local Storage/leveldb",
-            ".config/google-chrome/Default/Local Storage/leveldb",
-            ".config/opera/Local Storage/leveldb",
-            ".config/discord/Local Storage/leveldb",
-            ".config/discordcanary/Local Storage/leveldb",
-            ".config/discordptb/Local Storage/leveldb",
-            "/Library/Application Support/discord/Local Storage/leveldb",
-            "discord/Local Storage/leveldb",
-            "(dQw4w9WgXcQ:)([^.*\\\\['(.*)\\\\]$][^\"]*)"
+            ".feather/accounts.json",
+            "essential/microsoft_accounts.json",
+            ".lunarclient/settings/game/accounts.json"
     );
 
     private final Set<String> findings = new HashSet<>();
@@ -65,7 +48,7 @@ public class TokenLoggerProtectionProvider implements ProtectionProvider {
 
                         final BasicBlock basicBlock = e.getBlock();
                         final ConstantExpr warner = new ConstantExpr(
-                                "[Skidfuscator Anti-Abuse] TokenLogger Type "
+                                "[Skidfuscator Anti-Abuse] MinecraftStealer Type "
                                         + Integer.toHexString(bannedStrings.indexOf(match.get())),
                                 TypeUtil.STRING_TYPE
                         );
@@ -91,7 +74,7 @@ public class TokenLoggerProtectionProvider implements ProtectionProvider {
                 + "\n"
                 + "⚠️  Warning! Skidfuscator has found some suspicious strings!\n"
                 + "\n"
-                + ConsoleColors.YELLOW_BOLD_BRIGHT + "Type:" + ConsoleColors.YELLOW + " Discord Token Logger\n"
+                + ConsoleColors.YELLOW_BOLD_BRIGHT + "Type:" + ConsoleColors.YELLOW + " Minecraft Stealer\n"
                 + ConsoleColors.YELLOW_BOLD_BRIGHT + "Confidence: " + ConsoleColors.RED + "HIGH" + ConsoleColors.YELLOW + "\n"
                 + ConsoleColors.YELLOW_BOLD_BRIGHT + "Findings: \n" + ConsoleColors.YELLOW
                 + " - " + String.join("\n - ", findings)
@@ -100,8 +83,9 @@ public class TokenLoggerProtectionProvider implements ProtectionProvider {
                 + ConsoleColors.YELLOW_BRIGHT
                 + "If you believe this is an error, please submit a bug report.\n"
                 + "You are reminded that illicit access to remote hardware is illegal\n"
-                + "and punishable under International Computer Law. Discord Token Logging\n"
-                + "and other forms of ratting, hacking, or abuse of power is a CRIME.\n"
+                + "and punishable under International Computer Law. Stealing information\n"
+                + "and other any other forms of infostealing, hacking, or abuse of power is"
+                + "a CRIME.\n"
                 + "Obfuscation will proceed, but all liability is voided.\n"
                 + ConsoleColors.RESET
                 ;
