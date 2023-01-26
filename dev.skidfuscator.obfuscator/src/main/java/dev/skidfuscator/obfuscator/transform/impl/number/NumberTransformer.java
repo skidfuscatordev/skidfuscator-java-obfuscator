@@ -3,20 +3,17 @@ package dev.skidfuscator.obfuscator.transform.impl.number;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
-import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
-import dev.skidfuscator.obfuscator.transform.TransformResult;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.Stmt;
@@ -30,7 +27,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class NumberTransformer extends AbstractTransformer {
     public NumberTransformer(Skidfuscator skidfuscator) {
@@ -38,7 +34,7 @@ public class NumberTransformer extends AbstractTransformer {
     }
 
     public NumberTransformer(Skidfuscator skidfuscator, List<Transformer> children) {
-        super(skidfuscator, "Number Transformer", children);
+        super(skidfuscator, "Number Encryption", children);
     }
 
     private static final Set<Type> TYPES = new HashSet<>(Arrays.asList(
@@ -70,7 +66,7 @@ public class NumberTransformer extends AbstractTransformer {
 
             for (Stmt stmt : new HashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
-                    if (!(expr instanceof ConstantExpr))
+                    if (!(expr instanceof ConstantExpr) || expr instanceof SkidConstantExpr)
                         continue;
 
                     final ConstantExpr constantExpr = (ConstantExpr) expr;

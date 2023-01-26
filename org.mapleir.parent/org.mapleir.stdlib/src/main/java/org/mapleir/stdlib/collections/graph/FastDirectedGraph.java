@@ -11,8 +11,8 @@ import org.mapleir.stdlib.collections.graph.algorithms.SimpleDfs;
 
 public abstract class FastDirectedGraph<N extends FastGraphVertex, E extends FastGraphEdge<N>> implements FastGraph<N, E>{
 
-	private final Map<N, Set<E>> map;
-	private final Map<N, Set<E>> reverseMap;
+	protected final Map<N, Set<E>> map;
+	protected final Map<N, Set<E>> reverseMap;
 	
 	public FastDirectedGraph() {
 		map = createMap();

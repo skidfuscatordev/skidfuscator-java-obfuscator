@@ -88,6 +88,10 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
         return (node.access & Opcodes.ACC_NATIVE) != 0;
     }
 
+    public boolean isSynthetic() {
+        return (node.access & Opcodes.ACC_SYNTHETIC) != 0;
+    }
+
     public boolean isInit() {
         return this.getName().equals("<init>");
     }

@@ -10,6 +10,7 @@ import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.AllocObjectExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.expr.invoke.InitialisedObjectExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import org.mapleir.ir.code.stmt.PopStmt;
@@ -39,39 +40,13 @@ public class Blocks {
         final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length - 1)]);
 
         final BasicBlock fuckup = new SkidBlock(cfg);
-        final Expr alloc_exception = new AllocObjectExpr(exception);
-        final Local local = cfg.getLocals().get(cfg.getEntries().size() + 2, true);
+        final Expr alloc_exception = new InitialisedObjectExpr(
+                exception.getClassName().replace(".", "/"),
+                notice == null ? "()V" : "(Ljava/lang/String;)V",
+                notice == null ? new Expr[0] : new Expr[]{new ConstantExpr(notice)}
+        );
 
-        final VarExpr dup_save = new VarExpr(local, exception);
-        final Stmt dup_stmt = new CopyVarStmt(dup_save, alloc_exception, true);
-        fuckup.add(dup_stmt);
-
-        final VarExpr fuck = new VarExpr(local, exception);
-        final Expr init_alloc;
-
-        if (notice == null) {
-            init_alloc = new VirtualInvocationExpr(
-                    InvocationExpr.CallType.SPECIAL,
-                    new Expr[]{fuck},
-                    exception.getClassName().replace(".", "/"),
-                    "<init>",
-                    "()V"
-            );
-        } else {
-            init_alloc = new VirtualInvocationExpr(
-                    InvocationExpr.CallType.SPECIAL,
-                    new Expr[]{fuck, new ConstantExpr(notice)},
-                    exception.getClassName().replace(".", "/"),
-                    "<init>",
-                    "(Ljava/lang/String;)V"
-            );
-        }
-
-        final PopStmt popStmt = new PopStmt(init_alloc);
-        fuckup.add(popStmt);
-
-        final VarExpr returnFuck = new VarExpr(local, exception);
-        final Stmt exception_stmt = new ThrowStmt(returnFuck);
+        final Stmt exception_stmt = new ThrowStmt(alloc_exception);
         fuckup.add(exception_stmt);
 
         cfg.addVertex(fuckup);

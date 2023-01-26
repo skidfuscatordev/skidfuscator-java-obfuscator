@@ -8,17 +8,15 @@ import org.junit.jupiter.api.RepeatedTest;
 public class OpaqueConditionTest extends SkidTest {
 
     @Override
-    public void test() {
-        super.test();
-    }
-
-    @Override
     public Class<? extends TestRun> getMainClass() {
         return OpaqueConditionClazz.class;
     }
 
     @Override
     public Class<?>[] getClasses() {
-        return new Class[]{OpaqueConditionClazz.class};
+        return new Class[]{
+                OpaqueConditionClazz.class,
+                OpaqueConditionClazz.AES.class
+        };
     }
 }

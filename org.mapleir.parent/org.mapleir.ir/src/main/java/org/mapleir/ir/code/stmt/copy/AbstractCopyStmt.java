@@ -89,7 +89,10 @@ public abstract class AbstractCopyStmt extends Stmt {
 	}
 	
 	public void setExpression(Expr expression) {
-		writeAt(expression, 0);
+		this.expression = expression;
+
+		if (!synthetic)
+			writeAt(expression, 0);
 	}
 	
 	public int getIndex() {

@@ -86,3 +86,9 @@ hs_err_pid*
 */.DS_Store
 */mappings/
 dev.skidfuscator.obfuscator/calculations.txt
+
+dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed
+
+dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.json
+
+dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.skid

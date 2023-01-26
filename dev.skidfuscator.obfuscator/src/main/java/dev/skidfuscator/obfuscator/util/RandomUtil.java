@@ -22,6 +22,10 @@ public class RandomUtil {
         return random.nextLong();
     }
 
+    public boolean nextBoolean() {
+        return random.nextBoolean();
+    }
+
     public String randomIsoString(int size) {
         final int leftLimit = 48; // numeral '0'
         final int rightLimit = 122; // letter 'z'

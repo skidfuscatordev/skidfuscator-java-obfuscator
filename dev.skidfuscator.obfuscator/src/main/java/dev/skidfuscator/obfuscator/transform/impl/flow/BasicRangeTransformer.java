@@ -16,8 +16,8 @@ import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import dev.skidfuscator.obfuscator.util.cfg.Blocks;
+import dev.skidfuscator.obfuscator.verifier.alertable.AlertableConstantExpr;
 import org.mapleir.flowgraph.ExceptionRange;
-import org.mapleir.flowgraph.edges.ImmediateEdge;
 import org.mapleir.flowgraph.edges.TryCatchEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
@@ -73,7 +73,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
     }
 
     public BasicRangeTransformer(Skidfuscator skidfuscator, List<Transformer> children) {
-        super(skidfuscator,"Basic Exception Transformer", children);
+        super(skidfuscator,"Flow Range", children);
     }
 
     @Listen(EventPriority.LOW)
@@ -96,7 +96,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
                 continue;
 
             for (Stmt stmt : entry) {
-                if (!(stmt instanceof UnconditionalJumpStmt)) {
+                if (!(stmt instanceof UnconditionalJumpStmt) || stmt instanceof FakeUnconditionalJumpStmt) {
                     continue;
                 }
 
@@ -141,7 +141,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
                                 entry,
                                 methodNode.getFlowPredicate().getGetter()
                         );
-                final ConstantExpr var_const = new ConstantExpr(hash.getHash());
+                final ConstantExpr var_const = new AlertableConstantExpr(hash.getHash());
 
                 /* Create a fake conditional if exception that's always true */
                 final FakeConditionalJumpStmt bridgeToFuckupStmt = new FakeConditionalJumpStmt(

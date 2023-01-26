@@ -5,7 +5,7 @@ import java.util.Arrays;
 public final class JarResource {
 	
 	private final String name;
-	private final byte[] data;
+	private byte[] data;
 	
 	public JarResource(String name, byte[] data) {
 		this.name = name;
@@ -19,7 +19,11 @@ public final class JarResource {
 	public byte[] getData() {
 		return data;
 	}
-	
+
+	public void setData(byte[] data) {
+		this.data = data;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

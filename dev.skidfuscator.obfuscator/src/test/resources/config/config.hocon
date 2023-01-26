@@ -1,0 +1,14 @@
+exempt: [
+    "class{^dev\\/skidfuscator\\/test}"
+]
+
+driver: false
+
+flowRange {
+    enabled: true
+}
+
+flowException {
+    enabled: false
+    exempt: []
+}

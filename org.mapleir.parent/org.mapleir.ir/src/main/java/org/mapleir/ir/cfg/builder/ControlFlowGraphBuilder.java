@@ -19,7 +19,7 @@ public class ControlFlowGraphBuilder {
 
 	private static final Logger LOGGER = Logger.getLogger(ControlFlowGraph.class);
 
-	protected final MethodNode method;
+	public final MethodNode method;
 	protected final SSAFactory factory;
 	protected final ControlFlowGraph graph;
 	protected final Set<Local> locals;
@@ -72,7 +72,7 @@ public class ControlFlowGraphBuilder {
 	
 	protected BuilderPass[] resolvePasses() {
 		return new BuilderPass[] {
-				new GenerationPass(this),
+				new GenerationPassV2(this),
 				new DeadBlocksPass(this),
 				new NaturalisationPass(this),
 				new SSAGenPass(this, optimise),

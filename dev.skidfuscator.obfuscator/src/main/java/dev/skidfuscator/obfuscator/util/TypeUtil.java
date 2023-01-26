@@ -38,6 +38,9 @@ public class TypeUtil {
 	public final Type UNINITIALIZED_THIS = TypeUtils.UNINITIALIZED_TYPE;
 	public final Type STRING_TYPE = Type.getObjectType("java/lang/String");
 	public final Type THROWABLE_TYPE = Type.getType(Throwable.class);
+	public final Type CLASS_TYPE = Type.getType("Ljava/lang/Class;");
+	public final Type BYTE_ARRAY_TYPE = Type.getType(byte[].class);
+
 
 	/**
 	 * private sort denoting an object type, such as "com/Example" versus the
@@ -318,7 +321,7 @@ public class TypeUtil {
 					.iterator()
 					.next();
 
-			System.out.println("/!\\ Merged " + selfClassNode.getName() + " and " + otherClassNode.getName() + " to type " + commonClassNode.getName());
+			Skidfuscator.LOGGER.warn("/!\\ Merged " + selfClassNode.getName() + " and " + otherClassNode.getName() + " to type " + commonClassNode.getName());
 			return Type.getType("L" + commonClassNode.getName() + ";");
 		} /*else if ((head.equals(TypeUtil.NULL_TYPE) && newest.getSort() == Type.OBJECT)
 				|| (head.getSort() == Type.OBJECT && newest.equals(TypeUtil.NULL_TYPE))) {

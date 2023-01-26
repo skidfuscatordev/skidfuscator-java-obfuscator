@@ -4,6 +4,7 @@ import lombok.Data;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.invoke.DynamicInvocationExpr;
+import org.mapleir.ir.code.expr.invoke.Invocation;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.Invokable;
 
@@ -26,8 +27,8 @@ public class SkidInvocation {
         this.expr = expr;
     }
 
-    public Expr asExpr() {
-        return (Expr) expr;
+    public Invocation asExpr() {
+        return (Invocation) expr;
     }
 
     public boolean isDynamic() {

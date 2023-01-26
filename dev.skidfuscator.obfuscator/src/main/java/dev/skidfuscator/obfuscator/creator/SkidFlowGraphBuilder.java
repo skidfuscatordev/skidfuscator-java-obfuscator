@@ -11,32 +11,37 @@ import org.mapleir.ir.cfg.SSAFactory;
 import org.mapleir.ir.cfg.builder.*;
 
 public class SkidFlowGraphBuilder extends ControlFlowGraphBuilder {
+    private final Skidfuscator skidfuscator;
 
-    public SkidFlowGraphBuilder(MethodNode method) {
+    public SkidFlowGraphBuilder(MethodNode method, Skidfuscator skidfuscator) {
         super(method);
+        this.skidfuscator = skidfuscator;
     }
 
-    public SkidFlowGraphBuilder(MethodNode method, SSAFactory SSAFactory) {
-        super(method, SSAFactory);
+    public SkidFlowGraphBuilder(MethodNode method, SSAFactory factory, Skidfuscator skidfuscator) {
+        super(method, factory);
+        this.skidfuscator = skidfuscator;
     }
 
-    public SkidFlowGraphBuilder(MethodNode method, SSAFactory SSAFactory, boolean optimise) {
-        super(method, SSAFactory, optimise);
+    public SkidFlowGraphBuilder(MethodNode method, SSAFactory factory, boolean optimise, Skidfuscator skidfuscator) {
+        super(method, factory, optimise);
+        this.skidfuscator = skidfuscator;
     }
 
     @Override
     protected BuilderPass[] resolvePasses() {
         return new BuilderPass[] {
-                new GenerationPass(this),
+                new SkidGenerationPass(this, skidfuscator),
                 new DeadBlocksPass(this),
                 //new LocalFixerPass(this),
                 //new NaturalisationPass(this),
-                new SSAGenPass(this, false),
+                new SSAGenPass(this, false)
+                //new CreationFixer(this)
         };
     }
 
     public static ControlFlowGraph build(final Skidfuscator skidfuscator, final MethodNode method) {
-        ControlFlowGraphBuilder builder = new SkidFlowGraphBuilder(method, SkidBlockFactory.v(skidfuscator));
+        ControlFlowGraphBuilder builder = new SkidFlowGraphBuilder(method, SkidBlockFactory.v(skidfuscator), skidfuscator);
         final ControlFlowGraph cfg = builder.buildImpl();
         BoissinotDestructor.leaveSSA(cfg);
         SkidLocalsReallocator.realloc(skidfuscator, cfg);

@@ -175,7 +175,7 @@ public class ConstantExpr extends Expr {
 		}
 	}
 
-	private void packInt(MethodVisitor visitor, int value) {
+	public static void packInt(MethodVisitor visitor, int value) {
 		if (value >= -1 && value <= 5) {
 			visitor.visitInsn(Opcodes.ICONST_M1 + (value + 1));
 		} else if (value >= Byte.MIN_VALUE && value <= Byte.MAX_VALUE) {

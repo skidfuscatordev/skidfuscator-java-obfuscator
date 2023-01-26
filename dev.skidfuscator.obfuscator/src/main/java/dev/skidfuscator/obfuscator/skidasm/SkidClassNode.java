@@ -4,11 +4,15 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.predicate.opaque.ClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidMethodNodeBuilder;
+import dev.skidfuscator.obfuscator.util.RandomUtil;
 import lombok.Getter;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.code.stmt.ReturnStmt;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -20,6 +24,9 @@ public class SkidClassNode extends ClassNode {
     private final ClassOpaquePredicate predicate;
     private final ClassOpaquePredicate staticPredicate;
     private transient SkidMethodNode clinitNode;
+    private transient Boolean mixin;
+
+    private transient Integer randomInt;
 
     /**
      * @param node MapleIR class node object
@@ -164,5 +171,36 @@ public class SkidClassNode extends ClassNode {
      */
     public boolean isSuper() {
         return (node.access & Opcodes.ACC_SUPER) != 0;
+    }
+
+    public boolean isMixin() {
+        if (mixin != null)
+            return mixin;
+
+        if (node.invisibleAnnotations == null) {
+            return mixin = false;
+        }
+
+        for (AnnotationNode invisibleAnnotation : node.invisibleAnnotations) {
+            if (invisibleAnnotation.desc.equals("Lorg/spongepowered/asm/mixin/Mixin;")) {
+                return mixin = true;
+            }
+        }
+
+        return mixin = false;
+    }
+
+    public int getRandomInt() {
+        if (randomInt == null) {
+            randomInt = RandomUtil.nextInt();
+        }
+
+        return randomInt;
+    }
+
+    public byte[] toByteArray() {
+        final ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        this.node.accept(classWriter);
+        return classWriter.toByteArray();
     }
 }

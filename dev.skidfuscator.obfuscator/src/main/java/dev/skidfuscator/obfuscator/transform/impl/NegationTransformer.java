@@ -3,9 +3,7 @@ package dev.skidfuscator.obfuscator.transform.impl;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
-import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
-import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
@@ -61,7 +59,7 @@ public class NegationTransformer extends AbstractTransformer {
     }
 
     public NegationTransformer(Skidfuscator skidfuscator, List<Transformer> children) {
-        super(skidfuscator,"Negation Transformer", children);
+        super(skidfuscator,"Negation", children);
     }
 
     @Listen

@@ -1,0 +1,14 @@
+exempt: [
+    "class{^dev\\/skidfuscator\\/test}"
+]
+
+driver: false
+
+classRenamer {
+    enabled: false
+}
+
+methodRenamer {
+    enabled: false
+}
+

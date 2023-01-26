@@ -55,7 +55,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 	private int beginIndex;
 
-	public static boolean TEST_COMPUTE = true;
+	public static boolean TEST_COMPUTE = false;
 
 	public SkidFlowGraphDumper(Skidfuscator skidfuscator, ControlFlowGraph cfg, MethodNode m) {
 		this.skidfuscator = skidfuscator;

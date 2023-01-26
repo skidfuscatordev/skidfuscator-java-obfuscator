@@ -18,7 +18,7 @@ public class SkidASMFactory extends DefaultASMFactory {
     public ClassNode create(byte[] bytes, String name) {
         final ClassReader reader = new ClassReader(bytes);
         final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
-        reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        reader.accept(node, 0);
 
         for (int i = 0; i < node.methods.size(); i++) {
             final org.objectweb.asm.tree.MethodNode methodNode = node.methods.get(i);
@@ -31,6 +31,9 @@ public class SkidASMFactory extends DefaultASMFactory {
                     methodNode.exceptions.toArray(new String[0])
             );
             methodNode.accept(adapter);
+
+            if (methodNode.localVariables != null)
+                methodNode.localVariables = null;
             node.methods.set(i, adapter);
         }
 

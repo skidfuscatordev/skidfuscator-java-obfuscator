@@ -29,14 +29,16 @@ import java.util.Stack;
 
 public class AhegaoTransformer extends AbstractTransformer {
     public AhegaoTransformer(Skidfuscator skidfuscator) {
-        super(skidfuscator, "Ahegao Transformer");
+        super(skidfuscator, "Ahegao");
     }
 
     @Listen
     void handle(final FinalClassTransformEvent event) {
         final SkidClassNode classNode = event.getClassNode();
 
-        if (classNode.isEnum() || classNode.isInterface() || classNode.isAnnotation())
+        if (classNode.isEnum()
+                || classNode.isInterface()
+                || classNode.isAnnotation())
             return;
 
         final FieldNode mapleNode = new SkidFieldNodeBuilder(skidfuscator, classNode)

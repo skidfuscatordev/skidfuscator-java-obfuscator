@@ -1,13 +1,15 @@
 package dev.skidfuscator.obfuscator;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
 import dev.skidfuscator.obfuscator.analytics.SkidTracker;
+import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
 import dev.skidfuscator.obfuscator.event.EventBus;
-import dev.skidfuscator.obfuscator.event.Listener;
 import dev.skidfuscator.obfuscator.event.impl.transform.ClassTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.GroupTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.MethodTransformEvent;
@@ -16,8 +18,7 @@ import dev.skidfuscator.obfuscator.event.impl.transform.clazz.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.group.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
-import dev.skidfuscator.obfuscator.exempt.ExemptAnalysis;
-import dev.skidfuscator.obfuscator.exempt.SimpleExemptAnalysis;
+import dev.skidfuscator.obfuscator.exempt.ExemptManager;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
@@ -28,10 +29,11 @@ import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerBlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerMethodOpaquePredicate;
-import dev.skidfuscator.obfuscator.predicate.renderer.impl.IntegerBlockPredicateRenderer;
+import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.protection.ProtectionProvider;
 import dev.skidfuscator.obfuscator.protection.TokenLoggerProtectionProvider;
 import dev.skidfuscator.obfuscator.protection.MinecraftStealerProtectionProvider;
+import dev.skidfuscator.obfuscator.renamer.SkidRemapper;
 import dev.skidfuscator.obfuscator.resolver.SkidInvocationResolver;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.skidasm.SkidGroup;
@@ -39,9 +41,11 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.*;
+import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.outliner.SimpleOutlinerTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
@@ -67,10 +71,7 @@ import org.piwik.java.tracking.PiwikRequest;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -82,6 +83,8 @@ import java.util.stream.Collectors;
 public class Skidfuscator {
     public static final TimedLogger LOGGER = new TimedLogger(LogManager.getLogger(Skidfuscator.class));
     public static final int ASM_VERSION = Opcodes.ASM9;
+    public static final boolean FLATTENING = false;
+    public static boolean CLOUD = false;
 
     private final SkidfuscatorSession session;
 
@@ -94,8 +97,12 @@ public class Skidfuscator {
     private Hierarchy hierarchy;
 
     private OrderAnalysis orderAnalysis;
-    private ExemptAnalysis exemptAnalysis;
+    private ExemptManager exemptAnalysis;
+    private Config tsConfig;
+    private DefaultSkidConfig config;
     private PredicateAnalysis predicateAnalysis;
+
+    private final SkidRemapper classRemapper = new SkidRemapper(new HashMap<>());
 
     private final Counter counter = new Counter();
 
@@ -106,7 +113,7 @@ public class Skidfuscator {
      */
     public Skidfuscator(SkidfuscatorSession session) {
         this.session = session;
-        this.exemptAnalysis = new SimpleExemptAnalysis();
+        this.exemptAnalysis = new ExemptManager();
     }
 
     /**
@@ -187,9 +194,10 @@ public class Skidfuscator {
                 .build();
         LOGGER.log("Finished resolving predicate analysis!");
 
+        _importConfig();
+        _importExempt();
         _importClasspath();
         _importJvm();
-        _importExempt();
 
         if (!session.isFuckIt()) {
             _verify();
@@ -265,7 +273,7 @@ public class Skidfuscator {
             if (!protectionProvider.shouldWarn())
                 continue;
 
-            System.out.println("\n\n" + protectionProvider.getWarning());
+            LOGGER.post("\n\n" + protectionProvider.getWarning());
         }
 
         LOGGER.post("Dumping classes...");
@@ -280,7 +288,7 @@ public class Skidfuscator {
                 }
 
                 try {
-                    cfg.verify();
+                    cfg.recomputeEdges();
                     mn.dump();
                 } catch (Exception ex){
                     if (ex instanceof IllegalStateException) {
@@ -294,6 +302,7 @@ public class Skidfuscator {
         LOGGER.log("Finished dumping classes...");
         EventBus.end();
 
+        _cleanup();
         _dump();
 
         SkidProgressBar.RENDER_THREAD.shutdown();
@@ -334,47 +343,36 @@ public class Skidfuscator {
         }
     }
 
+    protected void _importConfig() {
+        LOGGER.post("Loading config...");
+        if (session.getConfig() == null) {
+            tsConfig = ConfigFactory.parseString("").resolve();
+        } else {
+            this.tsConfig = ConfigFactory.parseFile(session.getConfig()).resolve();
+        }
+        this.config = new DefaultSkidConfig(tsConfig, "");
+
+
+        LOGGER.post("> Driver: " + config.isDriver());
+        LOGGER.log("Loaded config!");
+    }
+
     protected void _importExempt() {
         /* Importation and exemptions */
         LOGGER.post("Importing exemptions...");
-        if (session.getExempt() != null) {
-            try {
-                final List<String> exclusions = new ArrayList<>();
-
-                /*
-                 * This method is really scuffed but temporary for now. As
-                 * of right now we read every line from a .txt file, cache
-                 * them into an array list then pass them off to parsing.
-                 */
-                final FileReader fileReader = new FileReader(session.getExempt());
-                final BufferedReader br = new BufferedReader(fileReader);
-                String exclusion;
-                while ((exclusion = br.readLine()) != null) {
-                    exclusions.add(exclusion);
+        if (!config.getExemptions().isEmpty()) {
+            /*
+             * This is the parsing bit. We initiate a progress bar and
+             * simply just call the exempt analysis which builds the
+             * exclusion call and caches it.
+             */
+            try(ProgressWrapper progressBar = ProgressUtil.progress(config.getExemptions().size())) {
+                for (String s : config.getExemptions()) {
+                    exemptAnalysis.add(s);
+                    progressBar.tick();
                 }
-
-                /*
-                 * This is the parsing bit. We initiate a progress bar and
-                 * simply just call the exempt analysis which builds the
-                 * exclusion call and caches it.
-                 */
-                try(ProgressWrapper progressBar = ProgressUtil.progress(exclusions.size())) {
-                    for (String s : exclusions) {
-                        exemptAnalysis.add(s);
-                        progressBar.tick();
-                    }
-                }
-            } catch (IOException ex) {
-                /*
-                 * If there's any error, it can pose significant issues with
-                 * Skidfuscator. It's best to exit the program as of now.
-                 *
-                 * TODO:    Add better syntax highlighting for issues/parsing
-                 *          failure or exceptions
-                 */
-                LOGGER.error("Error reading exclusions file", ex);
-                System.exit(1);
             }
+            LOGGER.log("Imported: \n " + exemptAnalysis.toString());
         }
         LOGGER.log("Finished importing exemptions");
     }
@@ -437,7 +435,8 @@ public class Skidfuscator {
         this.classSource = new SkidApplicationClassSource(
                 session.getInput().getName(),
                 session.isFuckIt(),
-                downloader.getJarContents()
+                downloader.getJarContents(),
+                this
         );
         LOGGER.log("Finished importing jar.");
 
@@ -493,6 +492,24 @@ public class Skidfuscator {
             LOGGER.log("✓ Finished importing libs!");
         }
 
+        if (session.getMappings() == null && config.getLibs().length > 0) {
+            final File[] libs = Arrays.stream(config.getLibs())
+                    .filter(e -> e.getAbsolutePath().endsWith(".jar"))
+                    .toArray(File[]::new);
+
+            LOGGER.post("Importing " + libs.length + " config libs...");
+
+            for (File lib : libs) {
+                final ApplicationClassSource libraryClassSource = GhostHelper.getLibraryClassSource(session, lib);
+                /* Add library source to class source */
+                classSource.addLibraries(new LibraryClassSource(
+                        libraryClassSource,
+                        5
+                ));
+            }
+            LOGGER.log("✓ Finished importing config libs!");
+        }
+
         /*
          * Exclusively run this if JPhantom is activated. JPhantom computes some
          * stuff really well, albeit it just necks itself the moment the software
@@ -517,26 +534,48 @@ public class Skidfuscator {
     }
 
     protected void _loadTransformer() {
-        for (Listener o : this.getTransformers()) {
+        for (Transformer o : this.getTransformers()) {
             EventBus.register(o);
         }
     }
 
     public List<Transformer> getTransformers() {
-        return Arrays.asList(
-                /*new StringTransformer(this),
+        final List<Transformer> transformers = new ArrayList<>();
+
+        if (tsConfig.hasPath("stringEncryption.type")) {
+            switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
+                case STANDARD: transformers.add(new StringTransformer(this)); break;
+                default: throw new IllegalStateException("String transformation type not found");
+            }
+        } else {
+            transformers.add(new StringTransformer(this));
+        }
+
+        transformers.addAll(Arrays.asList(
                 //new NegationTransformer(this),
-                //new FlatteningFlowTransformer(this),
+                //new SimpleOutlinerTransformer(this),
                 new NumberTransformer(this),
                 new SwitchTransformer(this),
-                new BasicSimplifierTransformer(this),
+                //new BasicSimplifierTransformer(this),
                 new BasicConditionTransformer(this),
                 new BasicExceptionTransformer(this),
                 new BasicRangeTransformer(this),
-                new AhegaoTransformer(this)*/
+                /*
+                new FlatteningFlowTransformer(this),*/
+                new AhegaoTransformer(this)
                 //new SimpleOutlinerTransformer()
                 //
-        );
+        ));
+
+        final List<Transformer> temps = new ArrayList<>(transformers);
+        transformers.clear();
+
+        for (Transformer temp : temps) {
+            if (temp.getConfig().isEnabled())
+                transformers.add(temp);
+        }
+
+        return transformers;
     }
 
     private void _verify() {
@@ -545,7 +584,7 @@ public class Skidfuscator {
         try {
             classSource.getClassTree().verify();
         } catch (Exception e) {
-            System.out.println(
+            LOGGER.post("\n" +
                     "-----------------------------------------------------\n"
                             + "/!\\ Skidfuscator failed to compute some libraries!\n"
                             + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
@@ -557,10 +596,19 @@ public class Skidfuscator {
                             )
                             + "-----------------------------------------------------\n"
             );
-            System.exit(1);
+
+            if (!CLOUD)
+                System.exit(1);
             return;
         }
         LOGGER.log("Finished verification!");
+    }
+
+    protected void _cleanup() {
+        this.hierarchy = null;
+        this.irFactory.clear();
+        this.irFactory = null;
+        System.gc();
     }
 
     protected void _dump() {
@@ -674,6 +722,7 @@ public class Skidfuscator {
                     }
 
                     EventBus.call(caller.callMethod(methodNode));
+                    methodNode.getCfg().recomputeEdges();
                     progressBar.tick();
                 }
             }

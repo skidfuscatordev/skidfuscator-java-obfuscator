@@ -15,12 +15,17 @@ public class SkidfuscatorSession {
     private File[] libs;
     private File mappings;
     private File exempt;
+    private File config;
     private File runtime;
     private boolean phantom;
     private boolean jmod;
     private boolean fuckit;
-
     private boolean analytics;
+    private boolean renamer;
+    private boolean c2j;
+
+    private boolean lowCon;
+
 
     /**
      *
@@ -49,6 +54,13 @@ public class SkidfuscatorSession {
      */
     public File getMappings() {
         return mappings;
+    }
+
+    /**
+     * @return the config file
+     */
+    public File getConfig() {
+        return config;
     }
 
     /**
@@ -89,5 +101,21 @@ public class SkidfuscatorSession {
 
     public boolean isAnalytics() {
         return analytics;
+    }
+
+    public boolean isRenamer() {
+        return renamer;
+    }
+
+    public boolean isNative() {
+        return c2j;
+    }
+
+    public boolean isLowCon() {
+        return lowCon;
+    }
+
+    public void setLowCon(boolean lowCon) {
+        this.lowCon = lowCon;
     }
 }

@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator;
 
+import dev.skidfuscator.obfuscator.command.HelpCommand;
 import dev.skidfuscator.obfuscator.command.ObfuscateCommand;
 import lombok.SneakyThrows;
 import org.jline.reader.EndOfFileException;
@@ -49,7 +50,11 @@ public class SkidfuscatorMain {
                             null,
                             null,
                             null,
+                            null,
                             new File(System.getProperty("java.home"), "lib/rt.jar"),
+                            false,
+                            false,
+                            false,
                             false,
                             false,
                             false,
@@ -62,7 +67,8 @@ public class SkidfuscatorMain {
             }
 
         } else {
-            new CommandLine(new ObfuscateCommand())
+            new CommandLine(new HelpCommand())
+                    .addSubcommand("obfuscate", new ObfuscateCommand())
                     .execute(args);
         }
     }

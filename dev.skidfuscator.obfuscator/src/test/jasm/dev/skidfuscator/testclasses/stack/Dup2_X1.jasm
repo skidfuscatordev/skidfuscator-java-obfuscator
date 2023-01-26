@@ -1,0 +1,46 @@
+// This is the basic template for these tests
+public class dev/skidfuscator/testclasses/stack/Dup2_X1 implements dev/skidfuscator/testclasses/TestRun{
+    public <init>()V {
+        aload 0
+        invokespecial java/lang/Object.<init>()V
+        return
+    }
+
+    public run()V {
+        new java/lang/StringBuilder
+        dup
+        invokespecial java/lang/StringBuilder.<init>()V
+        astore 1
+        ldc "This should never be shown"
+        ldc "String two "
+        ldc "String one "
+        dup2_x1 // Haha fuck me....
+        aload 1
+        swap
+        invokevirtual java/lang/StringBuilder.append(java/lang/String)java/lang/StringBuilder
+        swap
+        invokevirtual java/lang/StringBuilder.append(java/lang/String)java/lang/StringBuilder
+        swap
+        pop
+        swap
+        invokevirtual java/lang/StringBuilder.append(java/lang/String)java/lang/StringBuilder
+        swap
+        invokevirtual java/lang/StringBuilder.append(java/lang/String)java/lang/StringBuilder
+        ldc "String one String two String one String two "
+        swap
+        invokevirtual java/lang/StringBuilder.toString()java/lang/String
+        invokevirtual java/lang/String.equals(java/lang/Object)Z
+
+        ifne end
+
+        exception:
+        new java/lang/AssertionError
+        dup
+        ldc "Failed String test equality"
+        invokespecial java/lang/AssertionError.<init>(java/lang/Object)V
+        athrow
+
+        end:
+        return
+    }
+}

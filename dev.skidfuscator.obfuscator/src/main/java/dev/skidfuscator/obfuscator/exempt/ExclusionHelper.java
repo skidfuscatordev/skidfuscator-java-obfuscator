@@ -58,7 +58,7 @@ public class ExclusionHelper {
 
             else {
                 if (c == '}') {
-                    final String matcher = padded.toString().toLowerCase(Locale.ROOT);
+                    final String matcher = padded.toString();
                     final String[] split = matcher.contains(" ")
                             ? matcher.split(" ")
                             : new String[]{matcher};
@@ -78,12 +78,23 @@ public class ExclusionHelper {
                                             .match("private", var.isPrivate())
                                             .check();
 
-                                    if (!initialMatch) {
-                                        System.out.println("Oh?");
+                                    assert initialMatch : "Failed initial match: " + parsed + " got:" + var;
+                                    assert !var.getName().contains(".") : "Got weird name: " + var.getName();
+
+                                    final boolean ret =  initialMatch
+                                            && (regex.matcher(var.getName()).find() || parsed.equals(var.getName()));
+
+                                    if (var.getName().equals("jda")) {
+                                        System.out.println("JDA! " + var.getName() + " --> " + ret);
                                     }
 
-                                    return initialMatch
-                                            && regex.matcher(var.getName()).find();
+                                    assert var.getName().contains("jda") == ret : "name: " + var.getName() + " parser: " + parsed;
+                                    return ret;
+                                }
+
+                                @Override
+                                public String toString() {
+                                    return regex.pattern();
                                 }
                             });
 
@@ -112,11 +123,11 @@ public class ExclusionHelper {
                                         return false;
                                     }
 
-                                    if (descRegex != null && !descRegex.matcher(var.getDesc()).matches()) {
+                                    if (descRegex != null && !descRegex.matcher(var.getDesc()).lookingAt()) {
                                         return false;
                                     }
 
-                                    return regexMethod.matcher(var.getName()).find();
+                                    return regexMethod.matcher(var.getName()).lookingAt() || parsed.equals(var.getName());
                                             //&& regexClazz.matcher(var.owner.getDisplayName()).matches();
                                 }
 
@@ -147,8 +158,8 @@ public class ExclusionHelper {
                                             .check();
 
                                     return initialMatch
-                                            && regexField.matcher(var.getDisplayName()).matches()
-                                            && regexClazz.matcher(var.owner.getDisplayName()).matches();
+                                            && regexField.matcher(var.getDisplayName()).lookingAt()
+                                            && regexClazz.matcher(var.owner.getDisplayName()).lookingAt();
                                 }
                             });
                             break;

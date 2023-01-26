@@ -88,6 +88,32 @@ public class EventBus {
     }
 
     /**
+     * Calls an event of type T
+     *
+     * @param <T>   the Type parameter of the event
+     * @param event the event
+     * @return Modified or intact output after passing through all the interceptors
+     */
+    public static <T extends Event> T callButSkip(final T event, final Class<?>... skipped) {
+        final Queue<EventListener> calls = new PriorityQueue<>(Comparator.comparingInt(EventListener::getPriority));
+        final Set<Class<?>> skippedSet = new HashSet<>(Arrays.asList(skipped));
+        for (List<EventListener> value : listeners.values()) {
+            for (EventListener listener : value) {
+                if (skippedSet.contains(listener.method.getDeclaringClass()))
+                    continue;
+
+                if (listener.check(event)) calls.add(listener);
+            }
+        }
+
+        for (EventListener call : calls) {
+            call.callUnsafe(event);
+        }
+
+        return event;
+    }
+
+    /**
      * Kills the EventBus and clears all of its listeners.
      */
     public static void end() {

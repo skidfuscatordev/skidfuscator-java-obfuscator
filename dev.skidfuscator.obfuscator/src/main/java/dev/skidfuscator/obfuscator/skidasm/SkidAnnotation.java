@@ -2,12 +2,15 @@ package dev.skidfuscator.obfuscator.skidasm;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
+import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import lombok.Data;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -46,6 +49,70 @@ public class SkidAnnotation {
      */
     public <T> AnnotationValue<T> getValue(String name) {
         return (AnnotationValue) values.get(name);
+    }
+
+    /**
+     * @param name Name of the value sought out to be modified (eg @Value(value = "123) )
+     *                                                                    ^^^^^ this bit
+     * @param <T> Type of the value sought out to be modified
+     * @return Annotation Value subclass with the getter and the setter
+     */
+    public <T> void setValue(String name, T value) {
+        int i;
+
+        if (values.containsKey(name)) {
+            i = values.get(name).index;
+        } else {
+            i = values.size();
+        }
+
+        final int finalI = i;
+        final String finalName = name;
+        final AnnotationValue<T> array = new AnnotationValue<>(
+                name,
+                finalI,
+                new Consumer<T>() {
+                    @Override
+                    public void accept(T o) {
+                        node.values.set(finalI, o);
+                    }
+                },
+                new Supplier<T>(){
+                    @Override
+                    public T get() {
+                        return (T) node.values.get(finalI);
+                    }
+                },
+                parent.getMethods()
+                        .stream()
+                        .filter(e -> e.getName().equals(finalName))
+                        .findFirst()
+                        .orElseThrow(() -> {
+                            return new IllegalStateException(
+                                    "Failed to find method for "
+                                            + finalName + " of value "
+                                            + node.values.get(finalI)
+                                            + " (parent: " + parent.getMethods().stream()
+                                            .map(e -> e.getName() + "#" + e.getDesc())
+                                            .collect(Collectors.joining("\n"))
+                                            + ")"
+                            );
+                        }));
+        array.set(value);
+        values.put(name, array);
+    }
+
+    private void updateDesc() {
+        if (values.size() == 1) {
+            node.desc = null;
+            return;
+        }
+
+        final Parameter parameter = new Parameter("()V");
+        values.entrySet()
+                .stream()
+                .sorted(Comparator.comparingInt(e -> e.getValue().index))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -96,7 +163,9 @@ public class SkidAnnotation {
 
         String name = null;
         if (node.desc == null) {
-            values.put("value", new AnnotationValue<>("value",
+            values.put("value", new AnnotationValue<>(
+                    "value",
+                    0,
                     new Consumer<Object>() {
                         @Override
                         public void accept(Object o) {
@@ -121,7 +190,9 @@ public class SkidAnnotation {
             } else {
                 final int finalI = i;
                 String finalName = name;
-                values.put(name, new AnnotationValue<>(name,
+                values.put(name, new AnnotationValue<>(
+                        name,
+                        finalI,
                         new Consumer<Object>() {
                             @Override
                             public void accept(Object o) {
@@ -156,13 +227,16 @@ public class SkidAnnotation {
 
     public static class AnnotationValue<T> {
         private final String name;
+
+        private final int index;
         private final Type type;
         private final Consumer<T> setter;
         private final Supplier<T> getter;
         private final MethodNode methodNode;
 
-        public AnnotationValue(String name, Consumer<T> setter, Supplier<T> getter, MethodNode methodNode) {
+        public AnnotationValue(String name, int index, Consumer<T> setter, Supplier<T> getter, MethodNode methodNode) {
             this.name = name;
+            this.index = index;
             this.setter = setter;
             this.getter = getter;
             this.methodNode = methodNode;
@@ -171,6 +245,10 @@ public class SkidAnnotation {
 
         public String getName() {
             return name;
+        }
+
+        public int getIndex() {
+            return index;
         }
 
         public Type getType() {
