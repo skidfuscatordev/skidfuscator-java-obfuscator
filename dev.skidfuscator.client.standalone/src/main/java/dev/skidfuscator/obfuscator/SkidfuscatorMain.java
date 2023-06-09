@@ -17,6 +17,7 @@ public class SkidfuscatorMain {
 
     @SneakyThrows
     public static void main(String[] args) {
+
         if (args.length == 1 && args[0].equalsIgnoreCase("cli")) {
             final LineReader reader = LineReaderBuilder
                     .builder()
@@ -52,6 +53,7 @@ public class SkidfuscatorMain {
                             null,
                             null,
                             new File(System.getProperty("java.home"), "lib/rt.jar"),
+                            false,
                             false,
                             false,
                             false,

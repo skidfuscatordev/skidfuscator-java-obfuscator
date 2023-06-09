@@ -1,5 +1,8 @@
 package dev.skidfuscator.test.exclusion;
 
+import dev.skidfuscator.core.TestCacheTemplate;
+import dev.skidfuscator.core.TestDispatcher;
+import dev.skidfuscator.core.TestReferenceDispatcher;
 import dev.skidfuscator.core.TestSkidfuscator;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.testclasses.exclusion.ObfuscatedTestClass;
@@ -19,7 +22,11 @@ public class ExclusionTest {
         skidfuscator = new TestSkidfuscator(
                 new Class[]{
                         ObfuscatedTestClass.class,
-                        UnobfuscatedTestClass.class
+                        UnobfuscatedTestClass.class,
+                        TestDispatcher.class,
+                        TestCacheTemplate.class,
+                        TestReferenceDispatcher.class
+
                 },
                 this::callback
         );

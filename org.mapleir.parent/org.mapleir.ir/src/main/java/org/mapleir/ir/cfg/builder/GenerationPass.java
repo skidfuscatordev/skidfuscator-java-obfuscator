@@ -366,10 +366,14 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 			possibleRules = verifier.find_verify_matches();
 		}
 
+
 		switch (opcode) {
 			case -1: {
 				if (ain instanceof LabelNode)
 					throw new IllegalStateException("Block should not contain label.");
+				else if (ain instanceof LineNumberNode) {
+					_line(((LineNumberNode) ain).line);
+				}
 				break;
 			}
 			case BIPUSH:
@@ -720,6 +724,10 @@ public class GenerationPass extends ControlFlowGraphBuilder.BuilderPass {
 
 	protected void _frame(int type, Object[] frame, Object[] stack) {
 		addStmt(new FrameStmt(type, frame, stack));
+	}
+
+	protected void _line(int line) {
+		addStmt(new LineNumberStmt(line));
 	}
 
 	protected void _const(Object o, Type type) {

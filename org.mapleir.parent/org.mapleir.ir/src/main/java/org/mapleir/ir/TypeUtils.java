@@ -345,7 +345,7 @@ public class TypeUtils {
 				break;
 		}
 
-		throw new IllegalArgumentException("illegal cast from " + from.toString() + " " + to.toString());
+		throw new IllegalArgumentException("illegal cast from " + from.toString() + " to " + to.toString());
 	}
 
 	public static int getPrimitiveArrayOpcode(Type type) {

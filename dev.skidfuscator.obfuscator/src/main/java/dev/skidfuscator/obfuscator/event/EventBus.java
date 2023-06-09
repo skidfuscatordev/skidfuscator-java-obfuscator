@@ -6,6 +6,7 @@ import dev.skidfuscator.obfuscator.event.impl.Event;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Basic EventBus quickly mushed up together to serve as an excuse
@@ -71,13 +72,19 @@ public class EventBus {
      * @param event the event
      * @return Modified or intact output after passing through all the interceptors
      */
-    public static <T extends Event> T call(final T event) {
+    public static <T extends Event> T call(final T event, Predicate<EventListener>... preconditions) {
         final Queue<EventListener> calls = new PriorityQueue<>(Comparator.comparingInt(EventListener::getPriority));
 
         for (List<EventListener> value : listeners.values()) {
-            for (EventListener listener : value) {
-                if (listener.check(event)) calls.add(listener);
+            loop: {
+                for (EventListener listener : value) {
+                    for (Predicate<EventListener> precondition : preconditions) {
+                        if (!precondition.test(listener)) break loop;
+                    }
+                    if (listener.check(event)) calls.add(listener);
+                }
             }
+
         }
 
         for (EventListener call : calls) {
@@ -123,7 +130,7 @@ public class EventBus {
     /**
      * Wrapper class for EventListener
      */
-    static class EventListener {
+    public static class EventListener {
         private final Listener listener;
         private final Method method;
         private final Class<?> type;
@@ -142,6 +149,20 @@ public class EventBus {
             this.method = method;
             this.type = type;
             this.priority = priority;
+        }
+
+        /**
+         * @return Returns the listener of this event
+         */
+        public Listener getListener() {
+            return listener;
+        }
+
+        /**
+         * @return type of the object of the listener
+         */
+        public Class<?> getType() {
+            return type;
         }
 
         /**

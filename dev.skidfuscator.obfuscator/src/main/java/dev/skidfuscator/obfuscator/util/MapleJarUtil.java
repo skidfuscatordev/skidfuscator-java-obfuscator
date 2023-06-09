@@ -7,6 +7,7 @@ import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.creator.SkidLibASMFactory;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
+import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
 import dev.skidfuscator.obfuscator.verifier.Verifier;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.ClassTree;
@@ -45,12 +46,17 @@ public class MapleJarUtil {
                     method.localVariables = null;
                 }
 
-                JarEntry entry = new JarEntry(classData.getName());
+                String path = classData.getName();
+                if (skidfuscator.getConfig().getBoolean("fileCrasher.enabled", false)) {
+                    path += "/";
+                }
+
+                JarEntry entry = new JarEntry(path);
                 ClassTree tree = skidfuscator.getClassSource().getClassTree();
 
                 //Skidfuscator.LOGGER.post("Writing " + entry.getName());
 
-                if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+                if (!cn.isVirtual() && skidfuscator.getExemptAnalysis().isExempt(cn)) {
                     final JarClassData resource = skidfuscator
                             .getJarContents()
                             .getClassContents()
@@ -88,10 +94,14 @@ public class MapleJarUtil {
                             .mapOrDefault(Type.getObjectType(classData.getName()
                                     .replace(".class", "")
                                     .replace(".", "/")).getInternalName());
-                    entry = new JarEntry(
-                                    name.replace(".", "/")
-                                    + ".class"
-                    );
+
+                    path = name.replace(".", "/") + ".class";
+
+                    if (skidfuscator.getConfig().getBoolean("fileCrasher.enabled", false)) {
+                        path += "/";
+                    }
+
+                    entry = new JarEntry(path);
                     out.putNextEntry(entry);
                     //Skidfuscator.LOGGER.post("Wrote " + entry.getName());
                     try {
@@ -109,11 +119,17 @@ public class MapleJarUtil {
                         cn.node.accept(writer);
                         out.write(writer.toByteArray());
                         var8.printStackTrace();
-                        System.err.println("\rFailed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, which may cause runtime abnormalities\n");
+
+                        Skidfuscator.LOGGER.error(
+                                "\rFailed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, which may cause runtime abnormalities\n",
+                                var8
+                        );
                     }
                 } catch (Exception var9) {
-                    System.err.println("\rFailed to write " + cn.getName() + "! Skipping class...\n");
-                    var9.printStackTrace();
+                    Skidfuscator.LOGGER.error(
+                            "\rFailed to write " + cn.getName() + "! Skipping class...\n",
+                            var9
+                    );
                 }
                 return 1;
             }

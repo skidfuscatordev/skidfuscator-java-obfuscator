@@ -48,6 +48,7 @@ public class TestSkidfuscator extends Skidfuscator {
     }
 
     public static boolean SKIP = false;
+    public static boolean BEFORE_NATIVE = false;
 
     @Override
     protected void _importExempt() {

@@ -7,36 +7,36 @@ import dev.skidfuscator.obfuscator.event.impl.transform.group.InitGroupTransform
 import dev.skidfuscator.obfuscator.event.impl.transform.method.InitMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.PostMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.InitSkidTransformEvent;
-import dev.skidfuscator.obfuscator.event.impl.transform.skid.PostSkidTransformEvent;
 import dev.skidfuscator.obfuscator.hierarchy.matching.ClassMethodHash;
 import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
-import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.impl.BitwiseHashTransformer;
-import dev.skidfuscator.obfuscator.predicate.cache.CacheTemplateDump;
+import dev.skidfuscator.obfuscator.number.hash.impl.LegacyHashTransformer;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowSetter;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.ClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.ConditionalJumpRenderer;
+import dev.skidfuscator.obfuscator.predicate.renderer.impl.ExceptionRenderer;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.SwitchJumpRenderer;
 import dev.skidfuscator.obfuscator.predicate.renderer.impl.UnconditionalJumpRenderer;
 import dev.skidfuscator.obfuscator.skidasm.*;
+import dev.skidfuscator.obfuscator.skidasm.builder.SkidClassNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidIntegerParseStaticInvocationExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeBlock;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
+import dev.skidfuscator.obfuscator.skidasm.stmt.SkidSwitchStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.OpcodeUtil;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
-import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
-import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.*;
@@ -52,7 +52,6 @@ import org.mapleir.ir.code.expr.invoke.*;
 import org.mapleir.ir.code.stmt.*;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -61,56 +60,40 @@ import org.topdank.byteengineer.commons.data.JarClassData;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class IntegerBlockPredicateRenderer extends AbstractTransformer {
+    public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     public IntegerBlockPredicateRenderer(Skidfuscator skidfuscator, List<Transformer> children) {
         super(skidfuscator,"GEN3 Flow", children);
     }
 
     public static boolean DEBUG = false;
-    private SkidClassNode predicateCache;
-    private SkidMethodNode predicateNode;
-    private BasicBlock currentBlock;
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
-        if (!skidfuscator.getConfig().isDriver())
-            return;
+        final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)
+                .name("skid/Factory")
+                .access(Opcodes.ACC_PUBLIC)
+                .phantom(true)
+                .virtual(true)
+                .build();
 
-        predicateCache = new SkidClassNode(
-                ClassHelper.create(CacheTemplateDump.dump(), 0).node,
-                skidfuscator
-        );
-
-        skidfuscator.getClassSource().add(predicateCache);
+        skidfuscator.setFactoryNode(factory);
+        /*skidfuscator.getClassRemapper().add(
+                Type.getObjectType(factory.getName()).getInternalName(),
+                RandomUtil.randomAlphabeticalString(16)
+        );*/
         skidfuscator
                 .getJarContents()
                 .getClassContents()
                 .add(
                         new JarClassData(
-                                "skid/Driver.class",
-                                predicateCache.toByteArray(),
-                                predicateCache
+                                "skid/Factory.class",
+                                factory.toByteArray(),
+                                factory
                         )
                 );
-        skidfuscator.getClassRemapper().add(
-                Type.getObjectType(predicateCache.getName()).getInternalName(),
-                "skid/Driver"//ClassRenamerTransformer.DICTIONARY.next()
-        );
 
-        predicateNode = (SkidMethodNode) predicateCache.getMethods()
-                .stream()
-                .filter(e -> e.getName().equals("init"))
-                .findFirst()
-                .orElseThrow(IllegalStateException::new);
-        currentBlock = predicateNode.getCfg().getEntry();
-    }
-
-    @Listen
-    void handle(final PostSkidTransformEvent event) {
-        if (!skidfuscator.getConfig().isDriver() || predicateNode == null)
-            return;
-
-        predicateNode.dump();
+        skidfuscator.setLegacyHasher(new LegacyHashTransformer(skidfuscator));
+        skidfuscator.setBitwiseHasher(new BitwiseHashTransformer(skidfuscator));
     }
 
     /**
@@ -188,72 +171,19 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
                 final ClassOpaquePredicate classPredicate = skidMethodNode.isStatic()
                                 ? skidMethodNode.getParent().getStaticPredicate()
-                                : skidMethodNode.getParent().getPredicate();
+                                : skidMethodNode.getParent().getClassPredicate();
                 int seed;
                 PredicateFlowGetter expr;
                 if (skidMethodNode.isClinit() || skidMethodNode.isInit()) {
                     final int randomSeed = skidClassNode.getRandomInt();
                     seed = randomSeed;
 
-                    final String randomString = RandomUtil.randomAlphabeticalString(16);
-
-                    if (!skidfuscator.getConfig().isDriver()
-                            || predicateNode == null
-                            || methodNode.owner.node.outerClass != null
-                            || methodNode.owner.node.nestHostClass != null
-                            || methodNode.owner.isPrivate()
-                            || (methodNode.owner.node.innerClasses != null
-                                && methodNode.owner.node.innerClasses
-                                .stream().anyMatch(e -> e.name.equals(methodNode.owner.node.name)))) {
-                        expr = new PredicateFlowGetter() {
-                            @Override
-                            public Expr get(BasicBlock vertex) {
-                                return new StaticInvocationExpr(
-                                        new Expr[]{new ConstantExpr("" + randomSeed, TypeUtil.STRING_TYPE)},
-                                        "java/lang/Integer",
-                                        "parseInt",
-                                        "(Ljava/lang/String;)I"
-                                );
-                            }
-                        };
-                    } else {
-                        expr = new PredicateFlowGetter() {
-                            @Override
-                            public Expr get(BasicBlock vertex) {
-                                return new StaticInvocationExpr(
-                                        new Expr[]{
-                                                new ConstantExpr(randomString)
-                                        },
-                                        "dev/skidfuscator/obfuscator/predicate/cache/CacheTemplate",
-                                        "get",
-                                        "(Ljava/lang/String;)I"
-                                );
-                            }
-                        };
-
-                        final BasicBlock block = new BasicBlock(predicateNode.getCfg());
-                        predicateNode.getCfg().getEntries().remove(predicateNode.getCfg().getEntry());
-                        predicateNode.getCfg().getEntries().add(block);
-                        predicateNode.getCfg().addVertex(block);
-                        predicateNode.getCfg().addEdge(new ImmediateEdge<>(
-                                block,
-                                currentBlock
-                        ));
-
-                        currentBlock = block;
-                        block.add(new PopStmt(
-                                new StaticInvocationExpr(
-                                        new Expr[]{
-                                                new ConstantExpr(randomString),
-                                                new ConstantExpr(seed, Type.INT_TYPE)
-                                        },
-                                        "dev/skidfuscator/obfuscator/predicate/cache/CacheTemplate",
-                                        "add",
-                                        "(Ljava/lang/String;I)V"
-                                )
-                        ));
-                    }
-
+                    expr = new PredicateFlowGetter() {
+                        @Override
+                        public Expr get(BasicBlock vertex) {
+                            return new SkidIntegerParseStaticInvocationExpr(randomSeed);
+                        }
+                    };
                 } else {
                     seed = classPredicate.get();
                     expr = classPredicate.getGetter();
@@ -304,7 +234,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     void handle(final InitClassTransformEvent event) {
         final SkidClassNode classNode = event.getClassNode();
 
-        final ClassOpaquePredicate clazzInstancePredicate = classNode.getPredicate();
+        final ClassOpaquePredicate clazzInstancePredicate = classNode.getClassPredicate();
         final ClassOpaquePredicate clazzStaticPredicate = classNode.getStaticPredicate();
 
         /*
@@ -337,7 +267,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             clazzInstancePredicate.setSetter(new PredicateFlowSetter() {
                 @Override
                 public Stmt apply(Expr expr) {
-                    throw new IllegalStateException("Cannot set value for a constant getter");
+                    return new PopStmt(expr);
                 }
             });
         };
@@ -436,7 +366,8 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
             clazzStaticPredicate.setSetter(new PredicateFlowSetter() {
                 @Override
                 public Stmt apply(Expr expr) {
-                    throw new IllegalStateException("Cannot set value for a constant getter");
+                    return new PopStmt(expr);
+                    //throw new IllegalStateException("Cannot set value for a constant getter");
                 }
             });
         };
@@ -547,22 +478,14 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .anyMatch(e -> !e.isClinit() && e.isStatic());
 
-            if (addStatic) {
-                createDynamicStatic2.run();
-            } else {
-                createConstantStatic.run();
-            }
+            createDynamicStatic2.run();
 
             final boolean addInstance = classNode.getMethods()
                     .stream()
                     .anyMatch(e -> !e.isInit() && !e.isStatic());
 
             // TODO: Figure out why tf this breaks shit
-            if (addInstance) {
-                createDynamicInstance.run();
-            } else {
-                createConstantInstance.run();
-            }
+            createDynamicInstance.run();
         }
     }
 
@@ -656,6 +579,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
             methodNode.node.desc = desc = parameterGroup.getDesc();
 
+            if ((methodNode.node.access & Opcodes.ACC_VARARGS) != 0) {
+                methodNode.node.access &= ~Opcodes.ACC_VARARGS;
+            }
+
             final ClassMethodHash classMethodHash = new ClassMethodHash(skidMethodNode);
 
             if (skidfuscator.getHierarchy().getGroup(classMethodHash) != null && !skidGroup.getName().contains("<")) {
@@ -703,7 +630,12 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                 final ConstantExpr constant = new ConstantExpr(skidGroup.getPredicate().getPublic());
                 args[args.length - 1] = constant;
 
+                for (Expr arg : args) {
+                    assert arg != null : "Invocation now is null? " + invoker.asExpr();
+                }
+
                 invoker.getExpr().setArgumentExprs(args);
+                //System.out.println(invoker.asExpr());
                 invoker.setTainted(true);
 
                 if (isDynamic) {
@@ -724,12 +656,15 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
                     ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1] = newBoundFunc;
                 } else {
-                    invoker.getExpr().setDesc(desc);
+                    final Parameter parameter = new Parameter(invoker.getExpr().getDesc());
+                    parameter.insertParameter(Type.INT_TYPE, indexGroup);
+                    //invoker.getExpr().setDesc(parameter.getDesc());
                 }
             }
         }
 
         final int finalStackHeight = stackHeight;
+        skidGroup.setDesc(desc);
         skidGroup.setStackHeight(finalStackHeight);
 
     }
@@ -781,6 +716,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
         final Stmt copyVarStmt = localSetter.apply(loadedChanged);
         entryPoint.add(0, copyVarStmt);
+
         if (DEBUG) {
             final int seed = methodNode.getBlockPredicate(seedEntry);
             final BasicBlock exception = Blocks.exception(cfg, "Failed to match seed of value " + seed);
@@ -832,7 +768,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                                 localSetter,
                                 methodNode.getBlockPredicate((SkidBlock) e.src()),
                                 methodNode.getBlockPredicate((SkidBlock) e.dst()),
-                                "Unconditional"
+                                "Immediate"
                         );
                     });
         }
@@ -843,7 +779,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .filter(e -> e instanceof UnconditionalJumpStmt && !(e instanceof FakeUnconditionalJumpStmt))
                     .map(e -> (UnconditionalJumpStmt) e)
-                    .forEach(stmt -> unconditionalRenderer.transform(skidfuscator, stmt));
+                    .forEach(stmt -> unconditionalRenderer.transform(skidfuscator, cfg, stmt));
         }
 
         /*
@@ -860,7 +796,7 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
                     .stream()
                     .filter(e -> e instanceof ConditionalJumpStmt && !(e instanceof FakeConditionalJumpStmt))
                     .map(e -> (ConditionalJumpStmt) e)
-                    .forEach(stmt -> conditionRenderer.transform(skidfuscator, stmt));
+                    .forEach(stmt -> conditionRenderer.transform(skidfuscator, cfg, stmt));
         }
         /*
          *    _____         _ __       __
@@ -874,9 +810,9 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
         for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
             new HashSet<>(vertex)
                     .stream()
-                    .filter(e -> e instanceof SwitchStmt)
+                    .filter(e -> e instanceof SkidSwitchStmt)
                     .map(e -> (SwitchStmt) e)
-                    .forEach(stmt -> switchRenderer.transform(skidfuscator, stmt));
+                    .forEach(stmt -> switchRenderer.transform(skidfuscator, cfg, stmt));
         }
 
         /*
@@ -887,136 +823,10 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
          * /_____/_/|_|\___/\___/ .___/\__/_/\____/_/ /_/
          *                     /_/
          */
+        final ExceptionRenderer exceptionRenderer = new ExceptionRenderer();
         for (ExceptionRange<BasicBlock> blockRange : cfg.getRanges()) {
-            LinkedHashMap<Integer, BasicBlock> basicBlockMap = new LinkedHashMap<>();
-            List<Integer> sortedList = new ArrayList<>();
-
-            // Save current handler
-            final BasicBlock basicHandler = blockRange.getHandler();
-            final SkidBlock handler = (SkidBlock) blockRange.getHandler();
-
-            // Create new block handle
-            final BasicBlock toppleHandler = new SkidBlock(cfg);
-            cfg.addVertex(toppleHandler);
-            blockRange.setHandler(toppleHandler);
-
-            // Hasher
-            final HashTransformer hashTransformer = new BitwiseHashTransformer();
-
-            // Add support for duplicate keys
-            final Set<Integer> calledHashes = new HashSet<>();
-
-            // For all block being read
-            for (BasicBlock node : blockRange.getNodes()) {
-                if (node instanceof FakeBlock)
-                    continue;
-
-                // Get their internal seed and add it to the list
-                final SkidBlock internal = (SkidBlock) node;
-
-                // Check if key is already generated
-                if (calledHashes.contains(internal.getSeed()))
-                    continue;
-                calledHashes.add(internal.getSeed());
-
-                // Create a new switch block and get it's seeded variant
-                final SkidBlock block = new SkidBlock(cfg);
-                block.setFlag(SkidBlock.FLAG_PROXY, true);
-
-                cfg.addVertex(block);
-
-                // Add a seed loader for the incoming block and convert it to the handler's
-                this.addSeedLoader(
-                        block,
-                        internal,
-                        0,
-                        localGetter,
-                        localSetter,
-                        methodNode.getBlockPredicate(internal),
-                        methodNode.getBlockPredicate(handler),
-                        "Exception Range " + Arrays.toString(blockRange.getTypes().toArray())
-                );
-
-                // Jump to handler
-                final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(
-                        block,
-                        handler
-                );
-                final UnconditionalJumpStmt proxy = new FakeUnconditionalJumpStmt(handler, edge);
-                proxy.setFlag(SkidBlock.FLAG_PROXY, true);
-                block.add(proxy);
-
-                cfg.addEdge(edge);
-
-                // Final hashed
-                final int hashed = hashTransformer.hash(
-                        methodNode.getBlockPredicate(internal),
-                        internal,
-                        localGetter
-                ).getHash();
-
-                // Add to switch
-                // TODO: Revert back to hashed
-                basicBlockMap.put(hashed, block);
-                cfg.addEdge(new SwitchEdge<>(toppleHandler, block, hashed));
-                sortedList.add(hashed);
-
-                // Find egde and transform
-                cfg.getEdges(node)
-                        .stream()
-                        .filter(e -> e instanceof TryCatchEdge)
-                        .map(e -> (TryCatchEdge<BasicBlock>) e)
-                        .filter(e -> e.erange == blockRange)
-                        .findFirst()
-                        .ifPresent(cfg::removeEdge);
-
-                // Add new edge
-                cfg.addEdge(new TryCatchEdge<>(node, blockRange));
-            }
-
-            // Haha get fucked
-            // Todo     Fix the other shit to re-enable this; this is for the lil shits
-            //          (love y'all tho) that are gonna try reversing this
-            /*for (int i = 0; i < 10; i++) {
-                // Generate random seed + prevent conflict
-                final int seed = RandomUtil.nextInt();
-                if (sortedList.contains(seed))
-                    continue;
-
-                // Add seed to list
-                sortedList.add(seed);
-
-                // Create new switch block
-                final SkidBlock block = new SkidBlock(cfg);
-                cfg.addVertex(block);
-
-                // Get seeded version and add seed loader
-                addSeedLoader(
-
-                );
-                seededBlock.addSeedLoader(-1, local, seed, RandomUtil.nextInt());
-                block.add(new UnconditionalJumpStmt(basicHandler));
-                cfg.addEdge(new UnconditionalJumpEdge<>(block, basicHandler));
-
-                basicBlockMap.put(seed, block);
-                cfg.addEdge(new SwitchEdge<>(handler.getBlock(), block, seed));
-            }*/
-
-            // Hash
-            final Expr hash = hashTransformer.hash(toppleHandler, localGetter);
-
-            // Default switch edge
-            final BasicBlock defaultBlock = Blocks.exception(cfg, "Error in hash");
-            cfg.addEdge(new DefaultSwitchEdge<>(toppleHandler, defaultBlock));
-
-            // Add switch
-            final SwitchStmt stmt = new SwitchStmt(hash, basicBlockMap, defaultBlock);
-            toppleHandler.add(stmt);
-
-            // Add unconditional jump edge
-            cfg.addEdge(new UnconditionalJumpEdge<>(toppleHandler, basicHandler));
+            exceptionRenderer.transform(skidfuscator, cfg, blockRange);
         }
-
 
         if (methodNode.getName().equals("lambda$null$5") && methodNode.owner.getName().contains("PlayerListener")) {
             System.out.println(cfg.toString());
@@ -1026,23 +836,6 @@ public class IntegerBlockPredicateRenderer extends AbstractTransformer {
 
         return;
     }
-
-    /**
-     * WIP
-     */
-    private BasicBlock createRedirector(final BasicBlock block,
-                                        final BasicBlock targetBlock,
-                                        final PredicateFlowGetter getter,
-                                        final PredicateFlowSetter setter,
-                                        final int value,
-                                        final int target,
-                                        final String type
-    ) {
-        final BasicBlock redirector = new BasicBlock(block.cfg);
-        block.cfg.addVertex(redirector);
-        return null;
-    }
-
 
     private void addSeedLoader(final BasicBlock block,
                                final BasicBlock targetBlock,

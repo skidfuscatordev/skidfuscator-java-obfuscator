@@ -56,6 +56,22 @@ public class FieldNode implements FastGraphVertex, IHasJavaDesc {
         return (node.access & Opcodes.ACC_STATIC) != 0;
     }
 
+    public boolean isVolatile() {
+        return (node.access & Opcodes.ACC_VOLATILE) != 0;
+    }
+
+    public boolean isTransient() {
+        return (node.access & Opcodes.ACC_TRANSIENT) != 0;
+    }
+
+    public boolean isFinal() {
+        return (node.access & Opcodes.ACC_FINAL) != 0;
+    }
+
+    public boolean isSynthetic() {
+        return (node.access & Opcodes.ACC_FINAL) != 0;
+    }
+
     public boolean isPublic() {
         return (node.access & Opcodes.ACC_PUBLIC) != 0;
     }

@@ -1,6 +1,9 @@
 package dev.skidfuscator.obfuscator.skidasm;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.attribute.Attribute;
+import dev.skidfuscator.obfuscator.attribute.AttributeKey;
+import dev.skidfuscator.obfuscator.attribute.AttributeMap;
 import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
@@ -38,6 +41,7 @@ public class SkidMethodNode extends MethodNode {
     private MethodOpaquePredicate predicate;
     private SkidGroup group;
     private transient BasicBlock initBlock;
+    private final AttributeMap attributes;
 
     private transient boolean extruded;
 
@@ -48,10 +52,19 @@ public class SkidMethodNode extends MethodNode {
         this.flowPredicate = skidfuscator
                 .getPredicateAnalysis()
                 .getBlockPredicate(this);
+        this.attributes = new AttributeMap();
     }
 
     public int getBlockPredicate(final SkidBlock block) {
         return flowPredicate.get(block);
+    }
+
+    public <T> Attribute<T> getAttribute(AttributeKey attributeKey) {
+        return attributes.poll(attributeKey);
+    }
+
+    public <T> void setAttribute(AttributeKey attributeKey, T value) {
+        attributes.get(attributeKey).set(value);
     }
 
     /**
@@ -102,6 +115,11 @@ public class SkidMethodNode extends MethodNode {
             cfg = skidfuscator.getIrFactory().getFor(this);
         }
         return cfg;
+    }
+
+    public void setEntryBlock(BasicBlock initBlock) {
+        assert isClinit() : "Cannot force entry block on anything but clinit";
+        this.initBlock = initBlock;
     }
 
     /**

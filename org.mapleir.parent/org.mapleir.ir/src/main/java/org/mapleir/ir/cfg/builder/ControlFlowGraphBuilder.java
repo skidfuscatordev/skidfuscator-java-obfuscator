@@ -72,7 +72,7 @@ public class ControlFlowGraphBuilder {
 	
 	protected BuilderPass[] resolvePasses() {
 		return new BuilderPass[] {
-				new GenerationPassV2(this),
+				new GenerationPass(this),
 				new DeadBlocksPass(this),
 				new NaturalisationPass(this),
 				new SSAGenPass(this, optimise),

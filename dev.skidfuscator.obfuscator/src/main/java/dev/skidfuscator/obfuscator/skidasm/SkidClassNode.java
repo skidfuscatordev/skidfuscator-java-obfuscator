@@ -1,6 +1,10 @@
 package dev.skidfuscator.obfuscator.skidasm;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.attribute.Attribute;
+import dev.skidfuscator.obfuscator.attribute.AttributeKey;
+import dev.skidfuscator.obfuscator.attribute.AttributeMap;
+import dev.skidfuscator.obfuscator.attribute.StandardAttribute;
 import dev.skidfuscator.obfuscator.predicate.opaque.ClassOpaquePredicate;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidMethodNodeBuilder;
@@ -8,7 +12,6 @@ import dev.skidfuscator.obfuscator.util.RandomUtil;
 import lombok.Getter;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.code.stmt.ReturnStmt;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -21,10 +24,11 @@ import java.util.ArrayList;
 @Getter // TODO: Deprecate the getter and document the stuff
 public class SkidClassNode extends ClassNode {
     private final Skidfuscator skidfuscator;
-    private final ClassOpaquePredicate predicate;
+    private final ClassOpaquePredicate classPredicate;
     private final ClassOpaquePredicate staticPredicate;
     private transient SkidMethodNode clinitNode;
     private transient Boolean mixin;
+    private final AttributeMap attributes;
 
     private transient Integer randomInt;
 
@@ -34,7 +38,7 @@ public class SkidClassNode extends ClassNode {
     public SkidClassNode(org.objectweb.asm.tree.ClassNode node, Skidfuscator session) {
         super(node, false);
         this.skidfuscator = session;
-        this.predicate = skidfuscator
+        this.classPredicate = skidfuscator
                 .getPredicateAnalysis()
                 .getClassPredicate(this);
         this.staticPredicate = skidfuscator
@@ -48,6 +52,8 @@ public class SkidClassNode extends ClassNode {
         for (FieldNode field : node.fields) {
             super.getFields().add(new SkidFieldNode(field, this, session));
         }
+
+        this.attributes = new AttributeMap();
     }
 
     /**
@@ -64,6 +70,22 @@ public class SkidClassNode extends ClassNode {
      */
     public SkidFieldNodeBuilder createField() {
         return new SkidFieldNodeBuilder(skidfuscator,this);
+    }
+
+    public boolean hasAttribute(AttributeKey attributeKey) {
+        return attributes.containsKey(attributeKey);
+    }
+
+    public <T> T getAttribute(AttributeKey attributeKey) {
+        return attributes.poll(attributeKey);
+    }
+
+    public <T> void setAttribute(AttributeKey attributeKey, T value) {
+        attributes.get(attributeKey).set(value);
+    }
+
+    public <T> void addAttribute(AttributeKey attributeKey, T value) {
+        attributes.put(attributeKey, new StandardAttribute<>(value));
     }
 
     /**
@@ -199,7 +221,7 @@ public class SkidClassNode extends ClassNode {
     }
 
     public byte[] toByteArray() {
-        final ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        final ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
         this.node.accept(classWriter);
         return classWriter.toByteArray();
     }

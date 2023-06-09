@@ -25,6 +25,7 @@ public class SkidfuscatorSession {
     private boolean c2j;
 
     private boolean lowCon;
+    private boolean dex;
 
 
     /**
@@ -33,6 +34,10 @@ public class SkidfuscatorSession {
      */
     public File getInput() {
         return input;
+    }
+
+    public void setInput(File input) {
+        this.input = input;
     }
 
     /**
@@ -103,19 +108,7 @@ public class SkidfuscatorSession {
         return analytics;
     }
 
-    public boolean isRenamer() {
-        return renamer;
-    }
-
-    public boolean isNative() {
-        return c2j;
-    }
-
-    public boolean isLowCon() {
-        return lowCon;
-    }
-
-    public void setLowCon(boolean lowCon) {
-        this.lowCon = lowCon;
+    public boolean isDex() {
+        return dex;
     }
 }

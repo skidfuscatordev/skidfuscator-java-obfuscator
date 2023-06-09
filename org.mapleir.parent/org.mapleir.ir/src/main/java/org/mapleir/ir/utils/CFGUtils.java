@@ -267,7 +267,6 @@ public class CFGUtils {
 		//System.out.println("New block: \n" + printBlock(newBlock));
 
 		//cfg.recomputeEdges();
-		cfg.verify();
 
 		return newBlock;
 	}

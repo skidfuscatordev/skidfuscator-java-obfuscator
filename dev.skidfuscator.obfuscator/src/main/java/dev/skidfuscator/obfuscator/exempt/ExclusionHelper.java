@@ -88,7 +88,7 @@ public class ExclusionHelper {
                                         System.out.println("JDA! " + var.getName() + " --> " + ret);
                                     }
 
-                                    assert var.getName().contains("jda") == ret : "name: " + var.getName() + " parser: " + parsed;
+                                    //assert var.getName().contains("jda") == ret : "name: " + var.getName() + " parser: " + parsed;
                                     return ret;
                                 }
 

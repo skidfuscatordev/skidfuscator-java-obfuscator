@@ -25,6 +25,11 @@ stringAnnotationEncryption {
   exempt: []
 }
 
+exceptionReturn {
+  enabled: true
+  exempt: []
+}
+
 flowCondition {
   enabled: true
   exempt: []
@@ -66,17 +71,42 @@ native: {
   exempt: []
 }
 
+driver: {
+  enabled: false
+}
+
+reference {
+  enabled: false
+}
+
+fileCrasher: {
+  enabled: false
+}
+
 classRenamer {
   enabled: false
-  exempt: []
+  type: CUSTOM
+  prefix: "skido/"
+  chars: [
+    "K"
+    "oO",
+    "o0"
+  ]
+  depth: 3
 }
 
 methodRenamer {
   enabled: false
-  exempt: []
+  type: CUSTOM
+  chars: [
+    "K"
+    "oO",
+    "o0"
+  ]
+  depth: 3
 }
 
 fieldRenamer {
   enabled: false
-  exempt: []
+  type: ALPHABETICAL
 }

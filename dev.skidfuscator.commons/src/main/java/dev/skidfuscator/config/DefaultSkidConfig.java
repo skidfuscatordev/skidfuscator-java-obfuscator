@@ -11,7 +11,7 @@ public class DefaultSkidConfig extends DefaultConfig {
     }
 
     public boolean isDriver() {
-        return this.getBoolean("driver", true);
+        return this.getBoolean("driver.enabled", true);
     }
 
     public File[] getLibs() {

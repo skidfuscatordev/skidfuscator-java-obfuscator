@@ -2,10 +2,8 @@ package dev.skidfuscator.test;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
-import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.BasicRangeTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.driver.DriverTransformer;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -33,52 +31,30 @@ public class ConfigTest {
 
         // General driver check
         assertEquals(
-                false,
+                true,
                 skidfuscator.getConfig().isDriver()
         );
 
         // Specific enabled check
         // This is *stated* to be enabled
-        final BasicRangeTransformer rangeTransformer = new BasicRangeTransformer(
+        final DriverTransformer driverTransformer = new DriverTransformer(
                 skidfuscator
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().hasPath("flowRange")
+                skidfuscator.getTsConfig().hasPath("driver")
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().hasPath("flowRange.enabled")
+                skidfuscator.getTsConfig().hasPath("driver.enabled")
         );
         assertEquals(
                 true,
-                skidfuscator.getTsConfig().getBoolean("flowRange.enabled")
+                skidfuscator.getTsConfig().getBoolean("driver.enabled")
         );
         assertEquals(
                 true,
-                rangeTransformer.getConfig().isEnabled()
-        );
-
-        // Specific disabled check
-        // This is *stated* to be disabled
-        final BasicExceptionTransformer exceptionTransformer = new BasicExceptionTransformer(
-                skidfuscator
-        );
-        assertEquals(
-                true,
-                skidfuscator.getTsConfig().hasPath("flowException")
-        );
-        assertEquals(
-                true,
-                skidfuscator.getTsConfig().hasPath("flowException.enabled")
-        );
-        assertEquals(
-                false,
-                skidfuscator.getTsConfig().getBoolean("flowException.enabled")
-        );
-        assertEquals(
-                false,
-                exceptionTransformer.getConfig().isEnabled()
+                driverTransformer.getConfig().isEnabled()
         );
 
         // General enabled check

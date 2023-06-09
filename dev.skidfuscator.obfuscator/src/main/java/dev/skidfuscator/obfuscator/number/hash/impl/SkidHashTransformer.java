@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.number.hash.impl;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.ir.cfg.BasicBlock;
@@ -132,7 +133,7 @@ public class SkidHashTransformer implements HashTransformer {
 
         @Override
         public Expr op(Expr var) {
-            return new ArithmeticExpr(var, new ConstantExpr(seed), operator);
+            return new ArithmeticExpr(var, new SkidConstantExpr(seed), operator);
         }
     }
 

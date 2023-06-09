@@ -116,5 +116,6 @@ public interface Opcode {
 	int EPHI           = 0x902;
 
 	int FRAME = 0x1000;
+	int LINE_NO = 0x1001;
 	int CLASS_RESERVED = 0x2000; // reserved for inner classes
 }

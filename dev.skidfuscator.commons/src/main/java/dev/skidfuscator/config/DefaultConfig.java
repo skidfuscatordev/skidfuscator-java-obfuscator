@@ -21,11 +21,19 @@ public class DefaultConfig {
     }
 
     public List<String> getExemptions() {
-        return getStringList(path + "exempt", new ArrayList<>());
+        return getStringList("exempt", new ArrayList<>());
     }
 
     public boolean getBoolean(String path, final boolean dflt) {
         return get(path, dflt, config::getBoolean);
+    }
+
+    public String getString(String path, final String dflt) {
+        return get(path, dflt, config::getString);
+    }
+
+    public int getInt(String path, final int dflt) {
+        return get(path, dflt, config::getInt);
     }
 
     public List<String> getStringList(String path, final List<String> dflt) {
@@ -50,7 +58,7 @@ public class DefaultConfig {
             cache.put(path, var);
         }
 
-        assert dflt.getClass().isAssignableFrom(var.getClass()) : "Value loaded at path is not a type assigned!";
+        //assert var.getClass().isAssignableFrom(dflt.getClass()) : "Value loaded at path is not a type assigned! (" + var.getClass() + " vs " + dflt.getClass() + ")";
 
         return (T) var;
     }

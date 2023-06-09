@@ -1,6 +1,9 @@
 package dev.skidfuscator.obfuscator.skidasm;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.attribute.AttributeKey;
+import dev.skidfuscator.obfuscator.attribute.AttributeMap;
+import dev.skidfuscator.obfuscator.attribute.StandardAttribute;
 import dev.skidfuscator.obfuscator.predicate.opaque.MethodOpaquePredicate;
 import lombok.Data;
 import org.mapleir.asm.MethodNode;
@@ -17,6 +20,7 @@ public class SkidGroup {
     private final Skidfuscator skidfuscator;
     private final MethodOpaquePredicate predicate;
     private final Set<SkidInvocation> invokers;
+    private final AttributeMap attributes;
 
     private boolean annotation;
     private boolean statical;
@@ -61,6 +65,24 @@ public class SkidGroup {
                 .map(e -> e.owner)
                 .map(SkidClassNode.class::cast)
                 .anyMatch(SkidClassNode::isMixin);
+
+        this.attributes = new AttributeMap();
+    }
+
+    public boolean hasAttribute(AttributeKey attributeKey) {
+        return attributes.containsKey(attributeKey);
+    }
+
+    public <T> T getAttribute(AttributeKey attributeKey) {
+        return attributes.poll(attributeKey);
+    }
+
+    public <T> void setAttribute(AttributeKey attributeKey, T value) {
+        attributes.get(attributeKey).set(value);
+    }
+
+    public <T> void addAttribute(AttributeKey attributeKey, T value) {
+        attributes.put(attributeKey, new StandardAttribute<>(value));
     }
 
     public void setStatical(boolean statical) {

@@ -361,7 +361,7 @@ public class SkidHierarchy implements Hierarchy {
                             methodNode.owner,
                             methodNode.getName(),
                             methodNode.getDesc(),
-                            false
+                            true // TODO: SUPER SENSITIVE PIECE OF SHIT
                     );
 
                     /* session
@@ -393,7 +393,7 @@ public class SkidHierarchy implements Hierarchy {
 
             final List<MethodNode> methods = new ArrayList<>(h);
 
-            if (false && methodNode.getName().equals("handle")) {
+            if (false && methodNode.getName().equals("clone")) {
                 System.out.println("Creating group of name " + methodNode.getName() + methodNode.getDesc());
 
                 for (MethodNode method : methods) {

@@ -6,6 +6,7 @@ import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.stdlib.util.*;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Array;
@@ -16,7 +17,21 @@ import java.util.stream.Collectors;
 
 public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc {
 	public enum CallType {
-		STATIC, SPECIAL, VIRTUAL, INTERFACE, DYNAMIC
+		STATIC(Opcodes.INVOKESTATIC),
+		SPECIAL(Opcodes.INVOKESPECIAL),
+		VIRTUAL(Opcodes.INVOKEVIRTUAL),
+		INTERFACE(Opcodes.INVOKEINTERFACE),
+		DYNAMIC(Opcodes.INVOKEDYNAMIC);
+
+		private final int opcode;
+
+		CallType(int opcode) {
+			this.opcode = opcode;
+		}
+
+		public int getOpcode() {
+			return opcode;
+		}
 	}
 	
 	private CallType callType;
@@ -74,7 +89,7 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 		this.desc = desc;
 	}
 
-	protected Expr[] copyArgs() {
+	public Expr[] copyArgs() {
 		Expr[] arguments = new Expr[args.length];
 		for (int i = 0; i < arguments.length; i++) {
 			arguments[i] = args[i].copy();
@@ -131,7 +146,11 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 		printer.print('(');
 		Expr[] printedArgs = getPrintedArgs();
 		for (int i = 0; i < printedArgs.length; i++) {
-			printedArgs[i].toString(printer);
+			if (printedArgs[i] == null) {
+				printer.print("null");
+			} else {
+				printedArgs[i].toString(printer);
+			}
 			if ((i + 1) < printedArgs.length) {
 				printer.print(", ");
 			}
@@ -152,30 +171,40 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 			System.arraycopy(bck, 0, argTypes, 1, bck.length);
 			argTypes[0] = Type.getType("L" + owner + ";");
 		}
-		
-		for (int i = 0; i < args.length; i++) {
-			args[i].toCode(visitor, assembler);
-			if (TypeUtils.isPrimitive(args[i].getType())) {
-				assert i < args.length : String.format(
-						"Failed on class %s to match args (%s)",
-						this.getClass().getName(),
-						Arrays.toString(args)
-				);
 
-				assert i < argTypes.length : String.format(
-						"Failed on class %s to match argTypes (%s)\ndesc: %s\n\n  \\-->%s",
-						this.getClass().getName(),
-						Arrays.toString(argTypes),
-						desc,
-						Arrays.stream(args).map(CodeUnit::toString).collect(Collectors.joining("\n  \\-->"))
-				);
-				int[] cast = TypeUtils.getPrimitiveCastOpcodes(args[i].getType(), argTypes[i]);
-				for (int a = 0; a < cast.length; a++) {
-					visitor.visitInsn(cast[a]);
+		try {
+			for (int i = 0; i < args.length; i++) {
+				args[i].toCode(visitor, assembler);
+				if (callType != CallType.DYNAMIC && TypeUtils.isPrimitive(args[i].getType())) {
+					assert i < args.length : String.format(
+							"Failed on class %s to match args (%s)",
+							this.getClass().getName(),
+							Arrays.toString(args)
+					);
+
+					assert i < argTypes.length : String.format(
+							"Failed on class %s to match argTypes (%s)\ndesc: %s\n\n  \\-->%s",
+							this.getClass().getName(),
+							Arrays.toString(argTypes),
+							desc,
+							Arrays.stream(args).map(CodeUnit::toString).collect(Collectors.joining("\n  \\-->"))
+					);
+					int[] cast = TypeUtils.getPrimitiveCastOpcodes(args[i].getType(), argTypes[i]);
+					for (int a = 0; a < cast.length; a++) {
+						visitor.visitInsn(cast[a]);
+					}
 				}
 			}
+		} catch (ArrayIndexOutOfBoundsException e) {
+			throw new IllegalStateException(String.format("Failed to write class %s to match argTypes (%s)\ndesc: %s\n\n  \\-->%s",
+					this.getClass().getName(),
+					Arrays.toString(argTypes),
+					desc,
+					Arrays.stream(args).map(CodeUnit::toString).collect(Collectors.joining("\n  \\-->"))),
+					e
+			);
 		}
-		
+
 		generateCallCode(visitor);
 	}
 
@@ -210,6 +239,10 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 
 		for (Expr arg : args) {
 			set.add(arg);
+
+			if (arg == null)
+				continue;
+
 			set.addAll(arg._enumerate());
 		}
 		return set;

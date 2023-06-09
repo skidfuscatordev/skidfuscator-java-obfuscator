@@ -80,12 +80,6 @@ public class ObfuscateCommand implements Callable<Integer> {
     )
     private boolean notrack;
 
-    @CommandLine.Option(
-            names = {"-re", "--renamer"},
-            description = "Enables renamer for the obfuscation"
-    )
-    private boolean renamer;
-
     @Override
     public Integer call()  {
         /* Total number of processors or cores available to the JVM */
@@ -206,7 +200,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .jmod(MiscUtil.getJavaVersion() > 8)
                 .fuckit(fuckit)
                 .config(config)
-                .renamer(renamer)
+                .renamer(false)
                 .analytics(!notrack)
                 .build();
 

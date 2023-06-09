@@ -1,7 +1,9 @@
 package dev.skidfuscator.obfuscator.transform.impl.number;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
+import dev.skidfuscator.obfuscator.event.impl.transform.method.PostMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
@@ -44,8 +46,8 @@ public class NumberTransformer extends AbstractTransformer {
             Type.CHAR_TYPE
     ));
 
-    @Listen
-    void handle(final RunMethodTransformEvent event) {
+    @Listen(EventPriority.LOW)
+    void handle(final PostMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
         final Skidfuscator skidfuscator = event.getSkidfuscator();
 
@@ -66,7 +68,7 @@ public class NumberTransformer extends AbstractTransformer {
 
             for (Stmt stmt : new HashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
-                    if (!(expr instanceof ConstantExpr) || expr instanceof SkidConstantExpr)
+                    if (!(expr instanceof SkidConstantExpr))
                         continue;
 
                     final ConstantExpr constantExpr = (ConstantExpr) expr;

@@ -3,7 +3,6 @@ package dev.skidfuscator.obfuscator.transform.impl.flow;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
-import dev.skidfuscator.obfuscator.event.impl.transform.method.FinalMethodTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
 import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
@@ -15,7 +14,6 @@ import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
-import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import dev.skidfuscator.obfuscator.verifier.alertable.AlertableConstantExpr;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.TryCatchEdge;
@@ -135,7 +133,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
 
                 /* Hash the condition to prevent skids from guessing seeds */
                 final SkiddedHash hash = NumberManager
-                        .randomHasher()
+                        .randomHasher(skidfuscator)
                         .hash(
                                 methodNode.getBlockPredicate(throwBridge),
                                 entry,

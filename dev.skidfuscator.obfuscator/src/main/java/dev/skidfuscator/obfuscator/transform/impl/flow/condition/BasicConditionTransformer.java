@@ -9,6 +9,7 @@ import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
+import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
@@ -43,7 +44,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
         if (methodNode.isAbstract() || methodNode.isInit())
             return;
 
-        final ControlFlowGraph cfg = methodNode.getCfg();
+        final SkidControlFlowGraph cfg = methodNode.getCfg();
 
         if (cfg == null)
             return;
@@ -79,7 +80,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
             final SkidBlock basicBlock = new SkidBlock(cfg);
             cfg.addVertex(basicBlock);
 
-            final HashTransformer transformer = NumberManager.randomHasher();
+            final HashTransformer transformer = NumberManager.randomHasher(skidfuscator);
             final SkiddedHash hash = transformer.hash(
                     methodNode.getBlockPredicate(basicBlock),
                     basicBlock,
@@ -108,9 +109,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
             ));
 
             // Exception
-            final BasicBlock exception = IntegerBlockPredicateRenderer.DEBUG
-                    ? Blocks.exception(cfg, "Condition " + RandomUtil.nextInt(255))
-                    : Blocks.exception(cfg);
+            final BasicBlock exception = cfg.getFuckup();
 
             // Add gay loop
             final UnconditionalJumpEdge<BasicBlock> edge1 = new UnconditionalJumpEdge<>(

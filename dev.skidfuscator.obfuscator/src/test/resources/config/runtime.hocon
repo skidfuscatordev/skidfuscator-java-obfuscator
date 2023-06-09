@@ -2,13 +2,56 @@ exempt: [
     "class{^dev\\/skidfuscator\\/test}"
 ]
 
-driver: false
+driver: {
+    enabled: true
+}
+
+fileCrasher: {
+    enabled: false
+}
+
+stringEncryption {
+    type: STANDARD
+    enabled: true
+    exempt: []
+}
+
+exceptionReturn {
+    enabled: true
+    exempt: []
+}
 
 classRenamer {
     enabled: false
+    type: CUSTOM
+    prefix: "skido/"
+    chars: [
+        "K"
+        "oO",
+        "o0"
+    ]
+    depth: 3
 }
 
 methodRenamer {
     enabled: false
+    type: CUSTOM
+    chars: [
+        "K"
+        "oO",
+        "o0"
+    ]
+    depth: 3
+}
+
+fieldRenamer {
+    enabled: false
+    type: ALPHABETICAL
+}
+
+flowException {
+    enabled: true
+    strength: AGGRESSIVE
+    exempt: []
 }
 

@@ -5,10 +5,12 @@ import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRende
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
+import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import org.mapleir.flowgraph.edges.SwitchEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
+import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
@@ -23,9 +25,11 @@ import java.util.Set;
 
 public class SwitchJumpRenderer extends AbstractInstructionRenderer<SwitchStmt> {
     @Override
-    public void transform(Skidfuscator base, SwitchStmt stmt) {
+    public void transform(
+            final Skidfuscator base,
+            final ControlFlowGraph cfg,
+            final SwitchStmt stmt) {
         final SkidBlock currentBlock = (SkidBlock) stmt.getBlock();
-        final SkidControlFlowGraph cfg = (SkidControlFlowGraph) currentBlock.getGraph();
         final SkidMethodNode methodNode = (SkidMethodNode) cfg.getMethodNode();
 
         final SkidBlock seededBlock = (SkidBlock) currentBlock;
@@ -47,21 +51,11 @@ public class SwitchJumpRenderer extends AbstractInstructionRenderer<SwitchStmt> 
             // Add jump and seed
             final SkidBlock basicBlock = new SkidBlock(value.cfg);
             basicBlock.setFlag(SkidBlock.FLAG_PROXY, true);
-
             methodNode.getFlowPredicate()
                     .set(basicBlock, methodNode.getBlockPredicate(target));
 
-            this.addSeedLoader(
-                    basicBlock,
-                    target,
-                    0,
-                    methodNode.getFlowPredicate(),
-                    methodNode.getBlockPredicate(seededBlock),
-                    "Switch Entry [" + entry.getKey() + ", og:" + target.getDisplayName()
-                            + ", redirected: " + basicBlock.getDisplayName() + ")"
-            );
             final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
-            final UnconditionalJumpStmt proxy = new UnconditionalJumpStmt(target, edge);
+            final UnconditionalJumpStmt proxy = new FakeUnconditionalJumpStmt(target, edge);
             proxy.setFlag(SkidBlock.FLAG_PROXY, true);
 
             basicBlock.add(proxy);
@@ -73,6 +67,18 @@ public class SwitchJumpRenderer extends AbstractInstructionRenderer<SwitchStmt> 
             // Replace successor
             targets.put(seed, basicBlock);
             basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
+
+            // Add seed loader
+            this.addSeedLoader(
+                    methodNode,
+                    basicBlock,
+                    target,
+                    0,
+                    methodNode.getFlowPredicate(),
+                    methodNode.getBlockPredicate(seededBlock),
+                    "Switch Entry [" + entry.getKey() + ", og:" + target.getDisplayName()
+                            + ", redirected: " + basicBlock.getDisplayName() + ")"
+            );
 
             if (IntegerBlockPredicateRenderer.DEBUG) {
                 final Local local1 = basicBlock.cfg.getLocals().get(seededBlock.cfg.getLocals().getMaxLocals() + 2);
@@ -100,20 +106,10 @@ public class SwitchJumpRenderer extends AbstractInstructionRenderer<SwitchStmt> 
         // Add jump and seed
         final SkidBlock basicBlock = new SkidBlock(target.cfg);
         basicBlock.setFlag(SkidBlock.FLAG_PROXY, true);
+        methodNode.getFlowPredicate().set(basicBlock, methodNode.getBlockPredicate(target));
 
-        methodNode.getFlowPredicate()
-                .set(basicBlock, methodNode.getBlockPredicate(target));
-
-        this.addSeedLoader(
-                basicBlock,
-                target,
-                0,
-                methodNode.getFlowPredicate(),
-                methodNode.getBlockPredicate(seededBlock),
-                "Switch Default"
-        );
         final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
-        final UnconditionalJumpStmt proxy = new UnconditionalJumpStmt(target, edge);
+        final UnconditionalJumpStmt proxy = new FakeUnconditionalJumpStmt(target, edge);
         proxy.setFlag(SkidBlock.FLAG_PROXY, true);
 
         basicBlock.add(proxy);
@@ -125,6 +121,17 @@ public class SwitchJumpRenderer extends AbstractInstructionRenderer<SwitchStmt> 
         // Replace successor
         stmt.setDefaultTarget(basicBlock);
         basicBlock.cfg.addEdge(new SwitchEdge<>(seededBlock, basicBlock, stmt.getOpcode()));
+
+        // Add seed loader
+        this.addSeedLoader(
+                methodNode,
+                basicBlock,
+                target,
+                0,
+                methodNode.getFlowPredicate(),
+                methodNode.getBlockPredicate(seededBlock),
+                "Switch Default"
+        );
 
         if (IntegerBlockPredicateRenderer.DEBUG) {
             final Local local1 = basicBlock.cfg.getLocals().get(seededBlock.cfg.getLocals().getMaxLocals() + 2);

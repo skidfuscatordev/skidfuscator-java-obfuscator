@@ -13,6 +13,9 @@ public class SkidClassNodeBuilder implements Builder<SkidClassNode> {
     private final ClassNodeBuilder classNodeBuilder;
     private boolean phantom;
 
+    private boolean virtual = true;
+
+
     public SkidClassNodeBuilder(Skidfuscator skidfuscator) {
         this.skidfuscator = skidfuscator;
         this.classNodeBuilder = new ClassNodeBuilder();
@@ -48,10 +51,16 @@ public class SkidClassNodeBuilder implements Builder<SkidClassNode> {
         return this;
     }
 
+    public SkidClassNodeBuilder virtual(boolean value) {
+        this.virtual = value;
+        return this;
+    }
+
     @Override
     public SkidClassNode build() {
         final ClassNode classNode = classNodeBuilder.build();
         final SkidClassNode skidClassNode = new SkidClassNode(classNode, skidfuscator);
+        skidClassNode.setVirtual(virtual);
 
         if (!phantom) {
             skidfuscator.getHierarchy().cache(skidClassNode);

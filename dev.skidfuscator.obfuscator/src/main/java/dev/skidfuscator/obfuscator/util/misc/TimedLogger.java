@@ -2,6 +2,8 @@ package dev.skidfuscator.obfuscator.util.misc;
 
 import org.apache.log4j.Logger;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -50,7 +52,10 @@ public class TimedLogger {
     }
 
     public void error(String text, Throwable e) {
-        logger.error(text, e);
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        String exceptionAsString = sw.toString();
+        warn(text + "\n" + exceptionAsString);
         //logger.debug("[Repeat] " + text, e);
     }
 }

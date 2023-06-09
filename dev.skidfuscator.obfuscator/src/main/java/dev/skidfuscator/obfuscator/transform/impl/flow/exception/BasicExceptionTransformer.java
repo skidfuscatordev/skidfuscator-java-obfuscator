@@ -10,6 +10,7 @@ import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRende
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
+import dev.skidfuscator.obfuscator.skidasm.expr.SkidConstantExpr;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
@@ -24,6 +25,7 @@ import dev.skidfuscator.obfuscator.util.RandomUtil;
 import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import dev.skidfuscator.obfuscator.verifier.alertable.AlertableConstantExpr;
 import org.mapleir.ir.cfg.BasicBlock;
+import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
@@ -35,6 +37,7 @@ import org.objectweb.asm.Type;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BasicExceptionTransformer extends AbstractTransformer {
     public BasicExceptionTransformer(Skidfuscator skidfuscator) {
@@ -81,6 +84,7 @@ public class BasicExceptionTransformer extends AbstractTransformer {
             );
         }
 
+        final AtomicInteger changed = new AtomicInteger();
         for (SkidBlock entry : new HashSet<>(cfg.blocks())) {
             /*
              * Skip if we have empty blocks, proxy blocks, or exception
@@ -100,16 +104,44 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                 continue;
             }
 
+            BasicBlock fuckup = cfg.getFuckup();
+
             // Todo make this a better system
             final int seed = methodNode.getBlockPredicate(entry);
             final SkiddedHash hash = NumberManager
-                    .randomHasher()
+                    .randomHasher(skidfuscator)
                     .hash(seed, entry, methodNode.getFlowPredicate().getGetter());
 
             // Todo add more boilerplates + add exception rotation
-            final BasicBlock fuckup = IntegerBlockPredicateRenderer.DEBUG
-                    ? Blocks.exception(cfg, "Exception " + RandomUtil.nextInt(255))
-                    : Blocks.exception(cfg);
+
+            final boolean doubleHit = strategy.execute();
+
+            if (doubleHit && RandomUtil.nextBoolean() && changed.get() > 1) {
+                fuckup = cfg.addFuckup("double");
+            }
+
+            /*
+             * The following is to dissuade reverse engineers using call-graphs to
+             * determine if a value is constantly static, so fuck u, im adding bogus
+             * calls bitc
+             */
+            final Expr fuckupExpr = NumberManager.encrypt(
+                    RandomUtil.nextInt(),
+                    entry.getSeed(),
+                    fuckup,
+                    methodNode.getFlowPredicate().getGetter()
+            );
+            fuckupExpr.setBlock(fuckup);
+            if (methodNode.isStatic() || RandomUtil.nextBoolean()) {
+                // Fuckup the static value
+                fuckup.add(0, methodNode.getParent().getStaticPredicate().getSetter().apply(
+                        fuckupExpr
+                ));
+            } else {
+                fuckup.add(0, methodNode.getParent().getClassPredicate().getSetter().apply(
+                        fuckupExpr
+                ));
+            }
 
             // Todo change blocks to be skiddedblocks to add method to directly add these
             final ConstantExpr var_const = new AlertableConstantExpr(hash.getHash(), Type.INT_TYPE);
@@ -120,7 +152,17 @@ public class BasicExceptionTransformer extends AbstractTransformer {
             else
                 entry.add(jump_stmt);
 
-            if (strategy.execute()) {
+            fuckup.add(
+                    0,
+                    new FakeConditionalJumpStmt(
+                            hash.getExpr().copy(),
+                            new SkidConstantExpr(RandomUtil.nextInt()),
+                            fuckup,
+                            ConditionalJumpStmt.ComparisonType.NE
+                    )
+            );
+
+            if (doubleHit) {
                 final ConstantExpr var_const_2 = new AlertableConstantExpr(
                         hash.getHash(),
                         Type.INT_TYPE
@@ -145,6 +187,7 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                         new ConstantExpr(entry.getDisplayName() + " : var expect: " + var_const.getConstant())));
             }
 
+            changed.getAndIncrement();
             strategy.reset();
         }
     }

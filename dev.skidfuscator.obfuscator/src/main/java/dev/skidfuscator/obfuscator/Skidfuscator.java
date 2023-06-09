@@ -21,6 +21,7 @@ import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
 import dev.skidfuscator.obfuscator.exempt.ExemptManager;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
+import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
 import dev.skidfuscator.obfuscator.order.priority.MethodPriority;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
@@ -42,6 +43,7 @@ import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.*;
 import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.driver.DriverTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
@@ -55,6 +57,7 @@ import dev.skidfuscator.obfuscator.util.misc.TimedLogger;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import dev.skidfuscator.obfuscator.util.progress.SkidProgressBar;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.log4j.LogManager;
 import org.mapleir.app.client.SimpleApplicationContext;
 import org.mapleir.app.service.ApplicationClassSource;
@@ -73,8 +76,11 @@ import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.nio.file.Files.createTempDirectory;
 
 /**
  * The type Skidfuscator.
@@ -106,6 +112,13 @@ public class Skidfuscator {
 
     private final Counter counter = new Counter();
 
+    @Setter
+    private transient SkidClassNode factoryNode;
+    @Setter
+    private HashTransformer legacyHasher;
+    @Setter
+    private HashTransformer bitwiseHasher;
+
     /**
      * Instantiates a new Skidfuscator.
      *
@@ -120,9 +133,13 @@ public class Skidfuscator {
      * Runs the execution of the obfuscator.
      */
     public void run() {
-        LOGGER.post("Beginning Skidfuscator Community...");
+        LOGGER.post("Beginning Skidfuscator Enterprise...");
         if (session.isAnalytics()) {
             _runAnalytics();
+        }
+
+        if (session.isDex()) {
+            // WIP
         }
 
         /*
@@ -305,6 +322,7 @@ public class Skidfuscator {
         _cleanup();
         _dump();
 
+
         SkidProgressBar.RENDER_THREAD.shutdown();
         IntegerBlockPredicateRenderer.DEBUG = false;
         LOGGER.post("Goodbye!");
@@ -360,6 +378,7 @@ public class Skidfuscator {
     protected void _importExempt() {
         /* Importation and exemptions */
         LOGGER.post("Importing exemptions...");
+
         if (!config.getExemptions().isEmpty()) {
             /*
              * This is the parsing bit. We initiate a progress bar and
@@ -371,6 +390,7 @@ public class Skidfuscator {
                     exemptAnalysis.add(s);
                     progressBar.tick();
                 }
+
             }
             LOGGER.log("Imported: \n " + exemptAnalysis.toString());
         }
@@ -542,37 +562,51 @@ public class Skidfuscator {
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
 
-        if (tsConfig.hasPath("stringEncryption.type")) {
-            switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
-                case STANDARD: transformers.add(new StringTransformer(this)); break;
-                default: throw new IllegalStateException("String transformation type not found");
+        if (true) {
+            if (tsConfig.hasPath("stringEncryption.type")) {
+                switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
+                    case STANDARD: transformers.add(new StringTransformer(this)); break;
+                }
+            } else {
+                transformers.add(new StringTransformer(this));
             }
-        } else {
-            transformers.add(new StringTransformer(this));
-        }
 
-        transformers.addAll(Arrays.asList(
-                //new NegationTransformer(this),
-                //new SimpleOutlinerTransformer(this),
-                new NumberTransformer(this),
-                new SwitchTransformer(this),
-                //new BasicSimplifierTransformer(this),
-                new BasicConditionTransformer(this),
-                new BasicExceptionTransformer(this),
-                new BasicRangeTransformer(this),
+            transformers.addAll(Arrays.asList(
+                    // ----- COMMUNITY -----
+                    new NumberTransformer(this),
+                    new SwitchTransformer(this),
+                    new BasicConditionTransformer(this),
+                    new BasicExceptionTransformer(this),
+                    new BasicRangeTransformer(this),
+
+                    // Patch
+                    new DriverTransformer(this),
+
                 /*
                 new FlatteningFlowTransformer(this),*/
-                new AhegaoTransformer(this)
-                //new SimpleOutlinerTransformer()
-                //
-        ));
+                    new AhegaoTransformer(this)
+                    //new SimpleOutlinerTransformer()
+                    //
+            ));
+        } else {
+            transformers.addAll(Arrays.asList(
+            ));
+        }
+
 
         final List<Transformer> temps = new ArrayList<>(transformers);
         transformers.clear();
 
         for (Transformer temp : temps) {
-            if (temp.getConfig().isEnabled())
+            if (temp.getConfig().isEnabled()) {
                 transformers.add(temp);
+                //System.out.println(temp.getName() + " -> " + Arrays.toString(temp.getConfig().getExemptions().toArray()));
+                for (String exemption : temp.getConfig().getExemptions()) {
+                    exemptAnalysis.add(temp.getClass(), exemption);
+
+                    //System.out.println("Adding exemption " + exemption + " to transformer " + temp.getName());
+                }
+            }
         }
 
         return transformers;
@@ -674,7 +708,17 @@ public class Skidfuscator {
                     continue;
                 }
 
-                EventBus.call(caller.callClass(classNode));
+                EventBus.call(
+                        caller.callClass(classNode),
+                        el -> {
+                            final Class<?> listener = el.getListener().getClass();
+                            return !Transformer.class.isAssignableFrom(listener)
+                                    || !exemptAnalysis.isExempt(
+                                    (Class<? extends Transformer>) listener,
+                                    classNode
+                            );
+                        }
+                );
                 progressBar.tick();
             }
         }
@@ -686,7 +730,22 @@ public class Skidfuscator {
                     continue;
                 }
 
-                EventBus.call(caller.callGroup(group));
+                EventBus.call(
+                        caller.callGroup(group),
+                        el -> {
+                            final Class<?> listenerClazz = el.getListener().getClass();
+                            return !Transformer.class.isAssignableFrom(listenerClazz)
+                                    || group
+                                    .getMethodNodeList()
+                                    .stream()
+                                    .noneMatch(e ->
+                                            exemptAnalysis.isExempt(
+                                                    (Class<? extends Transformer>) listenerClazz,
+                                                    e
+                                            )
+                                    );
+                        }
+                );
                 progressBar.tick();
             }
         }
@@ -721,12 +780,31 @@ public class Skidfuscator {
                         continue;
                     }
 
-                    EventBus.call(caller.callMethod(methodNode));
+                    EventBus.call(
+                            caller.callMethod(methodNode),
+                            el -> {
+                                final Class<?> listenerClazz = el.getListener().getClass();
+                                return !Transformer.class.isAssignableFrom(listenerClazz)
+                                        || !exemptAnalysis.isExempt(
+                                        (Class<? extends Transformer>) listenerClazz,
+                                        methodNode
+                                );
+                            }
+                    );
                     methodNode.getCfg().recomputeEdges();
                     progressBar.tick();
                 }
             }
         }
+    }
+
+    private static String getBaseName(String fn) {
+        int x = fn.lastIndexOf('.');
+        return x >= 0 ? fn.substring(0, x) : fn;
+    }
+
+    private static String getBaseName(Path fn) {
+        return getBaseName(fn.getFileName().toString());
     }
 
     private void init() {

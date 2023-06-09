@@ -60,6 +60,12 @@ public abstract class FlowGraph<N extends FastGraphVertex, E extends FlowEdge<N>
 			ranges.add(range);
 		}
 	}
+
+	public void addRange(int index, ExceptionRange<N> range) {
+		if(!ranges.contains(range)) {
+			ranges.add(index, range);
+		}
+	}
 	
 	public void removeRange(ExceptionRange<N> range) {
 		ranges.remove(range);

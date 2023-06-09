@@ -31,15 +31,15 @@ public class Blocks {
             ArrayStoreException.class
     };
 
-    public BasicBlock exception(final ControlFlowGraph cfg) {
+    public SkidBlock exception(final ControlFlowGraph cfg) {
         return exception(cfg, null);
     }
 
-    public BasicBlock exception(final ControlFlowGraph cfg, final String notice) {
+    public SkidBlock exception(final ControlFlowGraph cfg, final String notice) {
         // Temporary fix for this
         final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length - 1)]);
 
-        final BasicBlock fuckup = new SkidBlock(cfg);
+        final SkidBlock fuckup = new SkidBlock(cfg);
         final Expr alloc_exception = new InitialisedObjectExpr(
                 exception.getClassName().replace(".", "/"),
                 notice == null ? "()V" : "(Ljava/lang/String;)V",

@@ -174,7 +174,7 @@ public class SkidBlockFactory extends DefaultBlockFactory {
             @Override
             public ConstantExpr build() {
                 if (type == null) {
-                    return new ConstantExpr(cst);
+                    return new SkidConstantExpr(cst);
                 }
                 return new SkidConstantExpr(cst, type, check);
             }

@@ -2,21 +2,23 @@ package org.mapleir.ir.locals.impl;
 
 import org.mapleir.ir.locals.Local;
 
+import java.util.Objects;
+
 public class VersionedLocal extends Local {
 
 	private int subscript;
 	
 	public VersionedLocal(int index, int subscript) {
 		super(index);
-		if (index > INDEX_MASK || subscript > SUBSCRIPT_MASK)
-			throw new IllegalArgumentException("Index/subscript overflow; hashCode collision possible " + index + " " + subscript);
+		//if (index > INDEX_MASK || subscript > SUBSCRIPT_MASK)
+			//throw new IllegalArgumentException("Index/subscript overflow; hashCode collision possible " + index + " " + subscript);
 		this.subscript = subscript;
 	}
 	
 	public VersionedLocal(int index, int subscript, boolean stack) {
 		super(index, stack);
-		if (index > INDEX_MASK || subscript > SUBSCRIPT_MASK)
-			throw new IllegalArgumentException("Index/subscript overflow; hashCode collision possible " + index + " " + subscript);
+		//if (index > INDEX_MASK || subscript > SUBSCRIPT_MASK)
+			//throw new IllegalArgumentException("Index/subscript overflow; hashCode collision possible " + index + " " + subscript);
 		this.subscript = subscript;
 	}
 	
@@ -39,7 +41,8 @@ public class VersionedLocal extends Local {
 	
 	@Override
 	public int hashCode() {
-		return ((isStack() ? 0 : 1) << 31) | ((getIndex() & INDEX_MASK) << 11) | (getSubscript() & SUBSCRIPT_MASK);
+		return Objects.hash(getIndex(), getSubscript());
+		//return ((isStack() ? 0 : 1) << 31) | ((getIndex() & INDEX_MASK) << 11) | (getSubscript() & SUBSCRIPT_MASK);
 	}
 
 	@Override

@@ -5,9 +5,11 @@ import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRende
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
+import dev.skidfuscator.obfuscator.skidasm.fake.FakeUnconditionalJumpStmt;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidCopyVarStmt;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
+import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
@@ -16,9 +18,11 @@ import org.objectweb.asm.Type;
 
 public class UnconditionalJumpRenderer extends AbstractInstructionRenderer<UnconditionalJumpStmt> {
     @Override
-    public void transform(Skidfuscator base, UnconditionalJumpStmt stmt) {
+    public void transform(
+            final Skidfuscator base,
+            final ControlFlowGraph cfg,
+            final UnconditionalJumpStmt stmt) {
         final SkidBlock block = (SkidBlock) stmt.getBlock();
-        final SkidControlFlowGraph cfg = (SkidControlFlowGraph) block.getGraph();
         final SkidMethodNode methodNode = (SkidMethodNode) cfg.getMethodNode();
 
         final int index = block.indexOf(stmt);
@@ -30,21 +34,11 @@ public class UnconditionalJumpRenderer extends AbstractInstructionRenderer<Uncon
         // Add jump and seed
         final SkidBlock basicBlock = new SkidBlock(block.cfg);
         basicBlock.setFlag(SkidBlock.FLAG_PROXY, true);
-
         methodNode.getFlowPredicate()
                 .set(basicBlock, methodNode.getBlockPredicate(targetSeeded));
 
-        this.addSeedLoader(
-                basicBlock,
-                targetSeeded,
-                0,
-                methodNode.getFlowPredicate(),
-                methodNode.getBlockPredicate(seededBlock),
-                "Unconditional"
-        );
-
         final UnconditionalJumpEdge<BasicBlock> edge = new UnconditionalJumpEdge<>(basicBlock, target);
-        final UnconditionalJumpStmt proxy = new UnconditionalJumpStmt(target, edge);
+        final UnconditionalJumpStmt proxy = new FakeUnconditionalJumpStmt(target, edge);
         proxy.setFlag(SkidBlock.FLAG_PROXY, true);
 
         basicBlock.add(proxy);
@@ -56,6 +50,17 @@ public class UnconditionalJumpRenderer extends AbstractInstructionRenderer<Uncon
         // Replace successor
         stmt.setTarget(basicBlock);
         basicBlock.cfg.addEdge(new UnconditionalJumpEdge<>(block, basicBlock));
+
+        // Add seed loader
+        this.addSeedLoader(
+                methodNode,
+                basicBlock,
+                targetSeeded,
+                0,
+                methodNode.getFlowPredicate(),
+                methodNode.getBlockPredicate(seededBlock),
+                "Unconditional"
+        );
 
         if (IntegerBlockPredicateRenderer.DEBUG) {
             final Local local1 = block.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);

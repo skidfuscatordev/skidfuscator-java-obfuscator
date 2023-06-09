@@ -65,7 +65,7 @@ public class SwitchTransformer extends AbstractTransformer {
                     final LinkedHashMap<Integer, BasicBlock> targets = unit.getTargets();
                     final LinkedHashMap<Integer, BasicBlock> targetsUpdated = new LinkedHashMap<>();
 
-                    final HashTransformer hasher = NumberManager.randomHasher();
+                    final HashTransformer hasher = NumberManager.randomHasher(skidfuscator);
 
                     targets.forEach((var, bb) -> {
                         final int hash = hasher.hash(var ^ opaquePredicate);

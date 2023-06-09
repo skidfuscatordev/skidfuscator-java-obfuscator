@@ -2,13 +2,19 @@ exempt: [
     "class{^dev\\/skidfuscator\\/test}"
 ]
 
-driver: false
-
-flowRange {
+driver: {
     enabled: true
 }
 
-flowException {
+classRenamer {
+    enabled: true
+}
+
+methodRenamer {
     enabled: false
+}
+
+flowException {
+    enabled: true
     exempt: []
 }

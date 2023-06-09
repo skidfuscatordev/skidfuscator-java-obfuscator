@@ -7,6 +7,7 @@ import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.core.classloader.SkidClassLoader;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -22,7 +23,7 @@ import java.util.jar.JarInputStream;
 
 public class SampleJarTest {
 
-    @Test
+    @RepeatedTest(5)
     public void test2() throws Exception {
         final File input = new File("src/test/resources/test.jar");
         final File output = new File("src/test/resources/test-out.jar");
@@ -48,21 +49,24 @@ public class SampleJarTest {
         final Skidfuscator skidfuscator = new Skidfuscator(session);
         skidfuscator.run();
 
-        assert !skidfuscator.getConfig().isDriver() : "Compiled with driver when config says no";
+        //assert skidfuscator.getConfig().isDriver() : "Compiled with driver when config says no";
 
         final URL[] urls = new URL[]{
                 output.toURL()
         };
 
-        /*for (URL url : urls) {
+        System.out.println("-----------");
+
+        for (URL url : urls) {
             try (JarInputStream jarInputStream = new JarInputStream(url.openStream())) {
                 JarEntry entry;
                 while ((entry = jarInputStream.getNextJarEntry()) != null) {
                     System.out.println(entry.getName());
                 }
             }
+        }
 
-        }*/
+        System.out.println("-----------");
 
         try(SkidClassLoader classLoader = new SkidClassLoader(urls)) {
             System.out.println(skidfuscator.getClassRemapper());

@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 public enum MethodExempt {
     ABSTRACT(MethodNode::isAbstract),
+    INTERFACE(m -> m.getParent().isInterface()),
     INIT(MethodNode::isInit),
     CLINIT(MethodNode::isClinit),
     NULLCFG(methodNode -> methodNode.getCfg() == null)

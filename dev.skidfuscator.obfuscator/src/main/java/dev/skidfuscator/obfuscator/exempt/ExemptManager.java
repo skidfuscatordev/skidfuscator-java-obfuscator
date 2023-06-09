@@ -32,6 +32,9 @@ public class ExemptManager {
     }
 
     public boolean isExempt(final MethodNode methodNode) {
+        if (methodNode.getName().equals("clone") && methodNode.isBridge())
+            return true;
+
         return globalExempt.isExempt(methodNode);
     }
 

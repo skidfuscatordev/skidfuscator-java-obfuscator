@@ -10,9 +10,10 @@ public class ClassNode implements FastGraphVertex {
     private static int ID_COUNTER = 1;
    	private final int numericId = ID_COUNTER++;
 
-    public final org.objectweb.asm.tree.ClassNode node;
+    public org.objectweb.asm.tree.ClassNode node;
     private final List<MethodNode> methods;
     private final List<FieldNode> fields;
+    private boolean synth;
 
     public ClassNode() {
         this.node = new org.objectweb.asm.tree.ClassNode();
@@ -105,6 +106,14 @@ public class ClassNode implements FastGraphVertex {
 
     public boolean isAnnoyingVersion() {
         return (node.version & 0xFFFF) < Opcodes.V1_8;
+    }
+
+    public boolean isVirtual() {
+        return synth;
+    }
+
+    public void setVirtual(boolean synth) {
+        this.synth = synth;
     }
 
     @Override

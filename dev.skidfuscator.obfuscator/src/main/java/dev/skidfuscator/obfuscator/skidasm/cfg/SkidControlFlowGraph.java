@@ -6,6 +6,7 @@ import com.google.common.collect.Streams;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.util.IOUtil;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
+import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -21,13 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SkidControlFlowGraph extends ControlFlowGraph {
     private int localTicker;
+    private transient Deque<SkidBlock> fuckups = new LinkedList<>();
+
     public SkidControlFlowGraph(LocalsPool locals, MethodNode methodNode) {
         super(locals, methodNode);
 
@@ -120,5 +122,29 @@ public class SkidControlFlowGraph extends ControlFlowGraph {
 
     public BasicBlock getEntry() {
         return getEntries().iterator().next();
+    }
+
+    public SkidBlock getFuckup() {
+        if (fuckups.isEmpty()) {
+            addFuckup();
+        }
+
+        final SkidBlock fuckup = fuckups.removeFirst();
+        fuckups.add(fuckup);
+
+        return fuckup;
+    }
+
+    public SkidBlock addFuckup() {
+        return this.addFuckup(null);
+    }
+
+    public SkidBlock addFuckup(final String notice) {
+        final SkidBlock block = notice == null
+                ? Blocks.exception(this)
+                : Blocks.exception(this, notice);
+        this.fuckups.add(block);
+
+        return block;
     }
 }
