@@ -133,7 +133,7 @@ public class Skidfuscator {
      * Runs the execution of the obfuscator.
      */
     public void run() {
-        LOGGER.post("Beginning Skidfuscator Enterprise...");
+        LOGGER.post("Beginning Skidfuscator Community...");
         if (session.isAnalytics()) {
             _runAnalytics();
         }

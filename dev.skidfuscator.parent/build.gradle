@@ -2,8 +2,8 @@ plugins {
     id 'java'
 }
 
-group 'dev.skidfuscator.enterprise'
-version '2.0.1-SNAPSHOT'
+group 'dev.skidfuscator.community'
+version '2.0.7-SNAPSHOT'
 
 repositories {
     mavenCentral()
