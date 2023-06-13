@@ -42,6 +42,7 @@ public class TestSkidfuscator extends Skidfuscator {
                 .debug(true)
                 .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
                 .build());
+        
         this.test = test;
         this.callback = callback;
 
