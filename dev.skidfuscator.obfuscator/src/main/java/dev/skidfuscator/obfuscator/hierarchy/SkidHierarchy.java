@@ -4,10 +4,14 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.hierarchy.matching.ClassMethodHash;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
+import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import lukfor.progress.Collection;
+import lukfor.progress.tasks.ITaskRunnable;
+import lukfor.progress.tasks.monitors.ITaskMonitor;
+import lukfor.progress.util.AnsiColors;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -184,13 +188,20 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     public void cache() {
-        Skidfuscator.LOGGER.log("[#] Beginning cache...");
         this.methods = new ArrayList<>();
         this.groups = new ArrayList<>();
         this.nodes = new ArrayList<>();
         this.annotations = new HashMap<>();
 
-        try (ProgressWrapper progressBar = ProgressUtil.progress(skidfuscator.getClassSource().size())){
+        final int cacheSize = skidfuscator
+                .getClassSource()
+                .getClassTree()
+                .size();
+
+        try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
+                cacheSize,
+                "Cached over " + cacheSize + " classes!"
+        )) {
             nodes = skidfuscator
                     .getClassSource()
                     .getClassTree()
@@ -207,7 +218,10 @@ public class SkidHierarchy implements Hierarchy {
         Skidfuscator.LOGGER.log("[#]     > Cached over " + nodes.size() + " classes!");
         Skidfuscator.LOGGER.post("[#] Establishing inheritance...");
 
-        try (ProgressWrapper progressBar = ProgressUtil.progress(nodes.size())){
+        try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
+                nodes.size(),
+                "Established inheritance for " + nodes.size() + " nodes"
+        )){
             nodes.forEach(e -> {
                 executor.accept(e);
                 progressBar.tick();
@@ -229,7 +243,10 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     private void setupInvoke() {
-        try (ProgressWrapper invocationBar = ProgressUtil.progress(nodes.size())) {
+        try (ProgressWrapper invocationBar = ProgressUtil.progressCheck(
+                nodes.size(),
+                "Resolved invocation path for " + nodes.size() + " nodes"
+        )) {
             nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
 

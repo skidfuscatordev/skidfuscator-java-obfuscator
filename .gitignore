@@ -92,3 +92,5 @@ dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed
 dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.json
 
 dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.skid
+
+skidfuscator.log

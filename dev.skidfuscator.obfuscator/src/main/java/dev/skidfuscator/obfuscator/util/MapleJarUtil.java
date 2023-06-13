@@ -176,6 +176,7 @@ public class MapleJarUtil {
                 new SkidASMFactory(skidfuscator),
                 new JarInfo(file)
         );
+
         dl.download();
 
         return dl;

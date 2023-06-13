@@ -26,7 +26,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	private static final Logger LOGGER = Logger.getLogger(ClassTree.class);
 	private static final boolean ALLOW_PHANTOM_CLASSES = false;
 	
-	private final ApplicationClassSource source;
+	protected final ApplicationClassSource source;
 	private final ClassNode rootNode;
 	private final boolean allowPhantomClasses;
 	
@@ -261,7 +261,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	@Override
 	public Set<InheritanceEdge> getEdges(ClassNode cn) {
 		if(!containsVertex(cn)) {
-			LOGGER.warn("warn: implicit add of " + cn.getDisplayName());
+			LOGGER.debug("warn: implicit add of " + cn.getDisplayName());
 			addVertex(cn);
 		}
 		return super.getEdges(cn);
@@ -270,7 +270,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	@Override
 	public Set<InheritanceEdge> getReverseEdges(ClassNode cn) {
 		if(!containsVertex(cn)) {
-			LOGGER.warn("warn(2): implicit add of " + cn.getDisplayName());
+			LOGGER.debug("warn(2): implicit add of " + cn.getDisplayName());
 			addVertex(cn);
 		}
 		return super.getReverseEdges(cn);

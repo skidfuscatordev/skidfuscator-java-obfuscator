@@ -26,7 +26,7 @@ public class SkidfuscatorSession {
 
     private boolean lowCon;
     private boolean dex;
-
+    private boolean debug = false;
 
     /**
      *
@@ -110,5 +110,9 @@ public class SkidfuscatorSession {
 
     public boolean isDex() {
         return dex;
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 }

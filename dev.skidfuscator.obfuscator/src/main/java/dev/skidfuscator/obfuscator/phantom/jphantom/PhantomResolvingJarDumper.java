@@ -61,7 +61,10 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		int resourcesDumped = 0;
 
 
-		try (ProgressWrapper progressBar = ProgressUtil.progress(contents.getClassContents().size() + contents.getResourceContents().size())) {
+		try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
+				contents.getClassContents().size() + contents.getResourceContents().size(),
+			 "Outputting " + contents.getClassContents().size() + " classes to jar"
+		)) {
 			for (JarClassData cn : new LinkedList<>(contents.getClassContents())) {
 				try {
 					classesDumped += dumpClass(jos, cn);
@@ -83,8 +86,8 @@ public class PhantomResolvingJarDumper implements JarDumper {
 			}
 		}
 
-		if(!Debug.debugging)
-			System.out.println("Dumped " + classesDumped + " classes and " + resourcesDumped + " resources to " + file.getAbsolutePath());
+		//if(!Debug.debugging)
+		//	System.out.println("Dumped " + classesDumped + " classes and " + resourcesDumped + " resources to " + file.getAbsolutePath());
 		jos.flush();
 		jos.close();
 	}

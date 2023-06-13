@@ -1,7 +1,7 @@
 package dev.skidfuscator.obfuscator.resolver;
 
-import org.apache.log4j.Logger;
-import org.mapleir.HierarchyMethods;
+import dev.skidfuscator.logger.Logger;
+import dev.skidfuscator.obfuscator.Skidfuscator;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.InvocationResolver;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
@@ -15,9 +15,9 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class SkidInvocationResolver implements InvocationResolver {
-	
-	private static final Logger LOGGER = Logger.getLogger(SkidInvocationResolver.class);
-	
+
+	private static Logger LOGGER;
+
 	/* trick for no IDE warning */
 	private static int __debug_level() { return 0; }
 	private static final int debugLevel = __debug_level();
@@ -33,12 +33,13 @@ public class SkidInvocationResolver implements InvocationResolver {
 	private final SkidHierarchyMethods hierarchyMethodsHelper;
 	
 	public SkidInvocationResolver(ApplicationClassSource app) {
+		LOGGER = Skidfuscator.LOGGER;
 		this.app = app;
 		hierarchyMethodsHelper = new SkidHierarchyMethods(app);
 		
 		//computeVTables();
 		
-		LOGGER.info(String.format("built vtables for %s classes", concreteVTables.size()));
+		LOGGER.post(String.format("built vtables for %s classes", concreteVTables.size()));
 	}
 	
 	protected boolean hasVisited(ClassNode c) {
@@ -663,7 +664,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 				}
 				
 				if(lvlSites.size() > 1) {
-					LOGGER.info(String.format("(warn) resolved %s.%s %s to %s", owner, name, desc, lvlSites));
+					LOGGER.post(String.format("(warn) resolved %s.%s %s to %s", owner, name, desc, lvlSites));
 				}
 				
 				if(lvlSites.size() > 0) {

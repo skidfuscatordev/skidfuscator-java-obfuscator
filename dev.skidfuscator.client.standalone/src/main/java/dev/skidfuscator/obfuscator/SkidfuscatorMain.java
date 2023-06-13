@@ -60,6 +60,7 @@ public class SkidfuscatorMain {
                             false,
                             false,
                             false,
+                            false,
                             false
                     );
 

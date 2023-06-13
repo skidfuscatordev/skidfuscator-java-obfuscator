@@ -238,7 +238,7 @@ public class TestSkidfuscator extends Skidfuscator {
          * + I love J8,... death to "var" in Java
          */
         if (MiscUtil.getJavaVersion() < 9) {
-            libs.add(GhostHelper.getJvm(true, runtime, folder));
+            libs.add(GhostHelper.getJvm(LOGGER, true, runtime, folder));
             LOGGER.post("✓ Success");
         }
         /*
@@ -252,7 +252,7 @@ public class TestSkidfuscator extends Skidfuscator {
                 if (!file.getAbsolutePath().endsWith(".jmod"))
                     continue;
 
-                libs.add(GhostHelper.getJvm(true, file, folder));
+                libs.add(GhostHelper.getJvm(LOGGER, true, file, folder));
             }
             LOGGER.post("✓ Success");
         }

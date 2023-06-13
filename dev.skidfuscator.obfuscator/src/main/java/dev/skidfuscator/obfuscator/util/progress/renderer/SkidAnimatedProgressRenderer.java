@@ -45,7 +45,6 @@ public class SkidAnimatedProgressRenderer extends AnimatedProgressRenderer {
 
     @Override
     public synchronized void render() {
-
         StringBuilder content = buildAnsiString();
         String string = content.toString();
 
@@ -55,7 +54,12 @@ public class SkidAnimatedProgressRenderer extends AnimatedProgressRenderer {
             //target.print(ANSI_CSI + (lines) + "A"); // up xx lines
         }
 
-        target.print(ansi().cursorUpLine().eraseLine(Ansi.Erase.ALL).append("\r").eraseLine(Ansi.Erase.ALL).append(string).newline());
+        target.print(ansi()
+                .cursorUpLine()
+                .eraseLine(Ansi.Erase.ALL)
+                .append(string)
+                .newline()
+        );
         //target.print(ansi().eraseLine(Ansi.Erase.ALL));
         //target.print("\r");
         //target.println(ansi().scrollUp(1).a(string));
@@ -66,7 +70,7 @@ public class SkidAnimatedProgressRenderer extends AnimatedProgressRenderer {
     @Override
     public synchronized void finish(TaskMonitor monitor) {
         super.finish(monitor);
-        render();
+        System.out.println();
         LogManager.getRootLogger().removeAppender(APPENDER);
     }
 
@@ -80,7 +84,7 @@ public class SkidAnimatedProgressRenderer extends AnimatedProgressRenderer {
                 buffer.append("\n");
             }
 
-            if (components != null && components.length > 0) {
+            if (components != null) {
                 for (IProgressIndicator component : components) {
                     if (component != null) {
                         component.render(monitor, buffer);

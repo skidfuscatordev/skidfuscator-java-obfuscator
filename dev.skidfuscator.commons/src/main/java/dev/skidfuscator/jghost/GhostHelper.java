@@ -6,9 +6,9 @@ import com.google.common.io.Files;
 import dev.skidfuscator.jghost.tree.GhostClassNode;
 import dev.skidfuscator.jghost.tree.GhostContents;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
+import dev.skidfuscator.logger.Logger;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import lombok.experimental.UtilityClass;
-import org.apache.log4j.Logger;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.asm.ClassHelper;
 import org.mapleir.asm.ClassNode;
@@ -24,29 +24,28 @@ import java.util.stream.Collectors;
 
 @UtilityClass
 public class GhostHelper {
-    private final Logger LOGGER = Logger.getLogger(GhostHelper.class);
-    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final File file) {
-        return getLibraryClassSource(session, file, false);
+    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final Logger logger, final File file) {
+        return getLibraryClassSource(session, logger, file, false);
     }
 
-    public ApplicationClassSource getJvm(final SkidfuscatorSession session, final File file) {
-        return getLibraryClassSource(session, file, true);
+    public ApplicationClassSource getJvm(final SkidfuscatorSession session, final Logger logger, final File file) {
+        return getLibraryClassSource(session, logger, file, true);
     }
 
-    public ApplicationClassSource getJvm(final boolean fuckit, final File file) {
-        return getLibraryClassSource(fuckit, file, true);
+    public ApplicationClassSource getJvm(final Logger logger, final boolean fuckit, final File file) {
+        return getLibraryClassSource(logger, fuckit, file, true);
     }
 
-    public ApplicationClassSource getJvm(final boolean fuckit, final File file, final File mappings) {
-        return getLibraryClassSource(fuckit, file, mappings, true);
+    public ApplicationClassSource getJvm(final Logger logger, final boolean fuckit, final File file, final File mappings) {
+        return getLibraryClassSource(logger, fuckit, file, mappings, true);
     }
 
-    public GhostLibrary getLibrary(final File lib, boolean jre) {
-        return getLibrary(lib, null, jre);
+    public GhostLibrary getLibrary(final Logger logger, final File lib, boolean jre) {
+        return getLibrary(logger, lib, null, jre);
     }
 
-    public GhostLibrary getLibrary(final File lib, final File folder, boolean jre) {
-        LOGGER.info("[+] " + lib.getAbsolutePath());
+    public GhostLibrary getLibrary(final Logger logger, final File lib, final File folder, boolean jre) {
+        logger.post("[+] " + lib.getAbsolutePath());
 
         final StringBuilder outputPath = new StringBuilder();
         if (folder != null) {
@@ -67,36 +66,36 @@ public class GhostHelper {
         final GhostLibrary library;
 
         if (!output.exists()) {
-            LOGGER.info("[?] Could not find mappings for " + lib.getAbsolutePath() + "... Creating...");
+            logger.post("[?] Could not find mappings for " + lib.getAbsolutePath() + "... Creating...");
             output.getParentFile().mkdirs();
             output.getParentFile().mkdir();
-            library = GhostHelper.createFromLibraryFile(lib);
-            GhostHelper.saveLibraryFile(library, output);
-            LOGGER.info("[✓] Creating mappings for " + lib.getAbsolutePath() + "!");
+            library = GhostHelper.createFromLibraryFile(logger, lib);
+            GhostHelper.saveLibraryFile(logger, library, output);
+            logger.post("[✓] Creating mappings for " + lib.getAbsolutePath() + "!");
         } else {
-            library = GhostHelper.readFromLibraryFile(output);
+            library = GhostHelper.readFromLibraryFile(logger, output);
         }
 
         return library;
     }
 
-    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final File lib, boolean jvm) {
-        return importFile(session.isFuckIt(), getLibrary(lib, jvm));
+    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final Logger logger, final File lib, boolean jvm) {
+        return importFile(logger, session.isFuckIt(), getLibrary(logger, lib, jvm));
     }
 
-    public ApplicationClassSource getLibraryClassSource(final boolean fuckIt, final File lib, boolean jvm) {
-        return importFile(fuckIt, getLibrary(lib, jvm));
+    public ApplicationClassSource getLibraryClassSource(final Logger logger, final boolean fuckIt, final File lib, boolean jvm) {
+        return importFile(logger, fuckIt, getLibrary(logger, lib, jvm));
     }
 
-    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final File lib, final File mappings, final boolean jvm) {
-        return importFile(session.isFuckIt(), getLibrary(lib, mappings, jvm));
+    public ApplicationClassSource getLibraryClassSource(final SkidfuscatorSession session, final Logger logger, final File lib, final File mappings, final boolean jvm) {
+        return importFile(logger, session.isFuckIt(), getLibrary(logger, lib, mappings, jvm));
     }
 
-    public ApplicationClassSource getLibraryClassSource(final boolean fuckit, final File lib, final File mappings, final boolean jvm) {
-        return importFile(fuckit, getLibrary(lib, mappings, jvm));
+    public ApplicationClassSource getLibraryClassSource(final Logger logger, final boolean fuckit, final File lib, final File mappings, final boolean jvm) {
+        return importFile(logger, fuckit, getLibrary(logger, lib, mappings, jvm));
     }
 
-    public ApplicationClassSource importFile(final boolean fuckit, final GhostLibrary library) {
+    public ApplicationClassSource importFile(final Logger logger, final boolean fuckit, final GhostLibrary library) {
         /* Create a new library class source with superior to default priority */
         final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                 "libraries",
@@ -107,12 +106,12 @@ public class GhostHelper {
                         .stream()
                         .map(e -> ClassHelper.create(e.read())).collect(Collectors.toList())
         );
-        LOGGER.info("[✓] Imported " + library.getContents().getClasses().size() + " library classes...");
+        logger.post("[✓] Imported " + library.getContents().getClasses().size() + " library classes...");
 
         return libraryClassSource;
     }
 
-    public GhostLibrary readFromLibraryFile(final File file) {
+    public GhostLibrary readFromLibraryFile(final Logger logger, final File file) {
         try {
             final FileReader fileReader = new FileReader(file);
             final GhostLibrary library = Ghost
@@ -121,12 +120,12 @@ public class GhostHelper {
             fileReader.close();
             return library;
         } catch (IOException e) {
-            LOGGER.error("Failed to download library cache", e);
+            logger.error("Failed to download library cache", e);
             return null;
         }
     }
 
-    public GhostLibrary createFromLibraryFile(final File file) {
+    public GhostLibrary createFromLibraryFile(final Logger logger, final File file) {
         final JarInfo jarInfo = new JarInfo(file);
         final AbstractJarDownloader<ClassNode> downloader = file.getName().endsWith(".jmod")
                         ? new SingleJmodDownloader<>(jarInfo)
@@ -135,7 +134,7 @@ public class GhostHelper {
         try {
             downloader.download();
         } catch (IOException e) {
-            LOGGER.error("Failed to download library", e);
+            logger.error("Failed to download library", e);
             return null;
         }
 
@@ -149,7 +148,7 @@ public class GhostHelper {
             ghostLibrary.setSha1(byteSource.hash(Hashing.sha1()).toString());
             ghostLibrary.setSha256(byteSource.hash(Hashing.sha256()).toString());
         } catch (Throwable e) {
-            LOGGER.error("Failed to hash library", e);
+            logger.error("Failed to hash library", e);
             return null;
         }
 
@@ -161,14 +160,14 @@ public class GhostHelper {
         return ghostLibrary;
     }
 
-    public void saveLibraryFile(final GhostLibrary library, final File file) {
+    public void saveLibraryFile(final Logger logger, final GhostLibrary library, final File file) {
         try {
             final FileWriter fileWriter = new FileWriter(file);
             final BufferedWriter writer = new BufferedWriter(fileWriter);
             writer.write(Ghost.gson().toJson(library, GhostLibrary.class));
             writer.close();
         } catch (IOException e) {
-            LOGGER.error("Failed to download library cache", e);
+            logger.error("Failed to download library cache", e);
             return;
         }
     }

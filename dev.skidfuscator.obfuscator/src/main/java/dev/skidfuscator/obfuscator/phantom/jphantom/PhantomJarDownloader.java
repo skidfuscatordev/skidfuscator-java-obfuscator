@@ -43,7 +43,6 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 	private final Skidfuscator skidfuscator;
 	protected final JarInfo jarInfo;
 	protected LocateableJarContents phantomContents;
-	private final Logger logger = LogManager.getLogger(this.getClass());
 
 	public PhantomJarDownloader(Skidfuscator skidfuscator, JarInfo jarInfo) {
 		super();
@@ -94,45 +93,45 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		/*
 		 * Create all the classes necessary based on the data we cached.
 		 */
-		logger.info("[$] Generating classes...");
-		try (ProgressWrapper progressBar = ProgressUtil.progress(data.size())){
+		Skidfuscator.LOGGER.post("[$] Generating classes...");
+		try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
+				data.size(),
+				"Imported " + data.size() + " classes from " + jarInfo.getPath()
+			)){
+
 			data.forEach((name, db) -> {
 				C cn;
 				try {
-					try {
-						cn = factory.create(db, name);
+					cn = factory.create(db, name);
 
-						if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
-							phantomContents.getClassContents().add(new JarClassData(
+					if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+						phantomContents.getClassContents().add(new JarClassData(
+								name,
+								db,
+								cn
+						));
+						JarResource resource = new JarResource(name, db);
+						contents.getResourceContents().add(resource);
+					} else {
+						if(!data.containsKey(cn.getName())) {
+							contents.getClassContents().add(new JarClassData(
 									name,
 									db,
 									cn
 							));
-							JarResource resource = new JarResource(name, db);
-							contents.getResourceContents().add(resource);
 						} else {
-							if(!data.containsKey(cn.getName())) {
-								contents.getClassContents().add(new JarClassData(
-										name,
-										db,
-										cn
-								));
-							} else {
-								throw new IllegalStateException("duplicate: " + cn.getName());
-							}
+							throw new IllegalStateException("duplicate: " + cn.getName());
 						}
-					} catch (UnsupportedOperationException e) {
-						contents.getResourceContents().add(new JarResource(name, db));
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
+				} catch (IOException | UnsupportedOperationException e) {
+					contents.getResourceContents().add(new JarResource(name, db));
 				}
 
 				progressBar.tick();
 			});
 		}
 
-		if (!skidfuscator.getSession().isPhantom())
+		if (!skidfuscator.getSession().isPhantom() || true)
 			return;
 
 		/*
@@ -142,7 +141,8 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 */
 		final File input = new File(SkiddedDirectory.getCache(), "temp-copy.jar");
 		Files.writeArchive(true, input, data);
-		logger.info("[$] Wrote classes to temp file, starting phantom analysis... [" + data.size() + "]");
+		if (skidfuscator.getSession().isDebug())
+			Skidfuscator.LOGGER.post("[$] Wrote classes to temp file, starting phantom analysis... [" + data.size() + "]");
 
 		/*
 		 * Set up JPhantom (Recaf matt edition) and read all the classes from our cache.
@@ -165,7 +165,8 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		ClassHierarchy hierarchy = clsHierarchyFromArchive(new JarFile(input));
 		ClassMembers members = ClassMembers.fromJar(new JarFile(input), hierarchy);
 
-		logger.info("[$] Beginning Phantom Extraction...");
+		if (skidfuscator.getSession().isDebug())
+			Skidfuscator.LOGGER.post("[$] Beginning Phantom Extraction...");
 		try (ProgressWrapper progressBar = ProgressUtil.progress(data.size())){
 			data.values().forEach(c -> {
 				ClassReader cr = new ClassReader(c);
@@ -177,7 +178,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				try {
 					cr.accept(new ClassPhantomExtractor(hierarchy, members), 0);
 				} catch (Throwable t) {
-					logger.debug("Phantom extraction failed: {}", t);
+					Skidfuscator.LOGGER.error("Phantom extraction failed: {}", t);
 				}
 
 				progressBar.tick();
@@ -192,7 +193,8 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 			return isDuplicate;
 		});
 
-		logger.info("[$] Beginning Phantom Execution...");
+		if (skidfuscator.getSession().isDebug())
+			Skidfuscator.LOGGER.post("[$] Beginning Phantom Execution...");
 		JPhantom phantom;
 		try (ProgressWrapper progressBar = ProgressUtil.progress(1)){
 			// Execute and populate the current resource with generated classes
@@ -205,7 +207,8 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 * Generate the classes and export them to our phantom content jar
 		 * class cache. This will be used as a library during obfuscation.
 		 */
-		logger.info("[$] Outputting phantom classes...");
+		if (skidfuscator.getSession().isDebug())
+			Skidfuscator.LOGGER.post("[$] Outputting phantom classes...");
 		final Map<String, JarClassData> namedMap = contents.getClassContents().namedMap();
 
 		try (ProgressWrapper progressBar = ProgressUtil.progress(phantom.getGenerated().size())){
@@ -235,7 +238,8 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		 * Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup
 		 * Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup Cleanup
 		 */
-		logger.info("[$] Phantom analysis complete, cleaning temp file [x" + phantomContents.getClassContents().size() + "]");
+		if (skidfuscator.getSession().isDebug())
+			Skidfuscator.LOGGER.post("[$] Phantom analysis complete, cleaning temp file [x" + phantomContents.getClassContents().size() + "]");
 		// Cleanup
 		typeMap.clear();
 		Phantoms.refresh();
@@ -310,10 +314,10 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 							hierarchy.addClass(clazz, superclass, ifaces);
 						}
 					} catch (Exception ex) {
-						logger.error(String.format("JPhantom: Hierarchy failure for: %s", clazz), ex);
+						Skidfuscator.LOGGER.error(String.format("JPhantom: Hierarchy failure for: %s", clazz), ex);
 					}
 				} catch (IOException ex) {
-					logger.error(String.format("JPhantom: IO Error reading from archive: %s", file.getName()), ex);
+					Skidfuscator.LOGGER.error(String.format("JPhantom: IO Error reading from archive: %s", file.getName()), ex);
 				}
 			}
 			return hierarchy;

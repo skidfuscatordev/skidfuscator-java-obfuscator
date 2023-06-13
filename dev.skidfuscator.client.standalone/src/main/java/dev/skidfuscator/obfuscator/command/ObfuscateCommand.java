@@ -75,10 +75,17 @@ public class ObfuscateCommand implements Callable<Integer> {
     private boolean fuckit;
 
     @CommandLine.Option(
+            names = {"-dbg", "--debug"},
+            description = "Do not use!"
+    )
+    private boolean debug;
+
+    @CommandLine.Option(
             names = {"-notrack", "--notrack"},
             description = "If you do not wish to be part of analytics!"
     )
     private boolean notrack;
+
 
     @Override
     public Integer call()  {
@@ -134,7 +141,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 "                               │ "              + topMemory +            " │",
                 "                               └───────────────────────────────────────────┘",
                 "",
-                "                      Author: Ghast     Version: 2.0.6     Today: "
+                "                      Author: Ghast     Version: 2.0.7     Today: "
                         + DateFormat.getDateTimeInstance().format(new Date(Instant.now().toEpochMilli())),
                 ""
         };
@@ -200,6 +207,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .jmod(MiscUtil.getJavaVersion() > 8)
                 .fuckit(fuckit)
                 .config(config)
+                .debug(debug)
                 .renamer(false)
                 .analytics(!notrack)
                 .build();
