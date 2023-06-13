@@ -27,6 +27,7 @@ public interface SeedLoadable {
             final int value,
             final String type
     ) {
+        block.setFlag(SkidBlock.FLAG_BRIDGE, true);
         RENDERERS[RandomUtil.nextInt(RENDERERS.length)]
                 .addSeedLoader(
                         methodNode,

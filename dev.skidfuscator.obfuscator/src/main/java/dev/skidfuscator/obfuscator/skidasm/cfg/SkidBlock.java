@@ -9,6 +9,7 @@ public class SkidBlock extends BasicBlock {
     public static final int FLAG_NO_OPAQUE = 0x2;
     public static final int FLAG_PROXY = 0x4;
     public static final int FLAG_NO_EXCEPTION = 0x8;
+    public static final int FLAG_BRIDGE = 0x10;
 
     public SkidBlock(ControlFlowGraph cfg) {
         super(cfg);

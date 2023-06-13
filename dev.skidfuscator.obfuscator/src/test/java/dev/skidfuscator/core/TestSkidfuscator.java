@@ -39,6 +39,7 @@ public class TestSkidfuscator extends Skidfuscator {
                 .builder()
                 .jmod(MiscUtil.isJmod())
                 .analytics(false)
+                .debug(true)
                 .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
                 .build());
         this.test = test;

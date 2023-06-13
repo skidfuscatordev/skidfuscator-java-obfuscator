@@ -63,7 +63,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 
 		try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
 				contents.getClassContents().size() + contents.getResourceContents().size(),
-			 "Outputting " + contents.getClassContents().size() + " classes to jar"
+			 "Outputting " + contents.getClassContents().size() + " classes to " + file.getPath()
 		)) {
 			for (JarClassData cn : new LinkedList<>(contents.getClassContents())) {
 				try {
