@@ -33,6 +33,7 @@ public class SkidGroup {
 
     private int stackHeight;
     private transient boolean application;
+    private transient boolean implicitFunction;
 
     // TODO: Add parameter and parameter compilation
 
@@ -145,8 +146,13 @@ public class SkidGroup {
         return methodNodeList.iterator().next();
     }
 
+    public void setImplicitFunction(boolean implicitFunction) {
+        this.implicitFunction = implicitFunction;
+    }
+
     public boolean isEntryPoint() {
         return !application
+                || this.isImplicitFunction()
                 || this.getInvokers().isEmpty()
                 || this.getInvokers().stream().anyMatch(SkidInvocation::isDynamic)
                 || this.isAnnotation()

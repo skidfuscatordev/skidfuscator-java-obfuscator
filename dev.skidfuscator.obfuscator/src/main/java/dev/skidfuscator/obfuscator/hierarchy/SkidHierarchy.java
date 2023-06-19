@@ -281,10 +281,30 @@ public class SkidHierarchy implements Hierarchy {
                                     assert (e.getBootstrapArgs().length == 3 && e.getBootstrapArgs()[1] instanceof Handle);
                                     final Handle boundFunc = (Handle) e.getBootstrapArgs()[1];
 
-                                    if (boundFunc.getName().equals("handle")) {
-                                        /*System.out.println("Invoking dynamic " + invocation.getOwner() + "#"
-                                                + invocation.getName() + invocation.getDesc());*/
+                                    if (boundFunc.getName().equals("apply") && false ) {
+                                        System.out.println("Invoking dynamic " + invocation.getOwner() + "#"
+                                                + invocation.getName() + invocation.getDesc() + " bound to " + boundFunc.getOwner() + "#" + boundFunc.getName() + boundFunc.getDesc()
+                                        );
                                     }
+
+                                    // Patch for implicit funtions
+                                    // TODO: Fix this
+                                    if (boundFunc.getName().startsWith("lambda$new$")) {
+                                        final String returnType = e.getType().getClassName().replace(".", "/");
+                                        //System.out.println("Attempting to locate " + returnType);
+                                        final ClassNode targetClass = skidfuscator.getClassSource().findClassNode(returnType);
+
+                                        if (!(targetClass instanceof SkidClassNode))
+                                            return;
+
+                                        assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
+                                        final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
+
+                                        methodNode.getGroup().setImplicitFunction(true);
+                                        //System.out.println("Found implicit function: " + methodNode.toString());
+                                        return;
+                                    }
+
                                     target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
 
                                 } else if (invocation instanceof InvocationExpr) {
@@ -335,6 +355,18 @@ public class SkidHierarchy implements Hierarchy {
                                 }
                             });
                 }
+
+                // Patch for functional interfaces
+                if (c.node.visibleAnnotations != null) {
+                    final List<AnnotationNode> annotationNodes = c.node.visibleAnnotations;
+
+                    if (annotationNodes.stream().anyMatch(e -> e.desc.equals("Ljava/lang/FunctionalInterface;"))) {
+                        for (MethodNode method : c.getMethods()) {
+                            ((SkidMethodNode) method).getGroup().setImplicitFunction(true);
+                        }
+                    }
+                }
+
                 invocationBar.tick();
             });
         }
