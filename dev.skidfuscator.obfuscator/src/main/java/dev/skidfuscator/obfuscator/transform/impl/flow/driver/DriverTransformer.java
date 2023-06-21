@@ -55,8 +55,10 @@ public class DriverTransformer extends AbstractTransformer {
                 && methodNode.owner.node.innerClasses
                 .stream().anyMatch(e -> e.name.equals(methodNode.owner.node.name)));
 
-        if (exempt)
+        if (exempt) {
+            this.skip();
             return;
+        }
 
         final MethodOpaquePredicate methodPredicate = methodNode.getPredicate();
         methodPredicate.setGetter(new PredicateFlowGetter() {
@@ -158,6 +160,8 @@ public class DriverTransformer extends AbstractTransformer {
                 );
             }
         });
+
+        this.success();
     }
 
     @Listen
@@ -187,6 +191,7 @@ public class DriverTransformer extends AbstractTransformer {
                 }
             }
         } catch (Exception e) {
+            this.fail();
             Skidfuscator.LOGGER.error("Failed to create dispatcher. This WILL cause issues!", e);
             return;
         }

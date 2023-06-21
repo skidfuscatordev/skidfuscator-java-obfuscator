@@ -270,7 +270,7 @@ public class Skidfuscator {
          *
          * Here though shall puteth all your transformers. Enjoy!
          */
-        _loadTransformer();
+        final List<Transformer> transformers = _loadTransformer();
 
         LOGGER.log("Finished loading transformers...");
 
@@ -299,7 +299,14 @@ public class Skidfuscator {
         postTransform();
         finalTransform();
         LOGGER.log("Finished executing transformers...");
-        System.out.println(ansi().cursorUpLine().append("└───────────────────────────────────────────────────────────────────┘").newline().newline());
+        System.out.println(ansi().cursorUpLine().append("└───────────────────────────────────────────────────────────────────┘").newline());
+        System.out.println("┌────────────────────────────[ Results ]────────────────────────────┐");
+
+        for (Transformer transformer : transformers) {
+            System.out.println("│  " + pad(transformer.getResult(), 130) + "│");
+        }
+        System.out.println("└───────────────────────────────────────────────────────────────────┘\n\n");
+
 
         for (ProtectionProvider protectionProvider : protectionProviders) {
             if (!protectionProvider.shouldWarn())
@@ -607,18 +614,19 @@ public class Skidfuscator {
         LOGGER.log("Finished importing classpath!");
     }
 
-    protected void _loadTransformer() {
+    protected List<Transformer> _loadTransformer() {
         final List<Transformer> transformers = this.getTransformers();
         try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
                 transformers.size(),
                 "Loaded " + transformers.size() + " transformers!"
         )) {
-            for (Transformer o : this.getTransformers()) {
+            for (Transformer o : transformers) {
                 EventBus.register(o);
                 wrapper.tick();
             }
         }
 
+        return transformers;
     }
 
     public List<Transformer> getTransformers() {

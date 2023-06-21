@@ -51,16 +51,22 @@ public class NumberTransformer extends AbstractTransformer {
         final SkidMethodNode methodNode = event.getMethodNode();
         final Skidfuscator skidfuscator = event.getSkidfuscator();
 
-        if (methodNode.isAbstract() || methodNode.isInit())
+        if (methodNode.isAbstract() || methodNode.isInit()) {
+            this.skip();
             return;
+        }
 
-        if (methodNode.node.instructions.size() > 10000)
+        if (methodNode.node.instructions.size() > 10000) {
+            this.fail();
             return;
+        }
 
         final SkidControlFlowGraph cfg = methodNode.getCfg();
 
-        if (cfg == null)
+        if (cfg == null) {
+            this.fail();
             return;
+        }
 
         for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
             if (vertex.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
@@ -116,5 +122,7 @@ public class NumberTransformer extends AbstractTransformer {
                 }
             }
         }
+
+        this.success();
     }
 }

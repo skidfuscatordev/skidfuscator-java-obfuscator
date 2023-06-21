@@ -60,8 +60,10 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                 MethodExempt.ABSTRACT,
                 MethodExempt.INIT,
                 MethodExempt.NULLCFG
-        ))
+        )) {
+            this.skip();
             return;
+        }
 
         final SkidControlFlowGraph cfg = methodNode.getCfg();
         final StrengthStrategy strategy;
@@ -190,6 +192,8 @@ public class BasicExceptionTransformer extends AbstractTransformer {
             changed.getAndIncrement();
             strategy.reset();
         }
+
+        this.success();
     }
 
     @Override

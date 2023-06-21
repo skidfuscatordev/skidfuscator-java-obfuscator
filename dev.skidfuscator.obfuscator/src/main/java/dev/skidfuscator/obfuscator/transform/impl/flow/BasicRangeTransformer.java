@@ -78,13 +78,17 @@ public class BasicRangeTransformer extends AbstractTransformer {
     void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
 
-        if (methodNode.isAbstract() || methodNode.isInit())
+        if (methodNode.isAbstract() || methodNode.isInit()) {
+            this.skip();
             return;
+        }
 
         final ControlFlowGraph cfg = methodNode.getCfg();
 
-        if (cfg == null)
+        if (cfg == null) {
+            this.fail();
             return;
+        }
 
         for (BasicBlock entry : new HashSet<>(cfg.vertices())) {
             if (entry.size() == 0)
@@ -219,5 +223,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
                         new ConstantExpr(entry.getDisplayName() +" : var expect: " + var_const.getConstant())));
                 */
         }
+
+        this.success();
     }
 }

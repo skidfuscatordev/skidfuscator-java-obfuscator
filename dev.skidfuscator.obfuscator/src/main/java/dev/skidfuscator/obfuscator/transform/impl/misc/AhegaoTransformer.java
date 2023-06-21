@@ -38,8 +38,10 @@ public class AhegaoTransformer extends AbstractTransformer {
 
         if (classNode.isEnum()
                 || classNode.isInterface()
-                || classNode.isAnnotation())
+                || classNode.isAnnotation()) {
+            this.skip();
             return;
+        }
 
         final FieldNode mapleNode = new SkidFieldNodeBuilder(skidfuscator, classNode)
                 .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)
@@ -106,6 +108,7 @@ public class AhegaoTransformer extends AbstractTransformer {
         }
 
         event.tick();
+        this.success();
     }
 
     private static final List<String[]> ahegaos = Arrays.asList(

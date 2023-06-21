@@ -41,16 +41,22 @@ public class SwitchTransformer extends AbstractTransformer {
     void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
 
-        if (methodNode.isAbstract() || methodNode.isInit())
+        if (methodNode.isAbstract() || methodNode.isInit()) {
+            this.skip();
             return;
+        }
 
-        if (methodNode.node.instructions.size() > 10000)
+        if (methodNode.node.instructions.size() > 10000) {
+            this.fail();
             return;
+        }
 
         final ControlFlowGraph cfg = methodNode.getCfg();
 
-        if (cfg == null)
+        if (cfg == null) {
+            this.fail();
             return;
+        }
 
         cfg.vertices()
                 .stream()
@@ -99,5 +105,6 @@ public class SwitchTransformer extends AbstractTransformer {
                         }
                     }));
                 });
+        this.success();
     }
 }

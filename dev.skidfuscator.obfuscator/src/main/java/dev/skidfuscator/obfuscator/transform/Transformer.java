@@ -26,4 +26,9 @@ public interface Transformer extends Listener  {
      * Registers the listener
      */
     void register();
+
+    /**
+     * @return Formatted ANSI string of the result of thr transformer
+     */
+    String getResult();
 }

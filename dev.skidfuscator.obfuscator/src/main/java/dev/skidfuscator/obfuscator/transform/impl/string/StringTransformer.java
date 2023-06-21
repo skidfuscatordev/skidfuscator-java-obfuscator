@@ -50,16 +50,22 @@ public class StringTransformer extends AbstractTransformer {
         final SkidMethodNode methodNode = event.getMethodNode();
 
         if (methodNode.isAbstract()
-                || methodNode.isInit())
+                || methodNode.isInit()) {
+            this.skip();
             return;
+        }
 
-        if (methodNode.node.instructions.size() > 10000)
+        if (methodNode.node.instructions.size() > 10000) {
+            this.fail();
             return;
+        }
 
         final ControlFlowGraph cfg = methodNode.getCfg();
 
-        if (cfg == null)
+        if (cfg == null) {
+            this.fail();
             return;
+        }
 
         final SkidClassNode parentNode = methodNode.getParent();
 
@@ -165,5 +171,6 @@ public class StringTransformer extends AbstractTransformer {
                         return;
                     }
                 });
+        this.success();
     }
 }
