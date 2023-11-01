@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.zip.CRC32;
 import java.util.zip.ZipException;
 
 /**
@@ -264,6 +265,13 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	@Override
 	public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
 		JarEntry entry = new JarEntry(name);
+		if (name.endsWith(".jar")){
+			entry.setMethod(JarEntry.STORED);
+			entry.setSize(file.length);
+			CRC32 crc = new CRC32();
+			crc.update(file);
+			entry.setCrc(crc.getValue());
+		}
 		out.putNextEntry(entry);
 		out.write(file);
 		return 1;
