@@ -4,7 +4,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
-import dev.skidfuscator.obfuscator.analytics.SkidTracker;
 import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
@@ -70,12 +69,15 @@ import org.mapleir.context.BasicAnalysisContext;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.matomo.java.tracking.MatomoTracker;
+import org.matomo.java.tracking.TrackerConfiguration;
 import org.objectweb.asm.Opcodes;
-import org.piwik.java.tracking.PiwikRequest;
+import org.matomo.java.tracking.MatomoRequest;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
@@ -354,36 +356,22 @@ public class Skidfuscator {
     }
 
     private void _runAnalytics() {
-        try {
-            final SkidTracker tracker = new SkidTracker(
-                    "https://analytics.skidfuscator.dev/matomo.php"
-            );
-
-            final PiwikRequest request = new PiwikRequest(
-                    1,
-                    null
-            );
-
-            final URL url = new URL("https://app.skidfuscator.dev");
-            request.setActionUrl(url);
-            request.setActionName("skidfuscator/launch");
-
-            request.setCampaignName("community");
-            request.setCampaignKeyword("launch");
-
-            request.setPluginJava(true);
-
-            request.setEventAction("launch");
-            request.setEventCategory("skidfuscator/community");
-            request.setEventName("Java");
-            request.setEventValue(MiscUtil.getJavaVersion());
-
-            tracker.sendRequestAsync(request);
-            tracker.getHttpClient().getConnectionManager().shutdown();
-            tracker.getHttpAsyncClient().close();
-        } catch (Exception e){
-            //e.printStackTrace();
-        }
+        final MatomoTracker tracker = new MatomoTracker(
+                TrackerConfiguration.builder().apiEndpoint(URI.create("https://analytics.skidfuscator.dev/matomo.php")).build()
+        );
+        final MatomoRequest request = MatomoRequest.request()
+                .siteId(1)
+                .actionUrl("https://app.skidfuscator.dev")
+                .actionName("skidfuscator/launch")
+                .campaignName("community")
+                .campaignKeyword("launch")
+                .pluginJava(true)
+                .eventAction("launch")
+                .eventCategory("skidfuscator/community")
+                .eventName("Java")
+                .eventValue((double) MiscUtil.getJavaVersion())
+                .build();
+        tracker.sendRequestAsync(request);
     }
 
     protected void _importConfig() {
