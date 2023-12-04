@@ -34,6 +34,7 @@ public class SkidGroup {
     private int stackHeight;
     private transient boolean application;
     private transient boolean implicitFunction;
+    private transient boolean injectedMethodPredicate;
 
     // TODO: Add parameter and parameter compilation
 
@@ -124,21 +125,7 @@ public class SkidGroup {
         }
 
         for (SkidInvocation invoker : invokers) {
-            if (invoker.isDynamic()) {
-                final DynamicInvocationExpr expr = (DynamicInvocationExpr) invoker.asExpr();
-                final Handle boundFunc = (Handle) expr.getBootstrapArgs()[1];
-                final Handle updatedBoundFunc = new Handle(
-                        boundFunc.getTag(),
-                        boundFunc.getOwner(),
-                        name,
-                        boundFunc.getDesc(),
-                        boundFunc.isInterface()
-                );
-
-                expr.getBootstrapArgs()[1] = updatedBoundFunc;
-            } else {
-                invoker.getExpr().setName(name);
-            }
+            invoker.setName(name);
         }
     }
 
@@ -154,6 +141,7 @@ public class SkidGroup {
         return !application
                 || this.isImplicitFunction()
                 || this.getInvokers().isEmpty()
+                || this.getInvokers().stream().anyMatch(SkidInvocation::isExempt)
                 || this.getInvokers().stream().anyMatch(SkidInvocation::isDynamic)
                 || this.isAnnotation()
                 || this.isEnumerator();

@@ -27,7 +27,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	private static final boolean ALLOW_PHANTOM_CLASSES = false;
 	
 	protected final ApplicationClassSource source;
-	private final ClassNode rootNode;
+	protected final ClassNode rootNode;
 	private final boolean allowPhantomClasses;
 	
 	public ClassTree(ApplicationClassSource source) {
@@ -174,7 +174,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 		}
 	}
 	
-	private ClassNode requestClass0(String name, String from) {
+	protected ClassNode requestClass0(String name, String from) {
 		try {
 			return findClass(name);
 		} catch(RuntimeException e) {

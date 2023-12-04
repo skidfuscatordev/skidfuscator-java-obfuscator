@@ -16,6 +16,11 @@ import org.mapleir.asm.MethodNode;
 import org.mapleir.deob.PassGroup;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.InstructionAdapter;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceClassVisitor;
+import org.topdank.byteengineer.commons.asm.ASMFactory;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteio.in.MultiJarDownloader;
@@ -23,6 +28,7 @@ import org.topdank.byteio.in.SingleJarDownloader;
 import org.topdank.byteio.in.SingleJmodDownloader;
 
 import java.io.*;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -38,6 +44,13 @@ public class MapleJarUtil {
 
     public static void dumpJar(Skidfuscator skidfuscator, PassGroup masterGroup, String outputFile) throws IOException {
         (new PhantomResolvingJarDumper(skidfuscator, skidfuscator.getJarContents(), skidfuscator.getClassSource()) {
+
+            private Map<String, JarClassData> jarClassDataMap = skidfuscator
+                    .getJarContents()
+                    .getClassContents()
+                    .namedMap();
+
+            private ASMFactory<ClassNode> factory = new SkidASMFactory(skidfuscator);
 
             @Override
             public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
@@ -57,11 +70,7 @@ public class MapleJarUtil {
                 //Skidfuscator.LOGGER.post("Writing " + entry.getName());
 
                 if (!cn.isVirtual() && skidfuscator.getExemptAnalysis().isExempt(cn)) {
-                    final JarClassData resource = skidfuscator
-                            .getJarContents()
-                            .getClassContents()
-                            .namedMap()
-                            .get(classData.getName());
+                    final JarClassData resource = jarClassDataMap.get(classData.getName());
 
                     if (resource == null) {
                         throw new IllegalStateException("Failed to find class source for " + cn.getName());
@@ -78,6 +87,7 @@ public class MapleJarUtil {
                     );
                     cn.node.accept(remapper);
                     out.write(writer.toByteArray());
+
                     //out.write(resource.getData());
                     return 1;
                 }
@@ -113,6 +123,7 @@ public class MapleJarUtil {
                         );
                         ClassRemapper remapper = new ClassRemapper(writer, skidfuscator.getClassRemapper());
                         cn.node.accept(remapper);
+                        cn.node = factory.create(writer.toByteArray(), cn.getName()).node;
                         out.write(writer.toByteArray());
                     } catch (Exception var8) {
                         ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);

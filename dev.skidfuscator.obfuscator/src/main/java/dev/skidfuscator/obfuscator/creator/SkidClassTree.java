@@ -21,14 +21,24 @@ public class SkidClassTree extends ClassTree {
     }
 
     @Override
+    public void init() {
+        for (ClassNode node : source.iterate()) {
+            if (skidfuscator.getExemptAnalysis().isExempt(node))
+                continue;
+
+            addVertex(node);
+        }
+    }
+
+    @Override
     public void verify() {
         try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
                 source.size(),
                 "Verified classpath for " + source.size() + " classes"
         )){
             for (ClassNode node : source.iterate()) {
-                verifyVertex(node);
                 wrapper.tick();
+                verifyVertex(node);
             }
         }
     }
@@ -37,6 +47,29 @@ public class SkidClassTree extends ClassTree {
     public void verifyVertex(ClassNode cn) {
         if (skidfuscator.getExemptAnalysis().isExempt(cn))
             return;
-        super.verifyVertex(cn);
+
+        if(cn == null) {
+            throw new IllegalStateException("Vertex is null!");
+        }
+
+        if (!containsVertex(cn)) {
+            addVertex(cn);
+        }
+
+        if(cn != rootNode) {
+            ClassNode sup = cn.node.superName != null
+                    ? requestClass0(cn.node.superName, cn.getName())
+                    : rootNode;
+            if(sup == null) {
+                throw new IllegalStateException(String.format("No superclass %s for %s", cn.node.superName, cn.getName()));
+            }
+
+            for (String s : cn.node.interfaces) {
+                ClassNode iface = requestClass0(s, cn.getName());
+                if(iface == null) {
+                    throw new IllegalStateException(String.format("No superinterface %s for %s", s, cn.getName()));
+                }
+            }
+        }
     }
 }

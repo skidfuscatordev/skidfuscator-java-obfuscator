@@ -32,10 +32,17 @@ public class Blocks {
     };
 
     public SkidBlock exception(final ControlFlowGraph cfg) {
-        return exception(cfg, null);
+        return exception0(cfg, null);
     }
 
     public SkidBlock exception(final ControlFlowGraph cfg, final String notice) {
+        return exception0(cfg, notice);
+    }
+
+    public SkidBlock exception(final ControlFlowGraph cfg, final Expr notice) {
+        return exception0(cfg, notice);
+    }
+    private SkidBlock exception0(final ControlFlowGraph cfg, final Object notice) {
         // Temporary fix for this
         final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length - 1)]);
 
@@ -43,7 +50,7 @@ public class Blocks {
         final Expr alloc_exception = new InitialisedObjectExpr(
                 exception.getClassName().replace(".", "/"),
                 notice == null ? "()V" : "(Ljava/lang/String;)V",
-                notice == null ? new Expr[0] : new Expr[]{new ConstantExpr(notice)}
+                notice == null ? new Expr[0] : new Expr[]{(notice instanceof String ? new ConstantExpr(notice) : (Expr) notice)}
         );
 
         final Stmt exception_stmt = new ThrowStmt(alloc_exception);

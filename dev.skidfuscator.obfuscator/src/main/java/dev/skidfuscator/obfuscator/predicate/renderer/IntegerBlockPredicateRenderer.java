@@ -65,12 +65,13 @@ import java.util.stream.Collectors;
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
+        final String factoryName = RandomUtil.randomAlphabeticalString(16);
         final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)
-                .name("skid/Factory")
+                .name(factoryName)
                 .access(Opcodes.ACC_PUBLIC)
                 .phantom(true)
                 .virtual(true)
@@ -86,7 +87,7 @@ import java.util.stream.Collectors;
                 .getClassContents()
                 .add(
                         new JarClassData(
-                                "skid/Factory.class",
+                                factoryName + ".class",
                                 factory.toByteArray(),
                                 factory
                         )
@@ -189,7 +190,7 @@ import java.util.stream.Collectors;
                     expr = classPredicate.getGetter();
                 }
 
-                if (!skidMethodNode.getGroup().isEntryPoint()) {
+                if (skidMethodNode.getGroup().isInjectedMethodPredicate()) {
                     seed = seed ^ skidMethodNode.getGroup().getPredicate().getPublic();
 
                     final PredicateFlowGetter previousExprGetter = expr;
@@ -577,8 +578,6 @@ import java.util.stream.Collectors;
             skidMethodNode.getCfg().getLocals().getCache().clear();
             skidMethodNode.getCfg().getLocals().getCache().putAll(localMap);
 
-            methodNode.node.desc = desc = parameterGroup.getDesc();
-
             if ((methodNode.node.access & Opcodes.ACC_VARARGS) != 0) {
                 methodNode.node.access &= ~Opcodes.ACC_VARARGS;
             }
@@ -664,9 +663,9 @@ import java.util.stream.Collectors;
         }
 
         final int finalStackHeight = stackHeight;
-        skidGroup.setDesc(desc);
+        skidGroup.setDesc(parameterGroup.getDesc());
         skidGroup.setStackHeight(finalStackHeight);
-
+        skidGroup.setInjectedMethodPredicate(true);
     }
 
     @Listen
@@ -732,7 +731,40 @@ import java.util.stream.Collectors;
 
         if (DEBUG) {
             final int seed = methodNode.getPredicate().getPrivate();
-            final BasicBlock exception = Blocks.exception(cfg, "Failed to match entry seed of value " + seed + " of entry " + methodNode.getPredicate().getPublic());
+            final BasicBlock exception = Blocks.exception(cfg,
+                    new VirtualInvocationExpr(
+                            InvocationExpr.CallType.VIRTUAL,
+                            new Expr[] {
+                                    new VirtualInvocationExpr(
+                                            InvocationExpr.CallType.VIRTUAL,
+                                            new Expr[]{
+                                                    new InitialisedObjectExpr(
+                                                            "java/lang/StringBuilder",
+                                                            "(Ljava/lang/String;)V",
+                                                            new Expr[]{
+                                                                    new ConstantExpr(
+                                                                            "Failed to match entry seed of value "
+                                                                                    + seed + " of entry public: "
+                                                                                    + methodNode.getPredicate().getPublic()
+                                                                                    + " and private: "
+                                                                                    + methodNode.getPredicate().getPrivate()
+                                                                                    + " and value: ",
+                                                                            Type.getType(String.class)
+                                                                    )
+                                                            }
+                                                    ),
+                                                    methodNode.getPredicate().getGetter().get(entryPoint)
+                                            },
+                                            "java/lang/StringBuilder",
+                                            "append",
+                                            "(I)Ljava/lang/StringBuilder;"
+                                    )
+                            },
+                            "java/lang/StringBuilder",
+                            "toString",
+                            "()Ljava/lang/String;"
+                    )
+            );
             final Stmt jumpStmt = new FakeConditionalJumpStmt(
                     methodNode.getPredicate().getGetter().get(entryPoint),
                     new ConstantExpr(seed, Type.INT_TYPE),
@@ -861,12 +893,39 @@ import java.util.stream.Collectors;
         if (DEBUG) {
             final BasicBlock exception = Blocks.exception(
                     block.cfg,
-                    block.getDisplayName() + " --> "
-                            + targetBlock.getDisplayName()
-                            + " # Failed to match seed of type "
-                            + type
-                            + " and value "
-                            + target
+                    new VirtualInvocationExpr(
+                            InvocationExpr.CallType.VIRTUAL,
+                            new Expr[] {
+                                new VirtualInvocationExpr(
+                                        InvocationExpr.CallType.VIRTUAL,
+                                        new Expr[]{
+                                                new InitialisedObjectExpr(
+                                                        "java/lang/StringBuilder",
+                                                        "(Ljava/lang/String;)V",
+                                                        new Expr[]{
+                                                                new ConstantExpr(
+                                                                        block.getDisplayName() + " --> "
+                                                                                + targetBlock.getDisplayName()
+                                                                                + " # Failed to match seed of type "
+                                                                                + type
+                                                                                + " and value "
+                                                                                + target
+                                                                                + " and got ",
+                                                                        Type.getType(String.class)
+                                                                )
+                                                        }
+                                                ),
+                                                getter.get(block)
+                                        },
+                                        "java/lang/StringBuilder",
+                                        "append",
+                                        "(I)Ljava/lang/StringBuilder;"
+                                )
+                            },
+                            "java/lang/StringBuilder",
+                            "toString",
+                            "()Ljava/lang/String;"
+                    )
             );
 
             final Stmt jumpStmt = new FakeConditionalJumpStmt(

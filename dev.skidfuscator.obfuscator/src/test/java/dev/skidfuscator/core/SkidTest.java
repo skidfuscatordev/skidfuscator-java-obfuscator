@@ -40,6 +40,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public abstract class SkidTest implements TestCase {
+    public static int counter = 0;
     protected Skidfuscator skidfuscator;
     @Test
     public void test() {

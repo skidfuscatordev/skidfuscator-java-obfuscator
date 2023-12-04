@@ -18,8 +18,7 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.TypeAnnotationNode;
+import org.objectweb.asm.tree.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -103,6 +102,7 @@ public class SkidHierarchy implements Hierarchy {
                     return args1.size() - args2.size();
                 }
             }).forEach(method -> {
+                skidfuscator.getIrFactory().getFor(method);
                 getGroup(skidfuscator, method);
 
                 if (method.node.visibleAnnotations != null) {
@@ -243,17 +243,93 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     private void setupInvoke() {
+        final List<ClassNode> nodes = skidfuscator
+                .getClassSource()
+                .getClassTree()
+                .vertices()
+                .stream()
+                .filter(e -> {
+                    return skidfuscator.getClassSource().isApplicationClass(e.getName());
+                })
+                .collect(Collectors.toList());
         try (ProgressWrapper invocationBar = ProgressUtil.progressCheck(
                 nodes.size(),
                 "Resolved invocation path for " + nodes.size() + " nodes"
         )) {
             nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
-
-                    final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
-
+                    final SkidControlFlowGraph cfg = (SkidControlFlowGraph) skidfuscator.getIrFactory().getUnsafe(method);
                     if (cfg == null) {
-                        System.err.println("Failed to compute CFG for method " + method.toString());
+                        for (SkidMethodNode skidMethod : methods) {
+                            for (AbstractInsnNode instruction : skidMethod.node.instructions) {
+
+                                final ClassMethodHash target;
+                                final SkidInvocation skidInvocation;
+
+                                if (instruction instanceof InvokeDynamicInsnNode) {
+                                    final InvokeDynamicInsnNode e = (InvokeDynamicInsnNode) instruction;
+
+                                    if (!e.bsm.getOwner().equals("java/lang/invoke/LambdaMetafactory")
+                                            || !e.bsm.getName().equals("metafactory")) {
+                                        return;
+                                        //throw new IllegalStateException("Invalid invoke dynamic!");
+                                    }
+
+                                    assert (e.bsmArgs.length == 3 && e.bsmArgs[1] instanceof Handle);
+                                    final Handle boundFunc = (Handle) e.bsmArgs[1];
+
+                                    // Patch for implicit funtions
+                                    // TODO: Fix this
+                                    if (boundFunc.getName().startsWith("lambda$new$")) {
+                                        final String returnType = Type.getReturnType(e.desc).getClassName().replace(".", "/");
+                                        //System.out.println("Attempting to locate " + returnType);
+                                        final ClassNode targetClass = skidfuscator.getClassSource().findClassNode(returnType);
+
+                                        if (!(targetClass instanceof SkidClassNode))
+                                            return;
+
+                                        assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
+                                        final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
+
+                                        methodNode.getGroup().setImplicitFunction(true);
+                                        //System.out.println("Found implicit function: " + methodNode.toString());
+                                        return;
+                                    }
+
+                                    target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
+                                    skidInvocation = new SkidInvocation(
+                                            method,
+                                            e
+                                    );
+                                } else if (instruction instanceof MethodInsnNode) {
+                                    final MethodInsnNode e = (MethodInsnNode) instruction;
+                                    target = new ClassMethodHash(e.name, e.desc, e.owner);
+                                    skidInvocation = new SkidInvocation(
+                                            method,
+                                            e
+                                    );
+                                } else {
+                                    continue;
+                                }
+
+                                final SkidGroup targetGroup = hashToGroupMap.get(target);
+
+                                if (targetGroup != null) {
+                                    targetGroup.getInvokers().add(skidInvocation);
+                                }
+
+                                final MethodNode targetMethod = hashToMethodMap.get(target);
+                                if (targetMethod != null) {
+                                    if (targetMethod instanceof SkidMethodNode) {
+                                        ((SkidMethodNode) targetMethod).addInvocation(skidInvocation);
+                                    }
+
+                                    methodToInvocationsMap.computeIfAbsent(targetMethod, e -> {
+                                        return new ArrayList<>(Collections.singleton(skidInvocation));
+                                    });
+                                }
+                            }
+                        }
                         continue;
                     }
 

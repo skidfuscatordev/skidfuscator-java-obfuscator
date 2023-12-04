@@ -1368,6 +1368,10 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			range.getNodes().stream().filter(BasicBlock::isEmpty).forEach(e -> {
 				e.add(new NopStmt());
 			});
+
+			if (range.getNodes().isEmpty()) {
+				cfg.removeRange(range);
+			}
 		}
 	}
 
@@ -1629,7 +1633,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			BasicBlock nextBlock = range.get(rangeIdx + 1);
 			int nextOrderIdx = order.indexOf(nextBlock);
 			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
-				System.err.println("\r\n[warn] Had to split up a range: " + m + "\n");
+				Skidfuscator.LOGGER.post("\r\n[warn] Had to split up a range: " + m + "\n");
 				Label end = getLabel(order.get(orderIdx + 1));
 				assert start != end : "Label assigned is semantically identical.";
 				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());

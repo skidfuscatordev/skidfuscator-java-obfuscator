@@ -28,4 +28,8 @@ public class NullPermeableHashMap<K, V> extends ConcurrentHashMap<K, V> {
 	public V getNonNull(K k) {
 		return computeIfAbsent(k, creator::create);
 	}
+
+	public V getUnsafe(K k) {
+		return get(k);
+	}
 }

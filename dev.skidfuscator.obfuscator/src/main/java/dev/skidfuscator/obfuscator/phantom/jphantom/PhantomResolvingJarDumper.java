@@ -73,7 +73,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 					throw e;
 				}
 
-				contents.getClassContents().remove(cn);
+				//contents.getClassContents().remove(cn);
 				jos.flush();
 				progressBar.tick();
 			}
@@ -81,7 +81,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 			for (JarResource res : new LinkedList<>(contents.getResourceContents())) {
 				resourcesDumped += dumpResource(jos, res.getName(), res.getData());
 
-				contents.getResourceContents().remove(res);
+				//contents.getResourceContents().remove(res);
 				progressBar.tick();
 			}
 		}

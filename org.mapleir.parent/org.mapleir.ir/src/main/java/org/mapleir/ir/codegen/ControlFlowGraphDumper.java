@@ -304,7 +304,7 @@ public class ControlFlowGraphDumper implements BytecodeFrontend {
 			BasicBlock nextBlock = range.get(rangeIdx + 1);
 			int nextOrderIdx = order.indexOf(nextBlock);
 			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
-				System.err.println("[warn] Had to split up a range: " + m);
+				//System.err.println("[warn] Had to split up a range: " + m);
 				Label end = getLabel(order.get(orderIdx + 1));
 				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
 				start = getLabel(nextBlock);

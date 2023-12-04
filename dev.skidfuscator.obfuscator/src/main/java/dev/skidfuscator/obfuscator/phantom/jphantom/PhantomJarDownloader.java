@@ -104,7 +104,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				try {
 					cn = factory.create(db, name);
 
-					if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+					if (false && skidfuscator.getExemptAnalysis().isExempt(cn)) {
 						phantomContents.getClassContents().add(new JarClassData(
 								name,
 								db,

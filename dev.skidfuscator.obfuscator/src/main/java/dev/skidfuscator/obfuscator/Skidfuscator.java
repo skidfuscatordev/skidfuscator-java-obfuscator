@@ -43,7 +43,6 @@ import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.*;
 import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.driver.DriverTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
@@ -74,8 +73,10 @@ import org.objectweb.asm.Opcodes;
 import org.piwik.java.tracking.PiwikRequest;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
+import org.topdank.byteengineer.commons.data.JarResource;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
@@ -303,7 +304,7 @@ public class Skidfuscator {
         System.out.println("┌────────────────────────────[ Results ]────────────────────────────┐");
 
         for (Transformer transformer : transformers) {
-            System.out.println("│  " + pad(transformer.getResult(), 130) + "│");
+            System.out.println("│  " + pad(transformer.getResult().replace("Annotation", "@"), 130) + "│");
         }
         System.out.println("└───────────────────────────────────────────────────────────────────┘\n\n");
 
@@ -345,8 +346,8 @@ public class Skidfuscator {
         EventBus.end();
 
         _cleanup();
-        _dump();
 
+        _dump();
 
         SkidProgressBar.RENDER_THREAD.shutdown();
         IntegerBlockPredicateRenderer.DEBUG = false;
@@ -632,7 +633,7 @@ public class Skidfuscator {
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
 
-        if (true) {
+        if (false) {
             if (tsConfig.hasPath("stringEncryption.type")) {
                 switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
                     case STANDARD: transformers.add(new StringTransformer(this)); break;
@@ -648,10 +649,6 @@ public class Skidfuscator {
                     new BasicConditionTransformer(this),
                     new BasicExceptionTransformer(this),
                     new BasicRangeTransformer(this),
-
-                    // Patch
-                    new DriverTransformer(this),
-
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)
@@ -688,7 +685,7 @@ public class Skidfuscator {
         try {
             classSource.getClassTree().verify();
         } catch (Exception e) {
-            LOGGER.warn("\n" +
+            LOGGER.error("\n" +
                     "-----------------------------------------------------\n"
                             + "/!\\ Skidfuscator failed to compute some libraries!\n"
                             + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
@@ -699,7 +696,7 @@ public class Skidfuscator {
                                     : "      " + e.getCause().getMessage() + "\n"
                             )
                             + "-----------------------------------------------------\n"
-            );
+            , e);
 
             if (!CLOUD)
                 System.exit(1);
@@ -820,6 +817,9 @@ public class Skidfuscator {
                                             exemptAnalysis.isExempt(
                                                     (Class<? extends Transformer>) listenerClazz,
                                                     e
+                                            ) || exemptAnalysis.isExempt(
+                                                    (Class<? extends Transformer>) listenerClazz,
+                                                    e.owner
                                             )
                                     );
                         }
