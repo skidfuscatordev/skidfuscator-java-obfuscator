@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
 import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
+import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.verifier.Verifier;
 import dev.skidfuscator.testclasses.TestRun;
@@ -135,11 +136,11 @@ public class TestSkidfuscator extends Skidfuscator {
     }
 
     @Override
-    protected void _loadTransformer() {
+    protected List<Transformer> _loadTransformer() {
         if (SKIP)
-            return;
+            return new ArrayList<>();
 
-        super._loadTransformer();
+        return  super._loadTransformer();
     }
 
     @Override
