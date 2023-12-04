@@ -1,6 +1,5 @@
 package dev.skidfuscator.obfuscator.skidasm.expr;
 
-import dev.skidfuscator.obfuscator.transform.impl.j2c.NativeTransformer;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.PopStmt;
