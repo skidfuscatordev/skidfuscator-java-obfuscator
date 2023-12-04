@@ -96,3 +96,9 @@ dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.skid
 skidfuscator.log
 
 calculations.txt
+
+dev.skidfuscator.obfuscator/out/test/resources/test.jar.compressed.skid
+
+dev.skidfuscator.obfuscator/out/test/resources/test.jar.compressed.json
+
+dev.skidfuscator.obfuscator/out/test/resources/test.jar.compressed
