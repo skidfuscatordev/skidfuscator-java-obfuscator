@@ -72,9 +72,9 @@ public class SampleJarTest {
             System.out.println(skidfuscator.getClassRemapper());
             final String name = skidfuscator
                     .getClassRemapper()
-                    .map(Type.getObjectType("dev/sim0n/evaluator/Main").getInternalName());
+                    .map(Type.getObjectType("dev/sim0n/app/Main").getInternalName());
             System.out.println("Found named " + name);
-            final String replaced = name == null ? "dev.sim0n.evaluator.Main" : name.replace("/", ".");
+            final String replaced = name == null ? "dev.sim0n.app.Main" : name.replace("/", ".");
             final Class<?> clazz = classLoader.loadClass(replaced);
             clazz.getDeclaredMethod("main", String[].class).invoke(null, (Object) new String[0]);
         }
