@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
