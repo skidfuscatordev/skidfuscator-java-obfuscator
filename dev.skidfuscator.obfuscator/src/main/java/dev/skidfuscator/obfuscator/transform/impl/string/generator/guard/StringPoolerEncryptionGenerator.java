@@ -14,12 +14,12 @@ import java.nio.charset.StandardCharsets;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class ByteBufferEncryptionGenerator implements EncryptionGenerator {
+public class StringPoolerEncryptionGenerator implements EncryptionGenerator {
     public static final String METHOD_NAME = "thisIsAInsaneEncryptionMethod";
     private final Integer[] keys;
     private SkidFieldNode storageField;
 
-    public ByteBufferEncryptionGenerator(Integer[] keys) {
+    public StringPoolerEncryptionGenerator(Integer[] keys) {
         this.keys = keys;
     }
 
