@@ -15,6 +15,7 @@ import dev.skidfuscator.obfuscator.transform.impl.string.generator.EncryptionGen
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.AESEncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.CaesarEncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.basic.BasicEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.guard.ByteBufferEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.FieldNode;
@@ -72,7 +73,7 @@ public class StringTransformer extends AbstractTransformer {
         EncryptionGenerator generator = keyMap.get(parentNode);
 
         if (generator == null) {
-            switch (RandomUtil.nextInt(1)) {
+            switch (RandomUtil.nextInt(3)) {
                 case 1: {
                     final String iv = RandomUtil.randomAlphabeticalString(16);
                     keyMap.put(parentNode, (generator = new AESEncryptionGenerator(iv)));
@@ -86,7 +87,7 @@ public class StringTransformer extends AbstractTransformer {
                         keys[i] = RandomUtil.nextInt(127) + 1;
                     }
 
-                    keyMap.put(parentNode, (generator = new CaesarEncryptionGenerator(keys)));
+                    keyMap.put(parentNode, (generator = new ByteBufferEncryptionGenerator(keys)));
                     break;
                 }
                 default: {
