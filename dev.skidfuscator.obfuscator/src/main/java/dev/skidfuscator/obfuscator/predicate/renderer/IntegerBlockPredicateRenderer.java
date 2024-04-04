@@ -690,7 +690,10 @@ import java.util.stream.Collectors;
         final MethodOpaquePredicate predicate = methodNode.getPredicate();
         PredicateFlowGetter getter = predicate.getGetter();
 
-        assert getter != null : "Predicate flow getter is null! Has group not been initialized?";
+        assert getter != null : String.format(
+                "Getter for method %s is null!",
+                methodNode.getName()
+        );
 
         PredicateFlowGetter localGetterT = methodNode.getFlowPredicate().getGetter();
         PredicateFlowSetter localSetterT = methodNode.getFlowPredicate().getSetter();

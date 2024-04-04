@@ -48,6 +48,7 @@ import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
@@ -636,10 +637,10 @@ public class Skidfuscator {
         if (true) {
             if (tsConfig.hasPath("stringEncryption.type")) {
                 switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
-                    case STANDARD: transformers.add(new StringTransformer(this)); break;
+                    case STANDARD: transformers.add(new StringTransformerV2(this)); break;
                 }
             } else {
-                transformers.add(new StringTransformer(this));
+                transformers.add(new StringTransformerV2(this));
             }
 
             transformers.addAll(Arrays.asList(

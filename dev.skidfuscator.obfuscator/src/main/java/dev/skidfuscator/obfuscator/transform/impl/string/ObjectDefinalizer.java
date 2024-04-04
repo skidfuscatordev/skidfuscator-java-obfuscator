@@ -51,7 +51,6 @@ public class ObjectDefinalizer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        final MethodNode clinit = methodNode.getParent().getClinitNode();
 
         final InsnList insnList = new InsnList();
         // TODO: Don't forget if you use ASM, compute the CFG again with

@@ -21,13 +21,17 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
 
-@Getter // TODO: Deprecate the getter and document the stuff
+ // TODO: Deprecate the getter and document the stuff
 public class SkidClassNode extends ClassNode {
+    @Getter
     private final Skidfuscator skidfuscator;
+    @Getter
     private final ClassOpaquePredicate classPredicate;
+    @Getter
     private final ClassOpaquePredicate staticPredicate;
     private transient SkidMethodNode clinitNode;
     private transient Boolean mixin;
+    @Getter
     private final AttributeMap attributes;
 
     private transient Integer randomInt;
@@ -120,7 +124,7 @@ public class SkidClassNode extends ClassNode {
                 .access(Opcodes.ACC_STATIC)
                 .desc("()V")
                 .name("<clinit>")
-                .phantom(false)
+                .phantom(true)
                 .build();
 
         clinit.getEntryBlock().add(new ReturnStmt());
