@@ -691,6 +691,7 @@ public class Skidfuscator {
                             + "/!\\ Skidfuscator failed to compute some libraries!\n"
                             + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
                             + "\n"
+                            + "The following class was NOT found. This can be a dependency of a dependency."
                             + "Error: " + e.getMessage() + "\n" +
                             (e.getCause() == null
                                     ? "\n"
