@@ -28,6 +28,8 @@ add a significant strength to the obfuscation whilst at the same time retaining 
 This project is **___not completed___**. This is a proof of concept I've been working on for a while. As far as I could tell, there are
 some serious flaws with parameter injection. 
 
+![Classic Landscape 1 (3) (1)](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/assets/30368557/9ab9a2ab-8df7-4e62-a711-4df5f3042947)
+
 # ✨ Features 
 
 Here are all the cool features I've been adding to Skidfuscator. It's a fun project hence don't expect too much from it. It's purpose is
