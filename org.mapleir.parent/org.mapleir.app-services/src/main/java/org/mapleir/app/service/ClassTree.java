@@ -135,7 +135,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 				queue.addAll(getAllChildren(next));
 			}
 		}
-		queue.add(cn);
+		queue.addAll(resultsChild);
 
 		Collection<ClassNode> resultsAdult = new HashSet<>();
 		while (!queue.isEmpty()) {
