@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
+import org.apache.http.nio.entity.NFileEntity;
 import org.mapleir.asm.FieldNode;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.BasicBlock;
@@ -26,10 +27,12 @@ import org.objectweb.asm.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 public class AhegaoTransformer extends AbstractTransformer {
 
-    private static final String AHEGAO_FIELD_NAME = "nothing_to_see_here";
+    private static final String DEFAULT_AHEGAO_FIELD_NAME = "nothing_to_see_here";
 
     public AhegaoTransformer(Skidfuscator skidfuscator) {
         super(skidfuscator, "Ahegao");
@@ -46,15 +49,17 @@ public class AhegaoTransformer extends AbstractTransformer {
             return;
         }
 
-        if (classNode.getFields().stream()
-                .anyMatch(field -> field.getName().equals(AHEGAO_FIELD_NAME))) {
-            this.skip();
-            return;
-        }
+        List<String> fieldNames = classNode.getFields().stream()
+                .map(FieldNode::getName)
+                .collect(Collectors.toList());
+
+        String ahegaoName = DEFAULT_AHEGAO_FIELD_NAME;
+        while (fieldNames.contains(ahegaoName))
+            ahegaoName += (char) ThreadLocalRandom.current().nextInt(Character.MAX_CODE_POINT);
 
         final FieldNode mapleNode = new SkidFieldNodeBuilder(skidfuscator, classNode)
                 .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)
-                .name(AHEGAO_FIELD_NAME)
+                .name(ahegaoName)
                 .desc("[Ljava/lang/String;")
                 .signature(null)
                 .value(null)
