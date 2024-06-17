@@ -26,8 +26,13 @@ import org.objectweb.asm.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 public class AhegaoTransformer extends AbstractTransformer {
+
+    private static final String DEFAULT_AHEGAO_FIELD_NAME = "nothing_to_see_here";
+
     public AhegaoTransformer(Skidfuscator skidfuscator) {
         super(skidfuscator, "Ahegao");
     }
@@ -43,9 +48,17 @@ public class AhegaoTransformer extends AbstractTransformer {
             return;
         }
 
+        List<String> fieldNames = classNode.getFields().stream()
+                .map(FieldNode::getName)
+                .collect(Collectors.toList());
+
+        String ahegaoName = DEFAULT_AHEGAO_FIELD_NAME;
+        while (fieldNames.contains(ahegaoName))
+            ahegaoName += (char) ThreadLocalRandom.current().nextInt(Character.MAX_CODE_POINT);
+
         final FieldNode mapleNode = new SkidFieldNodeBuilder(skidfuscator, classNode)
                 .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)
-                .name("nothing_to_see_here")
+                .name(ahegaoName)
                 .desc("[Ljava/lang/String;")
                 .signature(null)
                 .value(null)
