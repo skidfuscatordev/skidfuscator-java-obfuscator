@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Stack;
 
 public class AhegaoTransformer extends AbstractTransformer {
+
+    private static final String AHEGAO_FIELD_NAME = "nothing_to_see_here";
+
     public AhegaoTransformer(Skidfuscator skidfuscator) {
         super(skidfuscator, "Ahegao");
     }
@@ -43,9 +46,15 @@ public class AhegaoTransformer extends AbstractTransformer {
             return;
         }
 
+        if (classNode.getFields().stream()
+                .anyMatch(field -> field.getName().equals(AHEGAO_FIELD_NAME))) {
+            this.skip();
+            return;
+        }
+
         final FieldNode mapleNode = new SkidFieldNodeBuilder(skidfuscator, classNode)
                 .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)
-                .name("nothing_to_see_here")
+                .name(AHEGAO_FIELD_NAME)
                 .desc("[Ljava/lang/String;")
                 .signature(null)
                 .value(null)

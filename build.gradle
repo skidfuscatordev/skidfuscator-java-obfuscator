@@ -23,6 +23,10 @@ allprojects {
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     }
+
+    compileJava {
+        options.encoding = "UTF-8" // Will fail on the non-ascii comments if not set
+    }
 }
 
 group 'dev.skidfuscator.community'
