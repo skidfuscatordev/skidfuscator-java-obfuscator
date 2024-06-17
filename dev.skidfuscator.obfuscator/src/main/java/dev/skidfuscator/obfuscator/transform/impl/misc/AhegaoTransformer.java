@@ -8,7 +8,6 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.builder.SkidFieldNodeBuilder;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
-import org.apache.http.nio.entity.NFileEntity;
 import org.mapleir.asm.FieldNode;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.BasicBlock;
