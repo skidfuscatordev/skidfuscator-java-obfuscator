@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
-        final String factoryName = RandomUtil.randomAlphabeticalString(16);
+        final String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
         final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)
                 .name(factoryName)
                 .access(Opcodes.ACC_PUBLIC)
