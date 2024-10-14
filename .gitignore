@@ -93,6 +93,10 @@ dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.json
 
 dev.skidfuscator.obfuscator/src/test/resources/test.jar.compressed.skid
 
+dev.skidfuscator.obfuscator/out/production/resources/log4j.properties
+
+dev.skidfuscator.obfuscator/out/test/resources/exempt.txt
+
 skidfuscator.log
 
 calculations.txt

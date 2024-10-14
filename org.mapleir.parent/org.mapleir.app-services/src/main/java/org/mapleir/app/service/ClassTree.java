@@ -52,6 +52,28 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 			verifyVertex(node);
 		}
 	}
+
+	public List<String> getMissingClasses() {
+		List<String> missing = new ArrayList<>();
+		for (ClassNode cn : source.iterate()) {
+			if(cn != rootNode) {
+				ClassNode sup = cn.node.superName != null
+						? requestClass0(cn.node.superName, cn.getName())
+						: rootNode;
+				if(sup == null) {
+					missing.add(cn.node.superName);
+				}
+
+				for (String s : cn.node.interfaces) {
+					ClassNode iface = requestClass0(s, cn.getName());
+					if(iface == null) {
+						missing.add(s);
+					}
+				}
+			}
+		}
+		return missing;
+	}
 	
 	public ClassNode getRootNode() {
 		return rootNode;
