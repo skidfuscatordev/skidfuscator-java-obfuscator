@@ -25,12 +25,24 @@ code flow. This is done via intra-procedural passes each designed to mingle the 
 neither the space complexity suffers from a great loss. To achieve the such, we have modeled a couple of well known tricks to 
 add a significant strength to the obfuscation whilst at the same time retaining a stable enough execution time.
 
-This project is **___not completed___**. This is a proof of concept I've been working on for a while. As far as I could tell, there are
-some serious flaws with parameter injection. 
+Skidfuscator is now feature-complete and continues to be actively maintained with several new obfuscation techniques aimed at hardening your code against reverse engineering.
 
 ![Classic Landscape 1 (3) (1)](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/assets/30368557/9ab9a2ab-8df7-4e62-a711-4df5f3042947)
 
 # ✨ Features 
+
+### 1. Automatic Dependency Downloading
+Skidfuscator intelligently identifies and downloads missing dependencies needed for your project, minimizing manual configuration. Known frameworks such as Bukkit are automatically handled, streamlining setup.
+### 2. Smart Recovery
+In the event of errors or failed obfuscation, Skidfuscator implements a recovery system that intelligently resolves conflicts and provides suggestions to fix issues. This ensures minimal disruption in your development workflow.
+### 3. Auto Configuration
+Skidfuscator comes with built-in presets for common configurations, allowing quick setup without needing to manually tweak every aspect of the obfuscation process. For advanced users, all settings remain fully customizable.
+### 4. Flow Obfuscation (GEN3)
+Skidfuscator introduces third-generation control flow obfuscation (Flow GEN3), which scrambles method logic and makes the control flow harder to understand. This method introduces opaque predicates and complex flow redirections, hindering static and dynamic analysis.
+### 5. Advanced Obfuscation Methods
+Comes with all sorts of advanced obfuscation methodologies only seen in modern obfuscators, such as Zelix KlassMaster. Skidfuscator is designed to be hyper-resilient and best of its field, for free.
+### 6. Optimization Out-of-the-Box
+Skidfuscator is built to ensure that obfuscation does not degrade your application’s runtime performance. By leveraging SSA and CFG-based transformations, it provides obfuscation that’s highly optimized to maintain both time and space complexity.
 
 Here are all the cool features I've been adding to Skidfuscator. It's a fun project hence don't expect too much from it. It's purpose is
 not to be commercial but to inspire some more clever approaches to code flow obfuscation, especially ones which make use of SSA and CFGs
@@ -72,48 +84,6 @@ Here are the features:
 | `String Encryption` | String | Encrypt the strings using the opaque predicate | ✅ |
 | `Reference Encryption` | Reference | Encrypt the reference calls using InvokeDynamic using the opaque predicate | ❌ |
 | `Reference Proxying` | Reference | Proxy references using a builder pattern OR dispatcher classes (mostly for initialisation) | ❌ |
-
-### ***NEW*** Number Mutation
-![Graph](https://i.imgur.com/XjUFdRU.png)
-
-### Switch Mutation
-![Graph](https://i.imgur.com/yPjFC8k.png)
-
-### Fake exceptions
-![Graph](https://i.imgur.com/bJcTNHm.png)
-
-### Fake jumps
-![Graph](https://i.imgur.com/780UIIc.png)
-
-
-### Todo
-- [x] Converting block creation to a factory style to give us more leniency to play around with stmts and stuff without having to wrap em 
-- [x] Convert method nodes and modasm to factory style too for that same reason
-- [ ] Create a proper util which allows for easy addition, editing and so and forth of the IR. For example, a proper util which can find edges. Perhaps also add a reference to the apropriate jump edge linked in the stmt and vice versa? For the util I envision doing something such as Build.new().Integer(<params>).create() or Build.new().IllegalStateException(<params>).create() or Build.invokevirtual(method).build() or Build.jump(target) or Build.if(<condition>).jump(<target>).build() or Build.if(<condition>).invokevirtual(method).store().build(). Depending on what we want it to return, we give it multiple choices, making it easier to create obfuscation and stuff
-- [ ] Begin implementation of LLVM compiler using the sorta-LLVM style stmt structure we got. We need to override them all and add a LLVM compile method to compile them to LLVM bytecode. Once that's done in the future we'll be able to create a website which runs that shit in LLVM-clang to cross compile on our backend, making it a smooth experience for customers
-- [x] Add proper parameter obfuscation with a properly done seeding system. My idea is that seeds should vary in type instead of being consistent eg one seed will be passed as a double then will be transformed using it's hashcode and stuff.
-- [x] Add a proper invocation resolver which caches everything pre-emptively. Make sure to make it support exclusions and stuff
-- [x] Optimize MapleIR's class heredity construction. Pretty weak sauce rn
-
-## Examples
-  
-### Builder example
-  
-```java
-Builder
-  .invokevirtual(method)        // Invokes the method and adds it to the stack. We have to use the stack value before exiting the builder for a stmt
-  .asImplicitInt()              // Converts the builder into an integer builder, allowing us to use arithmetic operations. We could also just make this refer 
-                                // to the hashcode function instead if it isn't an integer
-  .add()                        // Adds the next value, switches to an Addition builder
-    .invokevirtual(method2)     // Pops back a value, switches back to the expression builder
-  .condition()                  // Adds a condition, switches to the condition builder
-    .ifEqual(target)            
-    .ifSmaller(5, target2)                     
-    .ifBigger(6, target3)
-    .else(target4)              
-  .buildStmt()                  // Creates a statement (or statement list) based on the previous instructions
-```
-
 # Credits
 
 ## Libraries used
