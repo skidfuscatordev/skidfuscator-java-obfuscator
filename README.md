@@ -15,6 +15,9 @@
   <h3 align="center">
     Join the discord: https://discord.gg/QJC9g8fBU9
   </h3>
+  <h3 align="center">
+    Wiki: https://skidfuscator.dev/docs/
+  </h3>
 </p>
 
 ---
