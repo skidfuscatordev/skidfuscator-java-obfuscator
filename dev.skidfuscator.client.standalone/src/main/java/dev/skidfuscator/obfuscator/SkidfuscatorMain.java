@@ -1,7 +1,9 @@
 package dev.skidfuscator.obfuscator;
 
 import dev.skidfuscator.obfuscator.command.HelpCommand;
+import dev.skidfuscator.obfuscator.command.MappingsCommand;
 import dev.skidfuscator.obfuscator.command.ObfuscateCommand;
+import dev.skidfuscator.obfuscator.util.LogoUtil;
 import lombok.SneakyThrows;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -70,8 +72,10 @@ public class SkidfuscatorMain {
             }
 
         } else {
+            LogoUtil.printLogo();
             new CommandLine(new HelpCommand())
                     .addSubcommand("obfuscate", new ObfuscateCommand())
+                    .addSubcommand("mappings", new MappingsCommand())
                     .execute(args);
         }
     }

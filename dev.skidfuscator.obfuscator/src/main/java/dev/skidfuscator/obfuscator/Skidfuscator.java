@@ -8,6 +8,9 @@ import dev.skidfuscator.obfuscator.analytics.SkidTracker;
 import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
+import dev.skidfuscator.obfuscator.dependency.CommonDependency;
+import dev.skidfuscator.obfuscator.dependency.DependencyDownloader;
+import dev.skidfuscator.obfuscator.dependency.matcher.DependencyMatcher;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
 import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.event.impl.transform.ClassTransformEvent;
@@ -113,6 +116,7 @@ public class Skidfuscator {
     private PredicateAnalysis predicateAnalysis;
 
     private final SkidRemapper classRemapper = new SkidRemapper(new HashMap<>());
+    private final DependencyDownloader dependencyDownloader = new DependencyDownloader();
 
     private final Counter counter = new Counter();
 
@@ -685,26 +689,76 @@ public class Skidfuscator {
         LOGGER.post("Starting verification");
         try {
             classSource.getClassTree().verify();
-        } catch (Exception e) {
-            LOGGER.error("\n" +
-                    "-----------------------------------------------------\n"
-                            + "/!\\ Skidfuscator failed to compute some libraries!\n"
-                            + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
-                            + "\n"
-                            + "The following class was NOT found. This can be a dependency of a dependency."
-                            + "Error: " + e.getMessage() + "\n" +
-                            (e.getCause() == null
-                                    ? "\n"
-                                    : "      " + e.getCause().getMessage() + "\n"
-                            )
-                            + "-----------------------------------------------------\n"
-            , e);
+        } catch (Exception ex) {
+            final List<String> missingClasses = classSource.getClassTree().getMissingClasses();
 
-            if (!CLOUD)
-                System.exit(1);
+            LOGGER.warn("Attempting to auto-resolve missing classes...");
+            final Set<CommonDependency> commonDependencies = Arrays.stream(CommonDependency.values()).filter(f -> f.getMatcher().test(missingClasses)).collect(Collectors.toSet());
+
+            if (commonDependencies.isEmpty()) {
+                LOGGER.warn("\n" +
+                        "-----------------------------------------------------\n"
+                        + "/!\\ Skidfuscator failed to compute some libraries!\n"
+                        + "PLEASE READ THE FOLLOWING WITH MUCH ATTENTION\n"
+                        + "-----------------------------------------------------\n"
+                        + "It it advised to read https://skidfuscator.dev/docs/libraries.html\n"
+                        + "\n"
+                        + "The following classes were NOT found. This means they are \n"
+                        +  "either not present in the libraries or the libraries are \n"
+                        +  "corrupted. Libraries themselves can have dependencies\n"
+                        +  "\n"
+                        + "List of missing classes:\n"
+                        + missingClasses.stream().map(f -> "   -->   " + f + "\n").collect(Collectors.joining())
+                        + "-----------------------------------------------------\n"
+                );
+
+                if (!CLOUD)
+                    System.exit(1);
+                return;
+            }
+            commonDependencies.forEach(e -> {
+                LOGGER.warn("Found common dependency: " + e.name() + "...\n");
+                dependencyDownloader.download(e);
+                LOGGER.warn("Downloaded " + e.name() + "...\n");
+            });
+
+
+            final Path mappingsDir = Paths.get("mappings");
+            this.importMappingFolder(mappingsDir.toFile());
+
+            LOGGER.warn(String.format(
+                    "Resolved %d common dependencies... retrying verification...\n",
+                    commonDependencies.size()
+            ));
+            _verify();
             return;
         }
         LOGGER.log("Finished verification!");
+    }
+
+    private void importMappingFolder(final File folder) {
+        for (File lib : folder.listFiles()) {
+            if (lib.isDirectory()) {
+                importMappingFolder(lib);
+                continue;
+            }
+
+            final String absolute = lib.getAbsolutePath();
+            if (!absolute.endsWith(".json")) {
+                LOGGER.debug(String.format("Skipping over %s since not end in json", absolute));
+                continue;
+            }
+
+            final GhostLibrary library = GhostHelper.readFromLibraryFile(LOGGER, lib);
+            final ApplicationClassSource libraryClassSource = GhostHelper.importFile(LOGGER, session.isFuckIt(), library);
+            /* Add library source to class source */
+            classSource.addLibraries(new LibraryClassSource(
+                    libraryClassSource,
+                    5
+            ));
+
+            LOGGER.style(String.format("Importing %s... please wait...\n", absolute));
+        }
     }
 
     protected void _cleanup() {
