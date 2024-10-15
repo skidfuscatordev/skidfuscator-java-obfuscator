@@ -143,6 +143,7 @@ public class Skidfuscator {
     public void run() {
         LOGGER.setDebug(session.isDebug());
         LOGGER.post("Beginning Skidfuscator Community...");
+        _verifyEnvironment();
         if (session.isAnalytics()) {
             _runAnalytics();
         }
@@ -389,6 +390,27 @@ public class Skidfuscator {
             tracker.getHttpAsyncClient().close();
         } catch (Exception e){
             //e.printStackTrace();
+        }
+    }
+
+    protected void _verifyEnvironment() {
+        Path local = Paths.get("");
+
+        // If config is defined, it should be in workspace
+        if (session.getConfig() != null) {
+            LOGGER.debug(String.format("Config path: %s", session.getConfig().toPath().toString()));
+            final Path path = local.resolve(session.getConfig().getName());
+
+            if (path.toFile().getAbsolutePath().equals(session.getConfig().getAbsolutePath())) {
+                LOGGER.debug("Config is in workspace");
+            } else {
+                LOGGER.warn("-----------------------------------------------------\n"
+                        + "Config is not in workspace\n"
+                        + "Your current working directory is: " + local.toAbsolutePath() + "\n"
+                        + "Your current config path is: " + session.getConfig().getAbsolutePath() + "\n"
+                        + "Please execute Skidfuscator in the same directory as your config for best compatibility!!\n"
+                        + "----------------------------------------------------- \n");
+            }
         }
     }
 
@@ -719,11 +741,10 @@ public class Skidfuscator {
             commonDependencies.forEach(e -> {
                 LOGGER.warn("Found common dependency: " + e.name() + "...\n");
                 dependencyDownloader.download(e);
-                LOGGER.warn("Downloaded " + e.name() + "...\n");
             });
 
 
-            final Path mappingsDir = Paths.get("mappings");
+            final Path mappingsDir = Paths.get("mappings-cloud");
             this.importMappingFolder(mappingsDir.toFile());
 
             LOGGER.warn(String.format(

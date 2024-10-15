@@ -4,6 +4,7 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import lombok.SneakyThrows;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -20,10 +21,16 @@ public class DependencyDownloader {
         final String url = dependency.getUrl();
 
         // Resolve path
-        Path mappingsDir = Paths.get("mappings");
+        Path mappingsDir = Paths.get("mappings-cloud");
         Files.createDirectories(mappingsDir);
 
-        Path zipFilePath = mappingsDir.resolve(dependency.name().toLowerCase() + ".zip");
+        if (Files.exists(mappingsDir.resolve(dependency.name().toLowerCase()))) {
+            Skidfuscator.LOGGER.style(String.format("Dependency %s already exists\n", dependency.name()));
+            return;
+        }
+
+        Path zipFilePath = mappingsDir.resolve(dependency.name().toLowerCase() + "/download.zip");
+        Files.createDirectories(zipFilePath.getParent());
 
         // Download the zip file
         Skidfuscator.LOGGER.style(String.format("Downloading dependency %s from %s\n", dependency.name(), url));
@@ -64,8 +71,8 @@ public class DependencyDownloader {
                     zipInputStream.closeEntry();
                 }
             }
-            Skidfuscator.LOGGER.style(String.format("Extracted dependency %s to %s\n", dependency.name(), mappingsDir.toFile().getAbsolutePath()));
             Files.delete(zipFilePath);
+            Skidfuscator.LOGGER.style(String.format("Extracted dependency %s to %s\n", dependency.name(), mappingsDir.toFile().getAbsolutePath()));
         } else {
             Skidfuscator.LOGGER.style(String.format("Unsupported file type for %s\n", url));
         }
