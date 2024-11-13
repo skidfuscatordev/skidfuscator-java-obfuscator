@@ -59,6 +59,9 @@ public class ExclusionHelper {
             else {
                 if (c == '}') {
                     final String matcher = padded.toString();
+                    if (matcher.isEmpty()) {
+                        throw new IllegalArgumentException("Empty matcher! What is going on? PATTERN: " + pattern);
+                    }
                     final String[] split = matcher.contains(" ")
                             ? matcher.split(" ")
                             : new String[]{matcher};

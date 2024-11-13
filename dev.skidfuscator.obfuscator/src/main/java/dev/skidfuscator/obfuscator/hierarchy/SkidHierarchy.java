@@ -212,6 +212,10 @@ public class SkidHierarchy implements Hierarchy {
                         return skidfuscator.getClassSource().isApplicationClass(e.getName());
                     })
                     .filter(e -> !skidfuscator.getExemptAnalysis().isExempt(e))
+                    /*.filter(e -> {
+                        System.out.println("Caching " + e.getName());
+                        return true;
+                    })*/
                     .collect(Collectors.toList());
         }
 

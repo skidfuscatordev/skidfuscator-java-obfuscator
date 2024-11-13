@@ -93,11 +93,11 @@ public class MapleJarUtil {
                 }
 
 
-                for (MethodNode m : cn.getMethods()) {
+                /*for (MethodNode m : cn.getMethods()) {
                     if (m.node.instructions.size() > 10000) {
                         Skidfuscator.LOGGER.warn("large method: " + m + " @" + m.node.instructions.size() + "\n");
                     }
-                }
+                }*/
 
                 try {
                     final String name = skidfuscator.getClassRemapper()

@@ -56,12 +56,12 @@ public class ByteBufferClinitV3EncryptionGenerator extends AbstractEncryptionGen
 
         ));
 
-        System.out.println(String.format(
+        /*System.out.println(String.format(
                 "Generated buffer with %d chars and %d index in %s",
                 buffer.length(),
                 bufferIndex,
                 node.getName()
-        ));
+        ));*/
     }
 
     @Override

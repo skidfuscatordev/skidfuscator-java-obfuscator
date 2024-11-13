@@ -61,7 +61,7 @@ public class LogoUtil {
                 "                               │ "              + topMemory +            " │",
                 "                               └───────────────────────────────────────────┘",
                 "",
-                "                      Author: Ghast     Version: 2.0.10     Today: "
+                "                      Author: Ghast     Version: 2.0.11     Today: "
                         + DateFormat.getDateTimeInstance().format(new Date(Instant.now().toEpochMilli())),
                 ""
         };

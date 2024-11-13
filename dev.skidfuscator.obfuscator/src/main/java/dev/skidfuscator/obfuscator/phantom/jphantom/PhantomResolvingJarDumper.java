@@ -122,7 +122,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		ClassTree tree = source.getClassTree();
 		for(MethodNode m : cn.getMethods()) {
 			if(m.node.instructions.size() > 10000) {
-				System.out.println("large method: " + m + " @" + m.node.instructions.size());
+				//System.out.println("large method: " + m + " @" + m.node.instructions.size());
 			}
 		}
 

@@ -79,13 +79,13 @@ public class SkidControlFlowGraph extends ControlFlowGraph {
             final File output = new File("skidfuscator-error-" + RandomUtil.randomAlphabeticalString(3) + ".txt");
             try {
                 Files.write(output.toPath(), this.toString().getBytes(StandardCharsets.UTF_8));
-                Skidfuscator.LOGGER.warn( "-----------------------------------------------------\n"
+                /*Skidfuscator.LOGGER.warn( "-----------------------------------------------------\n"
                         + "/!\\ Skidfuscator failed to verify an obfuscated method!\n"
                         + "Please use the following debug information and send it to Ghast#0001\n"
                         + "\n"
                         + "File " + output.getAbsolutePath()
                         + "\n"
-                );
+                );*/
             } catch (IOException ex) {
                 Skidfuscator.LOGGER.warn( "-----------------------------------------------------\n"
                         + "/!\\ Skidfuscator failed to verify an obfuscated method!\n"

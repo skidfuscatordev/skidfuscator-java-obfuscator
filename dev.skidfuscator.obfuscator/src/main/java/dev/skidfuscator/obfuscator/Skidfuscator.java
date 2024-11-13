@@ -13,6 +13,7 @@ import dev.skidfuscator.obfuscator.dependency.DependencyDownloader;
 import dev.skidfuscator.obfuscator.dependency.matcher.DependencyMatcher;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
 import dev.skidfuscator.obfuscator.event.EventBus;
+import dev.skidfuscator.obfuscator.event.impl.TransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.ClassTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.GroupTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.MethodTransformEvent;
@@ -52,6 +53,7 @@ import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
+import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
@@ -850,12 +852,14 @@ public class Skidfuscator {
     }
 
     private void run(final String phaseName, final Caller caller) {
+        final List<String> issues = new ArrayList<>();
         final SkidTransformEvent event = caller.callBase();
         EventBus.call(event);
+        issues.addAll(event.getIssues());
 
         try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 hierarchy.getClasses().size(),
-                pad("Running phase [" + phaseName + "] on " + hierarchy.getClasses().size() + " classes", 63) + "│",
+                pad("Running phase [" + phaseName + "] on " + hierarchy.getClasses().size() + " classes", 62) + "│",
                 "│  "
         )){
             for (ClassNode ccls : hierarchy.getClasses()) {
@@ -866,8 +870,9 @@ public class Skidfuscator {
                     continue;
                 }
 
+                final TransformEvent classEvent = caller.callClass(classNode);
                 EventBus.call(
-                        caller.callClass(classNode),
+                        classEvent,
                         el -> {
                             final Class<?> listener = el.getListener().getClass();
                             return !Transformer.class.isAssignableFrom(listener)
@@ -877,13 +882,15 @@ public class Skidfuscator {
                             );
                         }
                 );
+                issues.addAll(classEvent.getIssues());
                 progressBar.tick();
             }
         }
 
+
         try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 hierarchy.getGroups().size(),
-                pad("Running phase [" + phaseName + "] on " + hierarchy.getGroups().size() + " method groups", 63) + "│",
+                pad("Running phase [" + phaseName + "] on " + hierarchy.getGroups().size() + " method groups", 62) + "│",
                 "│  "
         )){
             for (SkidGroup group : hierarchy.getGroups()) {
@@ -892,8 +899,9 @@ public class Skidfuscator {
                     continue;
                 }
 
+                final TransformEvent groupEvent = caller.callGroup(group);
                 EventBus.call(
-                        caller.callGroup(group),
+                        groupEvent,
                         el -> {
                             final Class<?> listenerClazz = el.getListener().getClass();
                             return !Transformer.class.isAssignableFrom(listenerClazz)
@@ -911,6 +919,7 @@ public class Skidfuscator {
                                     );
                         }
                 );
+                issues.addAll(groupEvent.getIssues());
                 progressBar.tick();
             }
         }
@@ -919,7 +928,7 @@ public class Skidfuscator {
 
         try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 size,
-                pad("Running phase [" + phaseName + "] on " + size + " methods", 63) + "│",
+                pad("Running phase [" + phaseName + "] on " + size + " methods", 62) + "│",
                 "│  "
         )){
             for (ClassNode ccls : hierarchy.getClasses()) {
@@ -949,8 +958,9 @@ public class Skidfuscator {
                         continue;
                     }
 
+                    final TransformEvent methodEvent = caller.callMethod(methodNode);
                     EventBus.call(
-                            caller.callMethod(methodNode),
+                            methodEvent,
                             el -> {
                                 final Class<?> listenerClazz = el.getListener().getClass();
                                 return !Transformer.class.isAssignableFrom(listenerClazz)
@@ -960,10 +970,26 @@ public class Skidfuscator {
                                 );
                             }
                     );
+                    issues.addAll(methodEvent.getIssues());
                     methodNode.getCfg().recomputeEdges();
                     progressBar.tick();
                 }
             }
+        }
+
+        System.out.println(ansi().cursorUpLine()
+                .append("│  ")
+                .append(pad(String.format(
+                        "Found " + ConsoleColors.RED + "%d " + ConsoleColors.RESET + "issues | " + " Modified " + ConsoleColors.YELLOW + "%d" + ConsoleColors.RESET,
+                        issues.size(), event.getChanged()
+                ), 87))
+                .append("│"));
+        issues.forEach(e -> System.out.println("│  --> " + pad(e, 61) + "│"));
+
+        if (!phaseName.equals("Finalize")) {
+            System.out.println("│───────────────────────────────────────────────────────────────────│\n");
+        } else {
+            System.out.println("");
         }
     }
 

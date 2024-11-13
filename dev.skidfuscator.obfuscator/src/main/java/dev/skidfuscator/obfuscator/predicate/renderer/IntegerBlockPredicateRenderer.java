@@ -675,7 +675,12 @@ import java.util.stream.Collectors;
         final BasicBlock entryPoint = methodNode.getEntryBlock();
         final SkidBlock seedEntry = (SkidBlock) entryPoint;
         cfg.recomputeEdges();
-        cfg.verify();
+
+        try {
+            cfg.verify();
+        } catch (Exception e) {
+            event.warn("Failed to verify CFG for method " + methodNode.getName());
+        }
 
         /*
          *    ____     __
@@ -867,7 +872,11 @@ import java.util.stream.Collectors;
             System.out.println(cfg.toString());
         }
         cfg.recomputeEdges();
-        cfg.verify();
+        try {
+            cfg.verify();
+        } catch (Exception e) {
+            event.warn("Failed to verify post-CFG for method " + methodNode.getName());
+        }
 
         return;
     }
