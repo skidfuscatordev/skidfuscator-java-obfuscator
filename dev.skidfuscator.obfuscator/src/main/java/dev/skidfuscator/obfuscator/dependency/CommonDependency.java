@@ -10,7 +10,14 @@ public enum CommonDependency {
         public boolean test(List<String> strings) {
             return strings.stream().anyMatch(e -> e.contains("org/bukkit"));
         }
-    });
+    }),
+    CONSCRYPT("https://raw.githubusercontent.com/skidfuscatordev/mappings/refs/heads/main/conscrypt/2.5.2/org.conscrypt.conscrypt-openjdk-uber-2.5.2.json", new DependencyMatcher() {
+        @Override
+        public boolean test(List<String> strings) {
+            return strings.stream().anyMatch(e -> e.contains("org/conscrypt"));
+        }
+    })
+    ;
 
     private final String url;
     private final DependencyMatcher matcher;

@@ -110,8 +110,7 @@ public class ObfuscateCommand implements Callable<Integer> {
         }
 
         if (exempt != null) {
-            final File converted = new File(exempt.getAbsolutePath()
-                    .substring(0, exempt.getAbsolutePath().lastIndexOf("/")) + "/config.hocon");
+            final File converted = new File(new File(exempt.getAbsolutePath()).getParentFile().getAbsolutePath(), "config.hocon");
             final String warning = "\n" + ConsoleColors.YELLOW
                     + "██╗    ██╗ █████╗ ██████╗ ███╗   ██╗██╗███╗   ██╗ ██████╗ \n"
                     + "██║    ██║██╔══██╗██╔══██╗████╗  ██║██║████╗  ██║██╔════╝ \n"
