@@ -14,6 +14,7 @@ import dev.skidfuscator.obfuscator.transform.impl.string.generator.EncryptionGen
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.ByteBufferClinitV3EncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.BytesClinitV3EncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.BytesV3EncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.VirtualizedStringEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
@@ -63,30 +64,34 @@ public class StringTransformerV2 extends AbstractTransformer {
         EncryptionGeneratorV3 generator = keyMap.get(parentNode);
 
         if (generator == null) {
-            switch (RandomUtil.nextInt(3)) {
-                case 0: {
-                    final int size = RandomUtil.nextInt(127) + 1;
-                    final byte[] keys = new byte[size];
+            generator = new VirtualizedStringEncryptionGenerator();
+            keyMap.put(parentNode, generator);
+            if (false) {
+                switch (RandomUtil.nextInt(3)) {
+                    case 0: {
+                        final int size = RandomUtil.nextInt(127) + 1;
+                        final byte[] keys = new byte[size];
 
-                    for (int i = 0; i < size; i++) {
-                        keys[i] = (byte) (RandomUtil.nextInt(127) + 1);
+                        for (int i = 0; i < size; i++) {
+                            keys[i] = (byte) (RandomUtil.nextInt(127) + 1);
+                        }
+                        keyMap.put(parentNode, (generator = new BytesV3EncryptionGenerator(keys)));
+                        break;
                     }
-                    keyMap.put(parentNode, (generator = new BytesV3EncryptionGenerator(keys)));
-                    break;
-                }
-                case 1: {
-                    final int size = RandomUtil.nextInt(127) + 1;
-                    final byte[] keys = new byte[size];
+                    case 1: {
+                        final int size = RandomUtil.nextInt(127) + 1;
+                        final byte[] keys = new byte[size];
 
-                    for (int i = 0; i < size; i++) {
-                        keys[i] = (byte) (RandomUtil.nextInt(127) + 1);
+                        for (int i = 0; i < size; i++) {
+                            keys[i] = (byte) (RandomUtil.nextInt(127) + 1);
+                        }
+                        keyMap.put(parentNode, (generator = new BytesClinitV3EncryptionGenerator(keys)));
+                        break;
                     }
-                    keyMap.put(parentNode, (generator = new BytesClinitV3EncryptionGenerator(keys)));
-                    break;
-                }
-                default: {
-                    keyMap.put(parentNode, (generator = new ByteBufferClinitV3EncryptionGenerator()));
-                    break;
+                    default: {
+                        keyMap.put(parentNode, (generator = new ByteBufferClinitV3EncryptionGenerator()));
+                        break;
+                    }
                 }
             }
         }

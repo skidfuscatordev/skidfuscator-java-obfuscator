@@ -137,6 +137,7 @@ public class NewArrayExpr extends Expr {
 		}
 
 		if (cst.length > 0) {
+			System.out.println("Type: " + type.getInternalName() + " Element: " + type.getElementType().getInternalName() + " Csts: " + Arrays.deepToString(cst));
 			switch (type.getElementType().getSort()) {
 				case Type.BYTE: {
 					for (int i = 0; i < cst.length; i++) {
@@ -147,8 +148,53 @@ public class NewArrayExpr extends Expr {
 					}
 					break;
 				}
+				case Type.SHORT: {
+					for (int i = 0; i < cst.length; i++) {
+						visitor.visitInsn(Opcodes.DUP);
+						ConstantExpr.packInt(visitor, i);
+						cst[i].toCode(visitor, assembler);
+						visitor.visitInsn(Opcodes.SASTORE);
+					}
+					break;
+				}
+				case Type.CHAR: {
+					for (int i = 0; i < cst.length; i++) {
+						visitor.visitInsn(Opcodes.DUP);
+						ConstantExpr.packInt(visitor, i);
+						cst[i].toCode(visitor, assembler);
+						visitor.visitInsn(Opcodes.CASTORE);
+					}
+					break;
+				}
+				case Type.FLOAT: {
+					for (int i = 0; i < cst.length; i++) {
+						visitor.visitInsn(Opcodes.DUP);
+						ConstantExpr.packInt(visitor, i);
+						cst[i].toCode(visitor, assembler);
+						visitor.visitInsn(Opcodes.FASTORE);
+					}
+					break;
+				}
+				case Type.DOUBLE: {
+					for (int i = 0; i < cst.length; i++) {
+						visitor.visitInsn(Opcodes.DUP);
+						ConstantExpr.packInt(visitor, i);
+						cst[i].toCode(visitor, assembler);
+						visitor.visitInsn(Opcodes.DASTORE);
+					}
+					break;
+				}
+				case Type.INT: {
+					for (int i = 0; i < cst.length; i++) {
+						visitor.visitInsn(Opcodes.DUP);
+						ConstantExpr.packInt(visitor, i);
+						cst[i].toCode(visitor, assembler);
+						visitor.visitInsn(Opcodes.IASTORE);
+					}
+					break;
+				}
 				default:
-					throw new IllegalStateException("Not implemented (type: " + type.getInternalName() + " csts: " + Arrays.deepToString(cst) + ")");
+					throw new IllegalStateException("Not implemented (type: " + type.getInternalName() + " elem: " + type.getElementType() + " csts: " + Arrays.deepToString(cst) + ")");
 			}
 		}
 	}

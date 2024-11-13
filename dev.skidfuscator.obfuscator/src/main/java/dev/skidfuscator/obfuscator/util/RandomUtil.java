@@ -26,6 +26,12 @@ public class RandomUtil {
         return random.nextBoolean();
     }
 
+    public byte[] randomBytes(int size) {
+        byte[] bytes = new byte[size];
+        random.nextBytes(bytes);
+        return bytes;
+    }
+
     public String randomIsoString(int size) {
         final int leftLimit = 48; // numeral '0'
         final int rightLimit = 122; // letter 'z'

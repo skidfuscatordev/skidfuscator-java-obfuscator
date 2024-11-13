@@ -136,12 +136,17 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
         for (Method declaredMethod : this.getClass().getDeclaredMethods()) {
             declaredMethod.setAccessible(true);
 
+            System.out.println(declaredMethod.getName());
+            System.out.println(declaredMethod.getAnnotation(InjectMethod.class));
+
             /*
              * Skip methods that are not annotated with @Inject
              */
             if (!declaredMethod.isAnnotationPresent(InjectMethod.class)) {
                 continue;
             }
+
+            System.out.println("Injecting method " + declaredMethod.getName());
 
             /*
              * Get the method node from the class node
@@ -220,6 +225,28 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
                             throw new IllegalStateException("Field remap not found for " + fieldInsnNode.name + fieldInsnNode.desc);
                         }
                     }
+                } else if (insn instanceof org.objectweb.asm.tree.MethodInsnNode) {
+                    final org.objectweb.asm.tree.MethodInsnNode methodInsnNode = (org.objectweb.asm.tree.MethodInsnNode) insn;
+
+                    /*
+                     * If the method owner is the same as the class node, then we need to remap it
+                     */
+                    if (methodInsnNode.owner.equals(classNode.getName())) {
+                        methodInsnNode.owner = node.getName();
+                    }
+
+                    /*
+                     * Remap the method name and description to their new values
+                     */
+                    final String remappedMethodName = methodMapping.getMapping(methodInsnNode.name);
+
+                    if (remappedMethodName != null) {
+                        methodInsnNode.name = remappedMethodName;
+                    } else {
+                        if (methodInsnNode.owner.equals(classNode.getName())) {
+                            throw new IllegalStateException("Method remap not found for " + methodInsnNode.name);
+                        }
+                    }
                 }
             });
 
@@ -284,28 +311,28 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
         );
     }
 
-    protected Expr generateByteArrayGenerator(final SkidClassNode node, final byte[] encrypted) {
+    protected static <T> Expr generateArrayGenerator(final SkidClassNode node, final T[] array, final Type elementType) {
         final SkidMethodNode injector = new SkidMethodNodeBuilder(node.getSkidfuscator(), node)
                 .access(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE)
                 .name(RandomUtil.randomAlphabeticalString(15))
-                .desc("()[B")
+                .desc("()[" + elementType.getDescriptor())
                 .phantom(true)
                 .build();
 
-        final Expr[] csts = new Expr[encrypted.length];
-        for (int i = 0; i < encrypted.length; i++) {
-            csts[i] = new ConstantExpr(encrypted[i], Type.BYTE_TYPE);
+        final Expr[] constants = new Expr[array.length];
+        for (int i = 0; i < array.length; i++) {
+            constants[i] = new ConstantExpr(array[i], elementType);
         }
 
-        final NewArrayExpr encryptedExpr = new NewArrayExpr(
-                new Expr[]{new ConstantExpr(encrypted.length, Type.INT_TYPE)},
-                Type.getType(byte[].class),
-                csts
+        final NewArrayExpr arrayExpr = new NewArrayExpr(
+                new Expr[]{new ConstantExpr(array.length, Type.INT_TYPE)},
+                Type.getType(elementType.getDescriptor() + "[]"),
+                constants
         );
 
         injector.getCfg()
                 .getEntry()
-                .add(new ReturnStmt(Type.getType(byte[].class), encryptedExpr));
+                .add(new ReturnStmt(Type.getType(elementType.getDescriptor() + "[]"), arrayExpr));
 
         return new StaticInvocationExpr(
                 node.isInterface() ? InvocationExpr.CallType.INTERFACE : InvocationExpr.CallType.STATIC,
@@ -314,6 +341,109 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
                 injector.getName(),
                 injector.getDesc()
         );
+    }
+
+    protected static Expr generateByteArrayGenerator(final SkidClassNode node, final byte[] array) {
+        return generatePrimitiveArrayGenerator(node, array, Type.BYTE_TYPE);
+    }
+
+    protected static Expr generateIntArrayGenerator(final SkidClassNode node, final int[] array) {
+        return generatePrimitiveArrayGenerator(node, array, Type.INT_TYPE);
+    }
+
+    private static Expr generatePrimitiveArrayGenerator(final SkidClassNode node, final Object array, final Type elementType) {
+        // Validation
+        if (!elementType.equals(Type.BYTE_TYPE) && !elementType.equals(Type.INT_TYPE)) {
+            throw new IllegalArgumentException("Unsupported primitive type: " + elementType);
+        }
+
+        // Check array
+        if (array == null) {
+            throw new IllegalArgumentException("Array cannot be null");
+        }
+
+        // Check array type
+        if (!array.getClass().isArray()) {
+            throw new IllegalArgumentException("Object is not an array");
+        }
+
+        // Check array length
+        if (java.lang.reflect.Array.getLength(array) == 0) {
+            throw new IllegalArgumentException("Array length is 0");
+        }
+
+        // Check array element type
+        if (!elementType.equals(Type.getType(array.getClass().getComponentType()))) {
+            throw new IllegalArgumentException("Array element type does not match");
+        }
+
+        final SkidMethodNode injector = new SkidMethodNodeBuilder(node.getSkidfuscator(), node)
+                .access(Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE)
+                .name(RandomUtil.randomAlphabeticalString(15))
+                .desc("()[" + elementType.getDescriptor())
+                .phantom(true)
+                .build();
+
+        final int length = java.lang.reflect.Array.getLength(array);
+        final Expr[] constants = new Expr[length];
+
+        for (int i = 0; i < length; i++) {
+            Object value = java.lang.reflect.Array.get(array, i);
+            constants[i] = new ConstantExpr(value, elementType);
+        }
+
+        final NewArrayExpr arrayExpr = new NewArrayExpr(
+                new Expr[]{new ConstantExpr(length, Type.INT_TYPE)},
+                Type.getType("[" + elementType.getDescriptor()),
+                constants
+        );
+
+        injector.getCfg()
+                .getEntry()
+                .add(new ReturnStmt(Type.getType("[" + elementType.getDescriptor()), arrayExpr));
+
+        return new StaticInvocationExpr(
+                node.isInterface() ? InvocationExpr.CallType.INTERFACE : InvocationExpr.CallType.STATIC,
+                new Expr[0],
+                node.getName(),
+                injector.getName(),
+                injector.getDesc()
+        );
+    }
+
+    // Convenience methods for Map conversion
+    protected static Expr generateIntArrayFromMap(final SkidClassNode node, Map<Integer, Integer> map) {
+        int[] array = new int[map.size() * 2];
+        int i = 0;
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            array[i++] = entry.getKey();
+            array[i++] = entry.getValue();
+        }
+        return generateIntArrayGenerator(node, array);
+    }
+
+    protected static Expr generateByteArrayFromInts(final SkidClassNode node, final int[] array) {
+        byte[] bytes = new byte[array.length * 4];
+        for (int i = 0; i < array.length; i++) {
+            int value = array[i];
+            bytes[i * 4] = (byte) (value >>> 24);
+            bytes[i * 4 + 1] = (byte) (value >>> 16);
+            bytes[i * 4 + 2] = (byte) (value >>> 8);
+            bytes[i * 4 + 3] = (byte) value;
+        }
+        return generateByteArrayGenerator(node, bytes);
+    }
+
+    // Helper method to handle arrays of different types
+    protected static Expr generateArray(final SkidClassNode node, final Object array) {
+        if (array instanceof byte[]) {
+            return generateByteArrayGenerator(node, (byte[]) array);
+        } else if (array instanceof int[]) {
+            return generateIntArrayGenerator(node, (int[]) array);
+        } else if (array instanceof Map) {
+            return generateIntArrayFromMap(node, (Map<Integer, Integer>) array);
+        }
+        throw new IllegalArgumentException("Unsupported array type: " + array.getClass());
     }
 
     static class InjectMapping {
