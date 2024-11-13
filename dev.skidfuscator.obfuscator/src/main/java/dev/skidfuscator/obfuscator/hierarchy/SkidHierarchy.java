@@ -337,12 +337,6 @@ public class SkidHierarchy implements Hierarchy {
                             .filter(e -> e instanceof Invokable)
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
-
-                                if (invocation.getName().equals("handle")) {
-                                    System.out.println("Invoking " + invocation.getOwner() + "#"
-                                            + invocation.getName() + invocation.getDesc());
-                                }
-
                                 final ClassMethodHash target;
 
                                 if (invocation instanceof DynamicInvocationExpr) {

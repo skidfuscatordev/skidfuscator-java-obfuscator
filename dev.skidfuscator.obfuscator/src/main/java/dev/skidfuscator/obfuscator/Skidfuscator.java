@@ -101,6 +101,7 @@ public class Skidfuscator {
 
     private final SkidfuscatorSession session;
 
+    protected Set<CommonDependency> installedDependencies = new HashSet<>();
     protected SkidApplicationClassSource classSource;
     private LibraryClassSource jvmClassSource;
     protected JarContents jarContents;
@@ -714,8 +715,16 @@ public class Skidfuscator {
         } catch (Exception ex) {
             final List<String> missingClasses = classSource.getClassTree().getMissingClasses();
 
-            LOGGER.warn("Attempting to auto-resolve missing classes...");
-            final Set<CommonDependency> commonDependencies = Arrays.stream(CommonDependency.values()).filter(f -> f.getMatcher().test(missingClasses)).collect(Collectors.toSet());
+            LOGGER.warn(
+                    "Attempting to auto-resolve missing classes..."
+                            +  "\n"
+                            + "List of missing classes:\n"
+                            + missingClasses.stream().map(f -> "   -->   " + f + "\n").collect(Collectors.joining())
+            );
+            final Set<CommonDependency> commonDependencies = Arrays.stream(CommonDependency.values())
+                    .filter(f -> f.getMatcher().test(missingClasses))
+                    .filter(f -> !installedDependencies.contains(f))
+                    .collect(Collectors.toSet());
 
             if (commonDependencies.isEmpty()) {
                 LOGGER.warn("\n" +
@@ -751,6 +760,7 @@ public class Skidfuscator {
                     "Resolved %d common dependencies... retrying verification...\n",
                     commonDependencies.size()
             ));
+            installedDependencies.addAll(commonDependencies);
             _verify();
             return;
         }

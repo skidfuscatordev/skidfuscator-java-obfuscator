@@ -29,13 +29,13 @@ public class DependencyDownloader {
             return;
         }
 
-        Path zipFilePath = mappingsDir.resolve(dependency.name().toLowerCase() + "/download.zip");
-        Files.createDirectories(zipFilePath.getParent());
+        Path resolvedMappingPath = mappingsDir.resolve(dependency.name().toLowerCase() + "/download.mappings");
+        Files.createDirectories(resolvedMappingPath.getParent());
 
         // Download the zip file
         Skidfuscator.LOGGER.style(String.format("Downloading dependency %s from %s\n", dependency.name(), url));
         try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
-             FileOutputStream fileOutputStream = new FileOutputStream(zipFilePath.toFile())) {
+             FileOutputStream fileOutputStream = new FileOutputStream(resolvedMappingPath.toFile())) {
             byte[] dataBuffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
@@ -43,16 +43,16 @@ public class DependencyDownloader {
             }
         }
 
-        if (!Files.exists(zipFilePath)) {
-            throw new IOException("Failed to download the file: " + zipFilePath);
+        if (!Files.exists(resolvedMappingPath)) {
+            throw new IOException("Failed to download the file: " + resolvedMappingPath);
         }
 
-        Skidfuscator.LOGGER.style(String.format("Downloaded dependency %s to %s\n", dependency.name(), zipFilePath));
+        Skidfuscator.LOGGER.style(String.format("Downloaded dependency %s to %s\n", dependency.name(), resolvedMappingPath));
 
         if (url.endsWith(".jar")) {
             throw new IllegalArgumentException("Invalid dependency type");
         } else if (url.endsWith(".zip")) {
-            try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(zipFilePath))) {
+            try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(resolvedMappingPath))) {
                 ZipEntry entry;
                 while ((entry = zipInputStream.getNextEntry()) != null) {
                     Path filePath = mappingsDir.resolve(entry.getName());
@@ -71,10 +71,15 @@ public class DependencyDownloader {
                     zipInputStream.closeEntry();
                 }
             }
-            Files.delete(zipFilePath);
             Skidfuscator.LOGGER.style(String.format("Extracted dependency %s to %s\n", dependency.name(), mappingsDir.toFile().getAbsolutePath()));
-        } else {
+        } else if (url.endsWith(".json")) {
+            // Copy the file to the mappings directory
+            Files.copy(resolvedMappingPath, mappingsDir.resolve(dependency.name().toLowerCase() + ".json"));
+            Skidfuscator.LOGGER.style(String.format("Extracted JSON particular dependency %s to %s\n", dependency.name(), mappingsDir.toFile().getAbsolutePath()));
+        }
+        else {
             Skidfuscator.LOGGER.style(String.format("Unsupported file type for %s\n", url));
         }
+        Files.delete(resolvedMappingPath);
     }
 }
