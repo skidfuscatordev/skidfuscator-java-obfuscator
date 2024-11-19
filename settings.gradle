@@ -52,4 +52,5 @@ void initBase() {
 
 initMaple()
 initBase()
+include 'dev.skidfuscator.obfuscator.pureanalysis'
 
