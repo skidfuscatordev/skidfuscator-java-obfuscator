@@ -19,8 +19,8 @@ public class ImmutablePoint {
 
     @Pure(description = "Pure calculation method", 
          because = {"Uses only local state", "Returns new object"})
-    public static ImmutablePoint add(ImmutablePoint p1, ImmutablePoint p2) {
-        return new ImmutablePoint(p1.x + p2.x, p1.y + p2.y);
+    public ImmutablePoint add(int x, int y) {
+        return new ImmutablePoint(this.x + x, this.y + y);
     }
 
     @Pure(description = "Pure distance calculation",

@@ -1,11 +1,8 @@
 package framework;
 
+import dev.skidfuscator.pureanalysis.ClassHierarchyAnalyzer;
 import dev.skidfuscator.pureanalysis.PurityAnalyzer;
-import dev.skidfuscator.pureanalysis.condition.CompositeCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.PrimitiveParametersCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.StaticMethodCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.ArrayStateCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.nested.NoSideEffectsCondition;
+import dev.skidfuscator.pureanalysis.PurityReport;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.objectweb.asm.ClassReader;
@@ -38,17 +35,11 @@ public class PurityAnalysisTest {
     private final MemoryClassLoader classLoader = new MemoryClassLoader();
 
     public PurityAnalysisTest() {
-        this.analyzer = new PurityAnalyzer(classLoader);
+        this.analyzer = new PurityAnalyzer(new ClassHierarchyAnalyzer(classLoader));
         setupAnalyzer();
     }
 
     private void setupAnalyzer() {
-        CompositeCondition rootCondition = new CompositeCondition(CompositeCondition.Operation.AND);
-        rootCondition.addCondition(new StaticMethodCondition());
-        rootCondition.addCondition(new PrimitiveParametersCondition());
-        rootCondition.addCondition(new NoSideEffectsCondition());
-        rootCondition.addCondition(new ArrayStateCondition());
-        analyzer.addCondition(rootCondition);
     }
 
     @TestFactory
@@ -160,14 +151,12 @@ public class PurityAnalysisTest {
     }
 
     private void verifyMethodPurity(MethodTestInfo testInfo) {
-        boolean actualPure = analyzer.analyzeMethod(testInfo.methodNode, testInfo.classNode);
-
-        String message = buildFailureMessage(testInfo, actualPure);
+        PurityReport actualPure = analyzer.analyzeMethodPurity(testInfo.methodNode, testInfo.classNode);
 
         if (testInfo.expectedPure) {
-            assertTrue(actualPure, message);
+            assertTrue(actualPure.isPure(), actualPure.toString());
         } else {
-            assertFalse(actualPure, message);
+            assertFalse(actualPure.isPure(), actualPure.toString());
         }
     }
 

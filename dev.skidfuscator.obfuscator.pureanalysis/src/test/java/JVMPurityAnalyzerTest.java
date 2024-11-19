@@ -1,8 +1,6 @@
+import dev.skidfuscator.pureanalysis.ClassHierarchyAnalyzer;
 import dev.skidfuscator.pureanalysis.PurityAnalyzer;
-import dev.skidfuscator.pureanalysis.condition.CompositeCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.PrimitiveParametersCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.StaticMethodCondition;
-import dev.skidfuscator.pureanalysis.condition.impl.nested.NoSideEffectsCondition;
+import dev.skidfuscator.pureanalysis.PurityReport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
@@ -25,25 +23,9 @@ public class JVMPurityAnalyzerTest {
 
     @BeforeEach
     void setUp() {
-        analyzer = new PurityAnalyzer(getClass().getClassLoader());
-        setupAnalyzer();
-    }
-
-    private void setupAnalyzer() {
-        // Create composite condition for purity check
-        CompositeCondition rootCondition = new CompositeCondition(CompositeCondition.Operation.AND);
-        rootCondition.addCondition(new StaticMethodCondition());
-        rootCondition.addCondition(new PrimitiveParametersCondition());
-        rootCondition.addCondition(new NoSideEffectsCondition());
-        analyzer.addCondition(rootCondition);
-
-        // Register known pure classes
-        analyzer.registerPureClass("java/lang/Math");
-        analyzer.registerPureClass("java/lang/String");
-        analyzer.registerPureClass("java/lang/Integer");
-        analyzer.registerPureClass("java/lang/Long");
-        analyzer.registerPureClass("java/lang/Double");
-        analyzer.registerPureClass("java/lang/Float");
+        analyzer = new PurityAnalyzer(new ClassHierarchyAnalyzer(
+                getClass().getClassLoader())
+        );
     }
 
     @Test
@@ -144,8 +126,8 @@ public class JVMPurityAnalyzerTest {
 
             String methodKey = classNode.name + "." + method.name + method.desc;
             try {
-                boolean isPure = analyzer.analyzeMethod(method, classNode);
-                methodResults.put(methodKey, isPure);
+                PurityReport purity = analyzer.analyzeMethodPurity(method, classNode);
+                methodResults.put(methodKey, purity.isPure());
             } catch (Exception e) {
                 System.err.println("Failed to analyze method: " + methodKey + " - " + e.getMessage());
             }

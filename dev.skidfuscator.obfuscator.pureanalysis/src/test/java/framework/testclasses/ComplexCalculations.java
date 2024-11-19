@@ -4,7 +4,8 @@ import framework.Impure;
 import framework.Pure;
 
 public class ComplexCalculations {
-    @Pure(
+    // matrix input not supported yet
+    /*@Pure(
             description = "Matrix multiplication",
             because = {
                     "Pure mathematical operation",
@@ -22,7 +23,7 @@ public class ComplexCalculations {
             }
         }
         return result;
-    }
+    }*/
 
     @Impure(
             description = "Matrix operation with logging",

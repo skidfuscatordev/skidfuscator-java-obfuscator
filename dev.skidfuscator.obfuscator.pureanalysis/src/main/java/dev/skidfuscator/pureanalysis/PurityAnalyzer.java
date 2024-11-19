@@ -1,112 +1,50 @@
 package dev.skidfuscator.pureanalysis;
 
-import dev.skidfuscator.pureanalysis.condition.PurityCondition;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
+import dev.skidfuscator.pureanalysis.impl.*;
+import org.objectweb.asm.tree.*;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class PurityAnalyzer {
-    private final ConcurrentHashMap<String, Boolean> pureClasses = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Boolean> methodPurityCache = new ConcurrentHashMap<>();
+    private final Set<Analyzer> analyzers = new HashSet<>();
+    private final PurityContext context;
     private final ClassHierarchyAnalyzer hierarchyAnalyzer;
-    private final List<PurityCondition> conditions;
 
-    // ThreadLocal set to track methods being analyzed in the current thread
-    private final ThreadLocal<Set<String>> methodsUnderAnalysis = ThreadLocal.withInitial(HashSet::new);
-
-    public PurityAnalyzer(ClassLoader classLoader) {
-        this.hierarchyAnalyzer = new ClassHierarchyAnalyzer(classLoader);
-        this.conditions = new ArrayList<>();
+    public PurityAnalyzer(ClassHierarchyAnalyzer hierarchyAnalyzer) {
+        this.hierarchyAnalyzer = hierarchyAnalyzer;
+        this.context = new PurityContext(this);
+        initializeAnalyzers();
     }
 
-    public void addCondition(PurityCondition condition) {
-        conditions.add(condition);
+    public PurityContext getContext() {
+        return context;
     }
 
-    public void registerPureClass(String className) {
-        pureClasses.put(className, true);
+    private void initializeAnalyzers() {
+        analyzers.add(new TypeInstructionAnalyzer(context, this));
+        analyzers.add(new MethodInstructionAnalyzer(context, this));
+        analyzers.add(new FieldInstructionAnalyzer(context, this));
+        analyzers.add(new DynamicInstructionAnalyzer(context, this));
+        analyzers.add(new NativeMethodAnalyzer(context, this));
+        analyzers.add(new PrimitiveParametersAnalyzer(context, this));
     }
 
-    public boolean isPureClass(String className) {
-        return pureClasses.getOrDefault(className, false);
-    }
+    public PurityReport analyzeMethodPurity(MethodNode method, ClassNode classNode) {
+        final PurityReport report = new PurityReport(true, "Method Analysis", null, null);
+        final Analyzer.Context methodCtx = new Analyzer.Context(
+                method,
+                classNode
+        );
 
-    public boolean isPureMethod(String owner, String name, String desc) {
-        String key = owner + "." + name + desc;
-
-        // If the method is currently being analyzed, assume it's pure to break recursion
-        if (methodsUnderAnalysis.get().contains(key)) {
-            return true;
+        for (Analyzer analyzer : analyzers) {
+            report.addNested(analyzer.analyze(methodCtx));
         }
-
-        return methodPurityCache.getOrDefault(key, false);
-    }
-
-    public boolean analyzeMethod(MethodNode method, ClassNode classNode) {
-        String methodKey = classNode.name + "." + method.name + method.desc;
-
-        // If the method is already cached, return the cached result
-        Boolean cachedResult = methodPurityCache.get(methodKey);
-        if (cachedResult != null) {
-            return cachedResult;
-        }
-
-        // If we're already analyzing this method, return true to break recursion
-        Set<String> currentMethods = methodsUnderAnalysis.get();
-        if (currentMethods.contains(methodKey)) {
-            return true;
-        }
-
-        // Add this method to the set of methods being analyzed
-        currentMethods.add(methodKey);
-
-        try {
-            // Evaluate all conditions
-            boolean isPure = true;
-            for (PurityCondition condition : conditions) {
-                boolean result = condition.evaluateAndPrint(method, classNode, this);
-                if (!result) {
-                    isPure = false;
-                    break;
-                }
-            }
-
-            // Cache the result
-            methodPurityCache.put(methodKey, isPure);
-            return isPure;
-        } finally {
-            // Remove this method from the set of methods being analyzed
-            currentMethods.remove(methodKey);
-            if (currentMethods.isEmpty()) {
-                methodsUnderAnalysis.remove();
-            }
-        }
+        
+        return report;
     }
 
     public ClassHierarchyAnalyzer getHierarchyAnalyzer() {
         return hierarchyAnalyzer;
-    }
-
-    private final Set<String> analyzedClasses = ConcurrentHashMap.newKeySet();
-
-    public void analyzeClass(String className) throws IOException {
-        if (analyzedClasses.contains(className)) {
-            return;
-        }
-
-        ClassNode classNode = hierarchyAnalyzer.getClass(className);
-
-        // Analyze all methods in the class
-        for (MethodNode method : classNode.methods) {
-            analyzeMethod(method, classNode);
-        }
-
-        analyzedClasses.add(className);
     }
 }
