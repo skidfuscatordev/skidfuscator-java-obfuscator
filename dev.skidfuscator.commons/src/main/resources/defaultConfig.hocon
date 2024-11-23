@@ -113,5 +113,5 @@ fieldRenamer {
 
 factoryRenamer {
   enabled: false
-  name: factory
+  name: factory/factory
 }
