@@ -68,4 +68,19 @@ public class LibraryClassSource extends ClassSource {
 	public int getPriority() {
 		return priority;
 	}
+
+	@Override
+	public int size() {
+		return parent.size();
+	}
+
+	@Override
+	public Iterable<ClassNode> iterate() {
+		return parent.iterate();
+	}
+
+	@Override
+	public Iterator<ClassNode> iterator() {
+		return parent.iterator();
+	}
 }

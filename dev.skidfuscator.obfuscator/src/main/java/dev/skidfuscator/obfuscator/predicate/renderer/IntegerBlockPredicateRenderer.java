@@ -12,6 +12,7 @@ import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obfuscator.number.hash.impl.BitwiseHashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.impl.LegacyHashTransformer;
+import dev.skidfuscator.obfuscator.number.pure.VmHashTransformer;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowSetter;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
@@ -65,7 +66,7 @@ import java.util.stream.Collectors;
         super(skidfuscator,"GEN3 Flow", children);
     }
 
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
@@ -95,6 +96,7 @@ import java.util.stream.Collectors;
 
         skidfuscator.setLegacyHasher(new LegacyHashTransformer(skidfuscator));
         skidfuscator.setBitwiseHasher(new BitwiseHashTransformer(skidfuscator));
+        skidfuscator.setVmHasher(new VmHashTransformer(skidfuscator));
     }
 
     /**
@@ -875,7 +877,7 @@ import java.util.stream.Collectors;
         try {
             cfg.verify();
         } catch (Exception e) {
-            event.warn("Failed to verify post-CFG for method " + methodNode.getName());
+            event.warn("Failed to verify post-CFG for method " + methodNode.getName() + e);
         }
 
         return;

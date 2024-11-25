@@ -44,20 +44,32 @@ public class Blocks {
     }
     private SkidBlock exception0(final ControlFlowGraph cfg, final Object notice) {
         // Temporary fix for this
+        final SkidBlock fuckup = new SkidBlock(cfg);
+        final Stmt exception_stmt = stmtException0(notice);
+        fuckup.add(exception_stmt);
+
+        cfg.addVertex(fuckup);
+
+        return fuckup;
+    }
+
+    public Stmt stmtException(final Expr notice) {
+        return stmtException0(notice);
+    }
+
+    public Stmt stmtException(final String notice) {
+        return stmtException0(notice);
+    }
+
+    private Stmt stmtException0(final Object notice) {
         final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length - 1)]);
 
-        final SkidBlock fuckup = new SkidBlock(cfg);
         final Expr alloc_exception = new InitialisedObjectExpr(
                 exception.getClassName().replace(".", "/"),
                 notice == null ? "()V" : "(Ljava/lang/String;)V",
                 notice == null ? new Expr[0] : new Expr[]{(notice instanceof String ? new ConstantExpr(notice) : (Expr) notice)}
         );
 
-        final Stmt exception_stmt = new ThrowStmt(alloc_exception);
-        fuckup.add(exception_stmt);
-
-        cfg.addVertex(fuckup);
-
-        return fuckup;
+        return new ThrowStmt(alloc_exception);
     }
 }

@@ -129,6 +129,8 @@ public class Skidfuscator {
     private HashTransformer legacyHasher;
     @Setter
     private HashTransformer bitwiseHasher;
+    @Setter
+    private HashTransformer vmHasher;
 
     /**
      * Instantiates a new Skidfuscator.

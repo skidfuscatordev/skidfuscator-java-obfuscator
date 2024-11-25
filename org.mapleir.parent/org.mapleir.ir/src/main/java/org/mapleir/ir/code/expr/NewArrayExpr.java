@@ -137,7 +137,7 @@ public class NewArrayExpr extends Expr {
 		}
 
 		if (cst.length > 0) {
-			System.out.println("Type: " + type.getInternalName() + " Element: " + type.getElementType().getInternalName() + " Csts: " + Arrays.deepToString(cst));
+			//System.out.println("Type: " + type.getInternalName() + " Element: " + type.getElementType().getInternalName() + " Csts: " + Arrays.deepToString(cst));
 			switch (type.getElementType().getSort()) {
 				case Type.BYTE: {
 					for (int i = 0; i < cst.length; i++) {

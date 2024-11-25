@@ -17,6 +17,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.24'
 
     api project(':commons')
+    api project(':pure-analysis')
+
     implementation 'com.github.lukfor:magic-progress:0.3.2'
     implementation 'com.github.matomo-org:matomo-java-tracker:v1.7'
     api 'com.github.Col-E:jphantom:1.4.3'
