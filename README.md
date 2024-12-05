@@ -6,7 +6,6 @@
   Skidfuscator: Obfuscation like never seen before.
 </p>
 <p align="center">
-  <a><img alt="Server Version" src="https://github.com/terminalsin/skidfuscator-java-obfuscator/actions/workflows/maven.yml/badge.svg?branch=master"></a>
   <a><img alt="Api Type" src="https://img.shields.io/badge/API-MapleIR-blue"></a>
   <a><img alt="Authors" src="https://img.shields.io/badge/Authors-Ghast-blue"></a>
   <a><img alt="Issues" src="https://img.shields.io/github/issues/terminalsin/skidfuscator-java-obfuscator"></a>
@@ -21,8 +20,20 @@
 </p>
 
 ---
+## 🚀 Quickstart
 
-# 🕵️ What is Skidfuscator?
+> [!TIP]
+> You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly using:
+> ```
+> java -jar skidfuscator.jar obfuscate <path to your jar>
+> ```
+
+Skidfuscator uses a config system, which allows you to customize your obfuscation. We try to automatically download all compatible libraries, but some may slip through the cracks. The Gradle plugin is a work in progress. For now, use:
+```
+java -jar skidfuscator.jar obfuscate <path to your jar> -li=<path to folder with all libs>
+```
+
+## 🕵️ What is Skidfuscator?
 Skidfuscator is a proof of concept obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
 code flow. This is done via intra-procedural passes each designed to mingle the code in a shape where neither the time complexity
 neither the space complexity suffers from a great loss. To achieve the such, we have modeled a couple of well known tricks to 
@@ -54,6 +65,33 @@ not to be commercial but to inspire some more clever approaches to code flow obf
 
 ## Third Generation Flow
 
+### Flow Obfuscation
+- [x] Bogus Exception Flow
+- [x] Bogus Condition Flow
+- [x] **NEW** ✨ Pure Function Hashing Flow
+- [x] Switch Flow
+- [x] Factory Initiation Flow (**Enterprise**)
+- [x] Integer Return Flow (**Enterprise**)
+- [x] Exception Return Flow (**Enterprise**)
+
+### Encryption Obfuscation
+- [x] String Encryption
+- [x] Annotation Encryption (**Enterprise**)
+- [x] Reference Encryption (**Enterprise**)
+
+### Structure Obfuscation
+- [x] Field Renamer (**Enterprise**)
+- [x] Method Renamer (**Enterprise**)
+- [x] Class Renamer (**Enterprise**)
+- [x] Mixin Support (**Enterprise**)
+- [x] Spigot Plugin Support (**Enterprise**)
+
+### Miscelleanous 
+- [x] Ahegao Trolling
+- [x] Driver Protection
+- [x] **Experimental** Outlining Obfuscation (**Enterprise**)
+- [x] Native Driver Protection (**Enterprise**)
+
 What is third generation flow obfuscation? Well, contrary to Zelix's [second generation flow obfuscation](https://www.zelix.com/klassmaster/featuresFlowObfuscation.html), we use an even more complex system with private and public seeds. Here's 
 how it works:
 
@@ -69,24 +107,7 @@ how it works:
 
 We currently are working on a variety of ways to approach this system using various lightweight obfuscation methods. Here are the current ones
 to date:
-Here are the features:
 
-| Feature | Type | Description | Status |
-| --- | --- | --- | --- |
-| `Flow GEN3` | Flow (Community) | Obfuscates methods using the GEN3 Obfuscation methodology | ✅ |
-| `Bogus Jump` | Flow (Community) | Invalid jump to some random generated code to prevent skidding | ✅ |
-| `Bogus Exception`| Flow (Community) | Invalid jump to some random generated exception | ✅ |
-| `Mangled Jump` | Flow (**Enterprise**) | Mutation to the jump condition to make it appear more complex than it actually is | ❌ |
-| `Exception Jump` | Flow (**Enterprise**) | Changes done to flow semantics by forcing an exception then handling all the code in the catch clause | ❌ |
-| `Exception Return`| Flow (**Enterprise**) | Throw an exception with the value and catch it as opposed to returning it (Very heavy) | ❌ |
-| `Strong Opaque Predicate` | Flow (Community) | Use heredity and method invocation to pass a predicate as opposed to declaring it at the beginning of the CFG | ✅ |
-| `Method Inlining` | Flow (**Enterprise**) | Inline uncommon methods which aren't too big | ❌ |
-| `Method Outlining` | Flow (**Enterprise**) | Outline some non-sensitive blocks | ❌ |
-| `Loop Unrolling` | Flow (**Enterprise**) | Rewrite some loops instructions into continuous segments if the loop limit can be pre-determined | ❌ |
-| `Flattening` | Flow (Community) | Use a dispatcher method to harden the semantics of some block ranges (do not use entire method) | ⚠️ |
-| `String Encryption` | String | Encrypt the strings using the opaque predicate | ✅ |
-| `Reference Encryption` | Reference | Encrypt the reference calls using InvokeDynamic using the opaque predicate | ❌ |
-| `Reference Proxying` | Reference | Proxy references using a builder pattern OR dispatcher classes (mostly for initialisation) | ❌ |
 # Credits
 
 ## Libraries used
