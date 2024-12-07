@@ -63,7 +63,42 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           # Use a branch name where the formula resides, usually 'main'
           ref: master
-
+      - name: List Files
+        run: ls -R
+      - name: Create Formula if Missing
+        run: |
+          FORMULA_PATH="Formula/skidfuscator.rb"
+          mkdir -p "$(dirname $FORMULA_PATH)"
+          if [[ ! -f "$FORMULA_PATH" ]]; then
+            echo "Creating formula file..."
+            cat <<EOF > "$FORMULA_PATH"
+          class Skidfuscator < Formula
+          desc "A JVM-based obfuscation suite designed for Java and Android bytecode"
+          homepage "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator"
+          url "PLACEHOLDER"
+          sha256 "PLACEHOLDER"
+          version "PLACEHOLDER"
+          license "MIT"
+          
+          def install
+          libexec.install Dir["*.jar"]
+          jar_name = Dir["#{libexec}/*.jar"].first
+          (bin/"skidfuscator").write <<~EOS
+          #!/usr/bin/env bash
+          exec java -jar "#{jar_name}" "$@"
+          EOS
+          (bin/"skidfuscator").chmod 0755
+          end
+          
+          test do
+          output = shell_output("#{bin}/skidfuscator --help", 0)
+          assert_match "Usage", output
+          end
+          end
+          EOF
+          fi
+      - name: Show Formula Contents
+        run: cat Formula/skidfuscator.rb
       - name: Update formula
         run: |
           FORMULA_PATH="Formula/skidfuscator.rb"
