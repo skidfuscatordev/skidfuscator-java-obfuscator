@@ -1,0 +1,45 @@
+name: Update Homebrew Tap on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  homebrew-releaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release project to Homebrew tap
+        uses: Justintime50/homebrew-releaser@v2
+        with:
+          # The owner and tap name of your Homebrew tap repository
+          homebrew_owner: skidfuscatordev
+          homebrew_tap: homebrew-skidfuscator
+
+          # Required Personal Access Token secret with `repo` permissions
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+          # The `install` block is Ruby code inserted into the formula.
+          # We'll:
+          # 1. Install any JAR in the release into libexec
+          # 2. Create a wrapper script in bin/ to run it
+          install: |
+            libexec.install Dir["*.jar"]
+            jar_name = Dir["#{libexec}/*.jar"].first
+            (bin/"skidfuscator").write <<~EOS
+              #!/usr/bin/env bash
+              exec java -jar "#{jar_name}" "$@"
+            EOS
+            (bin/"skidfuscator").chmod 0755
+
+          # A basic test block: checks if 'skidfuscator --help' prints usage
+          test: 'assert_match("Usage", shell_output("#{bin}/skidfuscator --help", 0))'
+
+          # Optional dependencies (if needed). For Skidfuscator, typically just Java.
+          # If the user must have Java installed, you can specify:
+
+          # We do not need to set version explicitly if releases are semver-tagged.
+          # The action will infer version from the tag (e.g., v2.0.11).
+
+          # No need to update README with a project table or debug here
+          update_readme_table: false
+          debug: false
