@@ -39,6 +39,15 @@ brew tap skidfuscatordev/skidfuscator
 brew install skidfuscator
 ```
 
+### 🔥 Bash (Linux/macOS)
+```
+curl -sL https://raw.githubusercontent.com/skidfuscatordev/skidfuscator-java-obfuscator/refs/heads/master/scripts/install.sh | bash
+```
+### 🔥 Powershell [Admin required] (Windows)
+```
+iex "& { $(iwr -useb https://raw.githubusercontent.com/skidfuscatordev/skidfuscator-java-obfuscator/refs/heads/master/scripts/install.ps1) }"
+```
+
 ## 🕵️ What is Skidfuscator?
 Skidfuscator is a proof of concept obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
 code flow. This is done via intra-procedural passes each designed to mingle the code in a shape where neither the time complexity
