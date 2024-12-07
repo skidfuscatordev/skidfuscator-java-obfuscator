@@ -66,18 +66,28 @@ jobs:
         run: ls -R
       - name: Cleanup and Prepare Formula
         run: |
+          # Ensure Formula directory exists
+          mkdir -p Formula
+
+          # Use absolute path and verify directory exists
+          FORMULA_DIR="$(pwd)/Formula"
+          FORMULA_PATH="${FORMULA_DIR}/skidfuscator.rb"
+
+          echo "Working directory: $(pwd)"
+          echo "Formula directory: ${FORMULA_DIR}"
+          echo "Formula path: ${FORMULA_PATH}"
+
           # Remove any existing formula files
-          rm -f ./Formula/skidfuscator*.rb
+          rm -f ${FORMULA_DIR}/skidfuscator*.rb
 
           # Create the new formula file
-          FORMULA_PATH="Formula/skidfuscator.rb"
-          cat <<EOF > "$FORMULA_PATH"
+          cat > "${FORMULA_PATH}" << 'EOF'
           class Skidfuscator < Formula
             desc "A JVM-based obfuscation suite designed for Java and Android bytecode"
             homepage "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator"
-            url "${{ steps.find_asset.outputs.asset_url }}"
-            sha256 "${{ steps.sha256.outputs.sha256 }}"
-            version "${{ steps.extract_version.outputs.version }}"
+            url "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases/download/2.0.11/skidfuscator.jar"
+            sha256 "8d5bc1f6854995495a8451417cf5235a31a56d20fc4ce6079b19963ed84c49d9"
+            version "2.0.11"
             license "MIT"
 
             def install
@@ -85,7 +95,7 @@ jobs:
               jar_name = Dir["#{libexec}/*.jar"].first
               (bin/"skidfuscator").write <<~EOS
                 #!/usr/bin/env bash
-                exec java -jar "#{jar_name}" "\$@"
+                exec java -jar "#{jar_name}" "$@"
               EOS
               (bin/"skidfuscator").chmod 0755
             end
@@ -97,20 +107,30 @@ jobs:
           end
           EOF
 
+          # Verify file was created
+          ls -la ${FORMULA_DIR}
+
+          # Show file contents
+          echo "Formula contents:"
+          cat "${FORMULA_PATH}"
+
       - name: Debug Formula Content
         run: |
           echo "Formula content:"
-          cat "$FORMULA_PATH"
+          cat Formula/skidfuscator.rb || echo "Failed to read formula file"
           echo "Git status:"
           git status
+          echo "Directory contents:"
+          ls -R
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add ./Formula/skidfuscator.rb
-          git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
+          git add Formula/skidfuscator.rb
+          git commit -m "Update Skidfuscator formula to version 2.0.11"
           git push origin HEAD:master
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
 
