@@ -61,75 +61,56 @@ jobs:
         with:
           repository: skidfuscatordev/homebrew-skidfuscator
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          # Use a branch name where the formula resides, usually 'main'
           ref: master
       - name: List Files
         run: ls -R
-      - name: Create Formula if Missing
+      - name: Cleanup and Prepare Formula
         run: |
+          # Remove any existing formula files
+          rm -f ./Formula/skidfuscator*.rb
+
+          # Create the new formula file
           FORMULA_PATH="Formula/skidfuscator.rb"
-          mkdir -p "$(dirname $FORMULA_PATH)"
-          if [[ ! -f "$FORMULA_PATH" ]]; then
-            echo "Creating formula file..."
-            cat <<EOF > "$FORMULA_PATH"
+          cat <<EOF > "$FORMULA_PATH"
           class Skidfuscator < Formula
-          desc "A JVM-based obfuscation suite designed for Java and Android bytecode"
-          homepage "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator"
-          url "PLACEHOLDER"
-          sha256 "PLACEHOLDER"
-          version "PLACEHOLDER"
-          license "MIT"
-          
-          def install
-          libexec.install Dir["*.jar"]
-          jar_name = Dir["#{libexec}/*.jar"].first
-          (bin/"skidfuscator").write <<~EOS
-          #!/usr/bin/env bash
-          exec java -jar "#{jar_name}" "$@"
-          EOS
-          (bin/"skidfuscator").chmod 0755
-          end
-          
-          test do
-          output = shell_output("#{bin}/skidfuscator --help", 0)
-          assert_match "Usage", output
-          end
+            desc "A JVM-based obfuscation suite designed for Java and Android bytecode"
+            homepage "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator"
+            url "${{ steps.find_asset.outputs.asset_url }}"
+            sha256 "${{ steps.sha256.outputs.sha256 }}"
+            version "${{ steps.extract_version.outputs.version }}"
+            license "MIT"
+
+            def install
+              libexec.install Dir["*.jar"]
+              jar_name = Dir["#{libexec}/*.jar"].first
+              (bin/"skidfuscator").write <<~EOS
+                #!/usr/bin/env bash
+                exec java -jar "#{jar_name}" "\$@"
+              EOS
+              (bin/"skidfuscator").chmod 0755
+            end
+
+            test do
+              output = shell_output("#{bin}/skidfuscator --help", 0)
+              assert_match "Usage", output
+            end
           end
           EOF
-          fi
-      - name: Show Formula Contents
-        run: cat ./Formula/skidfuscator.rb
-      - name: Update formula
+
+      - name: Debug Formula Content
         run: |
-          FORMULA_PATH="./Formula/skidfuscator.rb"
-          NEW_VERSION="${{ steps.extract_version.outputs.version }}"
-          NEW_URL="${{ steps.find_asset.outputs.asset_url }}"
-          NEW_SHA256="${{ steps.sha256.outputs.sha256 }}"
+          echo "Formula content:"
+          cat "$FORMULA_PATH"
+          echo "Git status:"
+          git status
 
-          # Update url line
-          sed -i.bak "s|^  url \".*\"|  url \"${NEW_URL}\"|" $FORMULA_PATH
-          # Update sha256 line
-          sed -i.bak "s|^  sha256 \".*\"|  sha256 \"${NEW_SHA256}\"|" $FORMULA_PATH
-          # Update version line
-          sed -i.bak "s|^  version \".*\"|  version \"${NEW_VERSION}\"|" $FORMULA_PATH
-
-          # Clean backup
-          rm $FORMULA_PATH.bak
-
-          echo "Updated formula with version=${NEW_VERSION}, url=${NEW_URL}, sha256=${NEW_SHA256}"
-          cat $FORMULA_PATH
-      - name: Show updated formula
-        run: cat ./Formula/skidfuscator.rb
       - name: Commit and push changes
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions"
-            git config user.email "github-actions@github.com"
-            git add ./Formula/skidfuscator.rb
-            git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
-            git push origin HEAD:master
-          else
-            echo "No changes to commit"
-          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add ./Formula/skidfuscator.rb
+          git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
+          git push origin HEAD:master
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
