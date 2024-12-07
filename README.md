@@ -33,6 +33,12 @@ Skidfuscator uses a config system, which allows you to customize your obfuscatio
 java -jar skidfuscator.jar obfuscate <path to your jar> -li=<path to folder with all libs>
 ```
 
+### 🔥 Homebrew (macOS)
+```
+brew tap skidfuscatordev/skidfuscator
+brew install skidfuscator
+```
+
 ## 🕵️ What is Skidfuscator?
 Skidfuscator is a proof of concept obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
 code flow. This is done via intra-procedural passes each designed to mingle the code in a shape where neither the time complexity
