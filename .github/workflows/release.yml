@@ -63,7 +63,7 @@ jobs:
           repository: skidfuscatordev/homebrew-skidfuscator
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           # Use a branch name where the formula resides, usually 'main'
-          ref: main
+          ref: master
 
       - name: Update formula
         run: |
