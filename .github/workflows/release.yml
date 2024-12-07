@@ -60,7 +60,7 @@ jobs:
       - name: Checkout tap repository
         uses: actions/checkout@v3
         with:
-          repository: your-username/homebrew-skidfuscator
+          repository: skidfuscatordev/homebrew-skidfuscator
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           # Use a branch name where the formula resides, usually 'main'
           ref: main
