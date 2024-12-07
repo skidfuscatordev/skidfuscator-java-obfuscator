@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     api project(':modasm')
-    api 'com.github.xxDark:SSVM:d559ea90bb'
+    api 'com.github.terminalsin:SSVM:dev-SNAPSHOT'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

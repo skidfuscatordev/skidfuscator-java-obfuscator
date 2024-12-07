@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import dev.skidfuscator.failsafe.Failsafe;
 import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
 import dev.skidfuscator.obfuscator.analytics.SkidTracker;
@@ -10,7 +11,6 @@ import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
 import dev.skidfuscator.obfuscator.dependency.CommonDependency;
 import dev.skidfuscator.obfuscator.dependency.DependencyDownloader;
-import dev.skidfuscator.obfuscator.dependency.matcher.DependencyMatcher;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
 import dev.skidfuscator.obfuscator.event.EventBus;
 import dev.skidfuscator.obfuscator.event.impl.TransformEvent;
@@ -48,10 +48,11 @@ import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.*;
 import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.InterproceduralTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomInitTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
-import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
@@ -79,7 +80,6 @@ import org.objectweb.asm.Opcodes;
 import org.piwik.java.tracking.PiwikRequest;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
-import org.topdank.byteengineer.commons.data.JarResource;
 
 import java.io.File;
 import java.io.IOException;
@@ -675,6 +675,9 @@ public class Skidfuscator {
             }
 
             transformers.addAll(Arrays.asList(
+                    // BASE
+                    new RandomInitTransformer(this),
+                    new InterproceduralTransformer(this),
                     // ----- COMMUNITY -----
                     new NumberTransformer(this),
                     new SwitchTransformer(this),
@@ -751,14 +754,26 @@ public class Skidfuscator {
                     System.exit(1);
                 return;
             }
-            commonDependencies.forEach(e -> {
-                LOGGER.warn("Found common dependency: " + e.name() + "...\n");
-                dependencyDownloader.download(e);
-            });
 
+            // [failsafe]   some people cancel mid download, corrupting the library
+            //              and sometimes i fuck up, rendering it wrong
+            //              so we should nuke and redownload common deps to
+            //              prevent bad things. if it fails again, i want to know
+            //              about it
 
-            final Path mappingsDir = Paths.get("mappings-cloud");
-            this.importMappingFolder(mappingsDir.toFile());
+            Failsafe.run(() -> downloadCommonDependencies(commonDependencies))
+                    .onException()
+                    .retry(1)
+                    .execute(() -> {
+                        LOGGER.warn("Failed to download common dependencies... retrying...\n");
+                        final Path mappingsDir = Paths.get("mappings-cloud");
+                        try {
+                            Files.delete(mappingsDir);
+                        } catch (IOException e) {
+                            LOGGER.error("Failed to download common dependencies again... Please contact the developer\n", e);
+                        }
+                    })
+                    .finish();
 
             LOGGER.warn(String.format(
                     "Resolved %d common dependencies... retrying verification...\n",
@@ -769,6 +784,16 @@ public class Skidfuscator {
             return;
         }
         LOGGER.log("Finished verification!");
+    }
+
+    private void downloadCommonDependencies(Collection<CommonDependency> dependencies) {
+        dependencies.forEach(e -> {
+            LOGGER.warn("Found common dependency: " + e.name() + "...\n");
+            dependencyDownloader.download(e);
+        });
+
+        final Path mappingsDir = Paths.get("mappings-cloud");
+        this.importMappingFolder(mappingsDir.toFile());
     }
 
     private void importMappingFolder(final File folder) {

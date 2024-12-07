@@ -92,7 +92,7 @@ public class VmHashTransformer implements HashTransformer {
         }
     }
 
-    private void selectRandomMethod() {
+    public void selectRandomMethod() {
         if (methodMatches.isEmpty()) {
             throw new IllegalStateException("No valid methods found for hash transformation");
         }
@@ -104,9 +104,9 @@ public class VmHashTransformer implements HashTransformer {
         List<ParameterMatch> paramList = new ArrayList<>(matches);
         this.predicateParam = paramList.get(random.nextInt(paramList.size()));
 
-        System.out.println(String.format(
+        /*System.out.println(String.format(
                 "Selecting method %s", selectedMethod.getOwner().getName() + "." + selectedMethod.getName() + selectedMethod.getDesc()
-        ));
+        ));*/
 
         // Initialize random arguments for each parameter (except predicate param)
         this.randomArgs = new Object[Type.getArgumentTypes(selectedMethod.getDesc()).length];
@@ -122,6 +122,8 @@ public class VmHashTransformer implements HashTransformer {
         try {
             int hashed = hash(starting);
             Expr hashExpr = hash(vertex, caller);
+
+            this.selectRandomMethod();
 
             return new SkiddedHash(hashExpr, hashed);
         } catch (VMException | PanicException e) {
@@ -163,7 +165,7 @@ public class VmHashTransformer implements HashTransformer {
 
         for (int i = 0; i < args.length; i++) {
             if (i == predicateParam.getIndex()) {
-                args[i] = Argument.int32(starting);
+                args[i] = Argument.int32(skidfuscator.getLegacyHasher().hash(starting));
             } else {
                 args[i] = VmUtil.getArgument(vm, randomArgs[i], Type.getArgumentTypes(selectedMethod.getDesc())[i]);
             }
@@ -172,15 +174,15 @@ public class VmHashTransformer implements HashTransformer {
         try {
             return (int) invocationUtil.invokeInt(selectedMethod, args);
         } catch (VMException e) {
-            invocationUtil.invokeVoid(printStackTrace, Argument.reference(e.getOop()));
+            //invocationUtil.invokeVoid(printStackTrace, Argument.reference(e.getOop()));
             methodMatches.remove(selectedMethod);
             selectRandomMethod();
-            System.out.println("Reflushing... found " + selectedMethod.getName() + selectedMethod.getDesc() + " instead");
+            //System.out.println("Reflushing... found " + selectedMethod.getName() + selectedMethod.getDesc() + " instead");
             return hash(starting);
         } catch (Exception e) {
             methodMatches.remove(selectedMethod);
             selectRandomMethod();
-            System.out.println("Reflushing... found " + selectedMethod.getName() + selectedMethod.getDesc() + " instead");
+            //System.out.println("Reflushing... found " + selectedMethod.getName() + selectedMethod.getDesc() + " instead");
             return hash(starting);
         }
     }
@@ -195,7 +197,7 @@ public class VmHashTransformer implements HashTransformer {
         Expr[] invokeArgs = new Expr[types.length];
         for (int i = 0; i < invokeArgs.length; i++) {
             if (i == predicateParam.getIndex()) {
-                invokeArgs[i] = caller.get(vertex);
+                invokeArgs[i] = skidfuscator.getLegacyHasher().hash(vertex, caller);
             } else {
                 invokeArgs[i] = createConstantExpr(types[i], randomArgs[i]);
             }
@@ -208,10 +210,21 @@ public class VmHashTransformer implements HashTransformer {
                 selectedMethod.getDesc()
         );
 
-        System.out.println(String.format("Invoking with %s", invoke));
+        //System.out.println(String.format("Invoking with %s", invoke));
 
         return invoke;
     }
+
+    private static final String[] ILLEGAL_PATTERNS = {
+            // sun/
+            "sun/",
+            "com/sun/",
+            // jdk specific
+            "jdk/internal/",
+            "jdk/swing/interop/DragSourceContextWrapper",
+            "com/oracle/",
+            "com/ibm/",
+    };
 
     @SneakyThrows
     private void init() {
@@ -225,10 +238,10 @@ public class VmHashTransformer implements HashTransformer {
             }
         };
         vm.getProperties().put("java.class.path", "");
-        vm.bootstrap();
 
         final VMInterface vmi = vm.getInterface();
         final MemoryManager memoryManager = vm.getMemoryManager();
+        vm.bootstrap();
 
         // Some patches to circumvent bugs arising from VM implementation changes in later versions
         if (vm.getJvmVersion() > 8) {
@@ -290,14 +303,27 @@ public class VmHashTransformer implements HashTransformer {
 
         final Map<MethodNode, Set<ParameterMatch>> potentialCandidates = new HashMap<>();
 
-        System.out.println("Class sources: ");
+        //System.out.println("Class sources: ");
 
         for (LibraryClassSource library : skidfuscator.getClassSource().getLibraries()) {
-            System.out.println(String.format("-  Source: %s [x%d]", library.getClass().getName(), library.size()));
+            //System.out.println(String.format("-  Source: %s [x%d]", library.getClass().getName(), library.size()));
         }
 
         // Phase 1: Collect all of the compatible methods statically
         for (ClassNode vertex : skidfuscator.getClassSource().iterateWithLibraries()) {
+            if (vertex.isInterface() || vertex.isAnnotation() || vertex.isEnum())
+                continue;
+
+            // [fix] Sun classes are not compatible and weird and whacky. Probably
+            //       more to come
+            if (Arrays.stream(ILLEGAL_PATTERNS).anyMatch(vertex.getName()::startsWith)) {
+                /*System.out.println(String.format(
+                        "Skipping %s due to illegal pattern",
+                        vertex.getName()
+                ));*/
+                continue;
+            }
+
             for (org.mapleir.asm.MethodNode method : vertex.getMethods()) {
                 //System.out.println("Checking method " + method.getName() + " " + method.getDesc());
                 if (!isCandidate(method))
@@ -347,7 +373,7 @@ public class VmHashTransformer implements HashTransformer {
             methodMatches.put(javaMethod, matches);
         });
 
-        System.out.println("Method matches: " + methodMatches.size());
+        //System.out.println("Method matches: " + methodMatches.size());
 
         final InstanceClass vmExceptionKlass = helper.loadClass("java.lang.Throwable");
         printStackTrace = vmExceptionKlass.getMethod("printStackTrace", "()V");

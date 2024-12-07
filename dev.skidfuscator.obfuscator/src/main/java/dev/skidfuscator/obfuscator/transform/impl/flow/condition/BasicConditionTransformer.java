@@ -3,22 +3,17 @@ package dev.skidfuscator.obfuscator.transform.impl.flow.condition;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
-import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
-import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeConditionalJumpStmt;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
-import dev.skidfuscator.obfuscator.util.RandomUtil;
-import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import org.mapleir.flowgraph.edges.ConditionalJumpEdge;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
@@ -60,6 +55,10 @@ public class BasicConditionTransformer extends AbstractTransformer {
             if (parent.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
                 continue;
 
+            if (this.heuristicSizeSkip(methodNode, 8.f)) {
+                continue;
+            }
+
             final Stmt stmt = parent.get(parent.size() - 1);
 
             if (!(stmt instanceof ConditionalJumpStmt) || stmt instanceof FakeConditionalJumpStmt) {
@@ -84,7 +83,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
             final SkidBlock basicBlock = new SkidBlock(cfg);
             cfg.addVertex(basicBlock);
 
-            final HashTransformer transformer = NumberManager.randomHasher(skidfuscator);
+            final HashTransformer transformer = skidfuscator.getVmHasher();
             final SkiddedHash hash = transformer.hash(
                     methodNode.getBlockPredicate(basicBlock),
                     basicBlock,

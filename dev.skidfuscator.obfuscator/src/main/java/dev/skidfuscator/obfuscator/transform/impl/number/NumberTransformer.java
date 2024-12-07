@@ -72,6 +72,10 @@ public class NumberTransformer extends AbstractTransformer {
             if (vertex.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
                 continue;
 
+            if (methodNode.isClinit() && this.heuristicSizeSkip(methodNode, 8.f)) {
+                continue;
+            }
+
             for (Stmt stmt : new HashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
                     if (!(expr instanceof SkidConstantExpr))

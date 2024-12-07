@@ -100,6 +100,13 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                     BlockExempt.NO_OPAQUE))
                 continue;
 
+            // [fix]    heuristic to try to adjust the quantity used in large
+            //          methods, this is to prevent the method from being
+            //          too large and causing issues
+            if (this.heuristicSizeSkip(methodNode, 7.f)) {
+                continue;
+            }
+
             /*
              * I guess I owe some explanation to this.
              */
@@ -147,8 +154,6 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                         fuckupExpr
                 ));
             }
-
-
 
             // Todo change blocks to be skiddedblocks to add method to directly add these
             final ConstantExpr var_const = new AlertableConstantExpr(hash.getHash(), Type.INT_TYPE);
