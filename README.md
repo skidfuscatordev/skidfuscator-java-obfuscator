@@ -47,6 +47,9 @@ Skidfuscator is now feature-complete and continues to be actively maintained wit
 
 ### 1. Automatic Dependency Downloading
 Skidfuscator intelligently identifies and downloads missing dependencies needed for your project, minimizing manual configuration. Known frameworks such as Bukkit are automatically handled, streamlining setup.
+
+![autodepend](https://github.com/user-attachments/assets/958349aa-582b-4751-88e1-ed61408d24b8)
+
 ### 2. Smart Recovery
 In the event of errors or failed obfuscation, Skidfuscator implements a recovery system that intelligently resolves conflicts and provides suggestions to fix issues. This ensures minimal disruption in your development workflow.
 ### 3. Auto Configuration
