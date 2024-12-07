@@ -98,10 +98,10 @@ jobs:
           EOF
           fi
       - name: Show Formula Contents
-        run: cat Formula/skidfuscator.rb
+        run: cat ./Formula/skidfuscator.rb
       - name: Update formula
         run: |
-          FORMULA_PATH="Formula/skidfuscator.rb"
+          FORMULA_PATH="./Formula/skidfuscator.rb"
           NEW_VERSION="${{ steps.extract_version.outputs.version }}"
           NEW_URL="${{ steps.find_asset.outputs.asset_url }}"
           NEW_SHA256="${{ steps.sha256.outputs.sha256 }}"
@@ -119,13 +119,13 @@ jobs:
           echo "Updated formula with version=${NEW_VERSION}, url=${NEW_URL}, sha256=${NEW_SHA256}"
           cat $FORMULA_PATH
       - name: Show updated formula
-        run: cat Formula/skidfuscator.rb
+        run: cat ./Formula/skidfuscator.rb
       - name: Commit and push changes
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions"
             git config user.email "github-actions@github.com"
-            git add Formula/skidfuscator.rb
+            git add ./Formula/skidfuscator.rb
             git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
             git push origin HEAD:main
           else
