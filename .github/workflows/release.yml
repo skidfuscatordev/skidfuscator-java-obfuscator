@@ -14,7 +14,6 @@ on:
 jobs:
   update-formula:
     runs-on: ubuntu-latest
-
     steps:
       - name: Extract version from input or release
         id: extract_version
@@ -84,13 +83,18 @@ jobs:
 
           echo "Updated formula with version=${NEW_VERSION}, url=${NEW_URL}, sha256=${NEW_SHA256}"
           cat $FORMULA_PATH
-
+      - name: Show updated formula
+        run: cat Formula/skidfuscator.rb
       - name: Commit and push changes
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add Formula/skidfuscator.rb
-          git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
-          git push origin HEAD:main
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add Formula/skidfuscator.rb
+            git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
+            git push origin HEAD:main
+          else
+            echo "No changes to commit"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
