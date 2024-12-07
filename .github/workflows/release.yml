@@ -127,7 +127,7 @@ jobs:
             git config user.email "github-actions@github.com"
             git add ./Formula/skidfuscator.rb
             git commit -m "Update Skidfuscator formula to version ${{ steps.extract_version.outputs.version }}"
-            git push origin HEAD:main
+            git push origin HEAD:master
           else
             echo "No changes to commit"
           fi
