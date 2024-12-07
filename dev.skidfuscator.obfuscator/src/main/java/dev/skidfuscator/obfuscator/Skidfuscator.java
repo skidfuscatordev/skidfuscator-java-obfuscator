@@ -52,6 +52,7 @@ import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.Interproc
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomInitTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
@@ -684,6 +685,7 @@ public class Skidfuscator {
                     new BasicConditionTransformer(this),
                     new BasicExceptionTransformer(this),
                     new BasicRangeTransformer(this),
+                    new PureHashTransformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)

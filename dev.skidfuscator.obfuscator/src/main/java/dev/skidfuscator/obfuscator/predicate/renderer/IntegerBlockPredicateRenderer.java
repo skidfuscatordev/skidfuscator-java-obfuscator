@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
 
     public static boolean DEBUG = false;
 
-    @Listen
+    @Listen(EventPriority.HIGHEST)
     void handle(final InitSkidTransformEvent event) {
         final String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
         final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)
@@ -97,13 +97,7 @@ import java.util.stream.Collectors;
 
         skidfuscator.setLegacyHasher(new LegacyHashTransformer(skidfuscator));
         skidfuscator.setBitwiseHasher(new BitwiseHashTransformer(skidfuscator));
-
-        try {
-            skidfuscator.setVmHasher(new VmHashTransformer(skidfuscator));
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        skidfuscator.setVmHasher(new BitwiseHashTransformer(skidfuscator));
     }
 
     /**
