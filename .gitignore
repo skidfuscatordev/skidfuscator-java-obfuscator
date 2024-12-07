@@ -5,6 +5,7 @@
 .idea/*
 *.iml
 
+*.json
 
 # Maven output
 */target/*
