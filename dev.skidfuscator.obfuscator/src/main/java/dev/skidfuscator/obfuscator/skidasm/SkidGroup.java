@@ -13,6 +13,7 @@ import org.objectweb.asm.Handle;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 @Data
 public class SkidGroup {
@@ -159,5 +160,14 @@ public class SkidGroup {
     @Override
     public int hashCode() {
         return methodNodeList.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "SkidGroup{" +
+                "name='" + name + '\'' +
+                ", desc='" + desc + '\'' +
+                ", classes=" + methodNodeList.stream().map(e -> e.owner.getName()).collect(Collectors.joining(", ")) +
+                '}';
     }
 }

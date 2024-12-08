@@ -1,8 +1,8 @@
 package framework;
 
-import dev.skidfuscator.pureanalysis.ClassHierarchyAnalyzer;
 import dev.skidfuscator.pureanalysis.PurityAnalyzer;
 import dev.skidfuscator.pureanalysis.PurityReport;
+import dev.skidfuscator.pureanalysis.SimpleClassHierarchyAnalyzer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.objectweb.asm.ClassReader;
@@ -35,7 +35,7 @@ public class PurityAnalysisTest {
     private final MemoryClassLoader classLoader = new MemoryClassLoader();
 
     public PurityAnalysisTest() {
-        this.analyzer = new PurityAnalyzer(new ClassHierarchyAnalyzer(classLoader));
+        this.analyzer = new PurityAnalyzer(new SimpleClassHierarchyAnalyzer(classLoader));
         setupAnalyzer();
     }
 

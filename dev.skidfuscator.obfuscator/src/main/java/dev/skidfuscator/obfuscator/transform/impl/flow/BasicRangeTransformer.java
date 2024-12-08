@@ -102,6 +102,10 @@ public class BasicRangeTransformer extends AbstractTransformer {
                     continue;
                 }
 
+                if (this.heuristicSizeSkip(methodNode, 8.f)) {
+                    continue;
+                }
+
                 final UnconditionalJumpStmt jmp = (UnconditionalJumpStmt) stmt;
                 final BasicBlock target = jmp.getTarget();
 

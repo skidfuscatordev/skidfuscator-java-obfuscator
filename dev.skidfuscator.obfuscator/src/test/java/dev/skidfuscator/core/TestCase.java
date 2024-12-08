@@ -10,6 +10,8 @@ public interface TestCase {
 
     Class<?>[] getClasses();
 
+    String getConfigPath();
+
     void receiveAndExecute(final List<Map.Entry<String, byte[]>> output);
 }
 

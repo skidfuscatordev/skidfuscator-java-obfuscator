@@ -26,8 +26,10 @@ import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import dev.skidfuscator.obfuscator.verifier.alertable.AlertableConstantExpr;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.expr.VarExpr;
+import org.mapleir.ir.code.expr.invoke.InitialisedObjectExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.UnconditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
@@ -98,6 +100,13 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                     BlockExempt.NO_OPAQUE))
                 continue;
 
+            // [fix]    heuristic to try to adjust the quantity used in large
+            //          methods, this is to prevent the method from being
+            //          too large and causing issues
+            if (this.heuristicSizeSkip(methodNode, 7.f)) {
+                continue;
+            }
+
             /*
              * I guess I owe some explanation to this.
              */
@@ -110,8 +119,8 @@ public class BasicExceptionTransformer extends AbstractTransformer {
 
             // Todo make this a better system
             final int seed = methodNode.getBlockPredicate(entry);
-            final SkiddedHash hash = NumberManager
-                    .randomHasher(skidfuscator)
+            final SkiddedHash hash = skidfuscator
+                    .getVmHasher()
                     .hash(seed, entry, methodNode.getFlowPredicate().getGetter());
 
             // Todo add more boilerplates + add exception rotation
@@ -139,6 +148,7 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                 fuckup.add(0, methodNode.getParent().getStaticPredicate().getSetter().apply(
                         fuckupExpr
                 ));
+
             } else {
                 fuckup.add(0, methodNode.getParent().getClassPredicate().getSetter().apply(
                         fuckupExpr
@@ -177,6 +187,11 @@ public class BasicExceptionTransformer extends AbstractTransformer {
                 );
 
                 fuckup.add(0, jump_stmt_2);
+            }
+
+            if (IntegerBlockPredicateRenderer.DEBUG) {
+                final Stmt exception_stmt = Blocks.stmtException("Failed to proper vm");
+                fuckup.add(0, exception_stmt);
             }
 
             cfg.recomputeEdges();

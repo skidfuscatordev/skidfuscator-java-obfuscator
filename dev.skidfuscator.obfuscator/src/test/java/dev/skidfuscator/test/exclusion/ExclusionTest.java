@@ -28,7 +28,8 @@ public class ExclusionTest {
                         TestReferenceDispatcher.class
 
                 },
-                this::callback
+                this::callback,
+                "/config/runtime.hocon"
         );
 
         skidfuscator.run();

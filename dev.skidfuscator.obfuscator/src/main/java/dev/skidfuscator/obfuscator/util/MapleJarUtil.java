@@ -15,6 +15,7 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.deob.PassGroup;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodTooLargeException;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.InstructionAdapter;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -125,6 +126,37 @@ public class MapleJarUtil {
                         cn.node.accept(remapper);
                         cn.node = factory.create(writer.toByteArray(), cn.getName()).node;
                         out.write(writer.toByteArray());
+                    } catch (MethodTooLargeException e) {
+                        // [Failsafe] Try to output but still remap
+                        // TODO: make prettier
+                        final JarClassData resource = jarClassDataMap.get(classData.getName());
+
+                        if (resource == null) {
+                            throw new IllegalStateException("Failed to find class source for " + cn.getName());
+                        }
+
+                        ClassWriter writer = this.buildClassWriter(
+                                tree,
+                                0
+                        );
+                        ClassRemapper remapper = new ClassRemapper(
+                                writer,
+                                skidfuscator.getClassRemapper()
+                        );
+                        cn.node.accept(remapper);
+
+                        try {
+                            out.write(writer.toByteArray());
+                            Skidfuscator.LOGGER.warn(
+                                    "\r❗ Failed to write " + cn.getName() + " because the computed method was too large! Skipping class...\n"
+                            );
+                        } catch (Exception ex) {
+                            // [Failsafe] Everything else failed, just write the resource
+                            out.write(resource.getData());
+                            Skidfuscator.LOGGER.warn(
+                                    "\r❗ Failed to write " + cn.getName() + "! Input method already exceeded max size. This MAY cause issues!\n"
+                            );
+                        }
                     } catch (Exception var8) {
                         ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
                         cn.node.accept(writer);

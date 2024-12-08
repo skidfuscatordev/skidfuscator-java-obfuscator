@@ -136,8 +136,8 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
         for (Method declaredMethod : this.getClass().getDeclaredMethods()) {
             declaredMethod.setAccessible(true);
 
-            System.out.println(declaredMethod.getName());
-            System.out.println(declaredMethod.getAnnotation(InjectMethod.class));
+            //System.out.println(declaredMethod.getName());
+            //System.out.println(declaredMethod.getAnnotation(InjectMethod.class));
 
             /*
              * Skip methods that are not annotated with @Inject
@@ -146,7 +146,7 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
                 continue;
             }
 
-            System.out.println("Injecting method " + declaredMethod.getName());
+            //System.out.println("Injecting method " + declaredMethod.getName());
 
             /*
              * Get the method node from the class node
@@ -369,7 +369,7 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
 
         // Check array length
         if (java.lang.reflect.Array.getLength(array) == 0) {
-            throw new IllegalArgumentException("Array length is 0");
+            //throw new IllegalArgumentException("Array length is 0");
         }
 
         // Check array element type

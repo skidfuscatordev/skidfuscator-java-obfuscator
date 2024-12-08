@@ -64,9 +64,9 @@ public class StringTransformerV2 extends AbstractTransformer {
         EncryptionGeneratorV3 generator = keyMap.get(parentNode);
 
         if (generator == null) {
-            generator = new VirtualizedStringEncryptionGenerator();
-            keyMap.put(parentNode, generator);
-            if (false) {
+            //generator = new VirtualizedStringEncryptionGenerator();
+            //keyMap.put(parentNode, generator);
+            if (true) {
                 switch (RandomUtil.nextInt(3)) {
                     case 0: {
                         final int size = RandomUtil.nextInt(127) + 1;

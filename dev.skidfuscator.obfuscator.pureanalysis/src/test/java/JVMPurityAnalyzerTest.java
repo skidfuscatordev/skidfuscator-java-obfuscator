@@ -1,6 +1,6 @@
-import dev.skidfuscator.pureanalysis.ClassHierarchyAnalyzer;
 import dev.skidfuscator.pureanalysis.PurityAnalyzer;
 import dev.skidfuscator.pureanalysis.PurityReport;
+import dev.skidfuscator.pureanalysis.SimpleClassHierarchyAnalyzer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.ClassReader;
@@ -23,7 +23,7 @@ public class JVMPurityAnalyzerTest {
 
     @BeforeEach
     void setUp() {
-        analyzer = new PurityAnalyzer(new ClassHierarchyAnalyzer(
+        analyzer = new PurityAnalyzer(new SimpleClassHierarchyAnalyzer(
                 getClass().getClassLoader())
         );
     }

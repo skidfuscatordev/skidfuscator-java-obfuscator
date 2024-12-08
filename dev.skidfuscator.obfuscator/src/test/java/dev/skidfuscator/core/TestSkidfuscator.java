@@ -35,13 +35,13 @@ import java.util.function.Consumer;
 public class TestSkidfuscator extends Skidfuscator {
     private final Class<?>[] test;
     private final Consumer<List<Map.Entry<String, byte[]>>> callback;
-    public TestSkidfuscator(Class<?>[] test, Consumer<List<Map.Entry<String, byte[]>>> callback) {
+    public TestSkidfuscator(Class<?>[] test, Consumer<List<Map.Entry<String, byte[]>>> callback, String config) {
         super(SkidfuscatorSession
                 .builder()
                 .jmod(MiscUtil.isJmod())
                 .analytics(false)
                 .debug(true)
-                .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
+                .config(new File(TestSkidfuscator.class.getResource(config).getFile()))
                 .build());
         
         this.test = test;

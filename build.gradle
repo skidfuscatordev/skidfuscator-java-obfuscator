@@ -8,6 +8,9 @@ allprojects {
         jcenter()
         mavenCentral()
         mavenLocal()
+        maven {
+            url 'https://repo.cleanroommc.com/releases/'
+        }
     }
 
     apply plugin: 'java'

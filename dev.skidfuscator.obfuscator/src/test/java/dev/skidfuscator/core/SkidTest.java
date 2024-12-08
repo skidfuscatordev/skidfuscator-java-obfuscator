@@ -56,9 +56,15 @@ public abstract class SkidTest implements TestCase {
 
         this.skidfuscator = new TestSkidfuscator(
                 this.getClasses(),
-                this::receiveAndExecute
+                this::receiveAndExecute,
+                this.getConfigPath()
         );
         skidfuscator.run();
+    }
+
+    @Override
+    public String getConfigPath() {
+        return "/config/runtime.hocon";
     }
 
     @Override
