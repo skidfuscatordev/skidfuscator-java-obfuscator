@@ -30,7 +30,6 @@
 > }
 > 
 > skidfuscator {
-> skidfuscator {
 >   // Configure the plugin here
 >   skidfuscatorVersion = "latest"
 >   exempt = ["com/example/SomeClass"]
