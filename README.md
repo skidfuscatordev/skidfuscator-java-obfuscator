@@ -23,10 +23,35 @@
 ## 🚀 Quickstart
 
 > [!TIP]
-> You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly using:
+> If you are using Gradle, consider using our [Gradle plugin](https://github.com/skidfuscatordev/skidfuscator-gradle-plugin) for easy integration.
+> ```java
+> plugins {
+>    id("io.github.skidfuscatordev.skidfuscator") version "0.1.3"
+> }
+> 
+> skidfuscator {
+> skidfuscator {
+>   // Configure the plugin here
+>   skidfuscatorVersion = "latest"
+>   exempt = ["com/example/SomeClass"]
+>
+>   transformers {
+>       interprocedural {
+>           enabled = true
+>           exempt = ["com/example/IgnoredClass"]
+>       }
+>       stringEncryption {
+>           type = "STANDARD"
+>           enabled = true
+>       }
+>   }
+>}
 > ```
-> java -jar skidfuscator.jar obfuscate <path to your jar>
-> ```
+
+You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly using:
+```
+java -jar skidfuscator.jar obfuscate <path to your jar>
+```
 
 Skidfuscator uses a config system, which allows you to customize your obfuscation. We try to automatically download all compatible libraries, but some may slip through the cracks. The Gradle plugin is a work in progress. For now, use:
 ```
