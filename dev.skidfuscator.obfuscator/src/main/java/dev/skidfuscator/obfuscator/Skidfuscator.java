@@ -25,10 +25,11 @@ import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
 import dev.skidfuscator.obfuscator.exempt.ExemptManager;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
+import dev.skidfuscator.obfuscator.io.apk.ApkInputSource;
+import dev.skidfuscator.obfuscator.io.jar.JarInputSource;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
 import dev.skidfuscator.obfuscator.order.priority.MethodPriority;
-import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerBlockOpaquePredicate;
@@ -79,7 +80,6 @@ import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
 import org.piwik.java.tracking.PiwikRequest;
-import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
@@ -533,19 +533,21 @@ public class Skidfuscator {
 
     protected void _importClasspath() {
         LOGGER.post("Importing jar...");
-        /*
-         * This is the main jar download. We'll be keeping a cache of the jar
-         * download as it will simplify our output methods. In several cases,
-         * many jars have classes with names that do not align with their
-         * respective ClassNode#getName, causing conflicts, hence why the cache
-         * of the jar downloader.
-         */
-        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
-                session.getInput(),
-                this
-        );
 
-        this.jarContents = downloader.getJarContents();
+        final String path = session.getInput().getPath();
+
+        if (path.endsWith(".apk")) {
+            this.jarContents = session.getInput().isDirectory()
+                    ? new ApkInputSource(this).download(session.getInput())
+                    : new ApkInputSource(this).download(new File(path));
+        } else if (path.endsWith(".dex")) {
+            this.jarContents = new JarInputSource(this)
+                    .download(session.getInput());
+        } else {
+            this.jarContents = new JarInputSource(this)
+                    .download(session.getInput());
+        }
+
         this.classSource = new SkidApplicationClassSource(
                 session.getInput().getName(),
                 session.isFuckIt(),
@@ -633,7 +635,8 @@ public class Skidfuscator {
          * Furthermore, since it computes classes which could be present in other
          * libraries, we set the priority to -1, making it the last fallback result.
          */
-        this.classSource.addLibraries(new LibraryClassSource(
+        // TODO: perma remove jphantom
+        /*this.classSource.addLibraries(new LibraryClassSource(
                 new ApplicationClassSource(
                         "phantom",
                         true,
@@ -644,7 +647,7 @@ public class Skidfuscator {
                                 .collect(Collectors.toList())
                 ),
                 1
-        ));
+        ));*/
         LOGGER.log("Finished importing classpath!");
     }
 

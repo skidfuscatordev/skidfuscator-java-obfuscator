@@ -1,26 +1,22 @@
 package dev.skidfuscator.obfuscator.util;
 
 import com.esotericsoftware.asm.Type;
+import com.googlecode.d2j.node.DexFileNode;
+import com.googlecode.d2j.reader.DexFileReader;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.creator.SkidASMFactory;
 import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.creator.SkidLibASMFactory;
+import dev.skidfuscator.obfuscator.io.dex.DexJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
-import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
-import dev.skidfuscator.obfuscator.verifier.Verifier;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.asm.ClassNode;
-import org.mapleir.asm.MethodNode;
 import org.mapleir.deob.PassGroup;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodTooLargeException;
 import org.objectweb.asm.commons.ClassRemapper;
-import org.objectweb.asm.commons.InstructionAdapter;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.util.Textifier;
-import org.objectweb.asm.util.TraceClassVisitor;
 import org.topdank.byteengineer.commons.asm.ASMFactory;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
@@ -215,6 +211,23 @@ public class MapleJarUtil {
     @SneakyThrows
     public static PhantomJarDownloader<ClassNode> importPhantomJar(File file, Skidfuscator skidfuscator) {
         PhantomJarDownloader<ClassNode> dl = new PhantomJarDownloader<>(
+                skidfuscator,
+                new SkidASMFactory(skidfuscator),
+                new JarInfo(file)
+        );
+
+        dl.download();
+
+        return dl;
+    }
+
+    @SneakyThrows
+    public static DexJarDownloader<ClassNode> importDex(File file, Skidfuscator skidfuscator) {
+        DexFileReader reader = new DexFileReader(file);
+        DexFileNode node = new DexFileNode();
+        reader.accept(node);
+
+        DexJarDownloader<ClassNode> dl = new DexJarDownloader<>(
                 skidfuscator,
                 new SkidASMFactory(skidfuscator),
                 new JarInfo(file)
