@@ -1,4 +1,4 @@
-package com.example.dependencyanalyzer;
+package dev.skidfuscator.dependanalysis;
 
 import dev.skidfuscator.dependanalysis.DependencyClassHierarchy;
 import dev.skidfuscator.dependanalysis.DependencyResult;

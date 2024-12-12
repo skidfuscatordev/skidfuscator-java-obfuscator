@@ -1,22 +1,23 @@
 package dev.skidfuscator.dependanalysis;
 
+import lombok.Data;
+import lombok.Getter;
+
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DependencyResult provides a structured representation of the required dependencies.
  * Each JarDependency represents an external jar that is needed, containing the classes
  * from that jar that are required and reasons for their necessity.
  */
+@Getter
 public class DependencyResult {
     private final List<JarDependency> jarDependencies;
 
     public DependencyResult(List<JarDependency> jarDependencies) {
         this.jarDependencies = jarDependencies;
-    }
-
-    public List<JarDependency> getJarDependencies() {
-        return jarDependencies;
     }
 
     public void printReport() {
@@ -40,39 +41,25 @@ public class DependencyResult {
             System.out.println();
         }
     }
+    @Data
     public static class JarDependency {
         private final Path jarPath;
         private final List<ClassDependency> classesNeeded;
 
-        public JarDependency(Path jarPath, List<ClassDependency> classesNeeded) {
-            this.jarPath = jarPath;
-            this.classesNeeded = classesNeeded;
-        }
-
-        public Path getJarPath() {
-            return jarPath;
-        }
-
-        public List<ClassDependency> getClassesNeeded() {
-            return classesNeeded;
+        @Override
+        public String toString() {
+            return "[" + this.getJarPath().getFileName() + "]"
+                    + "\nClasses [" + this.getClassesNeeded().size() + "]:"
+                    + "\n" + this.getClassesNeeded().stream()
+                    .map(e -> "  - " + e.getClassName() + " (" + String.join(", ", e.getReasons()) + ")")
+                    .collect(Collectors.joining("\n"))
+                    ;
         }
     }
 
+    @Data
     public static class ClassDependency {
         private final String className;
         private final List<String> reasons;
-
-        public ClassDependency(String className, List<String> reasons) {
-            this.className = className;
-            this.reasons = reasons;
-        }
-
-        public String getClassName() {
-            return className;
-        }
-
-        public List<String> getReasons() {
-            return reasons;
-        }
     }
 }

@@ -22,10 +22,10 @@ public class Main {
         Path libs = Paths.get(args[1]);
 
         DependencyAnalyzer analyzer = new DependencyAnalyzer(mainJar, libs);
-        Set<Path> requiredJars = analyzer.analyze();
+        DependencyResult requiredJars = analyzer.analyze();
 
         System.out.println("Required jars:");
-        for (Path jar : requiredJars) {
+        for (DependencyResult.JarDependency jar : requiredJars.getJarDependencies()) {
             System.out.println(" - " + jar);
         }
     }
