@@ -40,6 +40,7 @@ void initBase() {
     include(':annotations')
     include ':commons'
     include ':pure-analysis'
+    include ':depend-analysis'
     include ':obfuscator'
     include ':client-standalone'
     include ':gradle-plugin'
@@ -47,6 +48,7 @@ void initBase() {
     project(":annotations").projectDir = file('dev.skidfuscator.annotations')
     project(":commons").projectDir = file('dev.skidfuscator.commons')
     project(":pure-analysis").projectDir = file('dev.skidfuscator.obfuscator.pureanalysis')
+    project(":depend-analysis").projectDir = file('dev.skidfuscator.obfuscator.dependanalysis')
     project(":obfuscator").projectDir = file('dev.skidfuscator.obfuscator')
     project(":client-standalone").projectDir = file('dev.skidfuscator.client.standalone')
     project(":gradle-plugin").projectDir = file('dev.skidfuscator.gradle-plugin')
