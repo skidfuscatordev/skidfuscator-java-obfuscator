@@ -528,7 +528,8 @@ public class Skidfuscator {
             }
             LOGGER.post("✓ Success");
         }
-        LOGGER.log("Finished importing the JVM!");
+        LOGGER.log("Finished importing the JVM");
+        LOGGER.log(String.format("Imported %d jvm classes!", jvmClassSource.size()));
     }
 
     protected void _importClasspath() {
@@ -609,7 +610,7 @@ public class Skidfuscator {
             LOGGER.log("✓ Finished importing libs!");
         }
 
-        if (session.getMappings() == null && config.getLibs().length > 0) {
+        if (config.getLibs().length > 0) {
             final File[] libs = Arrays.stream(config.getLibs())
                     .filter(e -> e.getAbsolutePath().endsWith(".jar"))
                     .toArray(File[]::new);
@@ -625,6 +626,9 @@ public class Skidfuscator {
                 ));
             }
             LOGGER.log("✓ Finished importing config libs!");
+            LOGGER.log(String.format("✓ Imported %d config libs!", libs.length));
+        } else {
+            LOGGER.warn("! No libraries were imported! If this is normal, ignore this.");
         }
 
         /*

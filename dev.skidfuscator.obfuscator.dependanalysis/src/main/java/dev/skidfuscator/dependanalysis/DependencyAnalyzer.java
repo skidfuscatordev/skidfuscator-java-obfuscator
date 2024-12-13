@@ -83,12 +83,14 @@ public class DependencyAnalyzer {
 
         // Resolve superclass
         if (hierarchy.superName != null && !hierarchy.superName.isEmpty()) {
+            System.out.println("Resolving superclass of " + className);
             Path jarForSuper = hierarchy.isMainJarClass ? mainJar : classToLibraryMap.get(hierarchy.superName);
             if (jarForSuper == null && hierarchy.superName != null) {
                 jarForSuper = classToLibraryMap.get(hierarchy.superName);
             }
             if (jarForSuper != null) {
                 String superReason = "needed as superclass of " + className;
+                System.out.printf("%s -> %s%n", className, hierarchy.superName);
                 resolveHierarchy(hierarchy.superName, requiredJars, jarForSuper, visited, superReason);
             }
         }
@@ -129,6 +131,7 @@ public class DependencyAnalyzer {
      * Load the class hierarchy of a given class. If cached, use the cache.
      */
     private DependencyClassHierarchy loadDependencyClassHierarchy(String className, Path presumedJar) throws IOException {
+        System.out.println("Loading hierarchy for " + className);
         if (cache.containsKey(className)) {
             return cache.get(className);
         }
@@ -164,8 +167,8 @@ public class DependencyAnalyzer {
 
         DependencyClassHierarchy hierarchy = new DependencyClassHierarchy(
                 className,
-                visitor.superName,
-                visitor.interfaces,
+                visitor.superName.replace('.', '/'),
+                Arrays.stream(visitor.interfaces).map(s -> s.replace('.', '/')).toArray(String[]::new),
                 fromMainJar,
                 fromMainJar ? null : jarSource
         );
@@ -184,7 +187,7 @@ public class DependencyAnalyzer {
                     while (entries.hasMoreElements()) {
                         JarEntry entry = entries.nextElement();
                         if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                            String className = entry.getName().replace('/', '.').replace(".class", "");
+                            String className = entry.getName().replace(".class", "").replace('.', '/');
                             classToLibraryMap.put(className, jar);
                         }
                     }
@@ -203,7 +206,7 @@ public class DependencyAnalyzer {
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
-                    String className = entry.getName().replace('/', '.').replace(".class", "");
+                    String className = entry.getName().replace(".class", "").replace('.', '/');
                     classes.add(className);
                 }
             }
