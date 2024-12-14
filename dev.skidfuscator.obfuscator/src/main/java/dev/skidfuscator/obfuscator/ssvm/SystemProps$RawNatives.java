@@ -6,15 +6,15 @@ import dev.xdark.ssvm.execution.Result;
 import dev.xdark.ssvm.mirror.type.InstanceClass;
 import dev.xdark.ssvm.operation.VMOperations;
 import dev.xdark.ssvm.value.ArrayValue;
+import dev.xdark.ssvm.value.ObjectValue;
 
 import java.util.Map;
 
 /**
  * Sets up native bindings for jdk/internal/util/SystemProps$Raw,
  * integrating both VM and platform properties, including support
- * for propDefault() retrieval. This ensures that when SystemProps
- * requests default platform properties, a pre-populated array is
- * returned to simulate the native environment.
+ * for propDefault() retrieval. If the index is out of range, we
+ * return an empty string.
  */
 public final class SystemProps$RawNatives {
     // Index constants as defined in the provided code
@@ -59,6 +59,9 @@ public final class SystemProps$RawNatives {
     private static final int _user_name_NDX = 38;
     private static final int FIXED_LENGTH = 39;
 
+    // Cache the platform properties so we can access them in propDefault
+    private static ArrayValue platformArrayCache;
+
     public static void init(VirtualMachine vm) {
         InstanceClass jc = (InstanceClass) vm.findBootstrapClass("jdk/internal/util/SystemProps$Raw");
         if (jc != null) {
@@ -67,50 +70,52 @@ public final class SystemProps$RawNatives {
 
             // Provide platform properties for propDefault
             vmi.setInvoker(jc, "platformProperties", "()[Ljava/lang/String;", ctx -> {
-                ArrayValue platformArray = ops.allocateArray(vm.getSymbols().java_lang_String(), FIXED_LENGTH);
+                if (platformArrayCache == null) {
+                    platformArrayCache = ops.allocateArray(vm.getSymbols().java_lang_String(), FIXED_LENGTH);
 
-                // Provide meaningful defaults - adjust to suit your environment
-                platformArray.setReference(_display_country_NDX,       ops.newUtf8(vm.getProperties().getOrDefault("user.country", "US")));
-                platformArray.setReference(_display_language_NDX,      ops.newUtf8(vm.getProperties().getOrDefault("user.language", "en")));
-                platformArray.setReference(_display_script_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("user.script", "")));
-                platformArray.setReference(_display_variant_NDX,       ops.newUtf8(vm.getProperties().getOrDefault("user.variant", "")));
-                platformArray.setReference(_file_encoding_NDX,         ops.newUtf8("UTF-8"));
-                platformArray.setReference(_file_separator_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("file.separator", "/")));
-                platformArray.setReference(_format_country_NDX,        ops.newUtf8("US"));
-                platformArray.setReference(_format_language_NDX,       ops.newUtf8("en"));
-                platformArray.setReference(_format_script_NDX,         ops.newUtf8(""));
-                platformArray.setReference(_format_variant_NDX,        ops.newUtf8(""));
-                platformArray.setReference(_ftp_nonProxyHosts_NDX,     ops.newUtf8(""));
-                platformArray.setReference(_ftp_proxyHost_NDX,         ops.newUtf8(""));
-                platformArray.setReference(_ftp_proxyPort_NDX,         ops.newUtf8(""));
-                platformArray.setReference(_http_nonProxyHosts_NDX,    ops.newUtf8(""));
-                platformArray.setReference(_http_proxyHost_NDX,        ops.newUtf8(""));
-                platformArray.setReference(_http_proxyPort_NDX,        ops.newUtf8(""));
-                platformArray.setReference(_https_proxyHost_NDX,       ops.newUtf8(""));
-                platformArray.setReference(_https_proxyPort_NDX,       ops.newUtf8(""));
-                platformArray.setReference(_java_io_tmpdir_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("java.io.tmpdir", "/tmp")));
-                platformArray.setReference(_line_separator_NDX,        ops.newUtf8(System.lineSeparator()));
-                platformArray.setReference(_os_arch_NDX,               ops.newUtf8(vm.getProperties().getOrDefault("os.arch", "amd64")));
-                platformArray.setReference(_os_name_NDX,               ops.newUtf8(vm.getProperties().getOrDefault("os.name", "Linux")));
-                platformArray.setReference(_os_version_NDX,            ops.newUtf8(vm.getProperties().getOrDefault("os.version", "5.11.0-0")));
-                platformArray.setReference(_path_separator_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("path.separator", ":")));
-                platformArray.setReference(_socksNonProxyHosts_NDX,    ops.newUtf8(""));
-                platformArray.setReference(_socksProxyHost_NDX,        ops.newUtf8(""));
-                platformArray.setReference(_socksProxyPort_NDX,        ops.newUtf8(""));
-                platformArray.setReference(_sun_arch_abi_NDX,          ops.newUtf8(""));
-                platformArray.setReference(_sun_arch_data_model_NDX,   ops.newUtf8("64"));
-                platformArray.setReference(_sun_cpu_endian_NDX,        ops.newUtf8("little"));
-                platformArray.setReference(_sun_cpu_isalist_NDX,       ops.newUtf8(""));
-                platformArray.setReference(_sun_io_unicode_encoding_NDX, ops.newUtf8(""));
-                platformArray.setReference(_sun_jnu_encoding_NDX,       ops.newUtf8("UTF-8"));
-                platformArray.setReference(_sun_os_patch_level_NDX,     ops.newUtf8(""));
-                platformArray.setReference(_sun_stderr_encoding_NDX,    ops.newUtf8("UTF-8"));
-                platformArray.setReference(_sun_stdout_encoding_NDX,    ops.newUtf8("UTF-8"));
-                platformArray.setReference(_user_dir_NDX,               ops.newUtf8(vm.getProperties().getOrDefault("user.dir", "/home/user")));
-                platformArray.setReference(_user_home_NDX,              ops.newUtf8(vm.getProperties().getOrDefault("user.home", "/home/user")));
-                platformArray.setReference(_user_name_NDX,              ops.newUtf8(vm.getProperties().getOrDefault("user.name", "user")));
+                    // Provide meaningful defaults - adjust to suit your environment
+                    platformArrayCache.setReference(_display_country_NDX,       ops.newUtf8(vm.getProperties().getOrDefault("user.country", "US")));
+                    platformArrayCache.setReference(_display_language_NDX,      ops.newUtf8(vm.getProperties().getOrDefault("user.language", "en")));
+                    platformArrayCache.setReference(_display_script_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("user.script", "")));
+                    platformArrayCache.setReference(_display_variant_NDX,       ops.newUtf8(vm.getProperties().getOrDefault("user.variant", "")));
+                    platformArrayCache.setReference(_file_encoding_NDX,         ops.newUtf8("UTF-8"));
+                    platformArrayCache.setReference(_file_separator_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("file.separator", "/")));
+                    platformArrayCache.setReference(_format_country_NDX,        ops.newUtf8("US"));
+                    platformArrayCache.setReference(_format_language_NDX,       ops.newUtf8("en"));
+                    platformArrayCache.setReference(_format_script_NDX,         ops.newUtf8(""));
+                    platformArrayCache.setReference(_format_variant_NDX,        ops.newUtf8(""));
+                    platformArrayCache.setReference(_ftp_nonProxyHosts_NDX,     ops.newUtf8(""));
+                    platformArrayCache.setReference(_ftp_proxyHost_NDX,         ops.newUtf8(""));
+                    platformArrayCache.setReference(_ftp_proxyPort_NDX,         ops.newUtf8(""));
+                    platformArrayCache.setReference(_http_nonProxyHosts_NDX,    ops.newUtf8(""));
+                    platformArrayCache.setReference(_http_proxyHost_NDX,        ops.newUtf8(""));
+                    platformArrayCache.setReference(_http_proxyPort_NDX,        ops.newUtf8(""));
+                    platformArrayCache.setReference(_https_proxyHost_NDX,       ops.newUtf8(""));
+                    platformArrayCache.setReference(_https_proxyPort_NDX,       ops.newUtf8(""));
+                    platformArrayCache.setReference(_java_io_tmpdir_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("java.io.tmpdir", "/tmp")));
+                    platformArrayCache.setReference(_line_separator_NDX,        ops.newUtf8(System.lineSeparator()));
+                    platformArrayCache.setReference(_os_arch_NDX,               ops.newUtf8(vm.getProperties().getOrDefault("os.arch", "amd64")));
+                    platformArrayCache.setReference(_os_name_NDX,               ops.newUtf8(vm.getProperties().getOrDefault("os.name", "Linux")));
+                    platformArrayCache.setReference(_os_version_NDX,            ops.newUtf8(vm.getProperties().getOrDefault("os.version", "5.11.0-0")));
+                    platformArrayCache.setReference(_path_separator_NDX,        ops.newUtf8(vm.getProperties().getOrDefault("path.separator", ":")));
+                    platformArrayCache.setReference(_socksNonProxyHosts_NDX,    ops.newUtf8(""));
+                    platformArrayCache.setReference(_socksProxyHost_NDX,        ops.newUtf8(""));
+                    platformArrayCache.setReference(_socksProxyPort_NDX,        ops.newUtf8(""));
+                    platformArrayCache.setReference(_sun_arch_abi_NDX,          ops.newUtf8(""));
+                    platformArrayCache.setReference(_sun_arch_data_model_NDX,   ops.newUtf8("64"));
+                    platformArrayCache.setReference(_sun_cpu_endian_NDX,        ops.newUtf8("little"));
+                    platformArrayCache.setReference(_sun_cpu_isalist_NDX,       ops.newUtf8(""));
+                    platformArrayCache.setReference(_sun_io_unicode_encoding_NDX, ops.newUtf8(""));
+                    platformArrayCache.setReference(_sun_jnu_encoding_NDX,       ops.newUtf8("UTF-8"));
+                    platformArrayCache.setReference(_sun_os_patch_level_NDX,     ops.newUtf8(""));
+                    platformArrayCache.setReference(_sun_stderr_encoding_NDX,    ops.newUtf8("UTF-8"));
+                    platformArrayCache.setReference(_sun_stdout_encoding_NDX,    ops.newUtf8("UTF-8"));
+                    platformArrayCache.setReference(_user_dir_NDX,               ops.newUtf8(vm.getProperties().getOrDefault("user.dir", "/home/user")));
+                    platformArrayCache.setReference(_user_home_NDX,              ops.newUtf8(vm.getProperties().getOrDefault("user.home", "/home/user")));
+                    platformArrayCache.setReference(_user_name_NDX,              ops.newUtf8(vm.getProperties().getOrDefault("user.name", "user")));
+                }
 
-                ctx.setResult(platformArray);
+                ctx.setResult(platformArrayCache);
                 return Result.ABORT;
             });
 
@@ -125,6 +130,34 @@ public final class SystemProps$RawNatives {
                 }
 
                 ctx.setResult(array);
+                return Result.ABORT;
+            });
+
+            // Override propDefault(int) to return empty if index is not found or null.
+            // Signature: propDefault(I)Ljava/lang/String;
+            vmi.setInvoker(jc, "propDefault", "(I)Ljava/lang/String;", ctx -> {
+                int index = ctx.getLocals().loadInt(1);
+                VMOperations vops = vm.getOperations();
+
+                // Ensure platformArrayCache is initialized
+                if (platformArrayCache == null) {
+                    // If for some reason platformProperties hasn't been called yet, call it now.
+                    // This will populate platformArrayCache.
+                    platformArrayCache = vops.allocateArray(vm.getSymbols().java_lang_String(), FIXED_LENGTH);
+                    // You may reinitialize it here or ensure platformProperties is called beforehand.
+                    // For brevity, assume defaults again or call ctx.getInvoker() with platformProperties if accessible.
+                }
+
+                if (index < 0 || index >= FIXED_LENGTH) {
+                    ctx.setResult(vops.newUtf8(""));
+                } else {
+                    ObjectValue val = platformArrayCache.getReference(index);
+                    if (val.isNull()) {
+                        ctx.setResult(vops.newUtf8(""));
+                    } else {
+                        ctx.setResult(val);
+                    }
+                }
                 return Result.ABORT;
             });
         }
