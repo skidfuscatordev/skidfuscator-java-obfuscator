@@ -31,61 +31,61 @@ public class ObfuscateCommand implements Callable<Integer> {
             index = "0",
             description = "The file which will be obfuscated."
     )
-    private File input;
+    public File input;
 
     @CommandLine.Option(
             names = {"-rt", "--runtime"},
             description = "Path to the runtime jar"
     )
-    private File runtime;
+    public File runtime;
 
     @CommandLine.Option(
             names = {"-li", "--libs"},
             description = "Path to the libs folder"
     )
-    private File libFolder;
+    public File libFolder;
 
     @CommandLine.Option(
             names = {"-ex", "--exempt"},
             description = "Path to the exempt file"
     )
-    private File exempt;
+    public File exempt;
 
     @CommandLine.Option(
             names = {"-o", "--output"},
             description = "Path to the output jar location"
     )
-    private File output;
+    public File output;
 
     @CommandLine.Option(
             names = {"-cfg", "--config"},
             description = "Path to the config file"
     )
-    private File config;
+    public File config;
 
     @CommandLine.Option(
             names = {"-ph", "--phantom"},
             description = "Declare if phantom computation should be used"
     )
-    private boolean phantom;
+    public boolean phantom;
 
     @CommandLine.Option(
             names = {"-fuckit", "--fuckit"},
             description = "Do not use!"
     )
-    private boolean fuckit;
+    public boolean fuckit;
 
     @CommandLine.Option(
             names = {"-dbg", "--debug"},
             description = "Do not use!"
     )
-    private boolean debug;
+    public boolean debug;
 
     @CommandLine.Option(
             names = {"-notrack", "--notrack"},
             description = "If you do not wish to be part of analytics!"
     )
-    private boolean notrack;
+    public boolean notrack;
 
 
     @Override

@@ -55,6 +55,7 @@ import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
+import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
@@ -81,6 +82,7 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
 import org.piwik.java.tracking.PiwikRequest;
 import org.topdank.byteengineer.commons.data.JarContents;
+import org.topdank.byteengineer.commons.data.JarResource;
 
 import java.io.File;
 import java.io.IOException;

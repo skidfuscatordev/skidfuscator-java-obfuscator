@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator;
 import dev.skidfuscator.obfuscator.command.HelpCommand;
 import dev.skidfuscator.obfuscator.command.MappingsCommand;
 import dev.skidfuscator.obfuscator.command.ObfuscateCommand;
+import dev.skidfuscator.obfuscator.gui.MainFrame;
 import dev.skidfuscator.obfuscator.util.LogoUtil;
 import lombok.SneakyThrows;
 import org.jline.reader.EndOfFileException;
@@ -13,12 +14,30 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.TerminalBuilder;
 import picocli.CommandLine;
 
+import javax.swing.*;
 import java.io.File;
 
 public class SkidfuscatorMain {
 
     @SneakyThrows
     public static void main(String[] args) {
+
+        if (args.length == 0) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                new MainFrame().setVisible(true);
+            });
+            return;
+        }
+
+        final String[] logo = LogoUtil.getLogo();
+        for (String line : logo) {
+            System.out.println(line);
+        }
 
         if (args.length == 1 && args[0].equalsIgnoreCase("cli")) {
             final LineReader reader = LineReaderBuilder
@@ -72,7 +91,6 @@ public class SkidfuscatorMain {
             }
 
         } else {
-            LogoUtil.printLogo();
             new CommandLine(new HelpCommand())
                     .addSubcommand("obfuscate", new ObfuscateCommand())
                     .addSubcommand("mappings", new MappingsCommand())

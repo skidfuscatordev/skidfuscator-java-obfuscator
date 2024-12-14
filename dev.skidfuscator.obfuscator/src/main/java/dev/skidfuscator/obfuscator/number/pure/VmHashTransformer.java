@@ -4,6 +4,7 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
+import dev.skidfuscator.obfuscator.ssvm.SystemProps$RawNatives;
 import dev.xdark.ssvm.VirtualMachine;
 import dev.xdark.ssvm.api.MethodInvoker;
 import dev.xdark.ssvm.api.VMInterface;
@@ -17,6 +18,8 @@ import dev.xdark.ssvm.invoke.InvocationUtil;
 import dev.xdark.ssvm.memory.management.MemoryManager;
 import dev.xdark.ssvm.mirror.member.JavaMethod;
 import dev.xdark.ssvm.mirror.type.InstanceClass;
+import dev.xdark.ssvm.natives.SystemPropsNatives;
+import jdk.internal.util.SystemProps;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.CompleteResolvingJarDumper;
@@ -237,10 +240,12 @@ public class VmHashTransformer implements HashTransformer {
                 return new HostFileManager();
             }
         };
-        vm.getProperties().put("java.class.path", "");
+        //vm.getProperties().put("java.class.path", "");
 
         final VMInterface vmi = vm.getInterface();
         final MemoryManager memoryManager = vm.getMemoryManager();
+        vm.initialize();
+        SystemProps$RawNatives.init(vm);
         vm.bootstrap();
 
         // Some patches to circumvent bugs arising from VM implementation changes in later versions
