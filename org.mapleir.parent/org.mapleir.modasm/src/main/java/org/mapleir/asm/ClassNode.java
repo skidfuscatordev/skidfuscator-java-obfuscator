@@ -88,6 +88,14 @@ public class ClassNode implements FastGraphVertex {
         return (node.access & Opcodes.ACC_PROTECTED) != 0;
     }
 
+    public boolean isAbstract() {
+        return (node.access & Opcodes.ACC_ABSTRACT) != 0;
+    }
+
+    public boolean isFinal() {
+        return (node.access & Opcodes.ACC_FINAL) != 0;
+    }
+
     public boolean isPrivate() {
         return (node.access & Opcodes.ACC_PRIVATE) != 0;
     }

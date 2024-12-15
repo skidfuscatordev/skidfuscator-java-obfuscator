@@ -79,6 +79,9 @@ public class ExclusionHelper {
                                             .match("public", var.isPublic())
                                             .match("protected", var.isProtected())
                                             .match("private", var.isPrivate())
+                                            .match("abstract", var.isAbstract())
+                                            .match("final", var.isFinal())
+                                            .match("interface", var.isInterface())
                                             .check();
 
                                     assert initialMatch : "Failed initial match: " + parsed + " got:" + var;
