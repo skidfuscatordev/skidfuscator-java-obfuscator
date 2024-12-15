@@ -34,10 +34,7 @@ public class SkidfuscatorMain {
             return;
         }
 
-        final String[] logo = LogoUtil.getLogo();
-        for (String line : logo) {
-            System.out.println(line);
-        }
+        LogoUtil.printLogo();
 
         if (args.length == 1 && args[0].equalsIgnoreCase("cli")) {
             final LineReader reader = LineReaderBuilder
