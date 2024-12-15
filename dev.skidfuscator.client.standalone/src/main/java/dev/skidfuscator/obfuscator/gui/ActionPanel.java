@@ -58,7 +58,7 @@ public class ActionPanel extends JPanel {
 
         // Start obfuscation in background
         startButton.setEnabled(false);
-        SwingWorker<Void, String> worker = new SwingWorker<>() {
+        SwingWorker<Void, String> worker = new SwingWorker() {
             @Override
             protected Void doInBackground() {
                 try {
