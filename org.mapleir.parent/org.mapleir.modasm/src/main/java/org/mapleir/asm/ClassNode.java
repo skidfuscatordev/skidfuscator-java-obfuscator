@@ -4,6 +4,7 @@ import org.mapleir.stdlib.collections.graph.FastGraphVertex;
 import org.objectweb.asm.Opcodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ClassNode implements FastGraphVertex {
@@ -126,6 +127,18 @@ public class ClassNode implements FastGraphVertex {
 
     public void setVirtual(boolean synth) {
         this.synth = synth;
+    }
+
+    public String getSuperName() {
+        return node.superName;
+    }
+
+    public List<String> getInterfaces() {
+        return node.interfaces;
+    }
+
+    public String getPackageName() {
+        return node.name.substring(0, node.name.lastIndexOf('/'));
     }
 
     @Override
