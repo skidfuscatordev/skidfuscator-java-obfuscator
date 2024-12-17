@@ -11,6 +11,9 @@ allprojects {
         maven {
             url 'https://repo.cleanroommc.com/releases/'
         }
+        maven {
+            url 'https://jitpack.io'
+        }
     }
 
     apply plugin: 'java'
@@ -20,8 +23,8 @@ allprojects {
     targetCompatibility = 1.8
 
     dependencies {
-        compileOnly 'org.projectlombok:lombok:1.18.24'
-        annotationProcessor 'org.projectlombok:lombok:1.18.24'
+        compileOnly 'org.projectlombok:lombok:1.18.36'
+        annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
@@ -29,6 +32,15 @@ allprojects {
 
     compileJava {
         options.encoding = "UTF-8" // Will fail on the non-ascii comments if not set
+    }
+
+    ext {
+        asm = 'org.ow2.asm:asm:9.7.1'
+        asm_commons = 'org.ow2.asm:asm-commons:9.7.1'
+        asm_tree = 'org.ow2.asm:asm-tree:9.7.1'
+        cafedude = 'com.github.Col-E:CAFED00D:2.1.1'
+        slf4j_api = 'org.slf4j:slf4j-api:1.7.36'
+        jlinker = 'com.github.xxDark:jlinker:1.0.7'
     }
 }
 

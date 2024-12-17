@@ -13,8 +13,8 @@ configurations {
 }
 
 dependencies {
-    testCompileOnly 'org.projectlombok:lombok:1.18.24'
-    compileOnly 'org.projectlombok:lombok:1.18.24'
+    testCompileOnly 'org.projectlombok:lombok:1.18.36'
+    compileOnly 'org.projectlombok:lombok:1.18.36'
 
     api project(':commons')
     api project(':pure-analysis')
@@ -24,8 +24,9 @@ dependencies {
     api 'com.github.Col-E:jphantom:1.4.3'
     implementation 'dev.dirs:directories:26'
     implementation 'de.femtopedia.dex2jar:dex2jar:2.4.24'
+    implementation 'org.apache.commons:commons-compress:1.24.0'
 
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.24'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
     implementation 'org.fusesource.jansi:jansi:2.4.0'
     implementation 'org.yaml:snakeyaml:1.33'
 

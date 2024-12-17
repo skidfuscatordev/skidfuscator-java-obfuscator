@@ -1777,7 +1777,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private static class BlockBundle extends ArrayList<BasicBlock> implements FastGraphVertex {
 		private BasicBlock first = null;
 		
-		private BasicBlock getFirst() {
+		public BasicBlock getFirst() {
 			if (first == null)
 				first = get(0);
 			return first;
