@@ -1,6 +1,7 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'application'
+    id 'xyz.wagyourtail.jvmdowngrader' version '1.2.1'
 }
 repositories {
     mavenCentral()
@@ -9,6 +10,14 @@ repositories {
 
 application {
     mainClass = 'dev.skidfuscator.obfuscator.SkidfuscatorMain'
+}
+
+downgradeJar {
+    downgradeTo = JavaVersion.VERSION_1_8
+}
+
+shadeDowngradedApi {
+    downgradeTo = JavaVersion.VERSION_1_8
 }
 
 dependencies {
@@ -26,3 +35,6 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17

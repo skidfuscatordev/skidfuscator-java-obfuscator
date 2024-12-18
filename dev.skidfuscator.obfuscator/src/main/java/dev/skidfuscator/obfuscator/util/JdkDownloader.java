@@ -29,6 +29,7 @@ public class JdkDownloader {
                 JDK_URL = "https://corretto.aws/downloads/resources/17.0.13.11.1/amazon-corretto-17.0.13.11.1-macosx-aarch64.tar.gz";
                 break;
             case "windows":
+            case "windows 11":
                 JDK_URL = "https://download.java.net/java/GA/jdk17.0.2/0d483333a00540d886896a45e7e18309295e7f3a/jdk-17.0.2_windows-x64_bin.zip";
                 break;
             default:

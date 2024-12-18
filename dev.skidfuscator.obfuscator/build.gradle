@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'com.roscopeco.jasm' version "0.7.0"
+    id 'xyz.wagyourtail.jvmdowngrader' version '1.2.1'
 }
 
 repositories {
@@ -49,3 +50,12 @@ test {
 }
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
+
+configurations {
+    downgrade
+    implementation.extendsFrom downgrade
+}
+
+downgradeJar {
+    downgradeTo = JavaVersion.VERSION_1_8
+}
