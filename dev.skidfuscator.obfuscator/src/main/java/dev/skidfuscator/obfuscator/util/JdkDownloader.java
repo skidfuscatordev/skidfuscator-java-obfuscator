@@ -16,6 +16,7 @@ import java.util.zip.ZipInputStream;
 public class JdkDownloader {
     private static final String OS;
     private static final String JDK_URL;
+    private static boolean jdkDownloaded = false;
 
     static {
         // handle for all os
@@ -39,8 +40,8 @@ public class JdkDownloader {
     }
 
     private static final Path CACHE_DIR = Paths.get(System.getProperty("user.home"), ".ssvm", "jdk");
-    
-    public static Path getJdkHome() throws IOException {
+
+    public static Path getCachedJdk() throws IOException {
         String cacheName;
 
         switch (OS) {
@@ -61,12 +62,24 @@ public class JdkDownloader {
 
         Path jdkPath = CACHE_DIR.resolve(cacheName);
         if (Files.exists(jdkPath)) {
+            jdkDownloaded = true;
             //System.out.println("JDK 17 already downloaded to " + jdkPath);
             switch (OS) {
                 case "mac os x":
                 case "mac":
                     return jdkPath.resolve("Contents/Home");
             }
+            return jdkPath;
+        }
+
+        return null;
+    }
+
+    public static Path getJdkHome() throws IOException {
+        jdkDownloaded = true;
+        Path jdkPath = getCachedJdk();
+
+        if (jdkPath != null) {
             return jdkPath;
         }
 
@@ -128,5 +141,18 @@ public class JdkDownloader {
     
     public static String getJmodPath() throws IOException {
         return getJdkHome().resolve("jmods").toString();
+    }
+
+    public static String getCachedJmodPath() throws IOException {
+        Path jdkPath = getCachedJdk();
+
+        if (jdkPath == null) {
+            return null;
+        }
+        return jdkPath.resolve("jmods").toString();
+    }
+
+    public static boolean isJdkDownloaded() {
+        return jdkDownloaded;
     }
 }

@@ -42,29 +42,47 @@ public class MainFrame extends JFrame {
                     @Override
                     protected Insets getTabAreaInsets(int tabPlacement) {
                         Insets insets = super.getTabAreaInsets(tabPlacement);
-                        return new Insets(140, insets.left, insets.bottom, insets.right);
+                        return new Insets(220, insets.left, insets.bottom, insets.right);
                     }
 
                     @Override
                     protected int calculateTabAreaWidth(int tabPlacement, int horizRunCount, int maxTabWidth) {
-                        return 150;
+                        return 160;
                     }
 
                     @Override
                     protected int calculateTabWidth(int tabPlacement, int tabIndex, FontMetrics metrics) {
                         // Make tabs fill the entire width of the tab area
-                        return 150;
+                        return 160;
                     }
 
                     @Override
                     protected void paintTabArea(Graphics g, int tabPlacement, int selectedIndex) {
                         try {
+                            // Draw logo
                             InputStream logoStream = getClass().getResourceAsStream("/images/logo.png");
                             if (logoStream != null) {
                                 Image logo = ImageIO.read(logoStream);
                                 Image scaledLogo = logo.getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-                                g.drawImage(scaledLogo, 5, 0, null);
+                                g.drawImage(scaledLogo, 5, 10, null);
                             }
+
+                            // Draw separator line
+                            g.setColor(Color.DARK_GRAY);
+                            g.drawLine(5, 155, 155, 155);
+
+                            // Draw version info
+                            g.setColor(new Color(200,190,220));
+                            g.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                            g.drawString("Skidfuscator Community", 10, 175);
+                            g.setColor(new Color(130, 130, 130));
+                            g.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+                            g.drawString("Build: 2023.1", 10, 190);
+
+                            // Draw second separator
+                            g.setColor(Color.DARK_GRAY);
+                            g.drawLine(5, 205, 155, 205);
+
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -227,7 +245,6 @@ public class MainFrame extends JFrame {
                 .jmod(config.getRuntimePath().contains("jmods"))
                 .debug(config.isDebugEnabled())
                 .build();
-
         // Start obfuscation in background
         startButton.setEnabled(false);
         SwingWorker<Void, String> worker = new SwingWorker() {
@@ -246,6 +263,33 @@ public class MainFrame extends JFrame {
             @Override
             protected void done() {
                 startButton.setEnabled(true);
+                SwingUtilities.invokeLater(() -> {
+                    int option = JOptionPane.showOptionDialog(
+                        MainFrame.this,
+                        "Obfuscation completed successfully!",
+                        "Success",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        UIManager.getIcon("OptionPane.informationIcon"),
+                        new Object[]{"OK", "Open Output Folder"},
+                        "OK"
+                    );
+                    
+                    if (option == 1) {
+                        // Open output folder
+                        try {
+                            File outputFile = new File(configPanel.getOutputPath());
+                            Desktop.getDesktop().open(outputFile.getParentFile());
+                        } catch (Exception e) {
+                            JOptionPane.showMessageDialog(
+                                MainFrame.this,
+                                "Could not open output folder: " + e.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE
+                            );
+                        }
+                    }
+                });
             }
         };
         worker.execute();

@@ -3,15 +3,20 @@ package dev.skidfuscator.obfuscator.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 
 import dev.skidfuscator.jvm.Jvm;
 import dev.skidfuscator.obfuscator.gui.autosave.AutoSaveDocumentListener;
 import dev.skidfuscator.obfuscator.gui.config.SkidfuscatorConfig;
+import dev.skidfuscator.obfuscator.util.JdkDownloader;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class ConfigPanel extends JPanel {
     private final JTextField inputField;
@@ -36,55 +41,230 @@ public class ConfigPanel extends JPanel {
         add(new JLabel("Input JAR:"), gbc);
         gbc.gridx = 1;
         inputField = new JTextField(30);
+        JLabel inputCheck = new JLabel("✗");
+        inputCheck.setForeground(new Color(255, 65, 54));
+        DocumentListener inputListener = new DocumentListener() {
+            private void updateCheck() {
+                boolean valid = new File(inputField.getText()).exists();
+                inputCheck.setText(valid ? "✓" : "✗");
+                inputCheck.setForeground(valid ? new Color(46, 204, 64) : new Color(255, 65, 54));
+                
+                if (!valid) {
+                    StringBuilder tooltip = new StringBuilder("<html><body style='width: 250px; padding: 3px; background-color: #FFF3CD; border: 2px solid #FFE69C; border-radius: 4px'>");
+                    tooltip.append("<div style='color: #856404; font-weight: bold; margin-bottom: 5px'>⚠ Warning: Invalid Input Configuration</div>");
+                    tooltip.append("<div style='color: #664D03; margin: 3px 0'>Input file does not exist</div>");
+                    tooltip.append("</body></html>");
+                    
+                    ToolTipManager.sharedInstance().setInitialDelay(0);
+                    ToolTipManager.sharedInstance().setDismissDelay(10000);
+                    inputField.setToolTipText(tooltip.toString());
+                } else {
+                    inputField.setToolTipText(null);
+                }
+            }
+            public void insertUpdate(DocumentEvent e) { updateCheck(); }
+            public void removeUpdate(DocumentEvent e) { updateCheck(); }
+            public void changedUpdate(DocumentEvent e) { updateCheck(); }
+        };
+        inputField.getDocument().addDocumentListener(inputListener);
         if (config.getLastInputPath() != null) {
             inputField.setText(config.getLastInputPath());
+            inputListener.insertUpdate(null);  // Trigger initial validation
         }
         add(inputField, gbc);
         gbc.gridx = 2;
-        add(createBrowseButton(inputField, false), gbc);
+        JPanel inputButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        inputButtonPanel.setPreferredSize(new Dimension(150, 30));
+        JButton inputBrowseButton = createBrowseButton(inputField, false);
+        inputButtonPanel.add(inputBrowseButton);
+        inputButtonPanel.add(Box.createHorizontalGlue());  // Push label to right
+        inputButtonPanel.add(inputCheck);
+        add(inputButtonPanel, gbc);
 
         // Output file
         gbc.gridx = 0; gbc.gridy = 1;
         add(new JLabel("Output JAR:"), gbc);
         gbc.gridx = 1;
         outputField = new JTextField(30);
+        JLabel outputCheck = new JLabel("✗");
+        outputCheck.setForeground(new Color(255, 65, 54));
+        DocumentListener outputListener = new DocumentListener() {
+            private void updateCheck() {
+                final String output = outputField.getText();
+                File parent = new File(output).getParentFile();
+
+                // [condition] must be valid file extension
+                final boolean validEnd = output.endsWith(".jar")
+                        || output.endsWith(".apk")
+                        || output.endsWith(".dex");
+
+                // [condition] must not be input
+                final boolean validInput = !inputField.getText().equals(output);
+
+                boolean valid = parent != null && parent.exists() && validEnd && validInput;
+                outputCheck.setText(valid ? "✓" : "✗");
+                outputCheck.setForeground(valid ? new Color(46, 204, 64) : new Color(255, 65, 54));
+                // Set tooltip explaining validation failure
+                StringBuilder tooltip = new StringBuilder("<html><body style='width: 250px; padding: 3px; background-color: #FFF3CD; border: 2px solid #FFE69C; border-radius: 4px'>");
+                tooltip.append("<div style='color: #856404; font-weight: bold; margin-bottom: 5px'>⚠ Warning: Invalid Output Configuration</div>");
+                
+                if (parent == null || !parent.exists()) {
+                    tooltip.append("<div style='color: #664D03; margin: 3px 0'>Output directory does not exist</div>");
+                }
+                if (!validEnd) {
+                    tooltip.append("<div style='color: #664D03; margin: 3px 0'>File must end with .jar, .apk or .dex</div>");
+                }
+                if (!validInput) {
+                    tooltip.append("<div style='color: #664D03; margin: 3px 0'>Output file cannot be the same as input file</div>");
+                }
+                tooltip.append("</body></html>");
+                
+                if (!valid) {
+                    ToolTipManager.sharedInstance().setInitialDelay(0);
+                    ToolTipManager.sharedInstance().setDismissDelay(10000);
+
+                    outputField.setToolTipText(tooltip.toString());
+                } else {
+                    outputCheck.setToolTipText(null);
+                }
+            }
+            public void insertUpdate(DocumentEvent e) { updateCheck(); }
+            public void removeUpdate(DocumentEvent e) { updateCheck(); }
+            public void changedUpdate(DocumentEvent e) { updateCheck(); }
+        };
+        outputField.getDocument().addDocumentListener(outputListener);
         if (config.getLastOutputPath() != null) {
             outputField.setText(config.getLastOutputPath());
+            outputListener.insertUpdate(null);
         } else if (config.getLastInputPath() != null) {
             outputField.setText(config.getLastInputPath().replace(".jar", "-obf.jar"));
+            outputListener.insertUpdate(null);
         }
         add(outputField, gbc);
         gbc.gridx = 2;
-        add(createBrowseButton(outputField, false), gbc);
+        JPanel outputButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        outputButtonPanel.setPreferredSize(new Dimension(150, 30));
+        JButton outputBrowseButton = createBrowseButton(outputField, false);
+        outputButtonPanel.add(outputBrowseButton);
+        outputButtonPanel.add(Box.createHorizontalGlue());
+        outputButtonPanel.add(outputCheck);
+        add(outputButtonPanel, gbc);
 
         // Libraries
         gbc.gridx = 0; gbc.gridy = 2;
         add(new JLabel("Libraries:"), gbc);
         gbc.gridx = 1;
         libsField = new JTextField(30);
+        JLabel libsCheck = new JLabel("✗");
+        libsCheck.setForeground(new Color(255, 65, 54));
+        DocumentListener libsListener = new DocumentListener() {
+            private void updateCheck() {
+                boolean valid;
+                if (libsField.getText().isEmpty()) {
+                    valid = true; // Empty is valid
+                    // Set orange dot for pending state
+                    libsCheck.setText("●");
+                    libsCheck.setForeground(new Color(255, 140, 0)); // Orange color
+                    return;
+                } else {
+                    File dir = new File(libsField.getText());
+                    valid = dir.exists() && dir.isDirectory();
+                }
+                libsCheck.setText(valid ? "✓" : "✗");
+                libsCheck.setForeground(valid ? new Color(46, 204, 64) : new Color(255, 65, 54));
+            }
+            public void insertUpdate(DocumentEvent e) { updateCheck(); }
+            public void removeUpdate(DocumentEvent e) { updateCheck(); }
+            public void changedUpdate(DocumentEvent e) { updateCheck(); }
+        };
+        libsField.getDocument().addDocumentListener(libsListener);
         if (config.getLastLibsPath() != null) {
             libsField.setText(config.getLastLibsPath());
+            libsListener.insertUpdate(null);
         }
         add(libsField, gbc);
         gbc.gridx = 2;
-        add(createBrowseButton(libsField, true), gbc);
+        JPanel libsButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        libsButtonPanel.setPreferredSize(new Dimension(150, 30));
+        JButton libsBrowseButton = createBrowseButton(libsField, true);
+        libsButtonPanel.add(libsBrowseButton);
+        libsButtonPanel.add(Box.createHorizontalGlue());
+        libsButtonPanel.add(libsCheck);
+        add(libsButtonPanel, gbc);
 
         // Runtime
         gbc.gridx = 0; gbc.gridy = 3;
         add(new JLabel("Runtime:"), gbc);
         gbc.gridx = 1;
         runtimeField = new JTextField(30);
-        if (config.getLastRuntimePath() != null) {
-            if (config.getLastRuntimePath().isEmpty()) {
-                runtimeField.setText(Jvm.getLibsPath());
-                runtimeField.setEnabled(false);
-            } else {
-                runtimeField.setText(config.getLastRuntimePath());
+        
+        // Check if JDK was previously downloaded
+        try {
+            String jmodPath = JdkDownloader.getCachedJmodPath();
+            runtimeField.setText(jmodPath);
+            runtimeField.setEnabled(!JdkDownloader.isJdkDownloaded());
+        } catch (IOException e) {
+            // Fallback to config
+            if (config.getLastRuntimePath() != null) {
+                if (config.getLastRuntimePath().isEmpty()) {
+                    runtimeField.setText(Jvm.getLibsPath());
+                    runtimeField.setEnabled(false);
+                } else {
+                    runtimeField.setText(config.getLastRuntimePath());
+                }
             }
         }
+
         add(runtimeField, gbc);
+        
+        // Add download button next to browse button
         gbc.gridx = 2;
-        add(createBrowseButton(runtimeField, false), gbc);
+        JPanel runtimeButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JButton downloadButton = new JButton("Download JDK");
+        
+        // Set initial button state based on JDK download status
+        if (JdkDownloader.isJdkDownloaded()) {
+            downloadButton.setText("Downloaded");
+            downloadButton.setEnabled(false);
+        }
+        
+        downloadButton.addActionListener(e -> {
+            downloadButton.setEnabled(false);
+            downloadButton.setText("Downloading...");
+            
+            SwingWorker<String, Void> worker = new SwingWorker<>() {
+                @Override
+                protected String doInBackground() throws Exception {
+                    return JdkDownloader.getJmodPath();
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        String path = get();
+                        runtimeField.setText(path);
+                        runtimeField.setEnabled(false);
+                        downloadButton.setText("Downloaded");
+                        downloadButton.setEnabled(false);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(
+                            ConfigPanel.this,
+                            "Failed to download JDK: " + ex.getMessage(),
+                            "Download Error",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                        downloadButton.setText("Download JDK");
+                        downloadButton.setEnabled(true);
+                    }
+                }
+            };
+            worker.execute();
+        });
+        runtimeButtonPanel.add(downloadButton);
+
+        // removing for now
+        //runtimeButtonPanel.add(createBrowseButton(runtimeField, false));
+        add(runtimeButtonPanel, gbc);
 
         // Checkboxes
         JPanel checkboxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
