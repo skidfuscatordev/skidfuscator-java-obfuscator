@@ -91,6 +91,7 @@ Skidfuscator intelligently identifies and downloads missing dependencies needed 
 
 ### 2. Smart Recovery
 In the event of errors or failed obfuscation, Skidfuscator implements a recovery system that intelligently resolves conflicts and provides suggestions to fix issues. This ensures minimal disruption in your development workflow.
+
 ![FocuSee_Project_2024-12-18_03-32-25-ezgif com-optimize](https://github.com/user-attachments/assets/8d1ec8e7-3f07-4da3-b4ef-c3b34cb1931b)
 
 ### 3. Auto Configuration
