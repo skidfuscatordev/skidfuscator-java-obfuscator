@@ -24,6 +24,9 @@ public class SkidfuscatorMain {
     public static void main(String[] args) {
 
         if (args.length == 0) {
+            // MacOS menu bar
+            System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Skidfuscator");
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
             SwingUtilities.invokeLater(() -> {
                 try {
                     FlatDarkPurpleIJTheme.setup();

@@ -19,6 +19,8 @@ import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
 
 public class ConfigPanel extends JPanel {
     private final JTextField inputField;
@@ -33,24 +35,74 @@ public class ConfigPanel extends JPanel {
         
         // Create compound border with titled border and empty border for padding
         setBorder(BorderFactory.createCompoundBorder(
-            // Outer titled border
             BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(EtchedBorder.RAISED), // Rounded line border with increased arc
+                BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
                 "Configuration", 
                 javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
                 javax.swing.border.TitledBorder.DEFAULT_POSITION,
                 new Font("Segoe UI", Font.BOLD, 16)
             ),
-            // Inner empty border for padding
             BorderFactory.createEmptyBorder(20, 0, 10, 0)
         ));
+        // Add description panel at the top
+        JTextArea descriptionArea = new JTextArea(
+            "Configure your obfuscation settings below:\n\n" +
+            "• Input JAR: Select the Java archive (.jar) file you want to obfuscate\n" +
+            "• Output JAR: Choose where to save the obfuscated file (.jar, .apk, or .dex)\n" +
+            "• Libraries: (Optional) Directory containing dependency JARs needed by your application\n" +
+            "• Runtime: JDK runtime libraries required for compilation (auto-downloaded)\n" +
+            "• Debug Mode: Enable additional logging and debugging information\n\n"
+        );
+        descriptionArea.setEditable(false);
+        descriptionArea.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setBackground(null);
+        descriptionArea.setBorder(null);
+
+        // Create indicator panel
+        JPanel indicatorPanel = new JPanel();
+        indicatorPanel.setLayout(new BoxLayout(indicatorPanel, BoxLayout.Y_AXIS));
+        indicatorPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+
+        // Add indicators with colored symbols
+        JLabel validLabel = new JLabel("✓ Green checkmarks indicate valid configurations");
+        validLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        validLabel.setForeground(new Color(0x2ECC40));
+
+        JLabel errorLabel = new JLabel("✗ Red X marks indicate issues that need to be resolved");
+        errorLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        errorLabel.setForeground(new Color(0xFF4136));
+
+        JLabel optionalLabel = new JLabel("● Orange dots indicate optional fields");
+        optionalLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        optionalLabel.setForeground(new Color(0xFF851B));
+
+        indicatorPanel.add(validLabel);
+        indicatorPanel.add(Box.createVerticalStrut(5));
+        indicatorPanel.add(errorLabel);
+        indicatorPanel.add(Box.createVerticalStrut(5));
+        indicatorPanel.add(optionalLabel);
+
+        // Add components to panel
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 5, 0, 5);
+        gbc.gridx = 0;
+        gbc.gridy = 20;
+        gbc.gridwidth = 3;
+        add(descriptionArea, gbc);
+
+        gbc.gridy = -1;
+        gbc.insets = new Insets(0, 5, 20, 5);
+        add(indicatorPanel, gbc);
+
+        // Reset gridwidth for other components
+        gbc.gridwidth = 1;
+        gbc.gridy++;
 
         // Load configuration
         config = SkidfuscatorConfig.load();
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
 
         // Input file
         gbc.gridx = 0; gbc.gridy = 0;

@@ -30,7 +30,18 @@ public class MainFrame extends JFrame {
         setTitle("Skidfuscator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(900, 700));
+        setResizable(false);
         setLayout(new BorderLayout(15, 5));
+
+        // Set application icon
+        try {
+            InputStream iconStream = getClass().getResourceAsStream("/images/logo.png");
+            if (iconStream != null) {
+                setIconImage(ImageIO.read(iconStream));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Create a panel for the left side that will contain both tabbed pane and button
         JPanel leftPanel = new JPanel(new BorderLayout());
