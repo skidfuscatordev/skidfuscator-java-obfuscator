@@ -92,10 +92,13 @@ Skidfuscator intelligently identifies and downloads missing dependencies needed 
 ### 2. Smart Recovery
 In the event of errors or failed obfuscation, Skidfuscator implements a recovery system that intelligently resolves conflicts and provides suggestions to fix issues. This ensures minimal disruption in your development workflow.
 
-![FocuSee_Project_2024-12-18_03-32-25-ezgif com-optimize](https://github.com/user-attachments/assets/8d1ec8e7-3f07-4da3-b4ef-c3b34cb1931b)
+![FocuSee_Project_2024-12-18_03-32-25-ezgif com-optimize (1)](https://github.com/user-attachments/assets/af709b36-1031-4519-8e21-2ec63a245ffb)
 
 ### 3. Auto Configuration
 Skidfuscator comes with built-in presets for common configurations, allowing quick setup without needing to manually tweak every aspect of the obfuscation process. For advanced users, all settings remain fully customizable.
+
+![FocuSeeProject2024-12-1802-56-07-ezgif com-optimize](https://github.com/user-attachments/assets/591415a0-b8fe-46d6-a530-d7914c58f613)
+
 ### 4. Flow Obfuscation (GEN3)
 Skidfuscator introduces third-generation control flow obfuscation (Flow GEN3), which scrambles method logic and makes the control flow harder to understand. This method introduces opaque predicates and complex flow redirections, hindering static and dynamic analysis.
 ### 5. Advanced Obfuscation Methods
