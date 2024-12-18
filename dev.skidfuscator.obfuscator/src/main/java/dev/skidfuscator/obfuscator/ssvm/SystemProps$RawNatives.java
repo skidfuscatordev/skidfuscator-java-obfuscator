@@ -1,6 +1,7 @@
 package dev.skidfuscator.obfuscator.ssvm;
 
 import dev.xdark.ssvm.VirtualMachine;
+import dev.xdark.ssvm.api.MethodInvoker;
 import dev.xdark.ssvm.api.VMInterface;
 import dev.xdark.ssvm.execution.Result;
 import dev.xdark.ssvm.mirror.type.InstanceClass;
@@ -118,6 +119,8 @@ public final class SystemProps$RawNatives {
                 ctx.setResult(platformArrayCache);
                 return Result.ABORT;
             });
+
+            vmi.setInvoker(jc, "<init>", "()V", MethodInvoker.noop());
 
             // Provide VM properties from the VM environment
             vmi.setInvoker(jc, "vmProperties", "()[Ljava/lang/String;", ctx -> {
