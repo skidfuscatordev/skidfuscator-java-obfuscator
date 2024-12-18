@@ -11,8 +11,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 
 @Getter
 public class MainFrame extends JFrame {
@@ -27,13 +30,13 @@ public class MainFrame extends JFrame {
         setTitle("Skidfuscator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(900, 700));
-
-        // Create main layout with increased padding
         setLayout(new BorderLayout(15, 5));
 
-        // Add header with logo
+        // Create a panel for the left side that will contain both tabbed pane and button
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setPreferredSize(new Dimension(180, getHeight()));
 
-        JPanel tabbedPanel = new JPanel(new BorderLayout());
+        // Create the tabbed pane
         tabbedPane = new JTabbedPane(JTabbedPane.LEFT) {
             @Override
             public void updateUI() {
@@ -47,13 +50,12 @@ public class MainFrame extends JFrame {
 
                     @Override
                     protected int calculateTabAreaWidth(int tabPlacement, int horizRunCount, int maxTabWidth) {
-                        return 160;
+                        return 180;
                     }
 
                     @Override
                     protected int calculateTabWidth(int tabPlacement, int tabIndex, FontMetrics metrics) {
-                        // Make tabs fill the entire width of the tab area
-                        return 160;
+                        return 180;
                     }
 
                     @Override
@@ -64,24 +66,24 @@ public class MainFrame extends JFrame {
                             if (logoStream != null) {
                                 Image logo = ImageIO.read(logoStream);
                                 Image scaledLogo = logo.getScaledInstance(150, 150, Image.SCALE_SMOOTH);
-                                g.drawImage(scaledLogo, 5, 10, null);
+                                g.drawImage(scaledLogo, 20, 10, null);
                             }
 
                             // Draw separator line
                             g.setColor(Color.DARK_GRAY);
-                            g.drawLine(5, 155, 155, 155);
+                            g.drawLine(5, 155, 175, 155);
 
                             // Draw version info
                             g.setColor(new Color(200,190,220));
                             g.setFont(new Font("Segoe UI", Font.BOLD, 11));
-                            g.drawString("Skidfuscator Community", 10, 175);
+                            g.drawString("Skidfuscator Community", 20, 175);
                             g.setColor(new Color(130, 130, 130));
                             g.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-                            g.drawString("Build: 2023.1", 10, 190);
+                            g.drawString("Build: 2023.1", 20, 190);
 
                             // Draw second separator
                             g.setColor(Color.DARK_GRAY);
-                            g.drawLine(5, 205, 155, 205);
+                            g.drawLine(5, 205, 175, 205);
 
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -91,70 +93,121 @@ public class MainFrame extends JFrame {
                 });
             }
         };
-        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        initializeTabs();
-        tabbedPanel.add(tabbedPane);
-        add(tabbedPanel, BorderLayout.CENTER);
 
-        // Create a more polished button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        // Create and configure start button
         startButton = new JButton("Start Obfuscation");
         startButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         startButton.setBackground(new Color(70, 130, 180));
         startButton.setForeground(Color.WHITE);
         startButton.setFocusPainted(false);
-        startButton.addActionListener(new AbstractAction() {
+        startButton.setPreferredSize(new Dimension(160, 30));
+        startButton.addActionListener(e -> {
+            if (e.getSource() == startButton) {
+                startObfuscation();
+            }
+        });
+
+        int topSpace = 220;
+        int bottomPadding = this.getPreferredSize().height - 60*3;
+
+        JPanel buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel.add(startButton, BorderLayout.NORTH);
+        
+        // Add copyright and website info
+        JPanel copyrightPanel = new JPanel();
+        copyrightPanel.setLayout(new BoxLayout(copyrightPanel, BoxLayout.Y_AXIS));
+        copyrightPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 20, 0));
+        JLabel copyrightLabel = new JLabel("© 2025 Skidfuscator");
+        copyrightLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        copyrightLabel.setForeground(new Color(130, 130, 130));
+        copyrightLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        copyrightLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel allRightsReservedText = new JLabel("<html><div style='width:100%;text-align:justify'>All rights reserved. The use of this software is subject to the terms of the Skidfuscator License Agreement. Unauthorized reproduction or distribution of this software, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under law.</div></html>");
+        allRightsReservedText.setFont(new Font("Segoe UI", Font.PLAIN, 6));
+        allRightsReservedText.setForeground(new Color(130, 130, 130));
+        allRightsReservedText.setAlignmentX(Component.CENTER_ALIGNMENT);
+        allRightsReservedText.setHorizontalAlignment(SwingConstants.CENTER);
+        allRightsReservedText.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
+
+        JSeparator separator = new JSeparator();
+        separator.setForeground(Color.DARK_GRAY);
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        
+        JLabel websiteLabel = new JLabel("skidfuscator.dev");
+        websiteLabel.setFont(new Font("Courier New", Font.PLAIN, 10));
+        websiteLabel.setForeground(new Color(70, 130, 180));
+        websiteLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        websiteLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        websiteLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        websiteLabel.addMouseListener(new MouseAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if (e.getSource() == startButton) {
-                    startObfuscation();
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    Desktop.getDesktop().browse(new URI("https://skidfuscator.dev"));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             }
         });
-        buttonPanel.add(startButton);
-        add(buttonPanel, BorderLayout.SOUTH);
+        copyrightPanel.add(copyrightLabel);
+        copyrightPanel.add(separator);
+        copyrightPanel.add(allRightsReservedText);
+        copyrightPanel.add(separator);
+        copyrightPanel.add(websiteLabel);
 
-        // Set keyboard mnemonics
-        setupKeyboardShortcuts();
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 5, 20, 0));
 
-        // Final setup
-        pack();
-        setLocationRelativeTo(null);
-    }
-
-    private void initializeTabs() {
         // Initialize panels
         configPanel = new ConfigPanel();
         transformerPanel = new TransformerPanel();
         consolePanel = new ConsolePanel();
 
-        // Add Configuration tab
-        JPanel configTabPanel = createTabPanel(configPanel, "Configuration");
-        tabbedPane.addTab("Configuration", null, configTabPanel, "Basic configuration settings");
+        // Add tabs (without content)
+        tabbedPane.addTab("Configuration", null);
+        tabbedPane.addTab("Transformers", null);
+        tabbedPane.addTab("Console", null);
+
+        // Set mnemonics
         tabbedPane.setMnemonicAt(0, KeyEvent.VK_C);
-
-        // Add Transformers tab
-        JPanel transformerTabPanel = createTabPanel(transformerPanel, "Transformers");
-        tabbedPane.addTab("Transformers", null, transformerTabPanel, "Transformer settings and options");
         tabbedPane.setMnemonicAt(1, KeyEvent.VK_T);
-
-        // Add Console tab
-        JPanel consoleTabPanel = createTabPanel(consolePanel, "Console Output");
-        tabbedPane.addTab("Console", null, consoleTabPanel, "View obfuscation progress and logs");
         tabbedPane.setMnemonicAt(2, KeyEvent.VK_O);
 
-        // Set default selected tab
-        tabbedPane.setSelectedIndex(0);
-    }
+        // Add components to the left panel
+        leftPanel.add(tabbedPane, BorderLayout.NORTH);
+        leftPanel.add(buttonPanel, BorderLayout.CENTER);
+        leftPanel.add(copyrightPanel, BorderLayout.SOUTH);
 
-    private JPanel createTabPanel(JComponent component, String title) {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(10, 10, 10, 10),
-                BorderFactory.createTitledBorder(title)
-        ));
-        panel.add(component, BorderLayout.CENTER);
-        return panel;
+        // Create a panel for the content area
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBorder(
+                BorderFactory.createEmptyBorder(10, 0, 10, 10));
+        contentPanel.add(configPanel, BorderLayout.CENTER); // Show config panel by default
+
+        // Add panels to the frame
+        add(leftPanel, BorderLayout.WEST);
+        add(contentPanel, BorderLayout.CENTER);
+
+        // Add a listener to update the content panel when tabs change
+        tabbedPane.addChangeListener(e -> {
+            contentPanel.removeAll();
+            switch (tabbedPane.getSelectedIndex()) {
+                case 0:
+                    contentPanel.add(configPanel, BorderLayout.CENTER);
+                    break;
+                case 1:
+                    contentPanel.add(transformerPanel, BorderLayout.CENTER);
+                    break;
+                case 2:
+                    contentPanel.add(consolePanel, BorderLayout.CENTER);
+                    break;
+            }
+            contentPanel.revalidate();
+            contentPanel.repaint();
+        });
+
+        // Final setup
+        pack();
+        setLocationRelativeTo(null);
     }
 
     private void setupKeyboardShortcuts() {

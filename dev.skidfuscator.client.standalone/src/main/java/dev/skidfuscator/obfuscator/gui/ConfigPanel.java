@@ -15,6 +15,8 @@ import java.awt.*;
 import java.io.File;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.EtchedBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -28,6 +30,20 @@ public class ConfigPanel extends JPanel {
 
     public ConfigPanel() {
         setLayout(new GridBagLayout());
+        
+        // Create compound border with titled border and empty border for padding
+        setBorder(BorderFactory.createCompoundBorder(
+            // Outer titled border
+            BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(EtchedBorder.RAISED), // Rounded line border with increased arc
+                "Configuration", 
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                new Font("Segoe UI", Font.BOLD, 16)
+            ),
+            // Inner empty border for padding
+            BorderFactory.createEmptyBorder(20, 0, 10, 0)
+        ));
 
         // Load configuration
         config = SkidfuscatorConfig.load();

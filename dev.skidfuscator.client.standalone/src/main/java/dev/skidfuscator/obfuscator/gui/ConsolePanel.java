@@ -4,6 +4,7 @@ import dev.skidfuscator.obfuscator.gui.ansi.AnsiParser;
 import dev.skidfuscator.obfuscator.gui.ansi.UnicodeBoxChars;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import javax.swing.text.*;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
@@ -34,7 +35,18 @@ public class ConsolePanel extends JPanel {
 
     public ConsolePanel() {
         setLayout(new BorderLayout());
-        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        setBorder(BorderFactory.createCompoundBorder(
+                // Outer titled border
+                BorderFactory.createTitledBorder(
+                        BorderFactory.createEtchedBorder(EtchedBorder.RAISED), // Rounded line border with increased arc
+                        "Console",
+                        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                        javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                        new Font("Segoe UI", Font.BOLD, 16)
+                ),
+                // Inner empty border for padding
+                BorderFactory.createEmptyBorder(20, 0, 0, 0)
+        ));
         cachedStyles = new HashMap<>();
 
         // Initialize console output

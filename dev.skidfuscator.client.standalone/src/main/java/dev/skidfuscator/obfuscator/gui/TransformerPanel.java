@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.gui.transformer.TransformerOptionDefinition;
 import dev.skidfuscator.obfuscator.gui.transformer.TransformerOptionType;
 
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
@@ -24,6 +25,19 @@ public class TransformerPanel extends JPanel {
     public TransformerPanel() {
         setLayout(new BorderLayout(10, 10));
 
+        // Create compound border with titled border and empty border for padding
+        setBorder(BorderFactory.createCompoundBorder(
+                // Outer titled border
+                BorderFactory.createTitledBorder(
+                        BorderFactory.createEtchedBorder(EtchedBorder.RAISED), // Rounded line border with increased arc
+                        "Transformers",
+                        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                        javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                        new Font("Segoe UI", Font.BOLD, 16)
+                ),
+                // Inner empty border for padding
+                BorderFactory.createEmptyBorder(20, 0, 10, 0)
+        ));
         // Create transformer sections panel
         JPanel sectionsPanel = new JPanel(new GridLayout(0, 1, 5, 5));
         transformerSections = new HashMap<>();

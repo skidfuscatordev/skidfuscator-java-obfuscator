@@ -32,6 +32,7 @@ public class JdkDownloader {
                 break;
             case "windows":
             case "windows 11":
+            case "windows 10":
                 JDK_URL = "https://corretto.aws/downloads/resources/17.0.13.11.1/amazon-corretto-17.0.13.11.1-windows-x64-jdk.zip";
                 break;
             default:
@@ -53,6 +54,7 @@ public class JdkDownloader {
                 cacheName = "amazon-corretto-17.jdk";
                 break;
             case "windows":
+            case "windows 10":
             case "windows 11":
                 cacheName = "jdk17.0.13_11";
                 break;
