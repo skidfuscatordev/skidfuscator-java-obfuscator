@@ -106,7 +106,7 @@ import java.util.stream.Collectors;
      *
      * @param event Method initializer event
      */
-    @Listen(EventPriority.HIGHEST)
+    @Listen(EventPriority.LOWEST)
     void handle(final InitMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
         final BlockOpaquePredicate flowPredicate = methodNode.getFlowPredicate();

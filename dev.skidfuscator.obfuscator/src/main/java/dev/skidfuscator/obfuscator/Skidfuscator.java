@@ -461,7 +461,7 @@ public class Skidfuscator {
 
         try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 config.getExemptionsv2().size(),
-                "Imported " + config.getExemptions().size() + " exclusions v2"
+                "Imported " + config.getExemptionsv2().size() + " exclusions v2"
         )) {
             for (String s : config.getExemptionsv2()) {
                 exemptAnalysis.add(ExclusionParser.parsePatternExclusion(s));

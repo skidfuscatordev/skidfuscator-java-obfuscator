@@ -186,6 +186,32 @@ class MapleExclusionParserTest {
     }
 
     @Test
+    @DisplayName("Test class exclusion, ross#1")
+    void testEvaluatorNestedClass() {
+        String input = """
+                @class dev.sim0n.evaluator.* {
+                            !@class util.*
+                            !@class Main
+                        } 
+               """;
+
+        ClassNode dev_sim0n_evaluator_Main = mock(ClassNode.class);
+        when(dev_sim0n_evaluator_Main.getName()).thenReturn("dev/sim0n/evaluator/Main");
+
+        ClassNode dev_sim0n_evaluator_util_Util = mock(ClassNode.class);
+        when(dev_sim0n_evaluator_util_Util.getName()).thenReturn("dev/sim0n/evaluator/util/Util");
+
+        ClassNode dev_sim0n_evaluator_operation_Operation = mock(ClassNode.class);
+        when(dev_sim0n_evaluator_operation_Operation.getName()).thenReturn("dev/sim0n/evaluator/operation/Operation");
+
+        Exclusion exclusion = ExclusionParser.parsePatternExclusion(input);
+
+        assertFalse(exclusion.test(dev_sim0n_evaluator_Main));
+        assertFalse(exclusion.test(dev_sim0n_evaluator_util_Util));
+        assertTrue(exclusion.test(dev_sim0n_evaluator_operation_Operation));
+    }
+
+    @Test
     @DisplayName("Test method parameter matching")
     void testMethodParameters() {
         String input = """

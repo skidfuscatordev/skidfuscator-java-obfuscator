@@ -25,6 +25,8 @@ dependencies {
     implementation 'org.jline:jline:3.21.0'
     implementation 'com.jgoodies:jgoodies-forms:1.9.0'
     implementation 'com.github.vlsi.mxgraph:jgraphx:4.2.2'
+    implementation 'com.formdev:flatlaf:3.5.4'
+    implementation 'com.formdev:flatlaf-intellij-themes:3.5.4'
 
     implementation project(':obfuscator')
 

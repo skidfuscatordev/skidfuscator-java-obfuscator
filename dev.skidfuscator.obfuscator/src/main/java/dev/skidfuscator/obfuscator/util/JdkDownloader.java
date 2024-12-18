@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.util;
 
+import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -60,7 +61,7 @@ public class JdkDownloader {
 
         Path jdkPath = CACHE_DIR.resolve(cacheName);
         if (Files.exists(jdkPath)) {
-            System.out.println("JDK 17 already downloaded to " + jdkPath);
+            //System.out.println("JDK 17 already downloaded to " + jdkPath);
             switch (OS) {
                 case "mac os x":
                 case "mac":
@@ -75,7 +76,8 @@ public class JdkDownloader {
         System.out.println("Downloading JDK 17...");
 
         if (JDK_URL.endsWith(".zip")) {
-            try (ZipInputStream zis = new ZipInputStream(new URL(JDK_URL).openStream())) {
+            try (ProgressWrapper wrapper = ProgressUtil.progress(1, "Downloaded JDK 17");
+                 ZipInputStream zis = new ZipInputStream(new URL(JDK_URL).openStream())) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
                     Path destPath = CACHE_DIR.resolve(entry.getName());
@@ -86,12 +88,15 @@ public class JdkDownloader {
                         Files.copy(zis, destPath);
                     }
                 }
+                wrapper.tick();
+                wrapper.succeed();
             } catch (IOException e) {
                 Files.deleteIfExists(jdkPath);
                 throw e;
             }
         } else {
-            try (TarArchiveInputStream tis = new TarArchiveInputStream(
+            try (ProgressWrapper wrapper = ProgressUtil.progress(1, "Downloaded JDK 17");
+                 TarArchiveInputStream tis = new TarArchiveInputStream(
                     new GzipCompressorInputStream(
                         new URL(JDK_URL).openStream()
                     ))) {
@@ -105,13 +110,13 @@ public class JdkDownloader {
                         Files.copy(tis, destPath);
                     }
                 }
+                wrapper.tick();
+                wrapper.succeed();
             } catch (IOException e) {
                 Files.deleteIfExists(jdkPath);
                 throw e;
             }
         }
-
-        System.out.println("JDK 17 downloaded to " + jdkPath);
 
         switch (OS) {
             case "mac os x":

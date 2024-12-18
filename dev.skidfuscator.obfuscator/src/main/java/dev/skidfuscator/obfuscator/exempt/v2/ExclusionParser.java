@@ -63,7 +63,7 @@ public class ExclusionParser {
         private final String extendsClass;      // extended class
         private final Set<String> interfaces;   // implemented interfaces
         private final List<ParsedMember> members; // class members
-        private final boolean isInclude;        // whether this class is an inclusion
+        private final boolean include;        // whether this class is an inclusion
     }
 
     /**
@@ -102,8 +102,9 @@ public class ExclusionParser {
         }
 
         // Check for inclusion prefix
-        boolean isInclusion = header.startsWith("!");
-        if (isInclusion) {
+        boolean include = header.startsWith("!");
+        if (include) {
+            System.out.println("include: " + include);
             header = header.substring(1);
         }
 
@@ -181,7 +182,7 @@ public class ExclusionParser {
             }
         }
 
-        return new ParsedClass(classType, modifiers, className, extendsClass, interfaces, members, isInclusion);
+        return new ParsedClass(classType, modifiers, className, extendsClass, interfaces, members, include);
     }
 
     private static class MemberParserState {
@@ -652,7 +653,6 @@ public class ExclusionParser {
                             .compile(convertClassPattern(parsedClass.getName() + member.getName()))
                             .matcher(var.getName())
                             .find();
-
 
                     if (match) {
                         initialNameMatch = match != member.isInclusion();

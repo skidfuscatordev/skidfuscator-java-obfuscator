@@ -223,6 +223,6 @@ public class ExclusionHelper {
             });
         }
 
-        return new Exclusion(map, false);
+        return new Exclusion(map);
     }
 }

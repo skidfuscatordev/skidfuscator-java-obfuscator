@@ -40,10 +40,11 @@ public class SampleJarTest {
                 .input(input)
                 .output(output)
                 .runtime(runtime)
-                .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
+                .config(new File(TestSkidfuscator.class.getResource("/config/new.hocon").getFile()))
                 .jmod(MiscUtil.getJavaVersion() > 8)
                 .phantom(true)
                 .analytics(false)
+                .debug(true)
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(session);

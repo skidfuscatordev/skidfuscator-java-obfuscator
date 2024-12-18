@@ -14,7 +14,6 @@ import org.mapleir.asm.MethodNode;
 @Builder
 public class Exclusion {
     private final ExclusionMap testers;
-    private final boolean include;
 
     /**
      * Test if a class is to be excluded
@@ -25,8 +24,7 @@ public class Exclusion {
     public boolean test(final ClassNode classNode) {
         assert testers.containsKey(ExclusionType.CLASS) : "Trying to test with null class tester";
 
-        boolean result = testers.poll(ExclusionType.CLASS).test(classNode);
-        return include ? !result : result;
+        return testers.poll(ExclusionType.CLASS).test(classNode);
     }
 
     /**
@@ -36,12 +34,11 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final MethodNode methodNode) {
-        if (test(methodNode.getOwnerClass()) != include)
+        if (test(methodNode.getOwnerClass()))
             return true;
 
         assert testers.containsKey(ExclusionType.METHOD) : "Trying to test with null method tester";
-        boolean result = testers.poll(ExclusionType.METHOD).test(methodNode);
-        return include != result;
+        return testers.poll(ExclusionType.METHOD).test(methodNode);
     }
 
     /**
@@ -51,12 +48,11 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final FieldNode fieldNode) {
-        if (test(fieldNode.getOwnerClass()) != include)
+        if (test(fieldNode.getOwnerClass()))
             return true;
 
         assert testers.containsKey(ExclusionType.FIELD) : "Trying to test with null field tester";
-        boolean result = testers.poll(ExclusionType.FIELD).test(fieldNode);
-        return include != result;
+        return testers.poll(ExclusionType.FIELD).test(fieldNode);
     }
 
     @Override

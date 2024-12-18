@@ -1,14 +1,18 @@
 // MainFrame.java
 package dev.skidfuscator.obfuscator.gui;
 
+import com.formdev.flatlaf.ui.FlatTabbedPaneUI;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import lombok.Getter;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.InputStream;
 
 @Getter
 public class MainFrame extends JFrame {
@@ -17,28 +21,80 @@ public class MainFrame extends JFrame {
     private TransformerPanel transformerPanel;
     private ConsolePanel consolePanel;
     private JButton startButton;
+    private JPanel headerPanel;
 
     public MainFrame() {
-        setTitle("Skidfuscator Obfuscator");
+        setTitle("Skidfuscator");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setPreferredSize(new Dimension(800, 600));
+        setPreferredSize(new Dimension(900, 700));
 
-        // Create main layout
-        setLayout(new BorderLayout(10, 10));
+        // Create main layout with increased padding
+        setLayout(new BorderLayout(15, 5));
 
-        // Initialize tabbed pane
-        tabbedPane = new JTabbedPane();
+        // Add header with logo
+
+        JPanel tabbedPanel = new JPanel(new BorderLayout());
+        tabbedPane = new JTabbedPane(JTabbedPane.LEFT) {
+            @Override
+            public void updateUI() {
+                super.updateUI();
+                setUI(new FlatTabbedPaneUI() {
+                    @Override
+                    protected Insets getTabAreaInsets(int tabPlacement) {
+                        Insets insets = super.getTabAreaInsets(tabPlacement);
+                        return new Insets(140, insets.left, insets.bottom, insets.right);
+                    }
+
+                    @Override
+                    protected int calculateTabAreaWidth(int tabPlacement, int horizRunCount, int maxTabWidth) {
+                        return 150;
+                    }
+
+                    @Override
+                    protected int calculateTabWidth(int tabPlacement, int tabIndex, FontMetrics metrics) {
+                        // Make tabs fill the entire width of the tab area
+                        return 150;
+                    }
+
+                    @Override
+                    protected void paintTabArea(Graphics g, int tabPlacement, int selectedIndex) {
+                        try {
+                            InputStream logoStream = getClass().getResourceAsStream("/images/logo.png");
+                            if (logoStream != null) {
+                                Image logo = ImageIO.read(logoStream);
+                                Image scaledLogo = logo.getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+                                g.drawImage(scaledLogo, 5, 0, null);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        super.paintTabArea(g, tabPlacement, selectedIndex);
+                    }
+                });
+            }
+        };
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         initializeTabs();
+        tabbedPanel.add(tabbedPane);
+        add(tabbedPanel, BorderLayout.CENTER);
 
-        // Initialize action panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // Create a more polished button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         startButton = new JButton("Start Obfuscation");
-        startButton.addActionListener(e -> startObfuscation());
+        startButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        startButton.setBackground(new Color(70, 130, 180));
+        startButton.setForeground(Color.WHITE);
+        startButton.setFocusPainted(false);
+        startButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == startButton) {
+                    startObfuscation();
+                }
+            }
+        });
         buttonPanel.add(startButton);
         add(buttonPanel, BorderLayout.SOUTH);
-
-        // Add components to frame
-        add(tabbedPane, BorderLayout.CENTER);
 
         // Set keyboard mnemonics
         setupKeyboardShortcuts();
@@ -193,5 +249,25 @@ public class MainFrame extends JFrame {
             }
         };
         worker.execute();
+    }
+
+    private JPanel createHeaderPanel() {
+        JPanel header = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
+
+        try {
+            // Load logo from resources
+            InputStream logoStream = getClass().getResourceAsStream("/images/logo.png");
+            if (logoStream != null) {
+                Image logo = ImageIO.read(logoStream);
+                Image scaledLogo = logo.getScaledInstance(120, 120, Image.SCALE_DEFAULT);
+                JLabel logoLabel = new JLabel(new ImageIcon(scaledLogo));
+                header.add(logoLabel);
+            }
+            // Add title label
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return header;
     }
 }

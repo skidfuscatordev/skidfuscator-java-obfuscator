@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator;
 
+import com.formdev.flatlaf.intellijthemes.FlatDarkPurpleIJTheme;
 import dev.skidfuscator.obfuscator.command.HelpCommand;
 import dev.skidfuscator.obfuscator.command.MappingsCommand;
 import dev.skidfuscator.obfuscator.command.ObfuscateCommand;
@@ -25,7 +26,7 @@ public class SkidfuscatorMain {
         if (args.length == 0) {
             SwingUtilities.invokeLater(() -> {
                 try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    FlatDarkPurpleIJTheme.setup();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
