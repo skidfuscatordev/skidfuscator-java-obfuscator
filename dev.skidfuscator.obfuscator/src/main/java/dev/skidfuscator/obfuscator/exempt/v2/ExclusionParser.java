@@ -39,6 +39,20 @@ public class ExclusionParser {
         private final String name;              // member name
         private final List<String> parameters;  // method parameters
         private final String containingClass;   // class this member belongs to
+        private final boolean isInclusion;      // whether this member is an inclusion
+
+        @Override
+        public String toString() {
+            return "ParsedMember{" +
+                    "type='" + type + '\'' +
+                    ", modifiers=" + modifiers +
+                    ", returnType='" + returnType + '\'' +
+                    ", name='" + name + '\'' +
+                    ", parameters=" + parameters +
+                    ", containingClass='" + containingClass + '\'' +
+                    ", isInclusion=" + isInclusion +
+                    '}';
+        }
     }
 
     @Data
@@ -49,6 +63,7 @@ public class ExclusionParser {
         private final String extendsClass;      // extended class
         private final Set<String> interfaces;   // implemented interfaces
         private final List<ParsedMember> members; // class members
+        private final boolean isInclude;        // whether this class is an inclusion
     }
 
     /**
@@ -72,14 +87,28 @@ public class ExclusionParser {
             throw new ExclusionParseException("Empty input");
         }
 
-        // Parse class header
-        String header = input;
-        int braceIndex = header.indexOf("{");
+        // Parse class header and body separately
+        String header;
+        String body = "";
+        int braceIndex = input.indexOf("{");
         if (braceIndex != -1) {
-            header = header.substring(0, braceIndex).trim();
+            header = input.substring(0, braceIndex).trim();
+            int closingBrace = input.lastIndexOf("}");
+            if (closingBrace != -1) {
+                body = input.substring(braceIndex + 1, closingBrace).trim();
+            }
+        } else {
+            header = input.trim();
         }
+
+        // Check for inclusion prefix
+        boolean isInclusion = header.startsWith("!");
+        if (isInclusion) {
+            header = header.substring(1);
+        }
+
         if (!header.startsWith("@")) {
-            throw new ExclusionParseException("Class declaration must start with @");
+            throw new ExclusionParseException("Class declaration must start with @ or !@");
         }
 
         // Split header into tokens
@@ -141,17 +170,18 @@ public class ExclusionParser {
 
         // Parse members using state machine
         List<ParsedMember> members = new ArrayList<>();
-        if (braceIndex != -1) {
-            MemberParserState state = new MemberParserState(input.substring(braceIndex + 1, input.lastIndexOf("}")).trim());
+        if (!body.isEmpty()) {
+            MemberParserState state = new MemberParserState(body);
             while (state.hasMore()) {
                 ParsedMember member = state.parseNextMember(className);
                 if (member != null) {
+                    System.out.println("member: " + member);
                     members.add(member);
                 }
             }
         }
 
-        return new ParsedClass(classType, modifiers, className, extendsClass, interfaces, members);
+        return new ParsedClass(classType, modifiers, className, extendsClass, interfaces, members, isInclusion);
     }
 
     private static class MemberParserState {
@@ -159,10 +189,13 @@ public class ExclusionParser {
         private int position;
         private StringBuilder currentToken;
         private ParserState state;
+        private int braceDepth;
+        private boolean isInclusion;
 
         private enum ParserState {
             LOOKING_FOR_AT,
             READING_MEMBER,
+            READING_NESTED_CLASS,
             SKIPPING_WHITESPACE
         }
 
@@ -171,6 +204,8 @@ public class ExclusionParser {
             this.position = 0;
             this.currentToken = new StringBuilder();
             this.state = ParserState.LOOKING_FOR_AT;
+            this.braceDepth = 0;
+            this.isInclusion = false;
         }
 
         public boolean hasMore() {
@@ -179,13 +214,18 @@ public class ExclusionParser {
 
         public ParsedMember parseNextMember(String className) {
             currentToken.setLength(0);
+            isInclusion = false;
             
             while (hasMore()) {
                 char c = input.charAt(position);
-                
                 switch (state) {
                     case LOOKING_FOR_AT:
-                        if (c == '@') {
+                        if (c == '!') {
+                            isInclusion = true;
+                            position++;
+                            System.out.println("isInclusion: " + isInclusion);
+                            continue;
+                        } else if (c == '@') {
                             state = ParserState.READING_MEMBER;
                             position++;
                         } else if (!Character.isWhitespace(c)) {
@@ -196,17 +236,28 @@ public class ExclusionParser {
                         break;
 
                     case READING_MEMBER:
-                        if (c == '@') {
+                        if (c == '@' || c == '!') {
                             // Found start of next member
                             String memberDecl = currentToken.toString().trim();
+                            System.out.println("memberDecl: " + memberDecl);
                             if (!memberDecl.isEmpty()) {
-                                return parseMember(memberDecl, className, -1);
+                                return createParsedMember(memberDecl, className);
                             }
-                            state = ParserState.READING_MEMBER;
+                            position--; // Back up to reprocess the @ or !
+                            state = ParserState.LOOKING_FOR_AT;
+                        } else if (c == '\n' || c == ';') {
+                            // End of member declaration
+                            String memberDecl = currentToken.toString().trim();
+                            if (!memberDecl.isEmpty()) {
+                                state = ParserState.LOOKING_FOR_AT;
+                                position++;
+                                return createParsedMember(memberDecl, className);
+                            }
+                            position++;
                         } else {
                             currentToken.append(c);
+                            position++;
                         }
-                        position++;
                         break;
 
                     case SKIPPING_WHITESPACE:
@@ -222,24 +273,44 @@ public class ExclusionParser {
             // Handle last member if exists
             String memberDecl = currentToken.toString().trim();
             if (!memberDecl.isEmpty()) {
-                return parseMember(memberDecl, className, -1);
+                return createParsedMember(memberDecl, className);
             }
 
             return null;
+        }
+
+        private ParsedMember createParsedMember(String declaration, String className) {
+            return parseMember(declaration, className, -1, isInclusion);
+        }
+
+        private ParsedMember createNestedClassMember(String declaration, String className) {
+            // Parse the nested class
+            ParsedClass nestedClass = parseClass(declaration);
+            
+            // Convert to a special member
+            return new ParsedMember(
+                    "class",
+                    nestedClass.getModifiers(),
+                    null,
+                    nestedClass.getName(),
+                    Collections.emptyList(),
+                    className,
+                    isInclusion || nestedClass.isInclude()
+            );
         }
     }
 
     /**
      * Parses a member (method or field) declaration
      */
-    private ParsedMember parseMember(String input, String containingClass, int lineNum) {
+    private ParsedMember parseMember(String input, String containingClass, int lineNum, boolean inclusion) {
         List<String> tokens = tokenize(input);
         if (tokens.isEmpty()) {
             throw new ExclusionParseException("Invalid member declaration", lineNum);
         }
 
         String memberType = tokens.get(0);
-        if (!memberType.equals("method") && !memberType.equals("field")) {
+        if (!memberType.equals("method") && !memberType.equals("field") && !memberType.equals("class")) {
             throw new ExclusionParseException("Invalid member type: " + memberType, lineNum);
         }
         tokens.remove(0);
@@ -271,7 +342,7 @@ public class ExclusionParser {
             throw new ExclusionParseException("Member name is required", lineNum);
         }
 
-        return new ParsedMember(memberType, modifiers, returnType, name, parameters, containingClass);
+        return new ParsedMember(memberType, modifiers, returnType, name, parameters, containingClass, inclusion);
     }
 
     /**
@@ -571,7 +642,24 @@ public class ExclusionParser {
                     }
                 }
 
-                return regex.matcher(var.getName()).find();
+                boolean initialNameMatch = regex.matcher(var.getName()).find() != parsedClass.isInclude();
+
+                for (ParsedMember member : parsedClass.getMembers()) {
+                    if (!member.getType().equalsIgnoreCase("class"))
+                        continue;
+
+                    final boolean match = Pattern
+                            .compile(convertClassPattern(parsedClass.getName() + member.getName()))
+                            .matcher(var.getName())
+                            .find();
+
+
+                    if (match) {
+                        initialNameMatch = match != member.isInclusion();
+                    }
+                }
+
+                return initialNameMatch;
             }
 
             @Override
@@ -582,70 +670,121 @@ public class ExclusionParser {
     }
 
     private void generateMethodTesters(ExclusionMap map, ParsedClass parsedClass) {
-        List<ExclusionTester<MethodNode>> methodTesters = new ArrayList<>();
+        final Pattern classRegex = Pattern.compile(convertClassPattern(parsedClass.getName()));
+        final List<Pattern> includedClassPatterns = new ArrayList<>();
+        final List<MethodPattern> methodPatterns = new ArrayList<>();
 
+        // Collect patterns from members
         for (ParsedMember member : parsedClass.getMembers()) {
-            if (!member.getType().equals("method")) continue;
-
-            final Pattern nameRegex = Pattern.compile(member.getName().replace("*", ".*"));
-            final Pattern descRegex = member.getReturnType() != null ?
-                    Pattern.compile(member.getReturnType()) : null;
-
-            methodTesters.add(new ExclusionTester<MethodNode>() {
-                @Override
-                public boolean test(MethodNode var) {
-                    // Check basic modifiers
-                    //System.out.println("testing: " + var.getName());
-                    //System.out.println("modifiers: " + parsedClass.getModifiers());
-                    final boolean initialMatch = Match.of("")
-                            .match("static", var.isStatic())
-                            .match("public", var.isPublic())
-                            .match("protected", var.isProtected())
-                            .match("private", var.isPrivate())
-                            .check();
-
-                    if (!initialMatch) return false;
-
-                    // Check specific modifiers
-                    for (String modifier : member.getModifiers()) {
-                        switch (modifier) {
-                            case "public": if (!var.isPublic()) return false; break;
-                            case "private": if (!var.isPrivate()) return false; break;
-                            case "protected": if (!var.isProtected()) return false; break;
-                            case "static": if (!var.isStatic()) return false; break;
-                            case "final": if (!var.isFinal()) return false; break;
-                            case "abstract": if (!var.isAbstract()) return false; break;
-                        }
+            switch (member.getType()) {
+                case "class" -> {
+                    if (member.isInclusion()) {
+                        includedClassPatterns.add(Pattern.compile(convertClassPattern(member.getName())));
                     }
-
-                    // Check return type if specified
-                    if (descRegex != null && !descRegex.matcher(var.getDesc()).lookingAt()) {
-                        return false;
-                    }
-
-                    // Check method name
-                    return nameRegex.matcher(var.getName()).lookingAt();
                 }
-
-                @Override
-                public String toString() {
-                    return nameRegex.pattern();
+                case "method" -> {
+                    methodPatterns.add(new MethodPattern(
+                            member.getName().replace("*", ".*"),
+                            member.getModifiers(),
+                            member.getReturnType(),
+                            member.getParameters(),
+                            member.isInclusion()
+                    ));
                 }
-            });
+                default -> throw new ExclusionParseException("Invalid member type: " + member.getType());
+            }
         }
 
-        // Combine all method testers into one
         map.put(ExclusionType.METHOD, new ExclusionTester<MethodNode>() {
             @Override
             public boolean test(MethodNode var) {
-                return methodTesters.stream().anyMatch(tester -> tester.test(var));
+                String ownerName = var.getOwnerClass().getName();
+
+                // First check if the method's class matches any inclusion pattern
+                for (Pattern includePattern : includedClassPatterns) {
+                    if (includePattern.matcher(ownerName).find()) {
+                        return false; // Include methods from included classes
+                    }
+                }
+
+                // Check if the method matches any specific method patterns
+                for (MethodPattern pattern : methodPatterns) {
+                    if (pattern.matches(var)) {
+                        return !pattern.isInclusion(); // Return false for inclusions, true for exclusions
+                    }
+                }
+
+                return false;
             }
 
             @Override
             public String toString() {
-                return "CombinedMethodTester";
+                return "MethodTester[class=" + classRegex.pattern() + ", patterns=" + methodPatterns.size() + "]";
             }
         });
+    }
+
+    private static class MethodPattern {
+        private final Pattern namePattern;
+        private final Set<String> modifiers;
+        private final String returnType;
+        private final List<String> parameters;
+        private final boolean inclusion;
+
+        public MethodPattern(String name, Set<String> modifiers, String returnType, List<String> parameters, boolean inclusion) {
+            this.namePattern = Pattern.compile(name);
+            this.modifiers = modifiers;
+            this.returnType = returnType;
+            this.parameters = parameters;
+            this.inclusion = inclusion;
+        }
+
+        public boolean matches(MethodNode method) {
+            // Check name pattern
+            if (!namePattern.matcher(method.getDisplayName()).matches()) {
+                return false;
+            }
+
+            // Check modifiers if specified
+            for (String modifier : modifiers) {
+                switch (modifier) {
+                    case "public": if (!method.isPublic()) return false; break;
+                    case "private": if (!method.isPrivate()) return false; break;
+                    case "protected": if (!method.isProtected()) return false; break;
+                    case "static": if (!method.isStatic()) return false; break;
+                    case "final": if (!method.isFinal()) return false; break;
+                    case "abstract": if (!method.isAbstract()) return false; break;
+                    case "native": if (!method.isNative()) return false; break;
+                }
+            }
+
+            // Check return type if specified
+            if (returnType != null) {
+                if (!Pattern.compile(returnType).matcher(method.getDesc()).find()) {
+                    return false;
+                }
+            }
+
+            // Check parameters if specified
+            if (!parameters.isEmpty()) {
+                // TODO: Add parameter matching logic
+                // This would require parsing the method descriptor
+            }
+
+            return true;
+        }
+
+        public boolean isInclusion() {
+            return inclusion;
+        }
+
+        @Override
+        public String toString() {
+            return (inclusion ? "!" : "") + namePattern.pattern() + 
+                   (modifiers.isEmpty() ? "" : " " + modifiers) +
+                   (returnType != null ? " returns " + returnType : "") +
+                   (parameters.isEmpty() ? "" : " params " + parameters);
+        }
     }
 
     private void generateFieldTesters(ExclusionMap map, ParsedClass parsedClass) {

@@ -30,7 +30,7 @@ public class JdkDownloader {
                 break;
             case "windows":
             case "windows 11":
-                JDK_URL = "https://download.java.net/java/GA/jdk17.0.2/0d483333a00540d886896a45e7e18309295e7f3a/jdk-17.0.2_windows-x64_bin.zip";
+                JDK_URL = "https://corretto.aws/downloads/resources/17.0.13.11.1/amazon-corretto-17.0.13.11.1-windows-x64-jdk.zip";
                 break;
             default:
                 throw new IllegalStateException("Unsupported OS: " + OS);
@@ -51,7 +51,8 @@ public class JdkDownloader {
                 cacheName = "amazon-corretto-17.jdk";
                 break;
             case "windows":
-                cacheName = "jdk-17.0.2";
+            case "windows 11":
+                cacheName = "jdk17.0.13_11";
                 break;
             default:
                 throw new IllegalStateException("Unsupported OS: " + OS);
