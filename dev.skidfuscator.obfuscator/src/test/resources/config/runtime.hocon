@@ -1,5 +1,5 @@
-exempt: [
-    "class{^dev\\/skidfuscator\\/test}"
+exclude: [
+    "@class dev.skidfuscator.testclasses.exclusion.*"
 ]
 
 driver: {

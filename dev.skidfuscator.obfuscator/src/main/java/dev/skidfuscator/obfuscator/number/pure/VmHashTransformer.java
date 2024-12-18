@@ -230,6 +230,7 @@ public class VmHashTransformer implements HashTransformer {
             "com/sun/",
             // jdk specific
             "jdk/internal/",
+            "jdk/vm",
             "jdk/swing/interop/DragSourceContextWrapper",
             "com/oracle/",
             "com/ibm/",

@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
 
     public static boolean DEBUG = false;
 
-    @Listen(EventPriority.HIGHEST)
+    @Listen(EventPriority.LOWEST)
     void handle(final InitSkidTransformEvent event) {
         final String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
         final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)

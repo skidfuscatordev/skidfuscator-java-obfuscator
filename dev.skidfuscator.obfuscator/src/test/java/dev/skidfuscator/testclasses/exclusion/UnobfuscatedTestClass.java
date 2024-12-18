@@ -7,7 +7,6 @@ import javax.crypto.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-@Exclude
 public class UnobfuscatedTestClass {
     private static final byte[] data = new byte[] {0, 1, 4, 3, 2};
 

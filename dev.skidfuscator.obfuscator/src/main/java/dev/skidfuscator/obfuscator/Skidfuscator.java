@@ -23,6 +23,7 @@ import dev.skidfuscator.obfuscator.event.impl.transform.group.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
 import dev.skidfuscator.obfuscator.exempt.ExemptManager;
+import dev.skidfuscator.obfuscator.exempt.v2.ExclusionParser;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
 import dev.skidfuscator.obfuscator.io.apk.ApkInputSource;
@@ -447,17 +448,23 @@ public class Skidfuscator {
     protected void _importExempt() {
         /* Importation and exemptions */
         LOGGER.post("Importing exemptions...");
-        /*
-         * This is the parsing bit. We initiate a progress bar and
-         * simply just call the exempt analysis which builds the
-         * exclusion call and caches it.
-         */
+
         try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 config.getExemptions().size(),
                 "Imported " + config.getExemptions().size() + " exclusions"
         )) {
             for (String s : config.getExemptions()) {
                 exemptAnalysis.add(s);
+                progressBar.tick();
+            }
+        }
+
+        try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
+                config.getExemptionsv2().size(),
+                "Imported " + config.getExemptions().size() + " exclusions v2"
+        )) {
+            for (String s : config.getExemptionsv2()) {
+                exemptAnalysis.add(ExclusionParser.parsePatternExclusion(s));
                 progressBar.tick();
             }
         }

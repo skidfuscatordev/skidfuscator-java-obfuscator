@@ -18,7 +18,11 @@ public class DefaultConfig {
     }
 
     public List<String> getExemptions() {
-        return getStringList("exempt", Arrays.asList(DefaultExempts.DEFAULT_EXEMPTS));
+        return getStringList("exempt", new ArrayList<>());
+    }
+
+    public List<String> getExemptionsv2() {
+        return getStringList("exclude", Arrays.asList(DefaultExempts.DEFAULT_EXEMPTS_V2));
     }
 
     public boolean getBoolean(String path, final boolean dflt) {
