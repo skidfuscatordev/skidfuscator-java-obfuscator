@@ -41,7 +41,7 @@ public class ConsolePanel extends JPanel {
         consoleOutput = new JTextPane();
         consoleOutput.setEditable(false);
         consoleOutput.setBackground(new Color(30, 30, 30));
-        consoleOutput.setFont(new Font("JetBrains Mono", Font.PLAIN, 12));
+        consoleOutput.setFont(new Font("JetBrains Mono", Font.PLAIN, 8));
 
         // Create scroll pane
         JScrollPane scrollPane = new JScrollPane(consoleOutput);
@@ -74,7 +74,7 @@ public class ConsolePanel extends JPanel {
     private Style initializeBaseStyle() {
         Style style = consoleOutput.addStyle("base", null);
         StyleConstants.setFontFamily(style, "JetBrains Mono");
-        StyleConstants.setFontSize(style, 12);
+        StyleConstants.setFontSize(style, 8);
         StyleConstants.setForeground(style, new Color(200, 200, 200));
         return style;
     }
