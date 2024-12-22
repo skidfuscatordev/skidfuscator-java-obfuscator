@@ -9,6 +9,7 @@ import dev.skidfuscator.obfuscator.analytics.SkidTracker;
 import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
+import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.dependency.CommonDependency;
 import dev.skidfuscator.obfuscator.dependency.DependencyDownloader;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
@@ -682,7 +683,7 @@ public class Skidfuscator {
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
 
-        if (true) {
+        if (!SkidFlowGraphDumper.TEST_COMPUTE) {
             if (tsConfig.hasPath("stringEncryption.type")) {
                 switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
                     case STANDARD: transformers.add(new StringTransformerV2(this)); break;
