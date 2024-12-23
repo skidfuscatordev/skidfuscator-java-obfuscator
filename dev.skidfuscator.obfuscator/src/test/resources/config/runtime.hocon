@@ -1,5 +1,4 @@
 exclude: [
-    "@class dev.skidfuscator.testclasses.exclusion.*"
 ]
 
 driver: {

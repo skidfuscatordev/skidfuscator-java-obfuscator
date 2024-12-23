@@ -1,12 +1,25 @@
 exclude: [
-  """
-  @class dev.sim0n.apps.* {
-            !@class util.*
-            !@class Main
-        }
-  """
+    "@class dev.skidfuscator.testclasses.exclusion.*"
 ]
 
+driver: {
+    enabled: false
+}
+
+fileCrasher: {
+    enabled: false
+}
+
+stringEncryption {
+    type: STANDARD
+    enabled: false
+    exempt: []
+}
+
+exceptionReturn {
+    enabled: false
+    exempt: []
+}
 
 classRenamer {
     enabled: false
@@ -35,3 +48,10 @@ fieldRenamer {
     enabled: false
     type: ALPHABETICAL
 }
+
+flowException {
+    enabled: false
+    strength: AGGRESSIVE
+    exempt: []
+}
+

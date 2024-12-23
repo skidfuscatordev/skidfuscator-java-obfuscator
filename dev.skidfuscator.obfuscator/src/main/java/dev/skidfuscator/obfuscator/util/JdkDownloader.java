@@ -40,7 +40,7 @@ public class JdkDownloader {
         }
     }
 
-    private static final Path CACHE_DIR = Paths.get(System.getProperty("user.home"), ".ssvm", "jdk");
+    public static final Path CACHE_DIR = Paths.get(System.getProperty("user.home"), ".ssvm", "jdk");
 
     public static Path getCachedJdk() throws IOException {
         String cacheName;

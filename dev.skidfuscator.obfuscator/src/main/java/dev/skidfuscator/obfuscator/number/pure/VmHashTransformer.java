@@ -24,7 +24,6 @@ import dev.xdark.ssvm.memory.management.MemoryManager;
 import dev.xdark.ssvm.mirror.member.JavaMethod;
 import dev.xdark.ssvm.mirror.type.InstanceClass;
 import dev.xdark.ssvm.natives.SystemPropsNatives;
-import jdk.internal.util.SystemProps;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.CompleteResolvingJarDumper;

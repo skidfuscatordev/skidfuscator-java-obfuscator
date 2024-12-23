@@ -39,6 +39,7 @@ void initMaple() {
 void initBase() {
     include(':annotations')
     include ':commons'
+    include ':sdk'
     include ':pure-analysis'
     include ':depend-analysis'
     include ':obfuscator'
@@ -47,6 +48,7 @@ void initBase() {
 
     project(":annotations").projectDir = file('dev.skidfuscator.annotations')
     project(":commons").projectDir = file('dev.skidfuscator.commons')
+    project(":sdk").projectDir = file('dev.skidfuscator.sdk')
     project(":pure-analysis").projectDir = file('dev.skidfuscator.obfuscator.pureanalysis')
     project(":depend-analysis").projectDir = file('dev.skidfuscator.obfuscator.dependanalysis')
     project(":obfuscator").projectDir = file('dev.skidfuscator.obfuscator')
