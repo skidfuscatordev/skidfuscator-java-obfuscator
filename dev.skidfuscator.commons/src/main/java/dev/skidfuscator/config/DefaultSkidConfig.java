@@ -15,7 +15,10 @@ public class DefaultSkidConfig extends DefaultConfig {
     }
 
     public File[] getLibs() {
-        return this.getStringList("libraries", Collections.emptyList())
+        return this.getStringList("libraries",
+                        // [failsafe] i fucking made this mistake too
+                        this.getStringList("libs", Collections.emptyList())
+                )
                 .stream()
                 .map(File::new)
                 .distinct()

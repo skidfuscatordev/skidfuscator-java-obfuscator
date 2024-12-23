@@ -9,6 +9,7 @@ import dev.skidfuscator.obfuscator.analytics.SkidTracker;
 import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
+import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.dependency.CommonDependency;
 import dev.skidfuscator.obfuscator.dependency.DependencyDownloader;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
@@ -23,12 +24,14 @@ import dev.skidfuscator.obfuscator.event.impl.transform.group.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
 import dev.skidfuscator.obfuscator.exempt.ExemptManager;
+import dev.skidfuscator.obfuscator.exempt.v2.ExclusionParser;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
+import dev.skidfuscator.obfuscator.io.apk.ApkInputSource;
+import dev.skidfuscator.obfuscator.io.jar.JarInputSource;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
 import dev.skidfuscator.obfuscator.order.priority.MethodPriority;
-import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerBlockOpaquePredicate;
@@ -50,10 +53,13 @@ import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionT
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.InterproceduralTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomInitTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTranformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTranformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
@@ -79,7 +85,6 @@ import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.objectweb.asm.Opcodes;
 import org.piwik.java.tracking.PiwikRequest;
-import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
@@ -445,17 +450,23 @@ public class Skidfuscator {
     protected void _importExempt() {
         /* Importation and exemptions */
         LOGGER.post("Importing exemptions...");
-        /*
-         * This is the parsing bit. We initiate a progress bar and
-         * simply just call the exempt analysis which builds the
-         * exclusion call and caches it.
-         */
+
         try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 config.getExemptions().size(),
                 "Imported " + config.getExemptions().size() + " exclusions"
         )) {
             for (String s : config.getExemptions()) {
                 exemptAnalysis.add(s);
+                progressBar.tick();
+            }
+        }
+
+        try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
+                config.getExemptionsv2().size(),
+                "Imported " + config.getExemptionsv2().size() + " exclusions v2"
+        )) {
+            for (String s : config.getExemptionsv2()) {
+                exemptAnalysis.add(ExclusionParser.parsePatternExclusion(s));
                 progressBar.tick();
             }
         }
@@ -528,24 +539,27 @@ public class Skidfuscator {
             }
             LOGGER.post("✓ Success");
         }
-        LOGGER.log("Finished importing the JVM!");
+        LOGGER.log("Finished importing the JVM");
+        LOGGER.log(String.format("Imported %d jvm classes!", jvmClassSource.size()));
     }
 
     protected void _importClasspath() {
         LOGGER.post("Importing jar...");
-        /*
-         * This is the main jar download. We'll be keeping a cache of the jar
-         * download as it will simplify our output methods. In several cases,
-         * many jars have classes with names that do not align with their
-         * respective ClassNode#getName, causing conflicts, hence why the cache
-         * of the jar downloader.
-         */
-        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
-                session.getInput(),
-                this
-        );
 
-        this.jarContents = downloader.getJarContents();
+        final String path = session.getInput().getPath();
+
+        if (path.endsWith(".apk")) {
+            this.jarContents = session.getInput().isDirectory()
+                    ? new ApkInputSource(this).download(session.getInput())
+                    : new ApkInputSource(this).download(new File(path));
+        } else if (path.endsWith(".dex")) {
+            this.jarContents = new JarInputSource(this)
+                    .download(session.getInput());
+        } else {
+            this.jarContents = new JarInputSource(this)
+                    .download(session.getInput());
+        }
+
         this.classSource = new SkidApplicationClassSource(
                 session.getInput().getName(),
                 session.isFuckIt(),
@@ -607,7 +621,7 @@ public class Skidfuscator {
             LOGGER.log("✓ Finished importing libs!");
         }
 
-        if (session.getMappings() == null && config.getLibs().length > 0) {
+        if (config.getLibs().length > 0) {
             final File[] libs = Arrays.stream(config.getLibs())
                     .filter(e -> e.getAbsolutePath().endsWith(".jar"))
                     .toArray(File[]::new);
@@ -623,6 +637,9 @@ public class Skidfuscator {
                 ));
             }
             LOGGER.log("✓ Finished importing config libs!");
+            LOGGER.log(String.format("✓ Imported %d config libs!", libs.length));
+        } else {
+            LOGGER.warn("! No libraries were imported! If this is normal, ignore this.");
         }
 
         /*
@@ -633,7 +650,8 @@ public class Skidfuscator {
          * Furthermore, since it computes classes which could be present in other
          * libraries, we set the priority to -1, making it the last fallback result.
          */
-        this.classSource.addLibraries(new LibraryClassSource(
+        // TODO: perma remove jphantom
+        /*this.classSource.addLibraries(new LibraryClassSource(
                 new ApplicationClassSource(
                         "phantom",
                         true,
@@ -644,7 +662,7 @@ public class Skidfuscator {
                                 .collect(Collectors.toList())
                 ),
                 1
-        ));
+        ));*/
         LOGGER.log("Finished importing classpath!");
     }
 
@@ -666,7 +684,7 @@ public class Skidfuscator {
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
 
-        if (true) {
+        if (!SkidFlowGraphDumper.TEST_COMPUTE) {
             if (tsConfig.hasPath("stringEncryption.type")) {
                 switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
                     case STANDARD: transformers.add(new StringTransformerV2(this)); break;
@@ -686,6 +704,9 @@ public class Skidfuscator {
                     new BasicExceptionTransformer(this),
                     new BasicRangeTransformer(this),
                     new PureHashTransformer(this),
+                    new SdkInjectorTransformer(this),
+                    new StringEqualsHashTranformer(this),
+                    new StringEqualsIgnoreCaseHashTranformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)

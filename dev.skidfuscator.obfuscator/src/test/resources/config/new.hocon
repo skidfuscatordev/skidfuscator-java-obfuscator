@@ -1,0 +1,37 @@
+exclude: [
+  """
+  @class dev.sim0n.apps.* {
+            !@class util.*
+            !@class Main
+        }
+  """
+]
+
+
+classRenamer {
+    enabled: false
+    type: CUSTOM
+    prefix: "skido/"
+    chars: [
+        "K"
+        "oO",
+        "o0"
+    ]
+    depth: 3
+}
+
+methodRenamer {
+    enabled: false
+    type: CUSTOM
+    chars: [
+        "K"
+        "oO",
+        "o0"
+    ]
+    depth: 3
+}
+
+fieldRenamer {
+    enabled: false
+    type: ALPHABETICAL
+}

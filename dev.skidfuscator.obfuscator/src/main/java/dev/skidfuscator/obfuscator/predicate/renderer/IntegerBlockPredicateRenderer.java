@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
 
     public static boolean DEBUG = false;
 
-    @Listen(EventPriority.HIGHEST)
+    @Listen(EventPriority.LOWEST)
     void handle(final InitSkidTransformEvent event) {
         String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
         Config tsConfig = skidfuscator.getTsConfig();
@@ -111,7 +111,7 @@ import java.util.stream.Collectors;
      *
      * @param event Method initializer event
      */
-    @Listen(EventPriority.HIGHEST)
+    @Listen(EventPriority.LOWEST)
     void handle(final InitMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
         final BlockOpaquePredicate flowPredicate = methodNode.getFlowPredicate();

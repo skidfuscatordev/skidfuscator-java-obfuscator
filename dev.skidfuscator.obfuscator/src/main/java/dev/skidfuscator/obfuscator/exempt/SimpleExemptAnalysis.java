@@ -28,6 +28,10 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
         //System.out.println(this);
     }
 
+    public void add(final Exclusion exclusion) {
+        exclusions.add(exclusion);
+    }
+
     @Override
     public void add(ClassNode exclusion) {
         classCache.put(exclusion, true);

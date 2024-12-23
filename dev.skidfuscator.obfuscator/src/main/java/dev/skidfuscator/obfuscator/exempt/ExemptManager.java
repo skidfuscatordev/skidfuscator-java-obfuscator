@@ -19,6 +19,10 @@ public class ExemptManager {
         globalExempt.add(exempt);
     }
 
+    public void add(Exclusion exclusion) {
+        globalExempt.add(exclusion);
+    }
+
     public void add(ClassNode exclusion) {
         globalExempt.add(exclusion);
     }

@@ -1,0 +1,29 @@
+plugins {
+    id 'java-library'
+    id 'application'
+    // shadowJar
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+}
+
+group = 'dev.skidfuscator.community'
+version = '2.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+application {
+    mainClass = 'dev.skidfuscator.dependanalysis.Main'
+}
+
+dependencies {
+    api project(':modasm')
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}

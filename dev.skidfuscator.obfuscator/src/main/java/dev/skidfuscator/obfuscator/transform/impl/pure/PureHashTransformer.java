@@ -14,6 +14,9 @@ public class PureHashTransformer extends AbstractTransformer {
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
+        if (skidfuscator.getVmHasher() == null) {
+            throw new IllegalStateException("VmHasher is null");
+        }
         skidfuscator.setVmHasher(new VmHashTransformer(skidfuscator));
     }
 }

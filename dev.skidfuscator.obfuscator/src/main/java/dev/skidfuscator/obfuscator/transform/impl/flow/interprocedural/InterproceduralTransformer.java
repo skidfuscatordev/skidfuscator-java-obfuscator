@@ -73,7 +73,7 @@ public class InterproceduralTransformer extends AbstractTransformer {
          * If the skid group is an entry point (it has no direct invocation)
          * or in the future when we support reflection calls
          */
-        if (entryPoint) {
+        if (entryPoint || skidGroup.isStatical()) {
             stackHeight = OpcodeUtil.getArgumentsSizes(skidGroup.getDesc());
 
             if (skidGroup.isStatical())

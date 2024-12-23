@@ -52,6 +52,8 @@ public class ExclusionTest {
 
             final byte[] stored = data.getData();
 
+            System.out.println("Comparing " + name + "...");
+
             switch (name) {
                 case "dev/skidfuscator/testclasses/exclusion/ObfuscatedTestClass": {
                     assert !Arrays.equals(stored, obfed)

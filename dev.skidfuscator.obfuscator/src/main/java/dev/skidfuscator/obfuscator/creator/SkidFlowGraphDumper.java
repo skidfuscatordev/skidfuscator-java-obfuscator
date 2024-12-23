@@ -11,6 +11,7 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidBogusStmt;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
+import dev.skidfuscator.obfuscator.verifier.Verifier;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.*;
@@ -265,18 +266,24 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 
 				maxLocal = Math.max(maxLocal, frameLocal.length);
+				maxStack = Math.max(maxStack, stackLength);
 
 				lastFrame = frameLocal;
 				lastStack = stack;
-
 			}
 
 			for (Stmt stmt : b) {
+				if (stmt instanceof FrameStmt && TEST_COMPUTE)
+					continue;
+
 				stmt.toCode(m.node, this);
 			}
 
 			last = b;
 		}
+
+		m.node.visitMaxs(32, 32);
+
 		terminalLabel = new LabelNode();
 		m.node.visitLabel(terminalLabel.getLabel());
 
@@ -290,7 +297,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		
 		m.node.visitEnd();
 
-		//Verifier.verify(m.node);
+		//Verifier.verify(m);
 	}
 
 	private Object _getFrameType(final Type type) {
@@ -1777,7 +1784,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private static class BlockBundle extends ArrayList<BasicBlock> implements FastGraphVertex {
 		private BasicBlock first = null;
 		
-		private BasicBlock getFirst() {
+		public BasicBlock getFirst() {
 			if (first == null)
 				first = get(0);
 			return first;

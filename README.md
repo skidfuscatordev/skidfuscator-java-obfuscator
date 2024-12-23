@@ -23,10 +23,34 @@
 ## 🚀 Quickstart
 
 > [!TIP]
-> You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly using:
+> If you are using Gradle, consider using our [Gradle plugin](https://github.com/skidfuscatordev/skidfuscator-gradle-plugin) for easy integration.
+> ```java
+> plugins {
+>    id("io.github.skidfuscatordev.skidfuscator") version "0.1.3"
+> }
+> 
+> skidfuscator {
+>   // Configure the plugin here
+>   skidfuscatorVersion = "latest"
+>   exempt = ["com/example/SomeClass"]
+>
+>   transformers {
+>       interprocedural {
+>           enabled = true
+>           exempt = ["com/example/IgnoredClass"]
+>       }
+>       stringEncryption {
+>           type = "STANDARD"
+>           enabled = true
+>       }
+>   }
+>}
 > ```
-> java -jar skidfuscator.jar obfuscate <path to your jar>
-> ```
+
+You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly using:
+```
+java -jar skidfuscator.jar obfuscate <path to your jar>
+```
 
 Skidfuscator uses a config system, which allows you to customize your obfuscation. We try to automatically download all compatible libraries, but some may slip through the cracks. The Gradle plugin is a work in progress. For now, use:
 ```
@@ -67,8 +91,14 @@ Skidfuscator intelligently identifies and downloads missing dependencies needed 
 
 ### 2. Smart Recovery
 In the event of errors or failed obfuscation, Skidfuscator implements a recovery system that intelligently resolves conflicts and provides suggestions to fix issues. This ensures minimal disruption in your development workflow.
+
+![FocuSee_Project_2024-12-18_03-32-25-ezgif com-optimize (1)](https://github.com/user-attachments/assets/af709b36-1031-4519-8e21-2ec63a245ffb)
+
 ### 3. Auto Configuration
 Skidfuscator comes with built-in presets for common configurations, allowing quick setup without needing to manually tweak every aspect of the obfuscation process. For advanced users, all settings remain fully customizable.
+
+![FocuSeeProject2024-12-1802-56-07-ezgif com-optimize](https://github.com/user-attachments/assets/591415a0-b8fe-46d6-a530-d7914c58f613)
+
 ### 4. Flow Obfuscation (GEN3)
 Skidfuscator introduces third-generation control flow obfuscation (Flow GEN3), which scrambles method logic and makes the control flow harder to understand. This method introduces opaque predicates and complex flow redirections, hindering static and dynamic analysis.
 ### 5. Advanced Obfuscation Methods

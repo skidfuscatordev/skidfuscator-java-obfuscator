@@ -1,0 +1,1235 @@
+handler=Block #CE, types=[Ljava/lang/IllegalStateException;], range=[Block #C, Block #D, Block #G, Block #E, Block #F, Block #I, Block #H]
+handler=Block #CU, types=[Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;], range=[Block #C, Block #D, Block #G, Block #E, Block #F, Block #I, Block #H]
+handler=Block #DK, types=[Ljava/lang/IllegalAccessException;], range=[Block #P, Block #O]
+handler=Block #DQ, types=[Ljava/lang/RuntimeException;], range=[Block #S, Block #R]
+handler=Block #DW, types=[Ljava/io/IOException;], range=[Block #V, Block #U]
+handler=Block #EC, types=[Ljava/lang/IllegalAccessException;], range=[Block #Y, Block #X]
+===#Block A(size=8, flags=1)===
+   0. if ({1454303676 ^ 439034243} != 1283835967)
+      goto AP
+   1. lvar56 = {224992149 ^ {1454303676 ^ 439034243}};
+   2. if (lvar56 != 1106039722)
+      goto AO
+   3. synth(lvar0 = lvar0);
+   4. lvar90 = "A : var expect: 258383186";
+   5. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 258383186)
+      goto AD
+   6. lvar56 = {1728135292 ^ lvar56};
+   7. if (lvar56 != 653104086)
+      goto AU
+      -> ConditionalJump[IF_ICMPNE] #A -> #AU
+      -> Immediate #A -> #B
+      -> ConditionalJump[IF_ICMPNE] #A -> #AP
+      -> ConditionalJump[IF_ICMPNE] #A -> #AD
+      -> ConditionalJump[IF_ICMPNE] #A -> #AO
+===#Block AO(size=1, flags=0)===
+   0. throw new java/io/IOException("Failed to match seed of value 1106039722");
+      <- ConditionalJump[IF_ICMPNE] #A -> #AO
+===#Block AP(size=1, flags=0)===
+   0. throw new java/io/IOException(new java/lang/StringBuilder("Failed to match entry seed of value 1283835967 of entry public: 1067300903 and private: 1283835967 and value: ").append({1454303676 ^ 439034243}).toString());
+      <- ConditionalJump[IF_ICMPNE] #A -> #AP
+===#Block B(size=7, flags=0)===
+   0. lvar1 = {653104086 ^ lvar56};
+   1. lvar170 = "[Constant] 0 -> 653104086 predicate=653104086";
+   2. lvar4 = lvar1;
+   3. lvar84 = "B : var expect: 929865393";
+   4. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 929865393)
+      goto AE
+   5. lvar56 = {1832829081 ^ lvar56};
+   6. if (lvar56 != 1272140623)
+      goto AT
+      -> ConditionalJump[IF_ICMPNE] #B -> #AT
+      -> Immediate #B -> #C
+      -> ConditionalJump[IF_ICMPNE] #B -> #AE
+      <- Immediate #A -> #B
+===#Block AE(size=16, flags=0)===
+   0. throw new java/io/IOException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 141870657)
+      goto AE
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {678601203 ^ lvar56})
+      goto AE
+   3. lvar158 = "[Constant] 2045360848 -> 678601203 predicate=1369119523";
+   4. _consume({324553256 ^ lvar56});
+   5. throw new java/lang/RuntimeException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 929865393)
+      goto AE
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {354133477 ^ lvar56})
+      goto AE
+   8. lvar156 = "[Constant] 1149288134 -> 354133477 predicate=1369119523";
+   9. _consume({2067786231 ^ lvar56});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -475011464)
+      goto AE
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1542592368 ^ lvar56})
+      goto AE
+   13. lvar154 = "[Constant] 174656595 -> 1542592368 predicate=1369119523";
+   14. _consume({221170507 ^ lvar56});
+   15. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AE -> #AE
+      <- ConditionalJump[IF_ICMPNE] #AE -> #AE
+      <- ConditionalJump[IF_ICMPNE] #S -> #AE
+      <- ConditionalJump[IF_ICMPNE] #B -> #AE
+      <- ConditionalJump[IF_ICMPNE] #G -> #AE
+===#Block C(size=20, flags=0)===
+   0. lvar6 = {1272140622 ^ lvar56};
+   1. lvar160 = "[Constant] 1 -> 1272140622 predicate=1272140623";
+   2. lvar49 = lvar6;
+   3. lvar7 = {1272140623 ^ lvar56};
+   4. lvar162 = "[Constant] 0 -> 1272140623 predicate=1272140623";
+   5. lvar8 = new java.lang.String[lvar7];
+   6. _consume(dev.skidfuscator.testclasses.evaluator.util.crypto.AES.main(lvar8, 2050942566));
+   7. lvar9 = {1272140621 ^ lvar56};
+   8. lvar166 = "[Constant] 2 -> 1272140621 predicate=1272140623";
+   9. lvar50 = lvar9;
+   10. lvar10 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.data;
+   11. lvar2 = {1272140623 ^ lvar56};
+   12. lvar168 = "[Constant] 0 -> 1272140623 predicate=1272140623";
+   13. lvar11 = lvar10[lvar2];
+   14. if (lvar11 != {1272140623 ^ lvar56})
+      goto BX
+   15. lvar164 = "[Constant] 0 -> 1272140623 predicate=1272140623";
+   16. lvar80 = "C : var expect: 1587190394";
+   17. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1587190394)
+      goto AD
+   18. lvar56 = {1229722527 ^ lvar56};
+   19. if (lvar56 != 43991248)
+      goto AS
+      -> TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #C -> #AD
+      -> ConditionalJump[IF_ICMPNE] #C -> #AS
+      -> Immediate #C -> #D
+      -> ConditionalJump[IF_ICMPNE] #C -> #BX
+      <- Immediate #B -> #C
+===#Block BX(size=4, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 485992155);
+   1. lvar226 = "C -> AC : c-loc - cond : 1462039956";
+   2. if (lvar56 != 1462039956)
+      goto BY
+   3. goto AC
+      -> UnconditionalJump[GOTO] #BX -> #AC
+      -> ConditionalJump[IF_ICMPNE] #BX -> #BY
+      <- ConditionalJump[IF_ICMPNE] #C -> #BX
+===#Block BY(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("BX --> AC # Failed to match seed of type Conditional and value 1462039956");
+      <- ConditionalJump[IF_ICMPNE] #BX -> #BY
+===#Block AC(size=5, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) == -1188582238)
+      goto BR
+   1. lvar66 = "AC : var expect: -1188582238";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1188582238)
+      goto AD
+   3. lvar206 = "AC -> AB : c-loc - uncond : 1574287175";
+   4. goto BB
+      -> ConditionalJump[IF_ICMPNE] #AC -> #AD
+      -> ConditionalJump[IF_ICMPEQ] #AC -> #BR
+      -> UnconditionalJump[GOTO] #AC -> #BB
+      <- UnconditionalJump[GOTO] #BX -> #AC
+===#Block BB(size=2, flags=10100)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56)) {
+      case 82916327:
+      	 goto	#BB
+      case 148360426:
+      	 goto	#BC
+      case 1221623750:
+      	 goto	#AB
+      case 1778286659:
+      	 goto	#AK
+      default:
+      	 goto	#AK
+   }
+   1. if (lvar56 != 1574287175)
+      goto BD
+      -> DefaultSwitch #BB -> #AK
+      -> Switch[1778286659] #BB -> #AK
+      -> Switch[82916327] #BB -> #BB
+      -> Immediate #BB -> #BC
+      -> Switch[1221623750] #BB -> #AB
+      -> ConditionalJump[IF_ICMPNE] #BB -> #BD
+      -> Switch[148360426] #BB -> #BC
+      <- Switch[82916327] #BB -> #BB
+      <- UnconditionalJump[GOTO] #AC -> #BB
+===#Block BD(size=1, flags=0)===
+   0. throw new java/io/IOException("BB --> AB # Failed to match seed of type Unconditional and value 1574287175");
+      <- ConditionalJump[IF_ICMPNE] #BB -> #BD
+===#Block BC(size=2, flags=100)===
+   0. lvar56 = {183583443 ^ lvar56};
+   1. goto AB
+      -> UnconditionalJump[GOTO] #BC -> #AB
+      <- Immediate #BB -> #BC
+      <- Switch[148360426] #BB -> #BC
+===#Block BR(size=4, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1660999038);
+   1. lvar220 = "AC -> I : c-loc - cond : 874782954";
+   2. if (lvar56 != 874782954)
+      goto BS
+   3. goto I
+      -> UnconditionalJump[GOTO] #BR -> #I
+      -> ConditionalJump[IF_ICMPNE] #BR -> #BS
+      <- ConditionalJump[IF_ICMPEQ] #AC -> #BR
+===#Block BS(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("BR --> I # Failed to match seed of type Conditional and value 874782954");
+      <- ConditionalJump[IF_ICMPNE] #BR -> #BS
+===#Block I(size=12, flags=0)===
+   0. lvar27 = new java.lang.IllegalArgumentException;
+   1. lvar39 = new java.lang.StringBuilder;
+   2. _consume(lvar39.<init>());
+   3. lvar47 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.xrmhzznmxl(dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.ityagplkacclgrd(), lvar56);
+   4. lvar40 = lvar39.append(lvar47);
+   5. lvar48 = lvar50;
+   6. lvar41 = lvar40.append(lvar48);
+   7. lvar42 = lvar41.toString();
+   8. _consume(lvar27.<init>(lvar42));
+   9. throw lvar27;
+   10. lvar100 = "I : var expect: -1591670959";
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1591670959)
+      goto AF
+      -> TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> ConditionalJump[IF_ICMPNE] #I -> #AF
+      <- UnconditionalJump[GOTO] #BR -> #I
+===#Block D(size=8, flags=0)===
+   0. lvar12 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.data;
+   1. lvar28 = {43991249 ^ lvar56};
+   2. lvar150 = "[Constant] 1 -> 43991249 predicate=43991248";
+   3. lvar13 = lvar12[lvar28];
+   4. svar116 = {lvar13 ^ lvar56};
+   5. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(svar116)) {
+      case 41242204:
+      	 goto	#BZ
+      default:
+      	 goto	#CC
+   }
+   6. lvar76 = "D : var expect: 351929984";
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 351929984)
+      goto AG
+      -> TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> Switch[41242204] #D -> #BZ
+      -> DefaultSwitch #D -> #CC
+      -> ConditionalJump[IF_ICMPNE] #D -> #AG
+      -> TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- Immediate #C -> #D
+===#Block CC(size=4, flags=10100)===
+   0. lvar56 = {1268655333 ^ lvar56};
+   1. lvar230 = "D -> F : c-loc - switch : 1224827957";
+   2. if (lvar56 != 1224827957)
+      goto CD
+   3. goto F
+      -> UnconditionalJump[GOTO] #CC -> #F
+      -> ConditionalJump[IF_ICMPNE] #CC -> #CD
+      <- DefaultSwitch #D -> #CC
+===#Block CD(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("CC --> F # Failed to match seed of type Switch Default and value 1224827957");
+      <- ConditionalJump[IF_ICMPNE] #CC -> #CD
+===#Block F(size=7, flags=0)===
+   0. lvar25 = {-1224827954 ^ lvar56};
+   1. lvar186 = "[Constant] -5 -> -1224827954 predicate=1224827957";
+   2. lvar51 = lvar25;
+   3. lvar108 = "F : var expect: 1208689066";
+   4. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1208689066)
+      goto AJ
+   5. lvar218 = "F -> Y : c-loc - uncond : 543171221";
+   6. goto BP
+      -> ConditionalJump[IF_ICMPNE] #F -> #AJ
+      -> UnconditionalJump[GOTO] #F -> #BP
+      -> TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- UnconditionalJump[GOTO] #CC -> #F
+===#Block BP(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1767982752);
+   1. if (lvar56 != 543171221)
+      goto BQ
+   2. goto Y
+      -> UnconditionalJump[GOTO] #BP -> #Y
+      -> ConditionalJump[IF_ICMPNE] #BP -> #BQ
+      <- UnconditionalJump[GOTO] #F -> #BP
+===#Block BQ(size=1, flags=0)===
+   0. throw new java/io/IOException("BP --> Y # Failed to match seed of type Unconditional and value 543171221");
+      <- ConditionalJump[IF_ICMPNE] #BP -> #BQ
+===#Block Y(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56) == 247096160)
+      goto X
+   1. throw nullconst;
+   2. lvar86 = "Y : var expect: 50402473";
+   3. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 50402473)
+      goto AH
+      -> ConditionalJump[IF_ICMPEQ] #Y -> #X
+      -> TryCatch range: [Y...X] -> EC ([Ljava/lang/IllegalAccessException;])
+      -> ConditionalJump[IF_ICMPNE] #Y -> #AH
+      <- UnconditionalJump[GOTO] #BP -> #Y
+===#Block AH(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 50402473)
+      goto AH
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1769781932 ^ lvar56})
+      goto AH
+   3. lvar118 = "[Constant] 1000214968 -> 1769781932 predicate=1390586644";
+   4. _consume({1320157410 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AH -> #AH
+      <- ConditionalJump[IF_ICMPNE] #AH -> #AH
+      <- ConditionalJump[IF_ICMPNE] #Y -> #AH
+===#Block X(size=3, flags=0)===
+   0. throw new java/lang/IllegalAccessException();
+   1. lvar82 = "X : var expect: 1037731394";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1037731394)
+      goto AB
+      -> ConditionalJump[IF_ICMPNE] #X -> #AB
+      -> TryCatch range: [Y...X] -> EC ([Ljava/lang/IllegalAccessException;])
+      <- ConditionalJump[IF_ICMPEQ] #Y -> #X
+===#Block EC(size=1, flags=0)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.kulmpcuobvixubyj(lvar56)) {
+      case 50402473:
+      	 goto	#ED
+      case 1037731394:
+      	 goto	#EF
+      default:
+      	 goto	#EH
+   }
+      -> DefaultSwitch #EC -> #EH
+      -> Switch[50402473] #EC -> #ED
+      -> Switch[1037731394] #EC -> #EF
+      <- TryCatch range: [Y...X] -> EC ([Ljava/lang/IllegalAccessException;])
+      <- TryCatch range: [Y...X] -> EC ([Ljava/lang/IllegalAccessException;])
+===#Block EF(size=3, flags=10100)===
+   0. lvar56 = {67830485 ^ lvar56};
+   1. if (lvar56 != 1135628829)
+      goto EG
+   2. goto Z
+      -> ConditionalJump[IF_ICMPNE] #EF -> #EG
+      -> UnconditionalJump[GOTO] #EF -> #Z
+      <- Switch[1037731394] #EC -> #EF
+===#Block EG(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("EF --> Z # Failed to match seed of type Exception Range [Ljava/lang/IllegalAccessException;] and value 1135628829");
+      <- ConditionalJump[IF_ICMPNE] #EF -> #EG
+===#Block ED(size=3, flags=10100)===
+   0. lvar56 = {1674604680 ^ lvar56};
+   1. if (lvar56 != 1135628829)
+      goto EE
+   2. goto Z
+      -> UnconditionalJump[GOTO] #ED -> #Z
+      -> ConditionalJump[IF_ICMPNE] #ED -> #EE
+      <- Switch[50402473] #EC -> #ED
+===#Block EE(size=1, flags=0)===
+   0. throw new java/io/IOException("ED --> Z # Failed to match seed of type Exception Range [Ljava/lang/IllegalAccessException;] and value 1135628829");
+      <- ConditionalJump[IF_ICMPNE] #ED -> #EE
+===#Block Z(size=5, flags=0)===
+   0. _consume(catch());
+   1. lvar72 = "Z : var expect: 495096042";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 495096042)
+      goto AD
+   3. lvar208 = "Z -> H : c-loc - uncond : 714299572";
+   4. goto BE
+      -> ConditionalJump[IF_ICMPNE] #Z -> #AD
+      -> UnconditionalJump[GOTO] #Z -> #BE
+      <- UnconditionalJump[GOTO] #ED -> #Z
+      <- UnconditionalJump[GOTO] #EF -> #Z
+===#Block BE(size=3, flags=10100)===
+   0. lvar56 = {1763904169 ^ lvar56};
+   1. if (lvar56 != 714299572)
+      goto BF
+   2. goto H
+      -> ConditionalJump[IF_ICMPNE] #BE -> #BF
+      -> UnconditionalJump[GOTO] #BE -> #H
+      <- UnconditionalJump[GOTO] #Z -> #BE
+===#Block BF(size=1, flags=0)===
+   0. throw new java/io/IOException("BE --> H # Failed to match seed of type Unconditional and value 714299572");
+      <- ConditionalJump[IF_ICMPNE] #BE -> #BF
+===#Block EH(size=1, flags=0)===
+   0. throw new java/io/IOException("Error in hash");
+      <- DefaultSwitch #EC -> #EH
+===#Block BZ(size=3, flags=10100)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56)) {
+      case 41242204:
+      	 goto	#CA
+      case 613988668:
+      	 goto	#E
+      case 1864816902:
+      	 goto	#AI
+      case 1910729165:
+      	 goto	#BZ
+      default:
+      	 goto	#AI
+   }
+   1. lvar228 = "D -> E : c-loc - switch : 1294796711";
+   2. if (lvar56 != 1294796711)
+      goto CB
+      -> Switch[1864816902] #BZ -> #AI
+      -> DefaultSwitch #BZ -> #AI
+      -> Switch[613988668] #BZ -> #E
+      -> Immediate #BZ -> #CA
+      -> ConditionalJump[IF_ICMPNE] #BZ -> #CB
+      -> Switch[41242204] #BZ -> #CA
+      -> Switch[1910729165] #BZ -> #BZ
+      <- Switch[41242204] #D -> #BZ
+      <- Switch[1910729165] #BZ -> #BZ
+===#Block CB(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("BZ --> E # Failed to match seed of type Switch Entry [41242204, og:E, redirected: BZ) and value 1294796711");
+      <- ConditionalJump[IF_ICMPNE] #BZ -> #CB
+===#Block CA(size=2, flags=100)===
+   0. lvar56 = {1337083767 ^ lvar56};
+   1. goto E
+      -> UnconditionalJump[GOTO] #CA -> #E
+      <- Immediate #BZ -> #CA
+      <- Switch[41242204] #BZ -> #CA
+===#Block E(size=7, flags=0)===
+   0. lvar14 = {1294796708 ^ lvar56};
+   1. lvar182 = "[Constant] 3 -> 1294796708 predicate=1294796711";
+   2. lvar51 = lvar14;
+   3. lvar98 = "E : var expect: 1768439098";
+   4. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1768439098)
+      goto AK
+   5. lvar212 = "E -> V : c-loc - uncond : 1459860970";
+   6. goto BI
+      -> TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #E -> #AK
+      -> TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> UnconditionalJump[GOTO] #E -> #BI
+      <- UnconditionalJump[GOTO] #CA -> #E
+      <- Switch[613988668] #BZ -> #E
+===#Block BI(size=2, flags=10100)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56)) {
+      case 41577974:
+      	 goto	#BI
+      case 92763134:
+      	 goto	#BJ
+      case 211499072:
+      	 goto	#V
+      case 2121522158:
+      	 goto	#AF
+      default:
+      	 goto	#AF
+   }
+   1. if (lvar56 != 1459860970)
+      goto BK
+      -> Immediate #BI -> #BJ
+      -> ConditionalJump[IF_ICMPNE] #BI -> #BK
+      -> Switch[2121522158] #BI -> #AF
+      -> DefaultSwitch #BI -> #AF
+      -> Switch[211499072] #BI -> #V
+      -> Switch[92763134] #BI -> #BJ
+      -> Switch[41577974] #BI -> #BI
+      <- UnconditionalJump[GOTO] #E -> #BI
+      <- Switch[41577974] #BI -> #BI
+===#Block BK(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("BI --> V # Failed to match seed of type Unconditional and value 1459860970");
+      <- ConditionalJump[IF_ICMPNE] #BI -> #BK
+===#Block BJ(size=2, flags=100)===
+   0. lvar56 = {439267917 ^ lvar56};
+   1. goto V
+      -> UnconditionalJump[GOTO] #BJ -> #V
+      <- Immediate #BI -> #BJ
+      <- Switch[92763134] #BI -> #BJ
+===#Block V(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56) == 144140150)
+      goto U
+   1. throw nullconst;
+   2. lvar70 = "V : var expect: -1206014126";
+   3. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1206014126)
+      goto AF
+      -> TryCatch range: [V...U] -> DW ([Ljava/io/IOException;])
+      -> ConditionalJump[IF_ICMPEQ] #V -> #U
+      -> ConditionalJump[IF_ICMPNE] #V -> #AF
+      <- UnconditionalJump[GOTO] #BJ -> #V
+      <- Switch[211499072] #BI -> #V
+===#Block U(size=3, flags=0)===
+   0. throw new java/io/IOException();
+   1. lvar112 = "U : var expect: -2111001710";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -2111001710)
+      goto AG
+      -> ConditionalJump[IF_ICMPNE] #U -> #AG
+      -> TryCatch range: [V...U] -> DW ([Ljava/io/IOException;])
+      <- ConditionalJump[IF_ICMPEQ] #V -> #U
+===#Block DW(size=1, flags=0)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.kulmpcuobvixubyj(lvar56)) {
+      case -2111001710:
+      	 goto	#DZ
+      case -1206014126:
+      	 goto	#DX
+      default:
+      	 goto	#EB
+   }
+      -> DefaultSwitch #DW -> #EB
+      -> Switch[-1206014126] #DW -> #DX
+      -> Switch[-2111001710] #DW -> #DZ
+      <- TryCatch range: [V...U] -> DW ([Ljava/io/IOException;])
+      <- TryCatch range: [V...U] -> DW ([Ljava/io/IOException;])
+===#Block DZ(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1305119366);
+   1. if (lvar56 != 495919092)
+      goto EA
+   2. goto W
+      -> ConditionalJump[IF_ICMPNE] #DZ -> #EA
+      -> UnconditionalJump[GOTO] #DZ -> #W
+      <- Switch[-2111001710] #DW -> #DZ
+===#Block EA(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("DZ --> W # Failed to match seed of type Exception Range [Ljava/io/IOException;] and value 495919092");
+      <- ConditionalJump[IF_ICMPNE] #DZ -> #EA
+===#Block DX(size=3, flags=10100)===
+   0. lvar56 = {1250732574 ^ lvar56};
+   1. if (lvar56 != 495919092)
+      goto DY
+   2. goto W
+      -> ConditionalJump[IF_ICMPNE] #DX -> #DY
+      -> UnconditionalJump[GOTO] #DX -> #W
+      <- Switch[-1206014126] #DW -> #DX
+===#Block W(size=5, flags=0)===
+   0. _consume(catch());
+   1. lvar102 = "W : var expect: -327614560";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -327614560)
+      goto AL
+   3. lvar214 = "W -> H : c-loc - uncond : 714299572";
+   4. goto BL
+      -> ConditionalJump[IF_ICMPNE] #W -> #AL
+      -> UnconditionalJump[GOTO] #W -> #BL
+      <- UnconditionalJump[GOTO] #DX -> #W
+      <- UnconditionalJump[GOTO] #DZ -> #W
+===#Block BL(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 924600128);
+   1. if (lvar56 != 714299572)
+      goto BM
+   2. goto H
+      -> ConditionalJump[IF_ICMPNE] #BL -> #BM
+      -> UnconditionalJump[GOTO] #BL -> #H
+      <- UnconditionalJump[GOTO] #W -> #BL
+===#Block H(size=15, flags=0)===
+   0. lvar15 = lvar0;
+   1. lvar29 = lvar51;
+   2. _consume(lvar15.self(lvar29, 1480640691));
+   3. lvar16 = new java.lang.IllegalArgumentException;
+   4. lvar3 = new java.lang.StringBuilder;
+   5. _consume(lvar3.<init>());
+   6. lvar43 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.xrmhzznmxl(dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.omwbqokgbtcfrul(), lvar56);
+   7. lvar32 = lvar3.append(lvar43);
+   8. lvar44 = lvar51;
+   9. lvar33 = lvar32.append(lvar44);
+   10. lvar34 = lvar33.toString();
+   11. _consume(lvar16.<init>(lvar34));
+   12. throw lvar16;
+   13. lvar106 = "H : var expect: 1419429281";
+   14. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1419429281)
+      goto AB
+      -> ConditionalJump[IF_ICMPNE] #H -> #AB
+      -> TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- UnconditionalJump[GOTO] #BE -> #H
+      <- UnconditionalJump[GOTO] #BN -> #H
+      <- UnconditionalJump[GOTO] #BL -> #H
+===#Block BM(size=1, flags=0)===
+   0. throw new java/io/IOException("BL --> H # Failed to match seed of type Unconditional and value 714299572");
+      <- ConditionalJump[IF_ICMPNE] #BL -> #BM
+===#Block AL(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -327614560)
+      goto AL
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {97247105 ^ lvar56})
+      goto AL
+   3. lvar124 = "[Constant] 94890884 -> 97247105 predicate=7091205";
+   4. _consume({2000967383 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AL -> #AL
+      <- ConditionalJump[IF_ICMPNE] #W -> #AL
+      <- ConditionalJump[IF_ICMPNE] #AL -> #AL
+===#Block DY(size=1, flags=0)===
+   0. throw new java/io/IOException("DX --> W # Failed to match seed of type Exception Range [Ljava/io/IOException;] and value 495919092");
+      <- ConditionalJump[IF_ICMPNE] #DX -> #DY
+===#Block EB(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Error in hash");
+      <- DefaultSwitch #DW -> #EB
+===#Block AK(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1768439098)
+      goto AK
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {513532846 ^ lvar56})
+      goto AK
+   3. lvar148 = "[Constant] 225905182 -> 513532846 predicate=334293424";
+   4. _consume({213075862 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AK -> #AK
+      <- ConditionalJump[IF_ICMPNE] #E -> #AK
+      <- DefaultSwitch #BB -> #AK
+      <- Switch[1778286659] #BB -> #AK
+      <- ConditionalJump[IF_ICMPNE] #AK -> #AK
+===#Block AS(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException(new java/lang/StringBuilder("C --> D # Failed to match seed of type Immediate and value 43991248 and got ").append(lvar56).toString());
+      <- ConditionalJump[IF_ICMPNE] #C -> #AS
+===#Block CE(size=1, flags=0)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.kulmpcuobvixubyj(lvar56)) {
+      case -1591670959:
+      	 goto	#CP
+      case -475011464:
+      	 goto	#CJ
+      case 351929984:
+      	 goto	#CH
+      case 1208689066:
+      	 goto	#CN
+      case 1419429281:
+      	 goto	#CR
+      case 1587190394:
+      	 goto	#CF
+      case 1768439098:
+      	 goto	#CL
+      default:
+      	 goto	#CT
+   }
+      -> Switch[1587190394] #CE -> #CF
+      -> Switch[1419429281] #CE -> #CR
+      -> Switch[1208689066] #CE -> #CN
+      -> Switch[351929984] #CE -> #CH
+      -> Switch[-475011464] #CE -> #CJ
+      -> Switch[-1591670959] #CE -> #CP
+      -> Switch[1768439098] #CE -> #CL
+      -> DefaultSwitch #CE -> #CT
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> CE ([Ljava/lang/IllegalStateException;])
+===#Block CT(size=1, flags=0)===
+   0. throw new java/io/IOException("Error in hash");
+      <- DefaultSwitch #CE -> #CT
+===#Block CL(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1604976096);
+   1. if (lvar56 != 310704711)
+      goto CM
+   2. goto J
+      -> ConditionalJump[IF_ICMPNE] #CL -> #CM
+      -> UnconditionalJump[GOTO] #CL -> #J
+      <- Switch[1768439098] #CE -> #CL
+===#Block CM(size=1, flags=0)===
+   0. throw new java/io/IOException("CL --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CL -> #CM
+===#Block CP(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 648075949);
+   1. if (lvar56 != 310704711)
+      goto CQ
+   2. goto J
+      -> ConditionalJump[IF_ICMPNE] #CP -> #CQ
+      -> UnconditionalJump[GOTO] #CP -> #J
+      <- Switch[-1591670959] #CE -> #CP
+===#Block CQ(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("CP --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CP -> #CQ
+===#Block CJ(size=3, flags=10100)===
+   0. lvar56 = {250676872 ^ lvar56};
+   1. if (lvar56 != 310704711)
+      goto CK
+   2. goto J
+      -> ConditionalJump[IF_ICMPNE] #CJ -> #CK
+      -> UnconditionalJump[GOTO] #CJ -> #J
+      <- Switch[-475011464] #CE -> #CJ
+===#Block CK(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("CJ --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CJ -> #CK
+===#Block CH(size=3, flags=10100)===
+   0. lvar56 = {270252695 ^ lvar56};
+   1. if (lvar56 != 310704711)
+      goto CI
+   2. goto J
+      -> UnconditionalJump[GOTO] #CH -> #J
+      -> ConditionalJump[IF_ICMPNE] #CH -> #CI
+      <- Switch[351929984] #CE -> #CH
+===#Block CI(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("CH --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CH -> #CI
+===#Block CN(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1535483506);
+   1. if (lvar56 != 310704711)
+      goto CO
+   2. goto J
+      -> ConditionalJump[IF_ICMPNE] #CN -> #CO
+      -> UnconditionalJump[GOTO] #CN -> #J
+      <- Switch[1208689066] #CE -> #CN
+===#Block CO(size=1, flags=0)===
+   0. throw new java/io/IOException("CN --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CN -> #CO
+===#Block CR(size=3, flags=10100)===
+   0. lvar56 = {941073139 ^ lvar56};
+   1. if (lvar56 != 310704711)
+      goto CS
+   2. goto J
+      -> ConditionalJump[IF_ICMPNE] #CR -> #CS
+      -> UnconditionalJump[GOTO] #CR -> #J
+      <- Switch[1419429281] #CE -> #CR
+===#Block CS(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("CR --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CR -> #CS
+===#Block CF(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1498917128);
+   1. if (lvar56 != 310704711)
+      goto CG
+   2. goto J
+      -> ConditionalJump[IF_ICMPNE] #CF -> #CG
+      -> UnconditionalJump[GOTO] #CF -> #J
+      <- Switch[1587190394] #CE -> #CF
+===#Block J(size=9, flags=0)===
+   0. lvar17 = catch();
+   1. lvar5 = lvar17;
+   2. lvar18 = {310704707 ^ lvar56};
+   3. lvar116 = "[Constant] 4 -> 310704707 predicate=310704711";
+   4. lvar52 = lvar18;
+   5. lvar58 = "J : var expect: -1809329608";
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1809329608)
+      goto AB
+   7. lvar200 = "J -> P : c-loc - uncond : 1511539599";
+   8. goto AV
+      -> ConditionalJump[IF_ICMPNE] #J -> #AB
+      -> UnconditionalJump[GOTO] #J -> #AV
+      <- UnconditionalJump[GOTO] #CH -> #J
+      <- UnconditionalJump[GOTO] #CP -> #J
+      <- UnconditionalJump[GOTO] #CF -> #J
+      <- UnconditionalJump[GOTO] #CJ -> #J
+      <- UnconditionalJump[GOTO] #CR -> #J
+      <- UnconditionalJump[GOTO] #CN -> #J
+      <- UnconditionalJump[GOTO] #CL -> #J
+===#Block AV(size=3, flags=10100)===
+   0. lvar56 = {1218230728 ^ lvar56};
+   1. if (lvar56 != 1511539599)
+      goto AW
+   2. goto P
+      -> UnconditionalJump[GOTO] #AV -> #P
+      -> ConditionalJump[IF_ICMPNE] #AV -> #AW
+      <- UnconditionalJump[GOTO] #J -> #AV
+===#Block AW(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("AV --> P # Failed to match seed of type Unconditional and value 1511539599");
+      <- ConditionalJump[IF_ICMPNE] #AV -> #AW
+===#Block P(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56) == 244275453)
+      goto O
+   1. throw nullconst;
+   2. lvar68 = "P : var expect: -792585094";
+   3. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -792585094)
+      goto AB
+      -> ConditionalJump[IF_ICMPNE] #P -> #AB
+      -> ConditionalJump[IF_ICMPEQ] #P -> #O
+      -> TryCatch range: [P...O] -> DK ([Ljava/lang/IllegalAccessException;])
+      <- UnconditionalJump[GOTO] #AV -> #P
+===#Block O(size=3, flags=0)===
+   0. throw new java/lang/IllegalAccessException();
+   1. lvar88 = "O : var expect: 1692268378";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1692268378)
+      goto AI
+      -> ConditionalJump[IF_ICMPNE] #O -> #AI
+      -> TryCatch range: [P...O] -> DK ([Ljava/lang/IllegalAccessException;])
+      <- ConditionalJump[IF_ICMPEQ] #P -> #O
+===#Block DK(size=1, flags=0)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.kulmpcuobvixubyj(lvar56)) {
+      case -792585094:
+      	 goto	#DL
+      case 1692268378:
+      	 goto	#DN
+      default:
+      	 goto	#DP
+   }
+      -> Switch[1692268378] #DK -> #DN
+      -> Switch[-792585094] #DK -> #DL
+      -> DefaultSwitch #DK -> #DP
+      <- TryCatch range: [P...O] -> DK ([Ljava/lang/IllegalAccessException;])
+      <- TryCatch range: [P...O] -> DK ([Ljava/lang/IllegalAccessException;])
+===#Block DP(size=1, flags=0)===
+   0. throw new java/io/IOException("Error in hash");
+      <- DefaultSwitch #DK -> #DP
+===#Block DL(size=3, flags=10100)===
+   0. lvar56 = {1047585592 ^ lvar56};
+   1. if (lvar56 != 1684578487)
+      goto DM
+   2. goto Q
+      -> ConditionalJump[IF_ICMPNE] #DL -> #DM
+      -> UnconditionalJump[GOTO] #DL -> #Q
+      <- Switch[-792585094] #DK -> #DL
+===#Block DM(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("DL --> Q # Failed to match seed of type Exception Range [Ljava/lang/IllegalAccessException;] and value 1684578487");
+      <- ConditionalJump[IF_ICMPNE] #DL -> #DM
+===#Block DN(size=3, flags=10100)===
+   0. lvar56 = {687021660 ^ lvar56};
+   1. if (lvar56 != 1684578487)
+      goto DO
+   2. goto Q
+      -> UnconditionalJump[GOTO] #DN -> #Q
+      -> ConditionalJump[IF_ICMPNE] #DN -> #DO
+      <- Switch[1692268378] #DK -> #DN
+===#Block DO(size=1, flags=0)===
+   0. throw new java/io/IOException("DN --> Q # Failed to match seed of type Exception Range [Ljava/lang/IllegalAccessException;] and value 1684578487");
+      <- ConditionalJump[IF_ICMPNE] #DN -> #DO
+===#Block Q(size=5, flags=0)===
+   0. _consume(catch());
+   1. lvar92 = "Q : var expect: 591726011";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 591726011)
+      goto AJ
+   3. lvar210 = "Q -> L : c-loc - uncond : 612227402";
+   4. goto BG
+      -> ConditionalJump[IF_ICMPNE] #Q -> #AJ
+      -> UnconditionalJump[GOTO] #Q -> #BG
+      <- UnconditionalJump[GOTO] #DN -> #Q
+      <- UnconditionalJump[GOTO] #DL -> #Q
+===#Block BG(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1075149309);
+   1. if (lvar56 != 612227402)
+      goto BH
+   2. goto L
+      -> UnconditionalJump[GOTO] #BG -> #L
+      -> ConditionalJump[IF_ICMPNE] #BG -> #BH
+      <- UnconditionalJump[GOTO] #Q -> #BG
+===#Block BH(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("BG --> L # Failed to match seed of type Unconditional and value 612227402");
+      <- ConditionalJump[IF_ICMPNE] #BG -> #BH
+===#Block AJ(size=11, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1208689066)
+      goto AJ
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {137631800 ^ lvar56})
+      goto AJ
+   3. lvar174 = "[Constant] 1239585194 -> 137631800 predicate=1104578962";
+   4. _consume({1507141880 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 591726011)
+      goto AJ
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {976847025 ^ lvar56})
+      goto AJ
+   8. lvar172 = "[Constant] 2079263011 -> 976847025 predicate=1104578962";
+   9. _consume({1660209801 ^ lvar56});
+   10. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #Q -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #F -> #AJ
+===#Block AI(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1692268378)
+      goto AI
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {373582960 ^ lvar56})
+      goto AI
+   3. lvar120 = "[Constant] 159036106 -> 373582960 predicate=524213946";
+   4. _consume({489526235 ^ lvar56});
+   5. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AI -> #AI
+      <- Switch[1864816902] #BZ -> #AI
+      <- ConditionalJump[IF_ICMPNE] #AI -> #AI
+      <- DefaultSwitch #BZ -> #AI
+      <- ConditionalJump[IF_ICMPNE] #O -> #AI
+===#Block CG(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("CF --> J # Failed to match seed of type Exception Range [Ljava/lang/IllegalStateException;] and value 310704711");
+      <- ConditionalJump[IF_ICMPNE] #CF -> #CG
+===#Block CU(size=1, flags=0)===
+   0. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.kulmpcuobvixubyj(lvar56)) {
+      case -1591670959:
+      	 goto	#DF
+      case -475011464:
+      	 goto	#CZ
+      case 351929984:
+      	 goto	#CX
+      case 1208689066:
+      	 goto	#DD
+      case 1419429281:
+      	 goto	#DH
+      case 1587190394:
+      	 goto	#CV
+      case 1768439098:
+      	 goto	#DB
+      default:
+      	 goto	#DJ
+   }
+      -> Switch[1419429281] #CU -> #DH
+      -> Switch[1208689066] #CU -> #DD
+      -> Switch[-1591670959] #CU -> #DF
+      -> Switch[1768439098] #CU -> #DB
+      -> DefaultSwitch #CU -> #DJ
+      -> Switch[1587190394] #CU -> #CV
+      -> Switch[351929984] #CU -> #CX
+      -> Switch[-475011464] #CU -> #CZ
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> CU ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+===#Block CZ(size=3, flags=10100)===
+   0. lvar56 = {1245697182 ^ lvar56};
+   1. if (lvar56 != 1447700561)
+      goto DA
+   2. goto K
+      -> UnconditionalJump[GOTO] #CZ -> #K
+      -> ConditionalJump[IF_ICMPNE] #CZ -> #DA
+      <- Switch[-475011464] #CU -> #CZ
+===#Block DA(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("CZ --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #CZ -> #DA
+===#Block CX(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1423272065);
+   1. if (lvar56 != 1447700561)
+      goto CY
+   2. goto K
+      -> ConditionalJump[IF_ICMPNE] #CX -> #CY
+      -> UnconditionalJump[GOTO] #CX -> #K
+      <- Switch[351929984] #CU -> #CX
+===#Block CY(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("CX --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #CX -> #CY
+===#Block CV(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 496597790);
+   1. if (lvar56 != 1447700561)
+      goto CW
+   2. goto K
+      -> ConditionalJump[IF_ICMPNE] #CV -> #CW
+      -> UnconditionalJump[GOTO] #CV -> #K
+      <- Switch[1587190394] #CU -> #CV
+===#Block CW(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("CV --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #CV -> #CW
+===#Block DJ(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Error in hash");
+      <- DefaultSwitch #CU -> #DJ
+===#Block DB(size=3, flags=10100)===
+   0. lvar56 = {459747318 ^ lvar56};
+   1. if (lvar56 != 1447700561)
+      goto DC
+   2. goto K
+      -> UnconditionalJump[GOTO] #DB -> #K
+      -> ConditionalJump[IF_ICMPNE] #DB -> #DC
+      <- Switch[1768439098] #CU -> #DB
+===#Block DC(size=1, flags=0)===
+   0. throw new java/io/IOException("DB --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #DB -> #DC
+===#Block DF(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 1651378363);
+   1. if (lvar56 != 1447700561)
+      goto DG
+   2. goto K
+      -> ConditionalJump[IF_ICMPNE] #DF -> #DG
+      -> UnconditionalJump[GOTO] #DF -> #K
+      <- Switch[-1591670959] #CU -> #DF
+===#Block DG(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("DF --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #DF -> #DG
+===#Block DD(size=3, flags=10100)===
+   0. lvar56 = {525028452 ^ lvar56};
+   1. if (lvar56 != 1447700561)
+      goto DE
+   2. goto K
+      -> UnconditionalJump[GOTO] #DD -> #K
+      -> ConditionalJump[IF_ICMPNE] #DD -> #DE
+      <- Switch[1208689066] #CU -> #DD
+===#Block DE(size=1, flags=0)===
+   0. throw new java/io/IOException("DD --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #DD -> #DE
+===#Block DH(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 2094624997);
+   1. if (lvar56 != 1447700561)
+      goto DI
+   2. goto K
+      -> ConditionalJump[IF_ICMPNE] #DH -> #DI
+      -> UnconditionalJump[GOTO] #DH -> #K
+      <- Switch[1419429281] #CU -> #DH
+===#Block K(size=11, flags=0)===
+   0. lvar22 = catch();
+   1. lvar53 = lvar22;
+   2. lvar23 = lvar53;
+   3. _consume(lvar23.printStackTrace());
+   4. lvar24 = {-1447700562 ^ lvar56};
+   5. lvar122 = "[Constant] -1 -> -1447700562 predicate=1447700561";
+   6. lvar52 = lvar24;
+   7. lvar60 = "K : var expect: -1303297398";
+   8. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1303297398)
+      goto AB
+   9. lvar56 = {1916268827 ^ lvar56};
+   10. if (lvar56 != 612227402)
+      goto AQ
+      -> ConditionalJump[IF_ICMPNE] #K -> #AQ
+      -> Immediate #K -> #L
+      -> ConditionalJump[IF_ICMPNE] #K -> #AB
+      <- UnconditionalJump[GOTO] #DB -> #K
+      <- UnconditionalJump[GOTO] #DD -> #K
+      <- UnconditionalJump[GOTO] #DH -> #K
+      <- UnconditionalJump[GOTO] #CZ -> #K
+      <- UnconditionalJump[GOTO] #CX -> #K
+      <- UnconditionalJump[GOTO] #DF -> #K
+      <- UnconditionalJump[GOTO] #CV -> #K
+===#Block L(size=10, flags=0)===
+   0. lvar19 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.data;
+   1. lvar30 = {612227400 ^ lvar56};
+   2. lvar146 = "[Constant] 2 -> 612227400 predicate=612227402";
+   3. lvar20 = lvar19[lvar30];
+   4. lvar31 = lvar52;
+   5. if (lvar20 == lvar31)
+      goto BV
+   6. lvar74 = "L : var expect: 602851921";
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 602851921)
+      goto AB
+   8. lvar56 = {1856681785 ^ lvar56};
+   9. if (lvar56 != 1255632499)
+      goto AR
+      -> ConditionalJump[IF_ICMPNE] #L -> #AR
+      -> Immediate #L -> #M
+      -> ConditionalJump[IF_ICMPEQ] #L -> #BV
+      -> ConditionalJump[IF_ICMPNE] #L -> #AB
+      <- UnconditionalJump[GOTO] #BG -> #L
+      <- Immediate #K -> #L
+===#Block BV(size=4, flags=10100)===
+   0. lvar56 = {2027284892 ^ lvar56};
+   1. lvar224 = "L -> AA : c-loc - cond : 1554526422";
+   2. if (lvar56 != 1554526422)
+      goto BW
+   3. goto AA
+      -> UnconditionalJump[GOTO] #BV -> #AA
+      -> ConditionalJump[IF_ICMPNE] #BV -> #BW
+      <- ConditionalJump[IF_ICMPEQ] #L -> #BV
+===#Block BW(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("BV --> AA # Failed to match seed of type Conditional and value 1554526422");
+      <- ConditionalJump[IF_ICMPNE] #BV -> #BW
+===#Block AA(size=5, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) == -448690510)
+      goto BT
+   1. lvar62 = "AA : var expect: -448690510";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -448690510)
+      goto AD
+   3. lvar202 = "AA -> AB : c-loc - uncond : 1574287175";
+   4. goto AX
+      -> ConditionalJump[IF_ICMPNE] #AA -> #AD
+      -> UnconditionalJump[GOTO] #AA -> #AX
+      -> ConditionalJump[IF_ICMPEQ] #AA -> #BT
+      <- UnconditionalJump[GOTO] #BV -> #AA
+===#Block BT(size=4, flags=10100)===
+   0. lvar56 = {2095182444 ^ lvar56};
+   1. lvar222 = "AA -> N : c-loc - cond : 541704890";
+   2. if (lvar56 != 541704890)
+      goto BU
+   3. goto N
+      -> ConditionalJump[IF_ICMPNE] #BT -> #BU
+      -> UnconditionalJump[GOTO] #BT -> #N
+      <- ConditionalJump[IF_ICMPEQ] #AA -> #BT
+===#Block N(size=3, flags=0)===
+   0. return;
+   1. lvar96 = "N : var expect: 38671825";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 38671825)
+      goto AG
+      -> ConditionalJump[IF_ICMPNE] #N -> #AG
+      <- UnconditionalJump[GOTO] #BT -> #N
+===#Block AG(size=16, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -2111001710)
+      goto AG
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1985139726 ^ lvar56})
+      goto AG
+   3. lvar128 = "[Constant] 1525469093 -> 1985139726 predicate=750656427";
+   4. _consume({134793986 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 38671825)
+      goto AG
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1110543100 ^ lvar56})
+      goto AG
+   8. lvar132 = "[Constant] 1854902615 -> 1110543100 predicate=750656427";
+   9. _consume({2070608960 ^ lvar56});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 351929984)
+      goto AG
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1049221118 ^ lvar56})
+      goto AG
+   13. lvar130 = "[Constant] 305646677 -> 1049221118 predicate=750656427";
+   14. _consume({180882403 ^ lvar56});
+   15. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AG -> #AG
+      <- ConditionalJump[IF_ICMPNE] #AG -> #AG
+      <- ConditionalJump[IF_ICMPNE] #U -> #AG
+      <- ConditionalJump[IF_ICMPNE] #D -> #AG
+      <- ConditionalJump[IF_ICMPNE] #N -> #AG
+===#Block BU(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("BT --> N # Failed to match seed of type Conditional and value 541704890");
+      <- ConditionalJump[IF_ICMPNE] #BT -> #BU
+===#Block AX(size=3, flags=10100)===
+   0. lvar56 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.qavqkwyrtjwtkffr(lvar56, 25003921);
+   1. if (lvar56 != 1574287175)
+      goto AY
+   2. goto AB
+      -> UnconditionalJump[GOTO] #AX -> #AB
+      -> ConditionalJump[IF_ICMPNE] #AX -> #AY
+      <- UnconditionalJump[GOTO] #AA -> #AX
+===#Block AY(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("AX --> AB # Failed to match seed of type Unconditional and value 1574287175");
+      <- ConditionalJump[IF_ICMPNE] #AX -> #AY
+===#Block AB(size=33, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1419429281)
+      goto AB
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1637996328 ^ lvar56})
+      goto AB
+   3. lvar188 = "[Constant] 1014259823 -> 1637996328 predicate=1574287175";
+   4. _consume({1131183641 ^ lvar56});
+   5. throw new java/lang/RuntimeException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1037731394)
+      goto AB
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {249634494 ^ lvar56})
+      goto AB
+   8. lvar196 = "[Constant] 1395960313 -> 249634494 predicate=1574287175";
+   9. _consume({482896703 ^ lvar56});
+   10. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 602851921)
+      goto AB
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1654916503 ^ lvar56})
+      goto AB
+   13. lvar192 = "[Constant] 1064415952 -> 1654916503 predicate=1574287175";
+   14. _consume({1659522322 ^ lvar56});
+   15. throw new java/lang/RuntimeException("Failed to proper vm");
+   16. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -792585094)
+      goto AB
+   17. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1609443040 ^ lvar56})
+      goto AB
+   18. lvar190 = "[Constant] 37458343 -> 1609443040 predicate=1574287175";
+   19. _consume({1101704478 ^ lvar56});
+   20. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   21. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1303297398)
+      goto AB
+   22. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {446439918 ^ lvar56})
+      goto AB
+   23. lvar198 = "[Constant] 1196005033 -> 446439918 predicate=1574287175";
+   24. _consume({2015974439 ^ lvar56});
+   25. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   26. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1809329608)
+      goto AB
+   27. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1845612652 ^ lvar56})
+      goto AB
+   28. lvar194 = "[Constant] 869558059 -> 1845612652 predicate=1574287175";
+   29. _consume({1229433881 ^ lvar56});
+   30. throw new java/lang/IllegalAccessException();
+   31. lvar114 = "AB : var expect: -290604486";
+   32. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -290604486)
+      goto AN
+      -> ConditionalJump[IF_ICMPNE] #AB -> #AB
+      -> ConditionalJump[IF_ICMPNE] #AB -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AB -> #AB
+      <- ConditionalJump[IF_ICMPNE] #J -> #AB
+      <- ConditionalJump[IF_ICMPNE] #X -> #AB
+      <- UnconditionalJump[GOTO] #AX -> #AB
+      <- ConditionalJump[IF_ICMPNE] #H -> #AB
+      <- ConditionalJump[IF_ICMPNE] #K -> #AB
+      <- Switch[1221623750] #BB -> #AB
+      <- ConditionalJump[IF_ICMPNE] #P -> #AB
+      <- ConditionalJump[IF_ICMPNE] #L -> #AB
+      <- UnconditionalJump[GOTO] #BC -> #AB
+===#Block AN(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -290604486)
+      goto AN
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {717641956 ^ lvar56})
+      goto AN
+   3. lvar184 = "[Constant] 1842016252 -> 717641956 predicate=1192015640";
+   4. _consume({1675557085 ^ lvar56});
+   5. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AN -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AN -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AB -> #AN
+===#Block AD(size=31, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1897858141)
+      goto AD
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {128979482 ^ lvar56})
+      goto AD
+   3. lvar140 = "[Constant] 947325492 -> 128979482 predicate=1070012462";
+   4. _consume({862544177 ^ lvar56});
+   5. throw new java/io/IOException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 258383186)
+      goto AD
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1458341559 ^ lvar56})
+      goto AD
+   8. lvar136 = "[Constant] 1764466329 -> 1458341559 predicate=1070012462";
+   9. _consume({564434948 ^ lvar56});
+   10. throw new java/io/IOException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1587190394)
+      goto AD
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {35458332 ^ lvar56})
+      goto AD
+   13. lvar138 = "[Constant] 1037702450 -> 35458332 predicate=1070012462";
+   14. _consume({1951717091 ^ lvar56});
+   15. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   16. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 495096042)
+      goto AD
+   17. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {975800993 ^ lvar56})
+      goto AD
+   18. lvar144 = "[Constant] 99521167 -> 975800993 predicate=1070012462";
+   19. _consume({352398893 ^ lvar56});
+   20. throw new java/io/IOException("Failed to proper vm");
+   21. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1188582238)
+      goto AD
+   22. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1820815737 ^ lvar56})
+      goto AD
+   23. lvar142 = "[Constant] 1396730199 -> 1820815737 predicate=1070012462";
+   24. _consume({1595339754 ^ lvar56});
+   25. throw new java/io/IOException("Failed to proper vm");
+   26. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -448690510)
+      goto AD
+   27. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {330411197 ^ lvar56})
+      goto AD
+   28. lvar134 = "[Constant] 745976979 -> 330411197 predicate=1070012462";
+   29. _consume({5030112 ^ lvar56});
+   30. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AD -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AC -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AA -> #AD
+      <- ConditionalJump[IF_ICMPNE] #Z -> #AD
+      <- ConditionalJump[IF_ICMPNE] #C -> #AD
+      <- ConditionalJump[IF_ICMPNE] #T -> #AD
+      <- ConditionalJump[IF_ICMPNE] #A -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AD -> #AD
+===#Block M(size=12, flags=0)===
+   0. lvar21 = new java.lang.IllegalArgumentException;
+   1. lvar35 = new java.lang.StringBuilder;
+   2. _consume(lvar35.<init>());
+   3. lvar45 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.xrmhzznmxl(dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.mqfuffkidacyblk(), lvar56);
+   4. lvar36 = lvar35.append(lvar45);
+   5. lvar46 = lvar52;
+   6. lvar37 = lvar36.append(lvar46);
+   7. lvar38 = lvar37.toString();
+   8. _consume(lvar21.<init>(lvar38));
+   9. throw lvar21;
+   10. lvar78 = "M : var expect: 1455125402";
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1455125402)
+      goto AF
+      -> ConditionalJump[IF_ICMPNE] #M -> #AF
+      <- Immediate #L -> #M
+===#Block AF(size=16, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1591670959)
+      goto AF
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1606689712 ^ lvar56})
+      goto AF
+   3. lvar178 = "[Constant] 403980167 -> 1606689712 predicate=1204821047";
+   4. _consume({237083360 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1455125402)
+      goto AF
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1387147969 ^ lvar56})
+      goto AF
+   8. lvar176 = "[Constant] 360591094 -> 1387147969 predicate=1204821047";
+   9. _consume({314691604 ^ lvar56});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1206014126)
+      goto AF
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {223193942 ^ lvar56})
+      goto AF
+   13. lvar180 = "[Constant] 1251850081 -> 223193942 predicate=1204821047";
+   14. _consume({1057928916 ^ lvar56});
+   15. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AF -> #AF
+      <- Switch[2121522158] #BI -> #AF
+      <- DefaultSwitch #BI -> #AF
+      <- ConditionalJump[IF_ICMPNE] #M -> #AF
+      <- ConditionalJump[IF_ICMPNE] #AF -> #AF
+      <- ConditionalJump[IF_ICMPNE] #I -> #AF
+      <- ConditionalJump[IF_ICMPNE] #V -> #AF
+===#Block AR(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException(new java/lang/StringBuilder("L --> M # Failed to match seed of type Immediate and value 1255632499 and got ").append(lvar56).toString());
+      <- ConditionalJump[IF_ICMPNE] #L -> #AR
+===#Block AQ(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException(new java/lang/StringBuilder("K --> L # Failed to match seed of type Immediate and value 612227402 and got ").append(lvar56).toString());
+      <- ConditionalJump[IF_ICMPNE] #K -> #AQ
+===#Block DI(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("DH --> K # Failed to match seed of type Exception Range [Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;] and value 1447700561");
+      <- ConditionalJump[IF_ICMPNE] #DH -> #DI
+===#Block AT(size=1, flags=0)===
+   0. throw new java/io/IOException(new java/lang/StringBuilder("B --> C # Failed to match seed of type Immediate and value 1272140623 and got ").append(lvar56).toString());
+      <- ConditionalJump[IF_ICMPNE] #B -> #AT
+===#Block AU(size=1, flags=0)===
+   0. throw new java/io/IOException(new java/lang/StringBuilder("A --> B # Failed to match seed of type Immediate and value 653104086 and got ").append(lvar56).toString());
+      <- ConditionalJump[IF_ICMPNE] #A -> #AU

@@ -116,6 +116,7 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
         return this.getName().equals("<clinit>");
     }
 
+
     public Type getOwnerType() {
         return Type.getType("L" + owner.getName() + ";");
     }

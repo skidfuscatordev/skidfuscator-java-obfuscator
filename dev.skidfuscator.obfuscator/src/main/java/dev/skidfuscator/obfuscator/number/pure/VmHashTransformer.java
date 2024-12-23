@@ -4,19 +4,26 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.SkiddedHash;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
+import dev.skidfuscator.obfuscator.ssvm.JdkBootClassFinder;
+import dev.skidfuscator.obfuscator.ssvm.SystemProps$RawNatives;
 import dev.xdark.ssvm.VirtualMachine;
 import dev.xdark.ssvm.api.MethodInvoker;
 import dev.xdark.ssvm.api.VMInterface;
+import dev.xdark.ssvm.classloading.BootClassFinder;
+import dev.xdark.ssvm.classloading.RuntimeBootClassFinder;
 import dev.xdark.ssvm.classloading.SupplyingClassLoaderInstaller;
 import dev.xdark.ssvm.execution.PanicException;
+import dev.xdark.ssvm.execution.Result;
 import dev.xdark.ssvm.execution.VMException;
 import dev.xdark.ssvm.filesystem.FileManager;
 import dev.xdark.ssvm.filesystem.HostFileManager;
+import dev.xdark.ssvm.filesystem.SimpleFileManager;
 import dev.xdark.ssvm.invoke.Argument;
 import dev.xdark.ssvm.invoke.InvocationUtil;
 import dev.xdark.ssvm.memory.management.MemoryManager;
 import dev.xdark.ssvm.mirror.member.JavaMethod;
 import dev.xdark.ssvm.mirror.type.InstanceClass;
+import dev.xdark.ssvm.natives.SystemPropsNatives;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.CompleteResolvingJarDumper;
@@ -32,6 +39,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 
 import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -221,6 +229,7 @@ public class VmHashTransformer implements HashTransformer {
             "com/sun/",
             // jdk specific
             "jdk/internal/",
+            "jdk/vm",
             "jdk/swing/interop/DragSourceContextWrapper",
             "com/oracle/",
             "com/ibm/",
@@ -231,19 +240,46 @@ public class VmHashTransformer implements HashTransformer {
         ImagineBreaker.openBootModules();
 
         // -- SENSITIVE FUCKERY DO NOT TOUCH
+
         this.vm = new VirtualMachine() {
             @Override
+            protected BootClassFinder createBootClassFinder() {
+                try {
+                    return new JdkBootClassFinder(RuntimeBootClassFinder.create());
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to create JDK class definer", e);
+                }
+            }
+
+            @Override
             protected FileManager createFileManager() {
-                return new HostFileManager();
+                return new SimpleFileManager();
             }
         };
-        vm.getProperties().put("java.class.path", "");
+        //vm.getProperties().put("java.class.path", "");
 
         final VMInterface vmi = vm.getInterface();
         final MemoryManager memoryManager = vm.getMemoryManager();
-        vm.bootstrap();
+        vm.initialize();
 
-        // Some patches to circumvent bugs arising from VM implementation changes in later versions
+        // [fix] fuck modules
+        InstanceClass jdk_internal_module_ModuleBootstrap = (InstanceClass) vm.findBootstrapClass("jdk/internal/module/ModuleBootstrap");
+        vmi.setInvoker(
+                vm.getSymbols().java_lang_System(), "initPhase2", "(ZZ)I",
+                ctx -> {
+                    ctx.setResult(0);
+                    return Result.ABORT;
+                }
+        );
+        vmi.setInvoker(
+                jdk_internal_module_ModuleBootstrap, "boot", "()V",
+                MethodInvoker.noop()
+        );
+
+        // [fix] fuck JDK9+ raw natives on Liberica
+        SystemProps$RawNatives.init(vm);
+
+        // [fix] jdk8+ memory fuckery
         if (vm.getJvmVersion() > 8) {
             // Bug in SSVM makes it think there are overlapping sleeps, so until that gets fixed we stub out sleeping.
             InstanceClass thread = vm.getSymbols().java_lang_Thread();
@@ -253,6 +289,10 @@ public class VmHashTransformer implements HashTransformer {
             InstanceClass bits = (InstanceClass) vm.findBootstrapClass("java/nio/Bits");
             if (bits != null) vmi.setInvoker(bits.getMethod("reserveMemory", "(JJ)V"), MethodInvoker.noop());
         }
+
+        // ==== FINALLY ====
+        vm.bootstrap();
+        // =================
 
         // Create a loader pulling classes and files from a root directory
         final CompleteResolvingJarDumper dumper = new CompleteResolvingJarDumper(

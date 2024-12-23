@@ -83,4 +83,8 @@ public class FieldNode implements FastGraphVertex, IHasJavaDesc {
     public boolean isPrivate() {
         return (node.access & Opcodes.ACC_PRIVATE) != 0;
     }
+
+    public ClassNode getOwnerClass() {
+        return owner;
+    }
 }

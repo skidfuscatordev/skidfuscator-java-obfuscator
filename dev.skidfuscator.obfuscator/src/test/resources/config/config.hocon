@@ -1,5 +1,5 @@
 exempt: [
-    "class{^dev\\/skidfuscator\\/test}"
+    "class{^dev\\/skidfuscator\\/test}",
 ]
 
 driver: {

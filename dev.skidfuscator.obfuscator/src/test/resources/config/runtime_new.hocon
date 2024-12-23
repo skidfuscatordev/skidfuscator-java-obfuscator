@@ -1,0 +1,57 @@
+exclude: [
+    "@class dev.skidfuscator.testclasses.exclusion.*"
+]
+
+driver: {
+    enabled: false
+}
+
+fileCrasher: {
+    enabled: false
+}
+
+stringEncryption {
+    type: STANDARD
+    enabled: false
+    exempt: []
+}
+
+exceptionReturn {
+    enabled: false
+    exempt: []
+}
+
+classRenamer {
+    enabled: false
+    type: CUSTOM
+    prefix: "skido/"
+    chars: [
+        "K"
+        "oO",
+        "o0"
+    ]
+    depth: 3
+}
+
+methodRenamer {
+    enabled: false
+    type: CUSTOM
+    chars: [
+        "K"
+        "oO",
+        "o0"
+    ]
+    depth: 3
+}
+
+fieldRenamer {
+    enabled: false
+    type: ALPHABETICAL
+}
+
+flowException {
+    enabled: false
+    strength: AGGRESSIVE
+    exempt: []
+}
+
