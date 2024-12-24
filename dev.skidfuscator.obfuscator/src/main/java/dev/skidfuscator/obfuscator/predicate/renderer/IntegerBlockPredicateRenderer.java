@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.predicate.renderer;
 
+import com.typesafe.config.Config;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
@@ -71,7 +72,11 @@ import java.util.stream.Collectors;
 
     @Listen(EventPriority.LOWEST)
     void handle(final InitSkidTransformEvent event) {
-        final String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
+        String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
+        Config tsConfig = skidfuscator.getTsConfig();
+        if (tsConfig.hasPath("factoryRenamer.enabled") && tsConfig.getBoolean("factoryRenamer.enabled")) {
+            factoryName = tsConfig.getString("factoryRenamer.name");
+        }
         final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)
                 .name(factoryName)
                 .access(Opcodes.ACC_PUBLIC)
