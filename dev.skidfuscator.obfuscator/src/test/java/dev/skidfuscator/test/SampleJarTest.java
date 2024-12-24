@@ -23,7 +23,7 @@ import java.util.jar.JarInputStream;
 
 public class SampleJarTest {
 
-    @RepeatedTest(1)
+    @RepeatedTest(20)
     public void test2() throws Exception {
         final File input = new File("src/test/resources/test.jar");
         final File output = new File("src/test/resources/test-out.jar");

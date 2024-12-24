@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mapleir.stdlib.collections.graph.util.GraphConverter;
 import org.mapleir.stdlib.collections.graph.util.OrderedNode;
 import org.mapleir.stdlib.collections.graph.util.OrderedNode.ODirectedGraph;
@@ -13,14 +16,13 @@ import org.mapleir.stdlib.collections.graph.util.OrderedNode.OGraph;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterators;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.*;
 
-
-public class DfsTest extends TestCase {
+public class DfsTest {
 
 	ODirectedGraph g;
 
-	@Override
+	@BeforeEach
 	public void setUp() {
 		try {
 			g = (ODirectedGraph) GraphConverter.fromFile("/dfs.gv");
@@ -29,24 +31,28 @@ public class DfsTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testSimpleDfsPre() {
 		DepthFirstSearch<OrderedNode> dfs = new SimpleDfs<>(g, getNode(g, 1), SimpleDfs.PRE);
 		List<OrderedNode> res = dfs.getPreOrder();
 		assertPreOrdered(res);
 	}
 
+	@Test
 	public void testExtendedDfsPre() {
 		DepthFirstSearch<OrderedNode> dfs = new ExtendedDfs<>(g, ExtendedDfs.PRE).run(getNode(g, 1));
 		List<OrderedNode> res = dfs.getPreOrder();
 		assertPreOrdered(res);
 	}
 
+	@Test
 	public void testSimpleDfsTopo() {
 		DepthFirstSearch<OrderedNode> dfs = new SimpleDfs<>(g, getNode(g, 1), SimpleDfs.TOPO);
 		List<OrderedNode> res = dfs.getTopoOrder();
 		assertTopoOrdered(res);
 	}
 
+	@Test
 	public void testExtendedDfsTopo() {
 		DepthFirstSearch<OrderedNode> dfs = new ExtendedDfs<>(g, ExtendedDfs.TOPO).run(getNode(g, 1));
 		List<OrderedNode> res = dfs.getTopoOrder();
@@ -55,22 +61,22 @@ public class DfsTest extends TestCase {
 
 	private void assertPreOrdered(List<OrderedNode> nodes) {
 		Set<OrderedNode> visited = new HashSet<>();
-		assertEquals("missing nodes", new HashSet<>(nodes), g.vertices());
+		assertEquals(new HashSet<>(nodes), g.vertices(), "missing nodes");
 		for (int i = 1; i < nodes.size(); i++) {
 			OrderedNode node = nodes.get(i);
 			visited.add(node);
 			OrderedNode prev = nodes.get(i - 1);
 			if (!Iterators.all(g.getSuccessors(prev).iterator(), Predicates.in(visited)))
-				assertTrue("unvisited pred", Iterators.contains(g.getPredecessors(node).iterator(), prev));
+				assertTrue(Iterators.contains(g.getPredecessors(node).iterator(), prev));
 		}
 	}
 
 	private void assertTopoOrdered(List<OrderedNode> nodes) {
 		Set<OrderedNode> visited = new HashSet<>();
-		assertEquals("missing nodes", new HashSet<>(nodes), g.vertices());
+		assertEquals(new HashSet<>(nodes), g.vertices());
 		for (OrderedNode node : nodes) {
 			visited.add(node);
-			assertTrue("unvisited pred", Iterators.all(g.getPredecessors(node).iterator(), Predicates.in(visited)));
+			assertTrue(Iterators.all(g.getPredecessors(node).iterator(), Predicates.in(visited)), "unvisited pred");
 		}
 	}
 	

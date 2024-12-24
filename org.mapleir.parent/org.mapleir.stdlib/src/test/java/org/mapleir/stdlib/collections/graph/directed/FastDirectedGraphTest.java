@@ -1,7 +1,9 @@
 package org.mapleir.stdlib.collections.graph.directed;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mapleir.stdlib.collections.graph.util.CollectionUtil.*;
 
+import org.junit.jupiter.api.Test;
 import org.mapleir.stdlib.collections.graph.AbstractFastGraphTest;
 import org.mapleir.stdlib.collections.graph.util.FakeFastEdge;
 
@@ -11,6 +13,7 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 		super(true);
 	}
 
+	@Test
 	public void testAddVertex() {
 		FakeFastDirectedGraph g = graph();
 		assertEquals(0, g.size());
@@ -23,7 +26,8 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 		assertEquals(1, g.size());
 //		assertEquals(1, g.reverseSize());
 	}
-	
+
+	@Test
 	public void testAddVertexByAddEdge() {
 		FakeFastDirectedGraph g = graph();
 		FakeFastEdge e = edge(1, 2);
@@ -32,7 +36,8 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 		assertEquals(2, g.size());
 //		assertEquals(2, g.reverseSize());
 	}
-	
+
+	@Test
 	public void testAddEdge() {
 		FakeFastDirectedGraph g = graph();
 		FakeFastEdge e = edge(1, 2);
@@ -45,7 +50,8 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 		assertTrue(g.containsEdge(e));
 		assertTrue(g.containsReverseEdge(e));
 	}
-	
+
+	@Test
 	public void testRemoveEdge() {
 		FakeFastDirectedGraph g = graph();
 		FakeFastEdge e = edge(1, 2);
@@ -57,7 +63,8 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 		assertFalse(g.containsEdge(e));
 		assertFalse(g.containsReverseEdge(e));
 	}
-	
+
+	@Test
 	public void testRemoveVertex() {
 		FakeFastDirectedGraph g = graph();
 		FakeFastEdge e1 = edge(1, 2), e2 = edge(1, 3),
@@ -81,7 +88,8 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 		assertFalse(g.containsEdge(e3));
 		assertTrue(g.containsEdge(e4));
 	}
-	
+
+	@Test
 	public void testReplace() {
 		FakeFastDirectedGraph g = graph();
 		FakeFastEdge e1 = edge(1, 2), e2 = edge(1, 3), e3 = edge(2, 4), e4 = edge(3, 4);
@@ -102,6 +110,7 @@ public class FastDirectedGraphTest extends AbstractFastGraphTest {
 	}
 	
 	/* internal test */
+	@Test
 	public void testClone() {
 		FakeFastDirectedGraph g = graph();
 		FakeFastEdge e1 = edge(1, 2);

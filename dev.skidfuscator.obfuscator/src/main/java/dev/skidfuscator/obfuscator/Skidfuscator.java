@@ -53,13 +53,14 @@ import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionT
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.InterproceduralTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomInitTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTranformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.InstanceOfHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
-import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTranformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
@@ -705,8 +706,9 @@ public class Skidfuscator {
                     new BasicRangeTransformer(this),
                     new PureHashTransformer(this),
                     new SdkInjectorTransformer(this),
-                    new StringEqualsHashTranformer(this),
-                    new StringEqualsIgnoreCaseHashTranformer(this),
+                    new StringEqualsHashTransformer(this),
+                    new StringEqualsIgnoreCaseHashTransformer(this),
+                    new InstanceOfHashTransformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)
@@ -723,7 +725,7 @@ public class Skidfuscator {
         transformers.clear();
 
         for (Transformer temp : temps) {
-            if (temp.getConfig().isEnabled()) {
+            if (temp.isEnabled()) {
                 transformers.add(temp);
                 //System.out.println(temp.getName() + " -> " + Arrays.toString(temp.getConfig().getExemptions().toArray()));
                 for (String exemption : temp.getConfig().getExemptions()) {

@@ -5,8 +5,20 @@ plugins {
 dependencies {
     api project(':dot4j')
     api project(':property-framework')
-    testImplementation 'junit:junit:3.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+
 
 group = 'dev.skidfuscator.mapleir'
 description = 'MapleIR-stdlib'

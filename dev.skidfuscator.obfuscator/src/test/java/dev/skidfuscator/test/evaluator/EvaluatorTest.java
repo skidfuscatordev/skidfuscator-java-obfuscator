@@ -19,11 +19,17 @@ import dev.skidfuscator.testclasses.evaluator.util.Log;
 import dev.skidfuscator.testclasses.evaluator.util.crypto.AES;
 import dev.skidfuscator.testclasses.evaluator.util.crypto.Blowfish;
 import dev.skidfuscator.testclasses.evaluator.util.stats.Calculations;
+import org.junit.jupiter.api.RepeatedTest;
 
 public class EvaluatorTest extends SkidTest {
     @Override
     public Class<? extends TestRun> getMainClass() {
         return EvaluatorMain.class;
+    }
+
+    @Override
+    public void test() {
+        super.test();
     }
 
     @Override

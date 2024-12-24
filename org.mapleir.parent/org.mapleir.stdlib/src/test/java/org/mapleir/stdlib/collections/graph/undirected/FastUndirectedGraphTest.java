@@ -1,5 +1,6 @@
 package org.mapleir.stdlib.collections.graph.undirected;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mapleir.stdlib.collections.graph.util.CollectionUtil.*;
 
 import org.mapleir.stdlib.collections.graph.AbstractFastGraphTest;
@@ -112,8 +113,8 @@ public class FastUndirectedGraphTest extends AbstractFastGraphTest {
 	
 	private <E extends FastGraphEdge<?>> void assertSisterEdges(E e1, E e2) {
 		String msg = getSisterErrorMsg(e1, e2);
-		assertEquals(msg, e1.src(), e2.dst());
-		assertEquals(msg, e1.dst(), e2.src());
+		assertEquals(e1.src(), e2.dst(), msg);
+		assertEquals(e1.dst(), e2.src(), msg);
 	}
 	
 	private String getSisterErrorMsg(Object o1, Object o2) {

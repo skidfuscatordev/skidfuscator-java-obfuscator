@@ -237,8 +237,6 @@ public class VmHashTransformer implements HashTransformer {
 
     @SneakyThrows
     private void init() {
-        ImagineBreaker.openBootModules();
-
         // -- SENSITIVE FUCKERY DO NOT TOUCH
 
         this.vm = new VirtualMachine() {

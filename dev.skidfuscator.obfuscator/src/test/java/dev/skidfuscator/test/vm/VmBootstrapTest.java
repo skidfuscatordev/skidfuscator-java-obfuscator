@@ -1,6 +1,5 @@
 package dev.skidfuscator.test.vm;
 
-import dev.skidfuscator.obfuscator.number.pure.ImagineBreaker;
 import dev.skidfuscator.obfuscator.ssvm.JdkBootClassFinder;
 import dev.skidfuscator.obfuscator.ssvm.JdkClassDefiner;
 import dev.skidfuscator.obfuscator.util.JdkDownloader;
@@ -19,8 +18,6 @@ import java.io.IOException;
 public class VmBootstrapTest {
     @Test
     public void testBoot() throws IOException {
-        ImagineBreaker.openBootModules();
-
         VirtualMachine vm = new VirtualMachine() {
             @Override
             protected BootClassFinder createBootClassFinder() {

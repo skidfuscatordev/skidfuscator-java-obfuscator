@@ -21,6 +21,7 @@ public abstract class AbstractTransformer implements Transformer {
     private int success;
     private int skipped;
     private int failed;
+    private boolean requiresSdk;
 
     public AbstractTransformer(Skidfuscator skidfuscator, String name) {
         this(skidfuscator, name, Collections.emptyList());
@@ -37,6 +38,12 @@ public abstract class AbstractTransformer implements Transformer {
         return (T) new DefaultTransformerConfig(skidfuscator.getTsConfig(), MiscUtil.toCamelCase(name));
     }
 
+    public boolean isEnabled() {
+        return config.isEnabled()
+                && (!requiresSdk
+                || skidfuscator.getConfig().getBoolean("sdk.enabled", true));
+    }
+
     public DefaultTransformerConfig getConfig() {
         return config;
     }
@@ -47,6 +54,10 @@ public abstract class AbstractTransformer implements Transformer {
         for (Transformer child : children) {
             child.register();
         }
+    }
+
+    public void requiresSdk() {
+        this.requiresSdk = true;
     }
 
     @Override
