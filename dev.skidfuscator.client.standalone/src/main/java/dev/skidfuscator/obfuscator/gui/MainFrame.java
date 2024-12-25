@@ -14,8 +14,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Getter
 public class MainFrame extends JFrame {
@@ -25,6 +29,7 @@ public class MainFrame extends JFrame {
     private ConsolePanel consolePanel;
     private LibrariesPanel librariesPanel;
     private JButton startButton;
+    private JButton buyEnterpriseButton;
     private JPanel headerPanel;
 
     public MainFrame() {
@@ -119,11 +124,27 @@ public class MainFrame extends JFrame {
             }
         });
 
+        buyEnterpriseButton = new JButton("Buy Enterprise");
+        buyEnterpriseButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        buyEnterpriseButton.setBackground(Color.DARK_GRAY);
+        buyEnterpriseButton.setForeground(Color.WHITE);
+        buyEnterpriseButton.setFocusPainted(false);
+        buyEnterpriseButton.setPreferredSize(new Dimension(160, 30));
+
+        buyEnterpriseButton.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().browse(new URI("https://skidfuscator.dev/pricing"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
         int topSpace = 220;
         int bottomPadding = this.getPreferredSize().height - 60*3;
 
-        JPanel buttonPanel = new JPanel(new BorderLayout());
-        buttonPanel.add(startButton, BorderLayout.NORTH);
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(startButton);
+        buttonPanel.add(buyEnterpriseButton);
         
         // Add copyright and website info
         JPanel copyrightPanel = new JPanel();
@@ -299,14 +320,31 @@ public class MainFrame extends JFrame {
         }
 
         // Validate inputs
-        tabbedPane.setSelectedIndex(2);
+        tabbedPane.setSelectedIndex(3);
+
+        // Validate libs
+        // Initialize library folder
+        String configLibPath = configPanel.getLibraryPath();
+        Path libraryFolder;
+        if (configLibPath != null && !configLibPath.isEmpty()) {
+            libraryFolder = Paths.get(configLibPath);
+        } else {
+            libraryFolder = Paths.get(System.getProperty("user.home"), ".ssvm", "libs");
+        }
+
+        // Create library folder if it doesn't exist
+        try {
+            Files.createDirectories(libraryFolder);
+        } catch (IOException e) {
+            Skidfuscator.LOGGER.error("Failed to create library folder", e);
+        }
 
         // Create session
         SkidfuscatorSession session = SkidfuscatorSession.builder()
                 .input(new File(config.getInputPath()))
                 .output(new File(config.getOutputPath()))
                 .libs(config.getLibsPath().isEmpty()
-                        ? new File[0]
+                        ? libraryFolder.toFile().listFiles()
                         : new File(config.getLibsPath()).listFiles()
                 )
                 .runtime(config.getRuntimePath().isEmpty()

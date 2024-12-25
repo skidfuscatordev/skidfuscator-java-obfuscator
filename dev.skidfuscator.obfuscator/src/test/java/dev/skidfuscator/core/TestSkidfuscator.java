@@ -59,7 +59,7 @@ public class TestSkidfuscator extends Skidfuscator {
     }
 
     @Override
-    protected void _importJvm() {
+    public Set<LibraryClassSource> _importJvm() {
         LOGGER.post("Beginning to import JVM...");
         if (!cached) {
             _cacheJvm(this);
@@ -72,10 +72,12 @@ public class TestSkidfuscator extends Skidfuscator {
             ));
         }
         LOGGER.log("Finished importing JVM!");
+
+        return new HashSet<>();
     }
 
     @Override
-    protected void _importClasspath() {
+    public SkidApplicationClassSource _importClasspath() {
         LOGGER.post("Beginning to import classpath...");
         this.jarContents = new JarContents();
 
@@ -133,6 +135,8 @@ public class TestSkidfuscator extends Skidfuscator {
                 this
         );
         LOGGER.log("Finished importing classpath!");
+
+        return classSource;
     }
 
     @Override

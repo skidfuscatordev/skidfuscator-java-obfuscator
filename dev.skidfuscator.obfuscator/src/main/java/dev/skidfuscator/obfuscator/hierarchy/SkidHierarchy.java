@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -371,12 +372,49 @@ public class SkidHierarchy implements Hierarchy {
                                         if (!(targetClass instanceof SkidClassNode))
                                             return;
 
-                                        assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
-                                        final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
+                                        SkidMethodNode methodNode = null;
 
-                                        methodNode.getGroup().setImplicitFunction(true);
+                                        // [resolution] step 1: check if current class has method
+                                        ClassNode node;
+
+                                        for (node = targetClass;
+                                             node instanceof SkidClassNode;
+                                             node = skidfuscator.getClassSource().findClassNode(targetClass.getSuperName())) {
+                                            if (!node.getMethods().isEmpty()) {
+
+                                                // [validation] cannot have more than one method in implicit function
+                                                if (node.getMethods().size() > 1) {
+                                                    throw new IllegalStateException(String.format(
+                                                            """
+                                                            -----------------------------------------------------
+                                                            /!\\ Skidfuscator failed to verify a lambda call! 
+                                                            Please report this to the developer...
+                                                            -----------------------------------------------------
+                                                            Bound: %s
+                                                            Target: %s
+                                                            Target Methods: %s
+                                                            -----------------------------------------------------
+                                                            """,
+                                                            boundFunc,
+                                                            node.getDisplayName(),
+                                                            node.getMethods().stream()
+                                                                    .map(MethodNode::toString)
+                                                                    .reduce("\n- ", (s, s2) -> s + "\n- " + s2)
+
+                                                    ));
+                                                }
+
+                                                // must be correct
+                                                methodNode = (SkidMethodNode) node.getMethods().get(0);
+                                                break;
+                                            }
+                                        }
+
+                                        if (methodNode != null) {
+                                            methodNode.getGroup().setImplicitFunction(true);
+                                            return;
+                                        }
                                         //System.out.println("Found implicit function: " + methodNode.toString());
-                                        return;
                                     }
 
                                     target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());

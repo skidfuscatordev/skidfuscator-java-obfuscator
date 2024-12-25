@@ -14,10 +14,7 @@ import org.topdank.byteengineer.commons.data.LocateableJarContents;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SkidApplicationClassSource extends ApplicationClassSource {
@@ -57,25 +54,7 @@ public class SkidApplicationClassSource extends ApplicationClassSource {
         ));
     }
 
-    public Set<String> getMissingClassNames() {
-        Set<String> missingClasses = new HashSet<>();
-        for (String className : nodeMap.keySet()) {
-            ClassNode node = nodeMap.get(className);
-            if (node != null) {
-                String superName = node.getName();
-                if (superName != null && !contains(superName)) {
-                    missingClasses.add(superName.replace('/', '.'));
-                }
-                Collection<String> interfaces = node.getInterfaces();
-                if (interfaces != null) {
-                    for (String iface : interfaces) {
-                        if (!contains(iface)) {
-                            missingClasses.add(iface.replace('/', '.'));
-                        }
-                    }
-                }
-            }
-        }
-        return missingClasses;
+    public List<String> getMissingClassNames() {
+        return classTree.getMissingClasses();
     }
 }

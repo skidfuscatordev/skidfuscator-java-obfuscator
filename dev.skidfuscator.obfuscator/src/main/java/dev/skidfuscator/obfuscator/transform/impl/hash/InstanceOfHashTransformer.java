@@ -30,7 +30,7 @@ public class InstanceOfHashTransformer extends AbstractExpressionTransformer {
         final boolean valid = expr instanceof InstanceofExpr;
 
         if (valid) {
-            System.out.println("Checking instanceof expression: " + expr);
+            //System.out.println("Checking instanceof expression: " + expr);
         }
 
         return valid;
@@ -46,7 +46,7 @@ public class InstanceOfHashTransformer extends AbstractExpressionTransformer {
         Type checkType = instanceofExpr.getCheckType();
         Expr object = instanceofExpr.getExpression();
 
-        System.out.println("Checking instanceof expression: " + expr);
+        //System.out.println("Checking instanceof expression: " + expr);
 
         // Skip primitive types and arrays
         if (checkType.getSort() != Type.OBJECT || checkType.getDescriptor().startsWith("[")) {
@@ -69,7 +69,7 @@ public class InstanceOfHashTransformer extends AbstractExpressionTransformer {
                 "(Ljava/lang/Object;Ljava/lang/String;I)Z"
         );
 
-        System.out.println("Transformed instanceof expression: " + expr + " to " + replacement);
+        //System.out.println("Transformed instanceof expression: " + expr + " to " + replacement);
         expr.getParent().overwrite(expr, replacement);
         return true;
     }

@@ -193,6 +193,7 @@ public class Skidfuscator {
 
                 /* Builder */
                 .build();
+        this.config = new DefaultSkidConfig(tsConfig, "");
     }
 
     /**
@@ -429,7 +430,7 @@ public class Skidfuscator {
         }
     }
 
-    protected void _importConfig() {
+    public void _importConfig() {
         LOGGER.post("Loading config...");
 
         try (final ProgressWrapper progressBar = ProgressUtil.progressCheck(
@@ -552,7 +553,7 @@ public class Skidfuscator {
         return sources;
     }
 
-    protected void _importClasspath() {
+    public SkidApplicationClassSource _importClasspath() {
         LOGGER.post("Importing jar...");
 
         final String path = session.getInput().getPath();
@@ -673,6 +674,8 @@ public class Skidfuscator {
                 1
         ));*/
         LOGGER.log("Finished importing classpath!");
+
+        return classSource;
     }
 
     protected List<Transformer> _loadTransformer() {

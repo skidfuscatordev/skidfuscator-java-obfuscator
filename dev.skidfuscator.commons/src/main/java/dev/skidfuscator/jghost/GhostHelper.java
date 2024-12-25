@@ -98,7 +98,7 @@ public class GhostHelper {
     public ApplicationClassSource importFile(final Logger logger, final boolean fuckit, final GhostLibrary library) {
         /* Create a new library class source with superior to default priority */
         final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
-                "libraries",
+                library.getName(),
                 fuckit,
                 library.getContents()
                         .getClasses()
@@ -140,6 +140,7 @@ public class GhostHelper {
 
         final GhostContents ghostContents = new GhostContents();
         final GhostLibrary ghostLibrary = new GhostLibrary();
+        ghostLibrary.setName(file.getName());
         ghostLibrary.setContents(ghostContents);
 
         try {
