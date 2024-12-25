@@ -133,6 +133,8 @@ public class VmHashTransformer implements HashTransformer {
 
             this.selectRandomMethod();
 
+            System.out.println("Hashed: " + hashed + " Expr: " + hashExpr);
+
             return new SkiddedHash(hashExpr, hashed);
         } catch (VMException | PanicException e) {
             e.printStackTrace();

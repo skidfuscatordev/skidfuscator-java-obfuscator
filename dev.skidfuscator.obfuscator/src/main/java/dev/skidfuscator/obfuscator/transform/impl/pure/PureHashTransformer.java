@@ -12,7 +12,7 @@ public class PureHashTransformer extends AbstractTransformer {
         super(skidfuscator, "Pure Encryption");
     }
 
-    @Listen
+    @Listen(EventPriority.HIGHEST)
     void handle(final InitSkidTransformEvent event) {
         if (skidfuscator.getVmHasher() == null) {
             throw new IllegalStateException("VmHasher is null");

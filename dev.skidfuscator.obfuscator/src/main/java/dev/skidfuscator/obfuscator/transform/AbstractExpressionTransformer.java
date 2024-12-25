@@ -19,7 +19,7 @@ public abstract class AbstractExpressionTransformer extends AbstractTransformer 
     }
 
     @Listen(EventPriority.LOWEST)
-    void handle(final RunMethodTransformEvent event) {
+    protected void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
 
         if (shouldSkipMethod(methodNode)) {

@@ -47,7 +47,7 @@ public class TestSkidfuscator extends Skidfuscator {
         this.test = test;
         this.callback = callback;
 
-        IntegerBlockPredicateRenderer.DEBUG = true;
+        IntegerBlockPredicateRenderer.DEBUG = false;
     }
 
     public static boolean SKIP = false;

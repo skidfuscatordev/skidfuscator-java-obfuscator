@@ -55,3 +55,6 @@ flowException {
     exempt: []
 }
 
+flowCondition {
+    enabled: false
+}

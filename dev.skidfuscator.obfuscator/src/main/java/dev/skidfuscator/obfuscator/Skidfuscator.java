@@ -56,6 +56,7 @@ import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomIni
 import dev.skidfuscator.obfuscator.transform.impl.hash.InstanceOfHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.loop.LoopConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
@@ -147,45 +148,6 @@ public class Skidfuscator {
     public Skidfuscator(SkidfuscatorSession session) {
         this.session = session;
         this.exemptAnalysis = new ExemptManager();
-    }
-
-    /**
-     * Runs the execution of the obfuscator.
-     */
-    public void run() {
-        LOGGER.setDebug(session.isDebug());
-        LOGGER.post("Beginning Skidfuscator Community...");
-        _verifyEnvironment();
-        if (session.isAnalytics()) {
-            _runAnalytics();
-        }
-
-        if (session.isDex()) {
-            // WIP
-        }
-
-        /*
-         * Initializes a null skid directory. This skid directory is used as a
-         * cache or a temporary directory, most often for silly things such as
-         * JPhantom or in the near future as a cache for the Ghost pre-computed
-         * mappings.
-         */
-        SkiddedDirectory.init(null);
-
-        /*
-         * Here is initialized the skid cache.
-         *
-         * The SkidCache is an extension of MapleIR's IRCache
-         */
-        this.irFactory = new SkidCache(this);
-
-        /*
-         * Here we initialize our opaque predicate type. As of right now
-         * only one has been completed: the direct integer opaque predicate.
-         * In the future, it will be possible to add compatibility for other
-         * types such as longs, byte arrays etc...
-         */
-        LOGGER.post("Resolving predicate analysis...");
         this.predicateAnalysis = new SimplePredicateAnalysis.Builder()
                 .skidfuscator(this)
                 /*
@@ -231,13 +193,54 @@ public class Skidfuscator {
 
                 /* Builder */
                 .build();
+    }
+
+    /**
+     * Runs the execution of the obfuscator.
+     */
+    public void run() {
+        LOGGER.setDebug(session.isDebug());
+        LOGGER.post("Beginning Skidfuscator Community...");
+        _verifyEnvironment();
+        if (session.isAnalytics()) {
+            _runAnalytics();
+        }
+
+        if (session.isDex()) {
+            // WIP
+        }
+
+        /*
+         * Initializes a null skid directory. This skid directory is used as a
+         * cache or a temporary directory, most often for silly things such as
+         * JPhantom or in the near future as a cache for the Ghost pre-computed
+         * mappings.
+         */
+        SkiddedDirectory.init(null);
+
+        /*
+         * Here is initialized the skid cache.
+         *
+         * The SkidCache is an extension of MapleIR's IRCache
+         */
+        this.irFactory = new SkidCache(this);
+
+        /*
+         * Here we initialize our opaque predicate type. As of right now
+         * only one has been completed: the direct integer opaque predicate.
+         * In the future, it will be possible to add compatibility for other
+         * types such as longs, byte arrays etc...
+         */
+        LOGGER.post("Resolving predicate analysis...");
+
         if (session.isDebug())
             LOGGER.log("Finished resolving predicate analysis!");
 
         _importConfig();
         _importExempt();
         _importClasspath();
-        _importJvm();
+        final Set<LibraryClassSource> sources = _importJvm();
+        this.getClassSource().addLibraries(sources.toArray(new LibraryClassSource[0]));
 
         if (!session.isFuckIt()) {
             _verify();
@@ -476,8 +479,9 @@ public class Skidfuscator {
         LOGGER.log("Finished importing exemptions");
     }
 
-    protected void _importJvm() {
+    public Set<LibraryClassSource> _importJvm() {
         /* Import JVM */
+        final Set<LibraryClassSource> sources = new HashSet<>();
         LOGGER.post("Beginning importing of the JVM...");
 
         /*
@@ -498,7 +502,8 @@ public class Skidfuscator {
                         GhostHelper.getJvm(session, LOGGER, session.getRuntime()),
                         0
                 );
-                this.classSource.addLibraries(jvmClassSource);
+
+                sources.add(jvmClassSource);
                 wrapper.tick();
             }
             LOGGER.post("✓ Success");
@@ -531,10 +536,11 @@ public class Skidfuscator {
                         continue;
                     }
 
-                    this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                    jvmClassSource = new LibraryClassSource(
                             GhostHelper.getJvm(session, LOGGER, file),
                             0
-                    )));
+                    );
+                    sources.add(jvmClassSource);
                     wrapper.tick();
                 }
             }
@@ -542,6 +548,8 @@ public class Skidfuscator {
         }
         LOGGER.log("Finished importing the JVM");
         LOGGER.log(String.format("Imported %d jvm classes!", jvmClassSource.size()));
+
+        return sources;
     }
 
     protected void _importClasspath() {
@@ -709,6 +717,7 @@ public class Skidfuscator {
                     new StringEqualsHashTransformer(this),
                     new StringEqualsIgnoreCaseHashTransformer(this),
                     new InstanceOfHashTransformer(this),
+                    //new LoopConditionTransformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)

@@ -23,6 +23,7 @@ public class MainFrame extends JFrame {
     private ConfigPanel configPanel;
     private TransformerPanel transformerPanel;
     private ConsolePanel consolePanel;
+    private LibrariesPanel librariesPanel;
     private JButton startButton;
     private JPanel headerPanel;
 
@@ -172,16 +173,19 @@ public class MainFrame extends JFrame {
         configPanel = new ConfigPanel();
         transformerPanel = new TransformerPanel();
         consolePanel = new ConsolePanel();
+        librariesPanel = new LibrariesPanel(configPanel, null);
 
         // Add tabs (without content)
         tabbedPane.addTab("Configuration", null);
+        tabbedPane.addTab("Libraries", null);
         tabbedPane.addTab("Transformers", null);
         tabbedPane.addTab("Console", null);
 
         // Set mnemonics
         tabbedPane.setMnemonicAt(0, KeyEvent.VK_C);
-        tabbedPane.setMnemonicAt(1, KeyEvent.VK_T);
-        tabbedPane.setMnemonicAt(2, KeyEvent.VK_O);
+        tabbedPane.setMnemonicAt(1, KeyEvent.VK_L);
+        tabbedPane.setMnemonicAt(2, KeyEvent.VK_T);
+        tabbedPane.setMnemonicAt(3, KeyEvent.VK_O);
 
         // Add components to the left panel
         leftPanel.add(tabbedPane, BorderLayout.NORTH);
@@ -206,9 +210,12 @@ public class MainFrame extends JFrame {
                     contentPanel.add(configPanel, BorderLayout.CENTER);
                     break;
                 case 1:
-                    contentPanel.add(transformerPanel, BorderLayout.CENTER);
+                    contentPanel.add(librariesPanel, BorderLayout.CENTER);
                     break;
                 case 2:
+                    contentPanel.add(transformerPanel, BorderLayout.CENTER);
+                    break;
+                case 3:
                     contentPanel.add(consolePanel, BorderLayout.CENTER);
                     break;
             }

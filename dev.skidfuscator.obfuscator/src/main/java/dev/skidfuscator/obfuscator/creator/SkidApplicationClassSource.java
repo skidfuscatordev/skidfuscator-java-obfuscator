@@ -1,19 +1,26 @@
 package dev.skidfuscator.obfuscator.creator;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.jghost.GhostHelper;
+import dev.skidfuscator.jghost.tree.GhostLibrary;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
+import org.mapleir.app.service.LibraryClassSource;
+import org.mapleir.app.service.LocateableClassNode;
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 import org.topdank.byteengineer.commons.data.LocateableJarContents;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SkidApplicationClassSource extends ApplicationClassSource {
-    //private final LocateableJarContents<ClassNode> nodes;
     private final Skidfuscator skidfuscator;
 
     public SkidApplicationClassSource(String name, boolean phantom, JarContents nodes, Skidfuscator skidfuscator) {
@@ -38,5 +45,37 @@ public class SkidApplicationClassSource extends ApplicationClassSource {
             classTree.init();
         }
         return classTree;
+    }
+
+    public void importLibrary(File file) throws IOException {
+        final ApplicationClassSource libraryClassSource = GhostHelper.getLibraryClassSource(
+                skidfuscator.getSession(), Skidfuscator.LOGGER, file);
+        /* Add library source to class source */
+        this.addLibraries(new LibraryClassSource(
+                libraryClassSource,
+                5
+        ));
+    }
+
+    public Set<String> getMissingClassNames() {
+        Set<String> missingClasses = new HashSet<>();
+        for (String className : nodeMap.keySet()) {
+            ClassNode node = nodeMap.get(className);
+            if (node != null) {
+                String superName = node.getName();
+                if (superName != null && !contains(superName)) {
+                    missingClasses.add(superName.replace('/', '.'));
+                }
+                Collection<String> interfaces = node.getInterfaces();
+                if (interfaces != null) {
+                    for (String iface : interfaces) {
+                        if (!contains(iface)) {
+                            missingClasses.add(iface.replace('/', '.'));
+                        }
+                    }
+                }
+            }
+        }
+        return missingClasses;
     }
 }

@@ -58,4 +58,14 @@ public class SDK {
 
         return Collections.unmodifiableSet(hashes);
     }
+
+    public static boolean checkEnumName(Enum<?> enumValue, String hashedName, int seed) {
+        if (enumValue == null) {
+            return false;
+        }
+
+        // Hash the enum's name and compare with the provided hash
+        String actualHash = LongHashFunction.xx3(seed).hashChars(enumValue.name()) + "";
+        return actualHash.equals(hashedName);
+    }
 }

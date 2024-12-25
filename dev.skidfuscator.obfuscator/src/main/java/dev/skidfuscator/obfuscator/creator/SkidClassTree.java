@@ -57,9 +57,13 @@ public class SkidClassTree extends ClassTree {
         }
 
         if(cn != rootNode) {
-            ClassNode sup = cn.node.superName != null
-                    ? requestClass0(cn.node.superName, cn.getName())
-                    : rootNode;
+            ClassNode sup;
+
+            try {
+                sup = requestClass0(cn.node.superName, cn.getName());
+            } catch (Exception e) {
+                throw new IllegalStateException(String.format("No superclass %s for %s", cn.node.superName, cn.getName()));
+            }
             if(sup == null) {
                 throw new IllegalStateException(String.format("No superclass %s for %s", cn.node.superName, cn.getName()));
             }

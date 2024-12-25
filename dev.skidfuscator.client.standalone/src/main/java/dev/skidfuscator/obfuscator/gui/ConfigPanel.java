@@ -409,5 +409,9 @@ public class ConfigPanel extends JPanel {
     public String getLibsPath() { return libsField.getText(); }
     public String getRuntimePath() { return runtimeField.getText(); }
     public boolean isDebugEnabled() { return debugBox.isSelected(); }
+    public String getLibraryPath() {
+        // TODO: Add a library path field to the config panel
+        return null;
+    }
 }
 
