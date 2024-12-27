@@ -403,24 +403,4 @@ public class MainFrame extends JFrame {
         };
         worker.execute();
     }
-
-    private JPanel createHeaderPanel() {
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
-
-        try {
-            // Load logo from resources
-            InputStream logoStream = getClass().getResourceAsStream("/images/logo.png");
-            if (logoStream != null) {
-                Image logo = ImageIO.read(logoStream);
-                Image scaledLogo = logo.getScaledInstance(120, 120, Image.SCALE_DEFAULT);
-                JLabel logoLabel = new JLabel(new ImageIcon(scaledLogo));
-                header.add(logoLabel);
-            }
-            // Add title label
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return header;
-    }
 }
