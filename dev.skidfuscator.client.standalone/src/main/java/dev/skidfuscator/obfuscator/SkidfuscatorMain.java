@@ -43,7 +43,7 @@ public class SkidfuscatorMain {
                 final int option = JOptionPane.showOptionDialog(
                         null,
                         "You are running Skidfuscator Community! Whilst this project is free and open-source, " +
-                                "we heavily encourage commercial usage to support the project by licensing via the enterprise" +
+                                "we heavily encourage commercial users to support the project by purchasing enterprise" +
                                 " edition available on our website",
                         "Notice!",
                         JOptionPane.DEFAULT_OPTION,
