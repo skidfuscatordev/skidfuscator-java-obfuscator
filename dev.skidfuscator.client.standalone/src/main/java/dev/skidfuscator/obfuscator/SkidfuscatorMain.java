@@ -16,7 +16,13 @@ import org.jline.terminal.TerminalBuilder;
 import picocli.CommandLine;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class SkidfuscatorMain {
 
@@ -33,7 +39,41 @@ public class SkidfuscatorMain {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                new MainFrame().setVisible(true);
+
+                final int option = JOptionPane.showOptionDialog(
+                        null,
+                        "You are running Skidfuscator Community! Whilst this project is free and open-source, " +
+                                "we heavily encourage commercial usage to support the project by licensing via the enterprise" +
+                                " edition available on our website",
+                        "Notice!",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE,
+                        UIManager.getIcon("OptionPane.informationIcon"),
+                        new Object[]{"OK", "Buy Enterprise", "Join the Discord"},
+                        "OK"
+                );
+
+                if (option == 0) {
+                    new MainFrame().setVisible(true);
+                    return;
+                }
+
+                final String url = switch (option) {
+                    case 1 -> "https://skidfuscator.dev/pricing";
+                    case 2 -> "https://discord.gg/QJC9g8fBU9";
+                    default -> throw new IllegalStateException("Impossible");
+                };
+
+                CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS).execute(() -> {
+                    try {
+                        Desktop.getDesktop().browse(new URI(url));
+                    } catch (IOException | URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                main(args);
+                return;
+
             });
             return;
         }
