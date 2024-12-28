@@ -45,7 +45,7 @@
 > If you are using Gradle, consider using our [Gradle plugin](https://github.com/skidfuscatordev/skidfuscator-gradle-plugin) for easy integration.
 > ```java
 > plugins {
->    id("io.github.skidfuscatordev.skidfuscator") version "0.1.3"
+>      id("dev.skidfuscator") version "0.1.4"
 > }
 > 
 > skidfuscator {
