@@ -1,12 +1,24 @@
 ![header](https://github.com/user-attachments/assets/65046709-27c3-417f-8053-3a6f8d5ea29d)
+
 ---
 <p align="center">
   <h3 align="center">
     🗣️ Discord: https://discord.gg/QJC9g8fBU9  📚  Wiki: https://skidfuscator.dev/docs/
   </h3>
+  <h3 align="center">
+    🏢 Enterprise/Custom Version: https://skidfuscator.dev/pricing
+  </h3>
 </p>
 
-  * [🚀 Quickstart](#---quickstart)
+---
+
+> [!WARNING]
+> This product is provided as-is, licensed under [MIT](/LICENSE). We will not provide any support, nor take liability for
+> any reversal, deobfuscation, or impact this tool may have on your software. If you seek to protect sensitive applications
+> for commercial use, we recommend you contact us at mastermind [at] zenrho.net or visit https://zenrho.com 
+
+
+* [🚀 Quickstart](#---quickstart)
     + [🔥 Homebrew (macOS)](#---homebrew--macos-)
     + [🔥 Bash (Linux/macOS)](#---bash--linux-macos-)
     + [🔥 Powershell [Admin required] (Windows)](#---powershell--admin-required---windows-)
@@ -84,8 +96,11 @@ Skidfuscator is now feature-complete and continues to be actively maintained wit
 ![Classic Landscape 1 (3) (1)](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/assets/30368557/9ab9a2ab-8df7-4e62-a711-4df5f3042947)
 </details>
 
-#✨ Features 
+## ✨ Features 
 
+Skidfuscator is rich in over 10+ features. Our objective: **be one click, you're protected.** We provide a **GUI**, over **+10** configurable transfomers, we have failsafes and automatic tools to tailor your configuration to you with ease. 
+<details><summary><h4>👉 Expand features</h4></summary>
+  
 ### 1. Automatic Dependency Downloading
 Skidfuscator intelligently identifies and downloads missing dependencies needed for your project, minimizing manual configuration. Known frameworks such as Bukkit are automatically handled, streamlining setup.
 
@@ -112,53 +127,54 @@ Here are all the cool features I've been adding to Skidfuscator. It's a fun proj
 not to be commercial but to inspire some more clever approaches to code flow obfuscation, especially ones which make use of SSA and CFGs
 
 ![Cool gif](https://i.ibb.co/4MQnj4V/FE185-E3-B-0-D0-D-4-ACC-81-AA-A4862-DF01-FA3.gif)
+</details>
 
-## Third Generation Flow
+## 🔥 Third Generation Flow
+
+Skidfuscator boasts the **most complex**, research-backed flow obfuscation in the JVM community. Our flow obfuscation outperforms competitors such as [Zelix Klassmaster](https://zelix.com), [DexGuard](), and various others. And yes, we're open-source! 
+
+<details><summary><h4>👉 Expand transformers</h4></summary>
 
 ### Flow Obfuscation
-- [x] Bogus Exception Flow
-- [x] Bogus Condition Flow
-- [x] **NEW** ✨ Pure Function Hashing Flow
-- [x] Switch Flow
-- [x] Factory Initiation Flow (**Enterprise**)
-- [x] Integer Return Flow (**Enterprise**)
-- [x] Exception Return Flow (**Enterprise**)
+| **Feature**                          | **Edition**           | **Description**                                   |
+|--------------------------------------|------------------------|---------------------------------------------------|
+| Bogus Exception Flow                 | Community              | Adds fake exception handling to confuse reverse engineers. |
+| Bogus Condition Flow                 | Community              | Introduces fake conditions to disrupt program analysis. |
+| **NEW** ✨ Pure Function Hashing Flow | Community               | Hashes pure functions to obfuscate their flow and outputs. |
+| Switch Flow                          | Community               | Uses switch statements to obscure logic paths.    |
+| Factory Initiation Flow              | Community               | Obfuscates factory patterns, adding complexity to instance creation. |
+| Integer Return Flow                  | [**Enterprise**](https://skidfuscator.dev/pricing) | Obfuscates integer return values to mislead reverse engineering. |
+| Exception Return Flow                | [**Enterprise**](https://skidfuscator.dev/pricing) | Utilizes exceptions as a return flow to confuse the control path. |
 
 ### Encryption Obfuscation
-- [x] String Encryption
-- [x] Annotation Encryption (**Enterprise**)
-- [x] Reference Encryption (**Enterprise**)
+
+| **Feature**                          | **Edition**           | **Description**                                   |
+|--------------------------------------|------------------------|---------------------------------------------------|
+| String Encryption                    | Community  | Encrypts strings to prevent static analysis.      |
+| Annotation Encryption                | [**Enterprise**](https://skidfuscator.dev/pricing)  | Encrypts annotations to protect metadata from tampering. |
+| Reference Encryption                 | [**Enterprise**](https://skidfuscator.dev/pricing)  | Encrypts object references to add another layer of security. |
 
 ### Structure Obfuscation
-- [x] Field Renamer (**Enterprise**)
-- [x] Method Renamer (**Enterprise**)
-- [x] Class Renamer (**Enterprise**)
-- [x] Mixin Support (**Enterprise**)
-- [x] Spigot Plugin Support (**Enterprise**)
+| **Feature**                          | **Edition**           | **Description**                                   |
+|--------------------------------------|------------------------|---------------------------------------------------|
+| Field Renamer                        | [**Enterprise**](https://skidfuscator.dev/pricing)   | Renames fields to meaningless names to obscure their purpose. |
+| Method Renamer                       | [**Enterprise**](https://skidfuscator.dev/pricing)   | Renames methods to make reverse engineering more challenging. |
+| Class Renamer                        | [**Enterprise**](https://skidfuscator.dev/pricing)   | Renames classes to break readability and tooling compatibility. |
+| Mixin Support                        | [**Enterprise**](https://skidfuscator.dev/pricing)   | Adds support for obfuscating mixin-based systems. |
+| Spigot Plugin Support                | [**Enterprise**](https://skidfuscator.dev/pricing)   | Obfuscates Spigot plugins for enhanced security.  |
 
 ### Miscelleanous 
-- [x] Ahegao Trolling
-- [x] Driver Protection
-- [x] **Experimental** Outlining Obfuscation (**Enterprise**)
-- [x] Native Driver Protection (**Enterprise**)
+| **Feature**                          | **Edition**           | **Description**                                   |
+|--------------------------------------|------------------------|---------------------------------------------------|
+| Ahegao Trolling                      | Community              | Adds humorous or trolling elements to deter casual inspection. |
+| Driver Protection                    | Community              | Protects drivers from tampering or reverse engineering. |
+| **New** Outlining Obfuscation        | [**Enterprise**](https://skidfuscator.dev/pricing)           | Segments code into separate outlined functions for obfuscation. |
+| Native Driver Protection             | [**Enterprise**](https://skidfuscator.dev/pricing)           | Protects native drivers at the OS level for added security. |
+</details>
 
-What is third generation flow obfuscation? Well, contrary to Zelix's [second generation flow obfuscation](https://www.zelix.com/klassmaster/featuresFlowObfuscation.html), we use an even more complex system with private and public seeds. Here's 
-how it works:
+## Credits
 
-<br>
-<br>
-
-![Exampel](https://i.imgur.com/j2tZavr.png)
-
-<sub>_Graph representing the two different approaches towards flow obfuscation between Zelix (17.0) and Skidfuscator (0.0.1)_</sub>
-<br>
-<br>
-<br>
-
-We currently are working on a variety of ways to approach this system using various lightweight obfuscation methods. Here are the current ones
-to date:
-
-# Credits
+We'd like to extend our many thanks to the many individuals who have financially supported this project, supervised its research, or reported bugs. All contributions have curated this tool to achieve a production grade, and I could not be more thankful.
 
 ## Libraries used
 - [Maple IR and the Team](https://github.com/LLVM-but-worse/maple-ir)
