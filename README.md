@@ -58,6 +58,7 @@ You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfusc
 
 <details>
 <summary>CLI Usage/Install</summary>
+  
 ```
 java -jar skidfuscator.jar obfuscate <path to your jar>
 ```
@@ -93,6 +94,7 @@ Skidfuscator is now feature-complete and continues to be actively maintained wit
 
 <details>
   <summary>Research Poster (Finalist CCSCNE 2024)</summary>
+  
 ![Classic Landscape 1 (3) (1)](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/assets/30368557/9ab9a2ab-8df7-4e62-a711-4df5f3042947)
 </details>
 
