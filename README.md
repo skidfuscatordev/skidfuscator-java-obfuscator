@@ -57,8 +57,8 @@
 You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly.
 
 <details>
-<summary>CLI Usage/Install</summary>
-  
+<summary><h3>👉 CLI Usage/Install</h3></summary>
+
 ```
 java -jar skidfuscator.jar obfuscate <path to your jar>
 ```
@@ -93,7 +93,7 @@ add a significant strength to the obfuscation whilst at the same time retaining 
 Skidfuscator is now feature-complete and continues to be actively maintained with several new obfuscation techniques aimed at hardening your code against reverse engineering.
 
 <details>
-  <summary>Research Poster (Finalist CCSCNE 2024)</summary>
+  <summary><h3>👉 Research Poster (Finalist CCSCNE 2024)</h3></summary>
   
 ![Classic Landscape 1 (3) (1)](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/assets/30368557/9ab9a2ab-8df7-4e62-a711-4df5f3042947)
 </details>
@@ -101,7 +101,7 @@ Skidfuscator is now feature-complete and continues to be actively maintained wit
 ## ✨ Features 
 
 Skidfuscator is rich in over 10+ features. Our objective: **be one click, you're protected.** We provide a **GUI**, over **+10** configurable transfomers, we have failsafes and automatic tools to tailor your configuration to you with ease. 
-<details><summary><h4>👉 Expand features</h4></summary>
+<details><summary><h3>👉 Expand features</h3></summary>
   
 ### 1. Automatic Dependency Downloading
 Skidfuscator intelligently identifies and downloads missing dependencies needed for your project, minimizing manual configuration. Known frameworks such as Bukkit are automatically handled, streamlining setup.
@@ -135,7 +135,7 @@ not to be commercial but to inspire some more clever approaches to code flow obf
 
 Skidfuscator boasts the **most complex**, research-backed flow obfuscation in the JVM community. Our flow obfuscation outperforms competitors such as [Zelix Klassmaster](https://zelix.com), [DexGuard](), and various others. And yes, we're open-source! 
 
-<details><summary><h4>👉 Expand transformers</h4></summary>
+<details><summary><h3>👉 Expand transformers</h3></summary>
 
 ### Flow Obfuscation
 | **Feature**                          | **Edition**           | **Description**                                   |
