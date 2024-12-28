@@ -1,25 +1,32 @@
+![header](https://github.com/user-attachments/assets/65046709-27c3-417f-8053-3a6f8d5ea29d)
+---
 <p align="center">
-  <img width="15%" height="15%" src="https://i.imgur.com/RgDz1Qn.png" href="https://github.com/terminalsin/skidfuscator-java-obfuscator/releases">
-  <br>
-</p>
-<p align="center">
-  Skidfuscator: Obfuscation like never seen before.
-</p>
-<p align="center">
-  <a><img alt="Api Type" src="https://img.shields.io/badge/API-MapleIR-blue"></a>
-  <a><img alt="Authors" src="https://img.shields.io/badge/Authors-Ghast-blue"></a>
-  <a><img alt="Issues" src="https://img.shields.io/github/issues/terminalsin/skidfuscator-java-obfuscator"></a>
-  <a><img alt="Forks" src="https://img.shields.io/github/forks/terminalsin/skidfuscator-java-obfuscator"></a>
-  <a><img alt="Stars" src="https://img.shields.io/github/stars/terminalsin/skidfuscator-java-obfuscator"></a> 
   <h3 align="center">
-    Join the discord: https://discord.gg/QJC9g8fBU9
-  </h3>
-  <h3 align="center">
-    Wiki: https://skidfuscator.dev/docs/
+    🗣️ Discord: https://discord.gg/QJC9g8fBU9  📚  Wiki: https://skidfuscator.dev/docs/
   </h3>
 </p>
 
----
+  * [🚀 Quickstart](#---quickstart)
+    + [🔥 Homebrew (macOS)](#---homebrew--macos-)
+    + [🔥 Bash (Linux/macOS)](#---bash--linux-macos-)
+    + [🔥 Powershell [Admin required] (Windows)](#---powershell--admin-required---windows-)
+  * [🕵️ What is Skidfuscator?](#----what-is-skidfuscator-)
+- [✨ Features](#features)
+    + [1. Automatic Dependency Downloading](#1-automatic-dependency-downloading)
+    + [2. Smart Recovery](#2-smart-recovery)
+    + [3. Auto Configuration](#3-auto-configuration)
+    + [4. Flow Obfuscation (GEN3)](#4-flow-obfuscation--gen3-)
+    + [5. Advanced Obfuscation Methods](#5-advanced-obfuscation-methods)
+    + [6. Optimization Out-of-the-Box](#6-optimization-out-of-the-box)
+- [🔥 Third Generation Flow](#third-generation-flow)
+    + [Flow Obfuscation](#flow-obfuscation)
+    + [Encryption Obfuscation](#encryption-obfuscation)
+    + [Structure Obfuscation](#structure-obfuscation)
+    + [Miscelleanous](#miscelleanous)
+- [Credits](#credits)
+  * [Libraries used](#libraries-used)
+  * [Inspired from](#inspired-from)
+
 ## 🚀 Quickstart
 
 > [!TIP]
@@ -32,22 +39,13 @@
 > skidfuscator {
 >   // Configure the plugin here
 >   skidfuscatorVersion = "latest"
->   exempt = ["com/example/SomeClass"]
->
->   transformers {
->       interprocedural {
->           enabled = true
->           exempt = ["com/example/IgnoredClass"]
->       }
->       stringEncryption {
->           type = "STANDARD"
->           enabled = true
->       }
->   }
 >}
 > ```
 
-You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly using:
+You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly.
+
+<details>
+<summary>CLI Usage/Install</summary>
 ```
 java -jar skidfuscator.jar obfuscate <path to your jar>
 ```
@@ -71,33 +69,37 @@ curl -sL https://raw.githubusercontent.com/skidfuscatordev/skidfuscator-java-obf
 ```
 iex "& { $(iwr -useb https://raw.githubusercontent.com/skidfuscatordev/skidfuscator-java-obfuscator/refs/heads/master/scripts/install.ps1) }"
 ```
+</details>
 
 ## 🕵️ What is Skidfuscator?
-Skidfuscator is a proof of concept obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
+Skidfuscator is a ~~proof of concept~~ ✨ **production** ✨ grade obfuscation tool designed to take advantage of SSA form to optimize and obfuscate Java bytecode
 code flow. This is done via intra-procedural passes each designed to mingle the code in a shape where neither the time complexity
 neither the space complexity suffers from a great loss. To achieve the such, we have modeled a couple of well known tricks to 
 add a significant strength to the obfuscation whilst at the same time retaining a stable enough execution time.
 
 Skidfuscator is now feature-complete and continues to be actively maintained with several new obfuscation techniques aimed at hardening your code against reverse engineering.
 
+<details>
+  <summary>Research Poster (Finalist CCSCNE 2024)</summary>
 ![Classic Landscape 1 (3) (1)](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/assets/30368557/9ab9a2ab-8df7-4e62-a711-4df5f3042947)
+</details>
 
-# ✨ Features 
+#✨ Features 
 
 ### 1. Automatic Dependency Downloading
 Skidfuscator intelligently identifies and downloads missing dependencies needed for your project, minimizing manual configuration. Known frameworks such as Bukkit are automatically handled, streamlining setup.
 
-![autodepend](https://github.com/user-attachments/assets/958349aa-582b-4751-88e1-ed61408d24b8)
+https://github.com/user-attachments/assets/9c349e09-01da-4073-be69-f00211add72a
 
 ### 2. Smart Recovery
 In the event of errors or failed obfuscation, Skidfuscator implements a recovery system that intelligently resolves conflicts and provides suggestions to fix issues. This ensures minimal disruption in your development workflow.
 
-![FocuSee_Project_2024-12-18_03-32-25-ezgif com-optimize (1)](https://github.com/user-attachments/assets/af709b36-1031-4519-8e21-2ec63a245ffb)
+https://github.com/user-attachments/assets/d71f3a10-ebac-466c-9e8e-3bfcaf5177d5
 
 ### 3. Auto Configuration
 Skidfuscator comes with built-in presets for common configurations, allowing quick setup without needing to manually tweak every aspect of the obfuscation process. For advanced users, all settings remain fully customizable.
 
-![FocuSeeProject2024-12-1802-56-07-ezgif com-optimize](https://github.com/user-attachments/assets/591415a0-b8fe-46d6-a530-d7914c58f613)
+https://github.com/user-attachments/assets/fb6a5ac1-a739-4c83-a340-40e312016947
 
 ### 4. Flow Obfuscation (GEN3)
 Skidfuscator introduces third-generation control flow obfuscation (Flow GEN3), which scrambles method logic and makes the control flow harder to understand. This method introduces opaque predicates and complex flow redirections, hindering static and dynamic analysis.
