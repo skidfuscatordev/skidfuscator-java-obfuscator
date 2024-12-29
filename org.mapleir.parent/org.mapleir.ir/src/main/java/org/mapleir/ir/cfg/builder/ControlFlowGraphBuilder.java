@@ -75,7 +75,7 @@ public class ControlFlowGraphBuilder {
 				new GenerationPass(this),
 				new DeadBlocksPass(this),
 				new NaturalisationPass(this),
-				new SSAGenPass(this, optimise),
+				new SSAGenPass(this, true),
 		};
 	}
 	

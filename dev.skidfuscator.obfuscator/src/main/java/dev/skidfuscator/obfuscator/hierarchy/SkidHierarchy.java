@@ -18,13 +18,13 @@ import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
-import org.objectweb.asm.tree.AnnotationNode;
-import org.objectweb.asm.tree.TypeAnnotationNode;
+import org.objectweb.asm.tree.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -103,6 +103,7 @@ public class SkidHierarchy implements Hierarchy {
                     return args1.size() - args2.size();
                 }
             }).forEach(method -> {
+                skidfuscator.getIrFactory().getFor(method);
                 getGroup(skidfuscator, method);
 
                 if (method.node.visibleAnnotations != null) {
@@ -212,6 +213,10 @@ public class SkidHierarchy implements Hierarchy {
                         return skidfuscator.getClassSource().isApplicationClass(e.getName());
                     })
                     .filter(e -> !skidfuscator.getExemptAnalysis().isExempt(e))
+                    /*.filter(e -> {
+                        System.out.println("Caching " + e.getName());
+                        return true;
+                    })*/
                     .collect(Collectors.toList());
         }
 
@@ -243,17 +248,93 @@ public class SkidHierarchy implements Hierarchy {
     }
 
     private void setupInvoke() {
+        final List<ClassNode> nodes = skidfuscator
+                .getClassSource()
+                .getClassTree()
+                .vertices()
+                .stream()
+                .filter(e -> {
+                    return skidfuscator.getClassSource().isApplicationClass(e.getName());
+                })
+                .collect(Collectors.toList());
         try (ProgressWrapper invocationBar = ProgressUtil.progressCheck(
                 nodes.size(),
                 "Resolved invocation path for " + nodes.size() + " nodes"
         )) {
             nodes.forEach(c -> {
                 for (MethodNode method : c.getMethods()) {
-
-                    final SkidControlFlowGraph cfg = skidfuscator.getIrFactory().getFor(method);
-
+                    final SkidControlFlowGraph cfg = (SkidControlFlowGraph) skidfuscator.getIrFactory().getUnsafe(method);
                     if (cfg == null) {
-                        System.err.println("Failed to compute CFG for method " + method.toString());
+                        for (SkidMethodNode skidMethod : methods) {
+                            for (AbstractInsnNode instruction : skidMethod.node.instructions) {
+
+                                final ClassMethodHash target;
+                                final SkidInvocation skidInvocation;
+
+                                if (instruction instanceof InvokeDynamicInsnNode) {
+                                    final InvokeDynamicInsnNode e = (InvokeDynamicInsnNode) instruction;
+
+                                    if (!e.bsm.getOwner().equals("java/lang/invoke/LambdaMetafactory")
+                                            || !e.bsm.getName().equals("metafactory")) {
+                                        return;
+                                        //throw new IllegalStateException("Invalid invoke dynamic!");
+                                    }
+
+                                    assert (e.bsmArgs.length == 3 && e.bsmArgs[1] instanceof Handle);
+                                    final Handle boundFunc = (Handle) e.bsmArgs[1];
+
+                                    // Patch for implicit funtions
+                                    // TODO: Fix this
+                                    if (boundFunc.getName().startsWith("lambda$new$")) {
+                                        final String returnType = Type.getReturnType(e.desc).getClassName().replace(".", "/");
+                                        //System.out.println("Attempting to locate " + returnType);
+                                        final ClassNode targetClass = skidfuscator.getClassSource().findClassNode(returnType);
+
+                                        if (!(targetClass instanceof SkidClassNode))
+                                            return;
+
+                                        assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
+                                        final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
+
+                                        methodNode.getGroup().setImplicitFunction(true);
+                                        //System.out.println("Found implicit function: " + methodNode.toString());
+                                        return;
+                                    }
+
+                                    target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
+                                    skidInvocation = new SkidInvocation(
+                                            method,
+                                            e
+                                    );
+                                } else if (instruction instanceof MethodInsnNode) {
+                                    final MethodInsnNode e = (MethodInsnNode) instruction;
+                                    target = new ClassMethodHash(e.name, e.desc, e.owner);
+                                    skidInvocation = new SkidInvocation(
+                                            method,
+                                            e
+                                    );
+                                } else {
+                                    continue;
+                                }
+
+                                final SkidGroup targetGroup = hashToGroupMap.get(target);
+
+                                if (targetGroup != null) {
+                                    targetGroup.getInvokers().add(skidInvocation);
+                                }
+
+                                final MethodNode targetMethod = hashToMethodMap.get(target);
+                                if (targetMethod != null) {
+                                    if (targetMethod instanceof SkidMethodNode) {
+                                        ((SkidMethodNode) targetMethod).addInvocation(skidInvocation);
+                                    }
+
+                                    methodToInvocationsMap.computeIfAbsent(targetMethod, e -> {
+                                        return new ArrayList<>(Collections.singleton(skidInvocation));
+                                    });
+                                }
+                            }
+                        }
                         continue;
                     }
 
@@ -261,12 +342,6 @@ public class SkidHierarchy implements Hierarchy {
                             .filter(e -> e instanceof Invokable)
                             .map(e -> (Invocation) e)
                             .forEach(invocation -> {
-
-                                if (invocation.getName().equals("handle")) {
-                                    System.out.println("Invoking " + invocation.getOwner() + "#"
-                                            + invocation.getName() + invocation.getDesc());
-                                }
-
                                 final ClassMethodHash target;
 
                                 if (invocation instanceof DynamicInvocationExpr) {
@@ -297,12 +372,49 @@ public class SkidHierarchy implements Hierarchy {
                                         if (!(targetClass instanceof SkidClassNode))
                                             return;
 
-                                        assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
-                                        final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
+                                        SkidMethodNode methodNode = null;
 
-                                        methodNode.getGroup().setImplicitFunction(true);
+                                        // [resolution] step 1: check if current class has method
+                                        ClassNode node;
+
+                                        for (node = targetClass;
+                                             node instanceof SkidClassNode;
+                                             node = skidfuscator.getClassSource().findClassNode(targetClass.getSuperName())) {
+                                            if (!node.getMethods().isEmpty()) {
+
+                                                // [validation] cannot have more than one method in implicit function
+                                                if (node.getMethods().size() > 1) {
+                                                    throw new IllegalStateException(String.format(
+                                                            """
+                                                            -----------------------------------------------------
+                                                            /!\\ Skidfuscator failed to verify a lambda call! 
+                                                            Please report this to the developer...
+                                                            -----------------------------------------------------
+                                                            Bound: %s
+                                                            Target: %s
+                                                            Target Methods: %s
+                                                            -----------------------------------------------------
+                                                            """,
+                                                            boundFunc,
+                                                            node.getDisplayName(),
+                                                            node.getMethods().stream()
+                                                                    .map(MethodNode::toString)
+                                                                    .reduce("\n- ", (s, s2) -> s + "\n- " + s2)
+
+                                                    ));
+                                                }
+
+                                                // must be correct
+                                                methodNode = (SkidMethodNode) node.getMethods().get(0);
+                                                break;
+                                            }
+                                        }
+
+                                        if (methodNode != null) {
+                                            methodNode.getGroup().setImplicitFunction(true);
+                                            return;
+                                        }
                                         //System.out.println("Found implicit function: " + methodNode.toString());
-                                        return;
                                     }
 
                                     target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());

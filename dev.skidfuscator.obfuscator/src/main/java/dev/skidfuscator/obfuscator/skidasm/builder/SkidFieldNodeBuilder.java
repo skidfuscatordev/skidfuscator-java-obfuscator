@@ -40,6 +40,11 @@ public class SkidFieldNodeBuilder implements Builder<SkidFieldNode> {
         return this;
     }
 
+    public SkidFieldNodeBuilder phantom(final boolean phantom) {
+        this.phantom = phantom;
+        return this;
+    }
+
     public SkidFieldNodeBuilder signature(String signature) {
         this.fieldNodeBuilder.signature(signature);
         return this;

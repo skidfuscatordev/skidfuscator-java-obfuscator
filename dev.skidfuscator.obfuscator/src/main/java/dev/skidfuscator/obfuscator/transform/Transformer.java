@@ -31,4 +31,9 @@ public interface Transformer extends Listener  {
      * @return Formatted ANSI string of the result of thr transformer
      */
     String getResult();
+
+    /**
+     * @return If the transformer is enabled
+     */
+    boolean isEnabled();
 }

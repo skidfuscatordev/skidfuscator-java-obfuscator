@@ -98,7 +98,7 @@ public class BoissinotDestructor {
 
 		coalescePhis();
 		coalesceCopies();
-		
+
 		remapLocals();
 		applyRemapping();
 
@@ -353,9 +353,36 @@ public class BoissinotDestructor {
 					if (!copy.isSynthetic() && copy.getExpression() instanceof VarExpr) {
 						Local lhs = copy.getVariable().getLocal();
 						Local rhs = ((VarExpr) copy.getExpression()).getLocal();
-						if (!isReservedRegister((VersionedLocal) rhs)) {
+
+						/*
+						 * Fix 4th December 2023
+						 * right and left must be both of same type to coalesce, or else
+						 * variables initialized with null and overriden in one branch
+						 * will have that one branch value propagated to the other branch
+						 *
+						 * eg:
+						 * var = nullconst
+						 * for (i in [0, 10)) {
+						 * 		if (cond) {
+						 * 			var = i
+						 * 		}
+						 * }
+						 * print(var)
+						 *
+						 * would become:
+						 *
+						 * var = nullconst
+						 * for (i in [0, 10)) {
+						 * 		var = i;
+						 * 		if (cond) {
+						 * 		}
+						 * }
+						 * print(var)
+						 *
+						 */
+						if (!isReservedRegister((VersionedLocal) rhs) && lhs.isStack() == rhs.isStack()) {
 							if (tryCoalesceCopyValue(lhs, rhs)) {
-//								 System.out.println("COPYKILL(1) " + lhs + " == " + rhs);
+								 //System.out.println("COPYKILL(1) " + lhs + " == " + rhs);
 								it.remove();
 							}
 
@@ -398,32 +425,32 @@ public class BoissinotDestructor {
 
 	// Process the copy a = b. Returns true if a and b can be coalesced via value.
 	private boolean tryCoalesceCopyValue(Local a, Local b) {
-		// System.out.println("Enter COPY");
+		//System.out.println("Enter COPY");
 		CongruenceClass conClassA = getCongruenceClass(a);
 		CongruenceClass conClassB = getCongruenceClass(b);
 
-		// System.out.println(" A: " + conClassA);
-		// System.out.println(" B: " + conClassB);
+		//System.out.println(" A: " + conClassA);
+		//System.out.println(" B: " + conClassB);
 
-		// System.out.println(" same=" + (conClassA == conClassB));
+		//System.out.println(" same=" + (conClassA == conClassB));
 		if (conClassA == conClassB)
 			return true;
 
 		if (conClassA.size() == 1 && conClassB.size() == 1) {
 			boolean r = checkInterfereSingle(conClassA, conClassB);
-			// System.out.println(" single=" + r);
+			//System.out.println(" single=" + r);
 			return r;
 		}
 
 		boolean r2 = checkInterfere(conClassA, conClassB);
-		// System.out.println(" both=" + r2);
+		//System.out.println(" both=" + r2);
 		if (r2) {
 			return false;
 		}
 
 		// merge congruence classes
 		merge(conClassA, conClassB);
-		// System.out.println("Exit COPY");
+		//System.out.println("Exit COPY");
 		return true;
 	}
 
@@ -570,21 +597,49 @@ public class BoissinotDestructor {
 		}
 	}
 
+	/**
+	 * Purpose: The checkInterfere method determines if there is any interference
+	 * between two congruence classes, red and blue, in the context of SSA variable
+	 * coalescence.
+	 * <br/>
+	 * Process:
+	 * The method uses dominator tree traversal to compare elements from each class.
+	 * It maintains two stacks: one for the elements (dom) and one for their corresponding class (domClasses).
+	 * The method iterates through each class, comparing elements based on their dominance relationship.
+	 * If any pair of elements from different classes interfere, the method returns true.
+	 * Return Value: Returns true if there is interference between the two classes, otherwise false.
+	 *
+	 * Note: This method assumes that the CongruenceClass type and related methods like dominates, interference, and checkPreDomOrder are correctly implemented and available in the context.
+	 * @param red The first congruence class to check for interference.
+	 * @param blue The second congruence class to check for interference.
+	 * @return Returns true if there is interference between the two classes, otherwise false.
+	 */
 	private boolean checkInterfere(CongruenceClass red, CongruenceClass blue) {
-		// System.out.println("Enter interfere: " + red + " vs " + blue);
-		Stack<Local> dom = new Stack<>(); // dominator tree traversal stack
-		Stack<Integer> domClasses = new Stack<>(); // 0=red, 1=blue
-		int nr = 0, nb = 0; // from the paper
-		Local ir = red.first(), ib = blue.first(); // iteration pointers
-		Local lr = red.last(), lb = blue.last(); // end sentinels
+		// Initialize stacks for dominator tree traversal and class tracking
+		Stack<Local> dom = new Stack<>();
+		Stack<Integer> domClasses = new Stack<>();
+
+		// Initialize counters for red and blue classes
+		int nr = 0, nb = 0;
+
+		// Initialize iteration pointers and end sentinels for both classes
+		Local ir = red.first(), ib = blue.first();
+		Local lr = red.last(), lb = blue.last();
+
+		// Flags to track if there are more elements in each class
 		boolean redHasNext = true, blueHasNext = true;
-		equalAncOut.put(ir, null); // these have no parents so we have to manually init them
+
+		// Manually initialize for elements with no parents
+		equalAncOut.put(ir, null);
 		equalAncOut.put(ib, null);
+
 		do {
 			// System.out.println("\n ir, ib, lr, lb: " + ir + " " + ib + " " + lr + " " + lb);
 			// System.out.println(" dom: " + dom);
 			Local current;
 			int currentClass;
+
+			// Determine which class to process next based on pre-dominator order
 			if (!blueHasNext || (redHasNext && checkPreDomOrder(ir, ib))) {
 				// current = red[ir++] (Red case)
 				current = ir;
@@ -601,6 +656,7 @@ public class BoissinotDestructor {
 					ib = blue.higher(ib);
 			}
 
+			// Pop elements from stack that do not dominate the current element
 			while (!dom.isEmpty() && !dominates(dom.peek(), current)) {
 				if (domClasses.peek() == 0)
 					nr--;
@@ -611,13 +667,20 @@ public class BoissinotDestructor {
 				dom.pop();
 				domClasses.pop();
 			}
+
+			// Check for interference
 			if (!dom.isEmpty() && interference(current, dom.peek(), currentClass == domClasses.peek())) {
 				return true;
 			}
+
+			// Push current element and its class onto the stacks
 			dom.push(current);
 			domClasses.push(currentClass);
-		} while ((redHasNext && nb > 0) || (blueHasNext && nr > 0) || (redHasNext && blueHasNext));
+		}
+		// Continue while there are elements in either class and unprocessed dominators in the stack
+		while ((redHasNext && nb > 0) || (blueHasNext && nr > 0) || (redHasNext && blueHasNext));
 
+		// No interference detected
 		return false;
 	}
 

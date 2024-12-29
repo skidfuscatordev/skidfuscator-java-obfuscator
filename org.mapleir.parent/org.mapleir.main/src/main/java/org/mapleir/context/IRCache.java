@@ -26,6 +26,10 @@ public class IRCache extends NullPermeableHashMap<MethodNode, ControlFlowGraph> 
 		return getNonNull(m);
 	}
 
+	public ControlFlowGraph getUnsafe(MethodNode m) {
+		return get(m);
+	}
+
 	public MethodNode findMethod(JavaDesc jd) {
 		return getActiveMethods().stream().filter(mn -> mn.getJavaDesc().equals(jd)).findFirst().orElseGet(null);
 	}

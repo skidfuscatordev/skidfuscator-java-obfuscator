@@ -281,7 +281,7 @@ public class ControlFlowGraphDumper implements BytecodeFrontend {
 		int rangeIdx = -1, orderIdx;
 		do {
 			if (++rangeIdx == range.size()) {
-				System.err.println("[warn] range is absent: " + m);
+				//System.err.println("[warn] range is absent: " + m);
 				return;
 			}
 			BasicBlock b = range.get(rangeIdx);
@@ -304,7 +304,7 @@ public class ControlFlowGraphDumper implements BytecodeFrontend {
 			BasicBlock nextBlock = range.get(rangeIdx + 1);
 			int nextOrderIdx = order.indexOf(nextBlock);
 			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
-				System.err.println("[warn] Had to split up a range: " + m);
+				//System.err.println("[warn] Had to split up a range: " + m);
 				Label end = getLabel(order.get(orderIdx + 1));
 				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
 				start = getLabel(nextBlock);
@@ -356,7 +356,7 @@ public class ControlFlowGraphDumper implements BytecodeFrontend {
 	private static class BlockBundle extends ArrayList<BasicBlock> implements FastGraphVertex {
 		private BasicBlock first = null;
 		
-		private BasicBlock getFirst() {
+		public BasicBlock getFirst() {
 			if (first == null)
 				first = get(0);
 			return first;

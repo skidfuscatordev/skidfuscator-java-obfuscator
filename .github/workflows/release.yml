@@ -1,0 +1,136 @@
+name: Update Homebrew Formula
+
+on:
+  release:
+    types: [published]
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to update the formula (e.g., 'v2.0.12')"
+        required: false
+        default: "2.0.11"
+
+jobs:
+  update-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version from input or release
+        id: extract_version
+        run: |
+          # Use the provided tag if triggered manually, otherwise use the release tag
+          if [ "${{ github.event.inputs.tag }}" != "" ]; then
+            VERSION="${{ github.event.inputs.tag }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+
+          # Normalize by removing a leading 'v' if present
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Find jar asset download URL
+        id: find_asset
+        run: |
+          # Get release data from GitHub API
+          release_data=$(curl -sL -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/skidfuscatordev/skidfuscator-java-obfuscator/releases/tags/${{ steps.extract_version.outputs.version }}")
+
+          # Find the asset named 'skidfuscator.jar' (adjust if needed)
+          asset_url=$(echo "$release_data" | jq -r '.assets[] | select(.name == "skidfuscator.jar") | .browser_download_url')
+
+          if [ -z "$asset_url" ]; then
+            echo "Could not find skidfuscator.jar in the release."
+            exit 1
+          fi
+
+          echo "asset_url=$asset_url" >> $GITHUB_OUTPUT
+
+      - name: Download jar
+        run: |
+          curl -L ${{ steps.find_asset.outputs.asset_url }} -o skidfuscator.jar
+
+      - name: Compute SHA256
+        id: sha256
+        run: |
+          SHA256=$(shasum -a 256 skidfuscator.jar | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+
+      - name: Checkout tap repository
+        uses: actions/checkout@v3
+        with:
+          repository: skidfuscatordev/homebrew-skidfuscator
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: master
+      - name: List Files
+        run: ls -R
+      - name: Cleanup and Prepare Formula
+        run: |
+          # Ensure Formula directory exists
+          mkdir -p Formula
+
+          # Use absolute path and verify directory exists
+          FORMULA_DIR="$(pwd)/Formula"
+          FORMULA_PATH="${FORMULA_DIR}/skidfuscator.rb"
+
+          echo "Working directory: $(pwd)"
+          echo "Formula directory: ${FORMULA_DIR}"
+          echo "Formula path: ${FORMULA_PATH}"
+
+          # Remove any existing formula files
+          rm -f ${FORMULA_DIR}/skidfuscator*.rb
+
+          # Create the new formula file
+          cat > "${FORMULA_PATH}" << 'EOF'
+          class Skidfuscator < Formula
+            desc "A JVM-based obfuscation suite designed for Java and Android bytecode"
+            homepage "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator"
+            url "https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases/download/2.0.11/skidfuscator.jar"
+            sha256 "8d5bc1f6854995495a8451417cf5235a31a56d20fc4ce6079b19963ed84c49d9"
+            version "2.0.11"
+            license "MIT"
+
+            def install
+              libexec.install Dir["*.jar"]
+              jar_name = Dir["#{libexec}/*.jar"].first
+              (bin/"skidfuscator").write <<~EOS
+                #!/usr/bin/env bash
+                exec java -jar "#{jar_name}" "$@"
+              EOS
+              (bin/"skidfuscator").chmod 0755
+            end
+
+            test do
+              output = shell_output("#{bin}/skidfuscator --help", 0)
+              assert_match "Usage", output
+            end
+          end
+          EOF
+
+          # Verify file was created
+          ls -la ${FORMULA_DIR}
+
+          # Show file contents
+          echo "Formula contents:"
+          cat "${FORMULA_PATH}"
+
+      - name: Debug Formula Content
+        run: |
+          echo "Formula content:"
+          cat Formula/skidfuscator.rb || echo "Failed to read formula file"
+          echo "Git status:"
+          git status
+          echo "Directory contents:"
+          ls -R
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add Formula/skidfuscator.rb
+          git commit -m "Update Skidfuscator formula to version 2.0.11"
+          git push origin HEAD:master
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+

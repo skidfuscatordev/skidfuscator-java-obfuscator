@@ -54,7 +54,7 @@ public class ConfigTest {
         );
         assertEquals(
                 true,
-                driverTransformer.getConfig().isEnabled()
+                driverTransformer.isEnabled()
         );
 
         // General enabled check
@@ -64,7 +64,7 @@ public class ConfigTest {
         );
         assertEquals(
                 true,
-                switchTransformer.getConfig().isEnabled()
+                switchTransformer.isEnabled()
         );
 
     }

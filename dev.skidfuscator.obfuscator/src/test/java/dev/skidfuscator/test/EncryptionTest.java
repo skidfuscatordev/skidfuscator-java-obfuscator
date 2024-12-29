@@ -3,6 +3,7 @@ package dev.skidfuscator.test;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.BytesEncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.AESEncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.CaesarEncryptionGenerator;
+import dev.skidfuscator.obfuscator.transform.impl.string.generator.algo.IvEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.junit.jupiter.api.Test;
 

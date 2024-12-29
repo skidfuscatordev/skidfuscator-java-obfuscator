@@ -51,7 +51,7 @@ public class ProgressUtil {
     }
 
     public ProgressWrapper progressCheck(final int count, String success, String prefix) {
-        return progress(count, prefix + AnsiColors.green("✔") + " " + success);
+        return progress(count, prefix + AnsiColors.green("✔") + "  " + success);
     }
 
     private Boolean isRunningTest = null;

@@ -11,6 +11,7 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidBogusStmt;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
+import dev.skidfuscator.obfuscator.verifier.Verifier;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.*;
@@ -265,18 +266,24 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				}
 
 				maxLocal = Math.max(maxLocal, frameLocal.length);
+				maxStack = Math.max(maxStack, stackLength);
 
 				lastFrame = frameLocal;
 				lastStack = stack;
-
 			}
 
 			for (Stmt stmt : b) {
+				if (stmt instanceof FrameStmt && TEST_COMPUTE)
+					continue;
+
 				stmt.toCode(m.node, this);
 			}
 
 			last = b;
 		}
+
+		m.node.visitMaxs(32, 32);
+
 		terminalLabel = new LabelNode();
 		m.node.visitLabel(terminalLabel.getLabel());
 
@@ -290,7 +297,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		
 		m.node.visitEnd();
 
-		//Verifier.verify(m.node);
+		//Verifier.verify(m);
 	}
 
 	private Object _getFrameType(final Type type) {
@@ -1368,6 +1375,10 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			range.getNodes().stream().filter(BasicBlock::isEmpty).forEach(e -> {
 				e.add(new NopStmt());
 			});
+
+			if (range.getNodes().isEmpty()) {
+				cfg.removeRange(range);
+			}
 		}
 	}
 
@@ -1604,7 +1615,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		int rangeIdx = -1, orderIdx;
 		do {
 			if (++rangeIdx == range.size()) {
-				System.err.println("[warn] range is absent: " + m);
+				//System.err.println("[warn] range is absent: " + m);
 				return;
 			}
 			BasicBlock b = range.get(rangeIdx);
@@ -1629,7 +1640,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			BasicBlock nextBlock = range.get(rangeIdx + 1);
 			int nextOrderIdx = order.indexOf(nextBlock);
 			if (nextOrderIdx - orderIdx > 1) { // blocks in-between, end the handler and begin anew
-				System.err.println("\r\n[warn] Had to split up a range: " + m + "\n");
+				Skidfuscator.LOGGER.post("\r\n[warn] Had to split up a range: " + m + "\n");
 				Label end = getLabel(order.get(orderIdx + 1));
 				assert start != end : "Label assigned is semantically identical.";
 				m.node.visitTryCatchBlock(start, end, handler, type.getInternalName());
@@ -1773,7 +1784,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private static class BlockBundle extends ArrayList<BasicBlock> implements FastGraphVertex {
 		private BasicBlock first = null;
 		
-		private BasicBlock getFirst() {
+		public BasicBlock getFirst() {
 			if (first == null)
 				first = get(0);
 			return first;

@@ -4,6 +4,7 @@ import org.mapleir.stdlib.collections.graph.FastGraphVertex;
 import org.objectweb.asm.Opcodes;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ClassNode implements FastGraphVertex {
@@ -88,6 +89,14 @@ public class ClassNode implements FastGraphVertex {
         return (node.access & Opcodes.ACC_PROTECTED) != 0;
     }
 
+    public boolean isAbstract() {
+        return (node.access & Opcodes.ACC_ABSTRACT) != 0;
+    }
+
+    public boolean isFinal() {
+        return (node.access & Opcodes.ACC_FINAL) != 0;
+    }
+
     public boolean isPrivate() {
         return (node.access & Opcodes.ACC_PRIVATE) != 0;
     }
@@ -98,6 +107,10 @@ public class ClassNode implements FastGraphVertex {
 
     public boolean isInterface() {
         return (node.access & Opcodes.ACC_INTERFACE) != 0;
+    }
+
+    public boolean isAnnotation() {
+        return (node.access & Opcodes.ACC_ANNOTATION) != 0;
     }
 
     public boolean isNative() {
@@ -114,6 +127,18 @@ public class ClassNode implements FastGraphVertex {
 
     public void setVirtual(boolean synth) {
         this.synth = synth;
+    }
+
+    public String getSuperName() {
+        return node.superName;
+    }
+
+    public List<String> getInterfaces() {
+        return node.interfaces;
+    }
+
+    public String getPackageName() {
+        return node.name.substring(0, node.name.lastIndexOf('/'));
     }
 
     @Override

@@ -21,13 +21,17 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
 
-@Getter // TODO: Deprecate the getter and document the stuff
+ // TODO: Deprecate the getter and document the stuff
 public class SkidClassNode extends ClassNode {
+    @Getter
     private final Skidfuscator skidfuscator;
-    private final ClassOpaquePredicate classPredicate;
-    private final ClassOpaquePredicate staticPredicate;
+    @Getter
+    private ClassOpaquePredicate classPredicate;
+    @Getter
+    private ClassOpaquePredicate staticPredicate;
     private transient SkidMethodNode clinitNode;
     private transient Boolean mixin;
+    @Getter
     private final AttributeMap attributes;
 
     private transient Integer randomInt;
@@ -38,12 +42,15 @@ public class SkidClassNode extends ClassNode {
     public SkidClassNode(org.objectweb.asm.tree.ClassNode node, Skidfuscator session) {
         super(node, false);
         this.skidfuscator = session;
-        this.classPredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getClassPredicate(this);
-        this.staticPredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getClassStaticPredicate(this);
+
+        if (skidfuscator != null) {
+            this.classPredicate = skidfuscator
+                    .getPredicateAnalysis()
+                    .getClassPredicate(this);
+            this.staticPredicate = skidfuscator
+                    .getPredicateAnalysis()
+                    .getClassStaticPredicate(this);
+        }
 
         for (MethodNode method : node.methods) {
             super.getMethods().add(new SkidMethodNode(method, this, session));
@@ -120,7 +127,7 @@ public class SkidClassNode extends ClassNode {
                 .access(Opcodes.ACC_STATIC)
                 .desc("()V")
                 .name("<clinit>")
-                .phantom(false)
+                .phantom(true)
                 .build();
 
         clinit.getEntryBlock().add(new ReturnStmt());

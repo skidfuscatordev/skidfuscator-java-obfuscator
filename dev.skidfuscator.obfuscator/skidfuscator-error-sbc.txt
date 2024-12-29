@@ -1,0 +1,599 @@
+handler=Block #J, types=[Ljava/lang/IllegalStateException;], range=[Block #C, Block #D, Block #G, Block #E, Block #F, Block #I, Block #H]
+handler=Block #K, types=[Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;], range=[Block #C, Block #D, Block #G, Block #E, Block #F, Block #I, Block #H]
+handler=Block #Q, types=[Ljava/lang/IllegalAccessException;], range=[Block #P, Block #O]
+handler=Block #T, types=[Ljava/lang/RuntimeException;], range=[Block #S, Block #R]
+handler=Block #W, types=[Ljava/io/IOException;], range=[Block #V, Block #U]
+handler=Block #Z, types=[Ljava/lang/IllegalAccessException;], range=[Block #Y, Block #X]
+===#Block A(size=3, flags=1)===
+   0. synth(lvar0 = lvar0);
+   1. lvar90 = "A : var expect: 258383186";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 258383186)
+      goto AD
+      -> Immediate #A -> #B
+      -> ConditionalJump[IF_ICMPNE] #A -> #AD
+===#Block B(size=5, flags=0)===
+   0. lvar1 = {653104086 ^ lvar56};
+   1. lvar170 = "[Constant] 0 -> 653104086 predicate=653104086";
+   2. lvar4 = lvar1;
+   3. lvar84 = "B : var expect: 929865393";
+   4. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 929865393)
+      goto AE
+      -> Immediate #B -> #C
+      -> ConditionalJump[IF_ICMPNE] #B -> #AE
+      <- Immediate #A -> #B
+===#Block AE(size=16, flags=0)===
+   0. throw new java/io/IOException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 141870657)
+      goto AE
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {678601203 ^ lvar56})
+      goto AE
+   3. lvar158 = "[Constant] 2045360848 -> 678601203 predicate=1369119523";
+   4. _consume({324553256 ^ lvar56});
+   5. throw new java/lang/RuntimeException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 929865393)
+      goto AE
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {354133477 ^ lvar56})
+      goto AE
+   8. lvar156 = "[Constant] 1149288134 -> 354133477 predicate=1369119523";
+   9. _consume({2067786231 ^ lvar56});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -475011464)
+      goto AE
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1542592368 ^ lvar56})
+      goto AE
+   13. lvar154 = "[Constant] 174656595 -> 1542592368 predicate=1369119523";
+   14. _consume({221170507 ^ lvar56});
+   15. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AE -> #AE
+      <- ConditionalJump[IF_ICMPNE] #AE -> #AE
+      <- ConditionalJump[IF_ICMPNE] #S -> #AE
+      <- ConditionalJump[IF_ICMPNE] #B -> #AE
+      <- ConditionalJump[IF_ICMPNE] #G -> #AE
+===#Block C(size=18, flags=0)===
+   0. lvar6 = {1272140622 ^ lvar56};
+   1. lvar160 = "[Constant] 1 -> 1272140622 predicate=1272140623";
+   2. lvar49 = lvar6;
+   3. lvar7 = {1272140623 ^ lvar56};
+   4. lvar162 = "[Constant] 0 -> 1272140623 predicate=1272140623";
+   5. lvar8 = new java.lang.String[lvar7];
+   6. _consume(dev.skidfuscator.testclasses.evaluator.util.crypto.AES.main(lvar8, 2050942566));
+   7. lvar9 = {1272140621 ^ lvar56};
+   8. lvar166 = "[Constant] 2 -> 1272140621 predicate=1272140623";
+   9. lvar50 = lvar9;
+   10. lvar10 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.data;
+   11. lvar2 = {1272140623 ^ lvar56};
+   12. lvar168 = "[Constant] 0 -> 1272140623 predicate=1272140623";
+   13. lvar11 = lvar10[lvar2];
+   14. if (lvar11 != {1272140623 ^ lvar56})
+      goto AC
+   15. lvar164 = "[Constant] 0 -> 1272140623 predicate=1272140623";
+   16. lvar80 = "C : var expect: 1587190394";
+   17. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1587190394)
+      goto AD
+      -> TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #C -> #AC
+      -> TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> ConditionalJump[IF_ICMPNE] #C -> #AD
+      -> Immediate #C -> #D
+      <- Immediate #B -> #C
+===#Block D(size=8, flags=0)===
+   0. lvar12 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.data;
+   1. lvar28 = {43991249 ^ lvar56};
+   2. lvar150 = "[Constant] 1 -> 43991249 predicate=43991248";
+   3. lvar13 = lvar12[lvar28];
+   4. svar116 = {lvar13 ^ lvar56};
+   5. switch (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(svar116)) {
+      case 41242204:
+      	 goto	#E
+      default:
+      	 goto	#F
+   }
+   6. lvar76 = "D : var expect: 351929984";
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 351929984)
+      goto AG
+      -> DefaultSwitch #D -> #F
+      -> TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      -> Switch[41242204] #D -> #E
+      -> ConditionalJump[IF_ICMPNE] #D -> #AG
+      -> TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- Immediate #C -> #D
+===#Block E(size=6, flags=0)===
+   0. lvar14 = {1294796708 ^ lvar56};
+   1. lvar182 = "[Constant] 3 -> 1294796708 predicate=1294796711";
+   2. lvar51 = lvar14;
+   3. lvar98 = "E : var expect: 1768439098";
+   4. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1768439098)
+      goto AK
+   5. goto V
+      -> ConditionalJump[IF_ICMPNE] #E -> #AK
+      -> TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      -> UnconditionalJump[GOTO] #E -> #V
+      <- Switch[41242204] #D -> #E
+===#Block V(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56) == 144140150)
+      goto U
+   1. throw nullconst;
+   2. lvar70 = "V : var expect: -1206014126";
+   3. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1206014126)
+      goto AF
+      -> TryCatch range: [V...U] -> W ([Ljava/io/IOException;])
+      -> ConditionalJump[IF_ICMPEQ] #V -> #U
+      -> ConditionalJump[IF_ICMPNE] #V -> #AF
+      <- UnconditionalJump[GOTO] #E -> #V
+===#Block U(size=3, flags=0)===
+   0. throw new java/io/IOException();
+   1. lvar112 = "U : var expect: -2111001710";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -2111001710)
+      goto AG
+      -> ConditionalJump[IF_ICMPNE] #U -> #AG
+      -> TryCatch range: [V...U] -> W ([Ljava/io/IOException;])
+      <- ConditionalJump[IF_ICMPEQ] #V -> #U
+===#Block W(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar102 = "W : var expect: -327614560";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -327614560)
+      goto AL
+   3. goto H
+      -> ConditionalJump[IF_ICMPNE] #W -> #AL
+      -> UnconditionalJump[GOTO] #W -> #H
+      <- TryCatch range: [V...U] -> W ([Ljava/io/IOException;])
+      <- TryCatch range: [V...U] -> W ([Ljava/io/IOException;])
+===#Block AL(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -327614560)
+      goto AL
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {97247105 ^ lvar56})
+      goto AL
+   3. lvar124 = "[Constant] 94890884 -> 97247105 predicate=7091205";
+   4. _consume({2000967383 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AL -> #AL
+      <- ConditionalJump[IF_ICMPNE] #W -> #AL
+      <- ConditionalJump[IF_ICMPNE] #AL -> #AL
+===#Block AK(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1768439098)
+      goto AK
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {513532846 ^ lvar56})
+      goto AK
+   3. lvar148 = "[Constant] 225905182 -> 513532846 predicate=334293424";
+   4. _consume({213075862 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AK -> #AK
+      <- ConditionalJump[IF_ICMPNE] #E -> #AK
+      <- ConditionalJump[IF_ICMPNE] #AK -> #AK
+===#Block F(size=6, flags=0)===
+   0. lvar25 = {-1224827954 ^ lvar56};
+   1. lvar186 = "[Constant] -5 -> -1224827954 predicate=1224827957";
+   2. lvar51 = lvar25;
+   3. lvar108 = "F : var expect: 1208689066";
+   4. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1208689066)
+      goto AJ
+   5. goto Y
+      -> TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> UnconditionalJump[GOTO] #F -> #Y
+      -> TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #F -> #AJ
+      <- DefaultSwitch #D -> #F
+===#Block Y(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56) == 247096160)
+      goto X
+   1. throw nullconst;
+   2. lvar86 = "Y : var expect: 50402473";
+   3. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 50402473)
+      goto AH
+      -> ConditionalJump[IF_ICMPEQ] #Y -> #X
+      -> TryCatch range: [Y...X] -> Z ([Ljava/lang/IllegalAccessException;])
+      -> ConditionalJump[IF_ICMPNE] #Y -> #AH
+      <- UnconditionalJump[GOTO] #F -> #Y
+===#Block AH(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 50402473)
+      goto AH
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1769781932 ^ lvar56})
+      goto AH
+   3. lvar118 = "[Constant] 1000214968 -> 1769781932 predicate=1390586644";
+   4. _consume({1320157410 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AH -> #AH
+      <- ConditionalJump[IF_ICMPNE] #AH -> #AH
+      <- ConditionalJump[IF_ICMPNE] #Y -> #AH
+===#Block X(size=3, flags=0)===
+   0. throw new java/lang/IllegalAccessException();
+   1. lvar82 = "X : var expect: 1037731394";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1037731394)
+      goto AB
+      -> ConditionalJump[IF_ICMPNE] #X -> #AB
+      -> TryCatch range: [Y...X] -> Z ([Ljava/lang/IllegalAccessException;])
+      <- ConditionalJump[IF_ICMPEQ] #Y -> #X
+===#Block Z(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar72 = "Z : var expect: 495096042";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 495096042)
+      goto AD
+   3. goto H
+      -> ConditionalJump[IF_ICMPNE] #Z -> #AD
+      -> UnconditionalJump[GOTO] #Z -> #H
+      <- TryCatch range: [Y...X] -> Z ([Ljava/lang/IllegalAccessException;])
+      <- TryCatch range: [Y...X] -> Z ([Ljava/lang/IllegalAccessException;])
+===#Block H(size=15, flags=0)===
+   0. lvar15 = lvar0;
+   1. lvar29 = lvar51;
+   2. _consume(lvar15.self(lvar29, 1480640691));
+   3. lvar16 = new java.lang.IllegalArgumentException;
+   4. lvar3 = new java.lang.StringBuilder;
+   5. _consume(lvar3.<init>());
+   6. lvar43 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.xrmhzznmxl(dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.omwbqokgbtcfrul(), lvar56);
+   7. lvar32 = lvar3.append(lvar43);
+   8. lvar44 = lvar51;
+   9. lvar33 = lvar32.append(lvar44);
+   10. lvar34 = lvar33.toString();
+   11. _consume(lvar16.<init>(lvar34));
+   12. throw lvar16;
+   13. lvar106 = "H : var expect: 1419429281";
+   14. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1419429281)
+      goto AB
+      -> TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #H -> #AB
+      -> TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- UnconditionalJump[GOTO] #T -> #H
+      <- UnconditionalJump[GOTO] #W -> #H
+      <- UnconditionalJump[GOTO] #Z -> #H
+===#Block AC(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) == -1188582238)
+      goto I
+   1. lvar66 = "AC : var expect: -1188582238";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1188582238)
+      goto AD
+   3. goto AB
+      -> ConditionalJump[IF_ICMPNE] #AC -> #AD
+      -> UnconditionalJump[GOTO] #AC -> #AB
+      -> ConditionalJump[IF_ICMPEQ] #AC -> #I
+      <- ConditionalJump[IF_ICMPNE] #C -> #AC
+===#Block I(size=12, flags=0)===
+   0. lvar27 = new java.lang.IllegalArgumentException;
+   1. lvar39 = new java.lang.StringBuilder;
+   2. _consume(lvar39.<init>());
+   3. lvar47 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.xrmhzznmxl(dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.ityagplkacclgrd(), lvar56);
+   4. lvar40 = lvar39.append(lvar47);
+   5. lvar48 = lvar50;
+   6. lvar41 = lvar40.append(lvar48);
+   7. lvar42 = lvar41.toString();
+   8. _consume(lvar27.<init>(lvar42));
+   9. throw lvar27;
+   10. lvar100 = "I : var expect: -1591670959";
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1591670959)
+      goto AF
+      -> TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #I -> #AF
+      <- ConditionalJump[IF_ICMPEQ] #AC -> #I
+===#Block K(size=9, flags=0)===
+   0. lvar22 = catch();
+   1. lvar53 = lvar22;
+   2. lvar23 = lvar53;
+   3. _consume(lvar23.printStackTrace());
+   4. lvar24 = {-1447700562 ^ lvar56};
+   5. lvar122 = "[Constant] -1 -> -1447700562 predicate=1447700561";
+   6. lvar52 = lvar24;
+   7. lvar60 = "K : var expect: -1303297398";
+   8. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1303297398)
+      goto AB
+      -> Immediate #K -> #L
+      -> ConditionalJump[IF_ICMPNE] #K -> #AB
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> K ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+===#Block J(size=8, flags=0)===
+   0. lvar17 = catch();
+   1. lvar5 = lvar17;
+   2. lvar18 = {310704707 ^ lvar56};
+   3. lvar116 = "[Constant] 4 -> 310704707 predicate=310704711";
+   4. lvar52 = lvar18;
+   5. lvar58 = "J : var expect: -1809329608";
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1809329608)
+      goto AB
+   7. goto P
+      -> ConditionalJump[IF_ICMPNE] #J -> #AB
+      -> UnconditionalJump[GOTO] #J -> #P
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> J ([Ljava/lang/IllegalStateException;])
+===#Block P(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.iozmupmwnsuylvjz(lvar56) == 244275453)
+      goto O
+   1. throw nullconst;
+   2. lvar68 = "P : var expect: -792585094";
+   3. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -792585094)
+      goto AB
+      -> TryCatch range: [P...O] -> Q ([Ljava/lang/IllegalAccessException;])
+      -> ConditionalJump[IF_ICMPNE] #P -> #AB
+      -> ConditionalJump[IF_ICMPEQ] #P -> #O
+      <- UnconditionalJump[GOTO] #J -> #P
+===#Block O(size=3, flags=0)===
+   0. throw new java/lang/IllegalAccessException();
+   1. lvar88 = "O : var expect: 1692268378";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1692268378)
+      goto AI
+      -> ConditionalJump[IF_ICMPNE] #O -> #AI
+      -> TryCatch range: [P...O] -> Q ([Ljava/lang/IllegalAccessException;])
+      <- ConditionalJump[IF_ICMPEQ] #P -> #O
+===#Block AI(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1692268378)
+      goto AI
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {373582960 ^ lvar56})
+      goto AI
+   3. lvar120 = "[Constant] 159036106 -> 373582960 predicate=524213946";
+   4. _consume({489526235 ^ lvar56});
+   5. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AI -> #AI
+      <- ConditionalJump[IF_ICMPNE] #AI -> #AI
+      <- ConditionalJump[IF_ICMPNE] #O -> #AI
+===#Block Q(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar92 = "Q : var expect: 591726011";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 591726011)
+      goto AJ
+   3. goto L
+      -> ConditionalJump[IF_ICMPNE] #Q -> #AJ
+      -> UnconditionalJump[GOTO] #Q -> #L
+      <- TryCatch range: [P...O] -> Q ([Ljava/lang/IllegalAccessException;])
+      <- TryCatch range: [P...O] -> Q ([Ljava/lang/IllegalAccessException;])
+===#Block L(size=8, flags=0)===
+   0. lvar19 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.data;
+   1. lvar30 = {612227400 ^ lvar56};
+   2. lvar146 = "[Constant] 2 -> 612227400 predicate=612227402";
+   3. lvar20 = lvar19[lvar30];
+   4. lvar31 = lvar52;
+   5. if (lvar20 == lvar31)
+      goto AA
+   6. lvar74 = "L : var expect: 602851921";
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 602851921)
+      goto AB
+      -> ConditionalJump[IF_ICMPEQ] #L -> #AA
+      -> Immediate #L -> #M
+      -> ConditionalJump[IF_ICMPNE] #L -> #AB
+      <- Immediate #K -> #L
+      <- UnconditionalJump[GOTO] #Q -> #L
+===#Block M(size=12, flags=0)===
+   0. lvar21 = new java.lang.IllegalArgumentException;
+   1. lvar35 = new java.lang.StringBuilder;
+   2. _consume(lvar35.<init>());
+   3. lvar45 = dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.xrmhzznmxl(dev.skidfuscator.testclasses.evaluator.test.impl.flow.OpaqueConditionTest.mqfuffkidacyblk(), lvar56);
+   4. lvar36 = lvar35.append(lvar45);
+   5. lvar46 = lvar52;
+   6. lvar37 = lvar36.append(lvar46);
+   7. lvar38 = lvar37.toString();
+   8. _consume(lvar21.<init>(lvar38));
+   9. throw lvar21;
+   10. lvar78 = "M : var expect: 1455125402";
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1455125402)
+      goto AF
+      -> ConditionalJump[IF_ICMPNE] #M -> #AF
+      <- Immediate #L -> #M
+===#Block AF(size=16, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1591670959)
+      goto AF
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1606689712 ^ lvar56})
+      goto AF
+   3. lvar178 = "[Constant] 403980167 -> 1606689712 predicate=1204821047";
+   4. _consume({237083360 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1455125402)
+      goto AF
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1387147969 ^ lvar56})
+      goto AF
+   8. lvar176 = "[Constant] 360591094 -> 1387147969 predicate=1204821047";
+   9. _consume({314691604 ^ lvar56});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1206014126)
+      goto AF
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {223193942 ^ lvar56})
+      goto AF
+   13. lvar180 = "[Constant] 1251850081 -> 223193942 predicate=1204821047";
+   14. _consume({1057928916 ^ lvar56});
+   15. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AF -> #AF
+      <- ConditionalJump[IF_ICMPNE] #M -> #AF
+      <- ConditionalJump[IF_ICMPNE] #AF -> #AF
+      <- ConditionalJump[IF_ICMPNE] #I -> #AF
+      <- ConditionalJump[IF_ICMPNE] #V -> #AF
+===#Block AA(size=4, flags=0)===
+   0. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) == -448690510)
+      goto N
+   1. lvar62 = "AA : var expect: -448690510";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -448690510)
+      goto AD
+   3. goto AB
+      -> UnconditionalJump[GOTO] #AA -> #AB
+      -> ConditionalJump[IF_ICMPNE] #AA -> #AD
+      -> ConditionalJump[IF_ICMPEQ] #AA -> #N
+      <- ConditionalJump[IF_ICMPEQ] #L -> #AA
+===#Block N(size=3, flags=0)===
+   0. return;
+   1. lvar96 = "N : var expect: 38671825";
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 38671825)
+      goto AG
+      -> ConditionalJump[IF_ICMPNE] #N -> #AG
+      <- ConditionalJump[IF_ICMPEQ] #AA -> #N
+===#Block AG(size=16, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -2111001710)
+      goto AG
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1985139726 ^ lvar56})
+      goto AG
+   3. lvar128 = "[Constant] 1525469093 -> 1985139726 predicate=750656427";
+   4. _consume({134793986 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 38671825)
+      goto AG
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1110543100 ^ lvar56})
+      goto AG
+   8. lvar132 = "[Constant] 1854902615 -> 1110543100 predicate=750656427";
+   9. _consume({2070608960 ^ lvar56});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 351929984)
+      goto AG
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1049221118 ^ lvar56})
+      goto AG
+   13. lvar130 = "[Constant] 305646677 -> 1049221118 predicate=750656427";
+   14. _consume({180882403 ^ lvar56});
+   15. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AG -> #AG
+      <- ConditionalJump[IF_ICMPNE] #AG -> #AG
+      <- ConditionalJump[IF_ICMPNE] #U -> #AG
+      <- ConditionalJump[IF_ICMPNE] #D -> #AG
+      <- ConditionalJump[IF_ICMPNE] #N -> #AG
+===#Block AD(size=31, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1897858141)
+      goto AD
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {128979482 ^ lvar56})
+      goto AD
+   3. lvar140 = "[Constant] 947325492 -> 128979482 predicate=1070012462";
+   4. _consume({862544177 ^ lvar56});
+   5. throw new java/io/IOException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 258383186)
+      goto AD
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1458341559 ^ lvar56})
+      goto AD
+   8. lvar136 = "[Constant] 1764466329 -> 1458341559 predicate=1070012462";
+   9. _consume({564434948 ^ lvar56});
+   10. throw new java/io/IOException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1587190394)
+      goto AD
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {35458332 ^ lvar56})
+      goto AD
+   13. lvar138 = "[Constant] 1037702450 -> 35458332 predicate=1070012462";
+   14. _consume({1951717091 ^ lvar56});
+   15. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   16. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 495096042)
+      goto AD
+   17. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {975800993 ^ lvar56})
+      goto AD
+   18. lvar144 = "[Constant] 99521167 -> 975800993 predicate=1070012462";
+   19. _consume({352398893 ^ lvar56});
+   20. throw new java/io/IOException("Failed to proper vm");
+   21. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1188582238)
+      goto AD
+   22. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1820815737 ^ lvar56})
+      goto AD
+   23. lvar142 = "[Constant] 1396730199 -> 1820815737 predicate=1070012462";
+   24. _consume({1595339754 ^ lvar56});
+   25. throw new java/io/IOException("Failed to proper vm");
+   26. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -448690510)
+      goto AD
+   27. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {330411197 ^ lvar56})
+      goto AD
+   28. lvar134 = "[Constant] 745976979 -> 330411197 predicate=1070012462";
+   29. _consume({5030112 ^ lvar56});
+   30. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AD -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AA -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AC -> #AD
+      <- ConditionalJump[IF_ICMPNE] #Z -> #AD
+      <- ConditionalJump[IF_ICMPNE] #C -> #AD
+      <- ConditionalJump[IF_ICMPNE] #T -> #AD
+      <- ConditionalJump[IF_ICMPNE] #A -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AD -> #AD
+===#Block AJ(size=11, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1208689066)
+      goto AJ
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {137631800 ^ lvar56})
+      goto AJ
+   3. lvar174 = "[Constant] 1239585194 -> 137631800 predicate=1104578962";
+   4. _consume({1507141880 ^ lvar56});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 591726011)
+      goto AJ
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {976847025 ^ lvar56})
+      goto AJ
+   8. lvar172 = "[Constant] 2079263011 -> 976847025 predicate=1104578962";
+   9. _consume({1660209801 ^ lvar56});
+   10. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #Q -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #F -> #AJ
+===#Block AB(size=33, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1419429281)
+      goto AB
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1637996328 ^ lvar56})
+      goto AB
+   3. lvar188 = "[Constant] 1014259823 -> 1637996328 predicate=1574287175";
+   4. _consume({1131183641 ^ lvar56});
+   5. throw new java/lang/RuntimeException("Failed to proper vm");
+   6. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 1037731394)
+      goto AB
+   7. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {249634494 ^ lvar56})
+      goto AB
+   8. lvar196 = "[Constant] 1395960313 -> 249634494 predicate=1574287175";
+   9. _consume({482896703 ^ lvar56});
+   10. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   11. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != 602851921)
+      goto AB
+   12. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1654916503 ^ lvar56})
+      goto AB
+   13. lvar192 = "[Constant] 1064415952 -> 1654916503 predicate=1574287175";
+   14. _consume({1659522322 ^ lvar56});
+   15. throw new java/lang/RuntimeException("Failed to proper vm");
+   16. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -792585094)
+      goto AB
+   17. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1609443040 ^ lvar56})
+      goto AB
+   18. lvar190 = "[Constant] 37458343 -> 1609443040 predicate=1574287175";
+   19. _consume({1101704478 ^ lvar56});
+   20. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   21. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1303297398)
+      goto AB
+   22. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {446439918 ^ lvar56})
+      goto AB
+   23. lvar198 = "[Constant] 1196005033 -> 446439918 predicate=1574287175";
+   24. _consume({2015974439 ^ lvar56});
+   25. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   26. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -1809329608)
+      goto AB
+   27. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {1845612652 ^ lvar56})
+      goto AB
+   28. lvar194 = "[Constant] 869558059 -> 1845612652 predicate=1574287175";
+   29. _consume({1229433881 ^ lvar56});
+   30. throw new java/lang/IllegalAccessException();
+   31. lvar114 = "AB : var expect: -290604486";
+   32. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -290604486)
+      goto AN
+      -> ConditionalJump[IF_ICMPNE] #AB -> #AB
+      -> ConditionalJump[IF_ICMPNE] #AB -> #AN
+      <- ConditionalJump[IF_ICMPNE] #J -> #AB
+      <- UnconditionalJump[GOTO] #AA -> #AB
+      <- ConditionalJump[IF_ICMPNE] #AB -> #AB
+      <- UnconditionalJump[GOTO] #AC -> #AB
+      <- ConditionalJump[IF_ICMPNE] #X -> #AB
+      <- ConditionalJump[IF_ICMPNE] #H -> #AB
+      <- ConditionalJump[IF_ICMPNE] #K -> #AB
+      <- ConditionalJump[IF_ICMPNE] #P -> #AB
+      <- ConditionalJump[IF_ICMPNE] #L -> #AB
+===#Block AN(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != -290604486)
+      goto AN
+   2. if (qwbkphdpnkrldtgs.lizexrapksoalzpp.mulltcwvfjcrdhlp(lvar56) != {717641956 ^ lvar56})
+      goto AN
+   3. lvar184 = "[Constant] 1842016252 -> 717641956 predicate=1192015640";
+   4. _consume({1675557085 ^ lvar56});
+   5. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AN -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AN -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AB -> #AN

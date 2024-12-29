@@ -26,6 +26,10 @@ public class LibraryClassSource extends ClassSource {
 		this(Collections.emptySet(), parent, priority);
 	}
 
+	public ApplicationClassSource getParent() {
+		return parent;
+	}
+
 	/* public lookup method, polls parent first (which can
 	 * call its children to look for the */
 	@Override
@@ -67,5 +71,20 @@ public class LibraryClassSource extends ClassSource {
 
 	public int getPriority() {
 		return priority;
+	}
+
+	@Override
+	public int size() {
+		return parent.size();
+	}
+
+	@Override
+	public Iterable<ClassNode> iterate() {
+		return parent.iterate();
+	}
+
+	@Override
+	public Iterator<ClassNode> iterator() {
+		return parent.iterator();
 	}
 }

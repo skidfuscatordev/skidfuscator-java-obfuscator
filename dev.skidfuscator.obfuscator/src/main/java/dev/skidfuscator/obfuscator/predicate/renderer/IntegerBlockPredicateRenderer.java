@@ -1,6 +1,7 @@
 package dev.skidfuscator.obfuscator.predicate.renderer;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.clazz.InitClassTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.group.InitGroupTransformEvent;
@@ -12,6 +13,7 @@ import dev.skidfuscator.obfuscator.number.NumberManager;
 import dev.skidfuscator.obfuscator.number.encrypt.impl.XorNumberTransformer;
 import dev.skidfuscator.obfuscator.number.hash.impl.BitwiseHashTransformer;
 import dev.skidfuscator.obfuscator.number.hash.impl.LegacyHashTransformer;
+import dev.skidfuscator.obfuscator.number.pure.VmHashTransformer;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowGetter;
 import dev.skidfuscator.obfuscator.predicate.factory.PredicateFlowSetter;
 import dev.skidfuscator.obfuscator.predicate.opaque.BlockOpaquePredicate;
@@ -62,15 +64,16 @@ import java.util.stream.Collectors;
 
     public class IntegerBlockPredicateRenderer extends AbstractTransformer {
     public IntegerBlockPredicateRenderer(Skidfuscator skidfuscator, List<Transformer> children) {
-        super(skidfuscator,"GEN3 Flow", children);
+        super(skidfuscator,"Interprocedural Predicate", children);
     }
 
     public static boolean DEBUG = false;
 
-    @Listen
+    @Listen(EventPriority.LOWEST)
     void handle(final InitSkidTransformEvent event) {
+        final String factoryName = RandomUtil.randomAlphabeticalString(16) + "/" + RandomUtil.randomAlphabeticalString(16);
         final SkidClassNode factory = new SkidClassNodeBuilder(skidfuscator)
-                .name("skid/Factory")
+                .name(factoryName)
                 .access(Opcodes.ACC_PUBLIC)
                 .phantom(true)
                 .virtual(true)
@@ -86,7 +89,7 @@ import java.util.stream.Collectors;
                 .getClassContents()
                 .add(
                         new JarClassData(
-                                "skid/Factory.class",
+                                factoryName + ".class",
                                 factory.toByteArray(),
                                 factory
                         )
@@ -94,6 +97,11 @@ import java.util.stream.Collectors;
 
         skidfuscator.setLegacyHasher(new LegacyHashTransformer(skidfuscator));
         skidfuscator.setBitwiseHasher(new BitwiseHashTransformer(skidfuscator));
+
+        if (skidfuscator.getVmHasher() != null) {
+            throw new IllegalStateException("VmHasher is already initialized");
+        }
+        skidfuscator.setVmHasher(new BitwiseHashTransformer(skidfuscator));
     }
 
     /**
@@ -102,7 +110,7 @@ import java.util.stream.Collectors;
      *
      * @param event Method initializer event
      */
-    @Listen
+    @Listen(EventPriority.LOWEST)
     void handle(final InitMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
         final BlockOpaquePredicate flowPredicate = methodNode.getFlowPredicate();
@@ -139,87 +147,47 @@ import java.util.stream.Collectors;
          * -->  Return a variable expression which calls the local storing the
          *      predicate
          */
-        flowPredicate.setGetter(new PredicateFlowGetter() {
-            @Override
-            public Expr get(final BasicBlock block) {
-                if (block.isFlagSet(SkidBlock.FLAG_NO_OPAQUE)) {
-                    return new ConstantExpr(flowPredicate.get((SkidBlock) block), Type.INT_TYPE);
-                }
-
-                return new VarExpr(local, Type.INT_TYPE);
+        flowPredicate.setGetter(block -> {
+            if (block.isFlagSet(SkidBlock.FLAG_NO_OPAQUE)) {
+                return new ConstantExpr(flowPredicate.get((SkidBlock) block), Type.INT_TYPE);
             }
+
+            return new VarExpr(local, Type.INT_TYPE);
         });
 
-        flowPredicate.setSetter(new PredicateFlowSetter() {
-            @Override
-            public Stmt apply(Expr expr) {
-                return new CopyVarStmt(new VarExpr(local, Type.INT_TYPE), expr);
-            }
-        });
+        flowPredicate.setSetter(expr -> new CopyVarStmt(new VarExpr(local, Type.INT_TYPE), expr));
 
         final MethodOpaquePredicate methodPredicate = methodNode.getPredicate();
 
         if (methodPredicate == null)
             return;
 
-        methodPredicate.setGetter(new PredicateFlowGetter() {
-            @Override
-            public Expr get(BasicBlock vertex) {
-                final XorNumberTransformer numberTransformer = new XorNumberTransformer();
-                final SkidMethodNode skidMethodNode = (SkidMethodNode) vertex.cfg.getMethodNode();
-                final SkidClassNode skidClassNode = (SkidClassNode) skidMethodNode.owner;
+        methodPredicate.setGetter(vertex -> {
+            final XorNumberTransformer numberTransformer = new XorNumberTransformer();
+            final SkidMethodNode skidMethodNode = (SkidMethodNode) vertex.cfg.getMethodNode();
+            final SkidClassNode skidClassNode = (SkidClassNode) skidMethodNode.owner;
 
-                final ClassOpaquePredicate classPredicate = skidMethodNode.isStatic()
-                                ? skidMethodNode.getParent().getStaticPredicate()
-                                : skidMethodNode.getParent().getClassPredicate();
-                int seed;
-                PredicateFlowGetter expr;
-                if (skidMethodNode.isClinit() || skidMethodNode.isInit()) {
-                    final int randomSeed = skidClassNode.getRandomInt();
-                    seed = randomSeed;
+            final ClassOpaquePredicate classPredicate = skidMethodNode.isStatic()
+                            ? skidMethodNode.getParent().getStaticPredicate()
+                            : skidMethodNode.getParent().getClassPredicate();
+            int seed;
+            PredicateFlowGetter expr;
+            if (skidMethodNode.isClinit() || skidMethodNode.isInit()) {
+                final int randomSeed = skidClassNode.getRandomInt();
+                seed = randomSeed;
 
-                    expr = new PredicateFlowGetter() {
-                        @Override
-                        public Expr get(BasicBlock vertex) {
-                            return new SkidIntegerParseStaticInvocationExpr(randomSeed);
-                        }
-                    };
-                } else {
-                    seed = classPredicate.get();
-                    expr = classPredicate.getGetter();
-                }
-
-                if (!skidMethodNode.getGroup().isEntryPoint()) {
-                    seed = seed ^ skidMethodNode.getGroup().getPredicate().getPublic();
-
-                    final PredicateFlowGetter previousExprGetter = expr;
-                    expr = new PredicateFlowGetter() {
-                        @Override
-                        public Expr get(BasicBlock vertex) {
-                            final ControlFlowGraph cfg = vertex.getGraph();
-
-                            return new ArithmeticExpr(
-                                    /* Get the seed from the parameter */
-                                    new VarExpr(
-                                            cfg.getLocals().get(skidMethodNode.getGroup().getStackHeight()),
-                                            Type.INT_TYPE
-                                    ),
-                                    /* Hash the previous instruction */
-                                    previousExprGetter.get(vertex),
-                                    /* Obv xor operation */
-                                    ArithmeticExpr.Operator.XOR
-                            );
-                        }
-                    };
-                }
-
-                return numberTransformer.getNumber(
-                        methodPredicate.getPrivate(),
-                        seed,
-                        vertex,
-                        expr
-                );
+                expr = vertex1 -> new SkidIntegerParseStaticInvocationExpr(randomSeed);
+            } else {
+                seed = classPredicate.get();
+                expr = classPredicate.getGetter();
             }
+
+            return numberTransformer.getNumber(
+                    methodPredicate.getPrivate(),
+                    seed,
+                    vertex,
+                    expr
+            );
         });
     }
 
@@ -230,7 +198,7 @@ import java.util.stream.Collectors;
      *
      * @param event InitClassTransformEvent event containing any necessary ref
      */
-    @Listen
+    @Listen(EventPriority.HIGHEST)
     void handle(final InitClassTransformEvent event) {
         final SkidClassNode classNode = event.getClassNode();
 
@@ -238,110 +206,20 @@ import java.util.stream.Collectors;
         final ClassOpaquePredicate clazzStaticPredicate = classNode.getStaticPredicate();
 
         /*
-         * Both methods down below are designed to create a specific way to access
-         * a class opaque predicate. To ensure the design is as compact and
-         * feasible as humanly possible, we need to exempt some scenarios:
+         * Here the getter to access the value is a constant expression loading the
+         * constant expr.
          *
-         * if no methods are NON-static         -> access directly via constant expression
-         * if class is interface or annotation  -> access directly via constant expression
-         * else                                 -> access by loading the value of a field
+         * The setter, on the other hand, throws an exception as it expresses a risk
+         * that should be circumvented.
          */
-        final Runnable createConstantInstance = () -> {
-            /*
-             * Here the getter to access the value is a constant expression loading the
-             * constant expr.
-             *
-             * The setter, on the other hand, throws an exception as it expresses a risk
-             * that should be circumvented.
-             */
-            clazzInstancePredicate.setGetter(new PredicateFlowGetter() {
-                @Override
-                public Expr get(final BasicBlock vertex) {
-                    // TODO: Do class instance opaque predicates
-                    return new ConstantExpr(
-                            clazzInstancePredicate.get(),
-                            Type.INT_TYPE
-                    );
-                }
-            });
-            clazzInstancePredicate.setSetter(new PredicateFlowSetter() {
-                @Override
-                public Stmt apply(Expr expr) {
-                    return new PopStmt(expr);
-                }
-            });
-        };
-        final Runnable createDynamicInstance = () -> {
-            /*
-             * Here, we create a new field in which we'll store the value. As of right now
-             * the value is loaded by default as a field constant. However, in the future,
-             * this should be calling a specific method in a different class to complicate
-             * the reverse engineering task.
-             *
-             * Contrary to the previous getter, this one store the value in a field. This
-             * should make things harder for individuals to fuck around with.
-             */
-            final int troll = clazzInstancePredicate.get() ^ clazzStaticPredicate.get();
-            final SkidFieldNode fieldNode = classNode
-                    .createField()
-                    .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT)
-                    .name(RandomUtil.randomIsoString(10))
-                    .desc("I")
-                    .value(troll)
-                    .build();
-
-            clazzInstancePredicate.setGetter(new PredicateFlowGetter() {
-                @Override
-                public Expr get(final BasicBlock vertex) {
-                    return new FieldLoadExpr(
-                            /* Call the class this variable */
-                            new VarExpr(
-                                    vertex.cfg.getLocals().get(0),
-                                    classNode.getType()
-                            ),
-                            classNode.node.name,
-                            fieldNode.node.name,
-                            fieldNode.node.desc,
-                            false
-                    );
-                }
-            });
-            clazzInstancePredicate.setSetter(new PredicateFlowSetter() {
-                @Override
-                public Stmt apply(Expr expr) {
-                    return new FieldStoreStmt(
-                            new VarExpr(
-                                    expr.getBlock().cfg.getLocals().get(0),
-                                    Type.getType("L" + classNode.getName() + ";")
-                            ),
-                            expr,
-                            classNode.node.name,
-                            fieldNode.node.name,
-                            fieldNode.node.desc,
-                            false
-                    );
-                }
-            });
-
-
-            classNode.getMethods()
-                    .stream()
-                    .filter(MethodNode::isInit)
-                    .filter(SkidMethodNode.class::isInstance)
-                    .map(SkidMethodNode.class::cast)
-                    .forEach(skidMethodNode -> {
-                        final Expr expr = new FakeArithmeticExpr(
-                                new ConstantExpr(troll, Type.INT_TYPE),
-                                clazzStaticPredicate.getGetter().get(skidMethodNode.getEntryBlock()),
-                                ArithmeticExpr.Operator.XOR
-                        );
-                        expr.setBlock(skidMethodNode.getEntryBlock());
-                        skidMethodNode.getEntryBlock().add(
-                                0,
-                                clazzInstancePredicate.getSetter().apply(expr)
-                        );
-                    });
-        };
+        clazzInstancePredicate.setGetter(vertex -> {
+            // TODO: Do class instance opaque predicates
+            return new ConstantExpr(
+                    clazzInstancePredicate.get(),
+                    Type.INT_TYPE
+            );
+        });
+        clazzInstancePredicate.setSetter(PopStmt::new);
 
         /*
          * Both methods down below are designed to create a specific way to access
@@ -352,322 +230,17 @@ import java.util.stream.Collectors;
          * if class is interface or annotation  -> access directly via constant expression
          * else                                 -> access by loading the value of a field
          */
-        final Runnable createConstantStatic = () -> {
-            clazzStaticPredicate.setGetter(new PredicateFlowGetter() {
-                @Override
-                public Expr get(final BasicBlock vertex) {
-                    // TODO: Do class instance opaque predicates
-                    return new ConstantExpr(
-                            clazzStaticPredicate.get(),
-                            Type.INT_TYPE
-                    );
-                }
-            });
-            clazzStaticPredicate.setSetter(new PredicateFlowSetter() {
-                @Override
-                public Stmt apply(Expr expr) {
-                    return new PopStmt(expr);
-                    //throw new IllegalStateException("Cannot set value for a constant getter");
-                }
-            });
-        };
-
-        final Runnable createDynamicStatic2 = () -> {
-            final SkidFieldNode staticFieldNode = classNode.createField()
-                    .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)
-                    .name(RandomUtil.randomIsoString(10))
-                    .desc("I")
-                    .value(0)
-                    .build();
-
-            final SkidMethodNode clinit = classNode.getClassInit();
-
-            final long seed = RandomUtil.nextLong();
-            final Random random = new Random(seed);
-            final int nextInt = random.nextInt();
-
-            final Local local = clinit
-                    .getCfg()
-                    .getLocals()
-                    .get(clinit.getCfg().getLocals().getMaxLocals() + 3);
-            local.setFlag(SkidBlock.FLAG_PROXY, true);
-
-            clinit.getEntryBlock().add(
-                    0,
-                    new SkidCopyVarStmt(
-                            new VarExpr(local, Type.INT_TYPE),
-                            new VirtualInvocationExpr(
-                                    InvocationExpr.CallType.VIRTUAL,
-                                    new Expr[]{
-                                            new InitialisedObjectExpr(
-                                                    "java/util/Random",
-                                                    "(J)V",
-                                                    new Expr[]{
-                                                            new ConstantExpr(seed, Type.LONG_TYPE)
-                                                    }
-                                            )
-                                    },
-                                    "java/util/Random",
-                                    "nextInt",
-                                    "()I"
-                            )
-
-                    )
+        clazzStaticPredicate.setGetter(vertex -> {
+            // TODO: Do class instance opaque predicates
+            return new ConstantExpr(
+                    clazzStaticPredicate.get(),
+                    Type.INT_TYPE
             );
-
-            clinit.getEntryBlock().add(
-                    1,
-                    new FieldStoreStmt(
-                        null,
-                        new XorNumberTransformer().getNumber(
-                                clazzStaticPredicate.get(),
-                                nextInt,
-                                clinit.getEntryBlock(),
-                                new PredicateFlowGetter() {
-                                    @Override
-                                    public Expr get(BasicBlock vertex) {
-                                        return new VarExpr(local, Type.INT_TYPE);
-                                    }
-                                }
-                        ),
-                        classNode.getName(),
-                        staticFieldNode.getName(),
-                        staticFieldNode.getDesc(),
-                        true
-                    )
-            );
-
-            clazzStaticPredicate.setGetter(new PredicateFlowGetter() {
-                @Override
-                public Expr get(final BasicBlock vertex) {
-                    return new FieldLoadExpr(
-                            null,
-                            classNode.node.name,
-                            staticFieldNode.node.name,
-                            staticFieldNode.node.desc,
-                            true
-                    );
-                }
-            });
-            clazzStaticPredicate.setSetter(new PredicateFlowSetter() {
-                @Override
-                public Stmt apply(Expr expr) {
-                    return new FieldStoreStmt(
-                            null,
-                            expr,
-                            classNode.node.name,
-                            staticFieldNode.node.name,
-                            staticFieldNode.node.desc,
-                            true
-                    );
-                }
-            });
-        };
-
-        final boolean skip = classNode.isInterface()
-                || classNode.isAnnotation()
-                || classNode.isEnum();
-
-        if (skip) {
-            createConstantStatic.run();
-            createConstantInstance.run();
-        }
-
-        else {
-            final boolean addStatic = classNode.getMethods()
-                    .stream()
-                    .anyMatch(e -> !e.isClinit() && e.isStatic());
-
-            createDynamicStatic2.run();
-
-            final boolean addInstance = classNode.getMethods()
-                    .stream()
-                    .anyMatch(e -> !e.isInit() && !e.isStatic());
-
-            // TODO: Figure out why tf this breaks shit
-            createDynamicInstance.run();
-        }
+        });
+        //throw new IllegalStateException("Cannot set value for a constant getter");
+        clazzStaticPredicate.setSetter(PopStmt::new);
     }
 
-    @Listen
-    void handle(final InitGroupTransformEvent event) {
-        final SkidGroup skidGroup = event.getGroup();
-
-        /*
-         * This can occur. Warn the user then skip. No significant damage
-         * should be caused by skipping this method.
-         *
-         * TODO: Add stricter exception logging for this
-         */
-        if (skidGroup.getPredicate().getGetter() != null) {
-            System.err.println("SkidGroup " + skidGroup.getName() + " does not have getter!");
-            return;
-        }
-
-        final boolean entryPoint = skidGroup.isEntryPoint();
-        int stackHeight = -1;
-
-        /*
-         * If the skid group is an entry point (it has no direct invocation)
-         * or in the future when we support reflection calls
-         */
-        if (entryPoint) {
-            stackHeight = OpcodeUtil.getArgumentsSizes(skidGroup.getDesc());
-
-            if (skidGroup.isStatical())
-                stackHeight -= 1;
-
-            skidGroup.setStackHeight(stackHeight);
-            return;
-        }
-
-        Local local = null;
-        String desc = null;
-
-        int indexGroup = -1;
-
-        //System.out.println("Iterating group " + skidGroup.getName());
-
-        final Parameter parameterGroup = new Parameter(skidGroup.getDesc());
-        if (skidGroup.getInvokers().stream().map(SkidInvocation::getExpr)
-                .anyMatch(DynamicInvocationExpr.class::isInstance)) {
-            final DynamicInvocationExpr invocationExpr = skidGroup
-                    .getInvokers()
-                    .stream()
-                    .map(SkidInvocation::getExpr)
-                    .filter(DynamicInvocationExpr.class::isInstance)
-                    .findFirst()
-                    .map(DynamicInvocationExpr.class::cast)
-                    .orElseThrow(IllegalStateException::new);
-
-            final Parameter bootstrappedParam = new Parameter(
-                    invocationExpr.getDesc()
-            );
-            indexGroup = bootstrappedParam.getArgs().size();
-        } else {
-            indexGroup = parameterGroup.getArgs().size();
-        }
-
-        parameterGroup.insertParameter(Type.INT_TYPE, indexGroup);
-
-        for (MethodNode methodNode : skidGroup.getMethodNodeList()) {
-            final SkidMethodNode skidMethodNode = (SkidMethodNode) methodNode;
-
-            stackHeight = parameterGroup.computeSize(indexGroup);
-            if (!methodNode.isStatic()) stackHeight += 1;
-
-            final Map<String, Local> localMap = new HashMap<>();
-            for (Map.Entry<String, Local> stringLocalEntry :
-                    skidMethodNode.getCfg().getLocals().getCache().entrySet()) {
-                final String old = stringLocalEntry.getKey();
-                final String oldStringId = old.split("var")[1].split("_")[0];
-                final int oldId = Integer.parseInt(oldStringId);
-
-                if (oldId < stackHeight) {
-                    localMap.put(old, stringLocalEntry.getValue());
-                    continue;
-                }
-                final int newId = oldId + 1;
-
-                final String newVar = old.replace("var" + oldStringId, "var" + Integer.toString(newId));
-                stringLocalEntry.getValue().setIndex(stringLocalEntry.getValue().getIndex() + 1);
-                localMap.put(newVar, stringLocalEntry.getValue());
-            }
-
-            skidMethodNode.getCfg().getLocals().getCache().clear();
-            skidMethodNode.getCfg().getLocals().getCache().putAll(localMap);
-
-            methodNode.node.desc = desc = parameterGroup.getDesc();
-
-            if ((methodNode.node.access & Opcodes.ACC_VARARGS) != 0) {
-                methodNode.node.access &= ~Opcodes.ACC_VARARGS;
-            }
-
-            final ClassMethodHash classMethodHash = new ClassMethodHash(skidMethodNode);
-
-            if (skidfuscator.getHierarchy().getGroup(classMethodHash) != null && !skidGroup.getName().contains("<")) {
-                skidGroup.setName(skidGroup.getName() + "$" + RandomUtil.nextInt());
-            }
-
-            if (local == null) {
-                local = skidMethodNode.getCfg().getLocals().get(stackHeight);
-            }
-        }
-
-        if (!skidGroup.getInvokers().isEmpty()) {
-            for (SkidInvocation invoker : skidGroup.getInvokers()) {
-                assert invoker != null : String.format("Invoker %s is null!", Arrays.toString(skidGroup.getInvokers().toArray()));
-
-                if (invoker.isTainted()) {
-                    Skidfuscator.LOGGER.warn("Warning! Almost duplicated call on " + invoker.asExpr().toString());
-                    continue;
-                }
-
-                //if (skidGroup.getName().equals("getConfig"))
-                //    System.out.println("Replacing invoker " + invoker.asExpr().getOwner() + "#" + invoker.asExpr().getName() + invoker.asExpr().getDesc() + " in " + invoker.getOwner().toString());
-
-                assert invoker.getExpr() != null : String.format("Invoker %s is null!", invoker.getOwner().getDisplayName());
-                final boolean isDynamic = invoker.getExpr() instanceof DynamicInvocationExpr;
-
-                int index = 0;
-                final Expr[] params = /*isDynamic
-                    ? ((DynamicInvocationExpr) invoker.getExpr()).getPrintedArgs()
-                    : */invoker.getExpr().getArgumentExprs();
-                for (Expr argumentExpr : params) {
-                    assert argumentExpr != null : "Argument of index " + index + " is null!";
-                    index++;
-                }
-
-                final Expr[] args = new Expr[params.length + 1];
-                System.arraycopy(
-                        params,
-                        0,
-                        args,
-                        0,
-                        params.length
-                );
-
-                final ConstantExpr constant = new ConstantExpr(skidGroup.getPredicate().getPublic());
-                args[args.length - 1] = constant;
-
-                for (Expr arg : args) {
-                    assert arg != null : "Invocation now is null? " + invoker.asExpr();
-                }
-
-                invoker.getExpr().setArgumentExprs(args);
-                //System.out.println(invoker.asExpr());
-                invoker.setTainted(true);
-
-                if (isDynamic) {
-                    final Handle boundFunc = (Handle) ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1];
-                    final Parameter handlerDesc = new Parameter(boundFunc.getDesc());
-                    handlerDesc.insertParameter(Type.INT_TYPE, indexGroup);
-                    final Handle newBoundFunc = new Handle(boundFunc.getTag(), boundFunc.getOwner(), boundFunc.getName(),
-                            handlerDesc.getDesc(), boundFunc.isInterface());
-
-                    final Parameter parameter = new Parameter(invoker.getExpr().getDesc());
-                    parameter.insertParameter(Type.INT_TYPE, indexGroup);
-                    System.out.println("-----[ " + boundFunc.getOwner() + "#" + boundFunc.getName() + " ]-----");
-                    System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getArgumentExprs()).map(Expr::getType).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
-                    System.out.println("\n" + Arrays.stream(((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()).map(Object::toString).collect(Collectors.joining("\n")) + "\n");
-                    System.out.println(invoker.getExpr().getDesc()  + " new: " + parameter.getDesc());
-                    System.out.println(boundFunc.getDesc() + " new " + newBoundFunc.getDesc());
-                    invoker.getExpr().setDesc(parameter.getDesc());
-
-                    ((DynamicInvocationExpr) invoker.getExpr()).getBootstrapArgs()[1] = newBoundFunc;
-                } else {
-                    final Parameter parameter = new Parameter(invoker.getExpr().getDesc());
-                    parameter.insertParameter(Type.INT_TYPE, indexGroup);
-                    //invoker.getExpr().setDesc(parameter.getDesc());
-                }
-            }
-        }
-
-        final int finalStackHeight = stackHeight;
-        skidGroup.setDesc(desc);
-        skidGroup.setStackHeight(finalStackHeight);
-
-    }
 
     @Listen
     void handle(final PostMethodTransformEvent event) {
@@ -676,7 +249,12 @@ import java.util.stream.Collectors;
         final BasicBlock entryPoint = methodNode.getEntryBlock();
         final SkidBlock seedEntry = (SkidBlock) entryPoint;
         cfg.recomputeEdges();
-        cfg.verify();
+
+        try {
+            cfg.verify();
+        } catch (Exception e) {
+            event.warn("Failed to verify CFG for method " + methodNode.getName());
+        }
 
         /*
          *    ____     __
@@ -691,7 +269,10 @@ import java.util.stream.Collectors;
         final MethodOpaquePredicate predicate = methodNode.getPredicate();
         PredicateFlowGetter getter = predicate.getGetter();
 
-        assert getter != null : "Predicate flow getter is null! Has group not been initialized?";
+        assert getter != null : String.format(
+                "Getter for method %s is null!",
+                methodNode.getName()
+        );
 
         PredicateFlowGetter localGetterT = methodNode.getFlowPredicate().getGetter();
         PredicateFlowSetter localSetterT = methodNode.getFlowPredicate().getSetter();
@@ -732,7 +313,40 @@ import java.util.stream.Collectors;
 
         if (DEBUG) {
             final int seed = methodNode.getPredicate().getPrivate();
-            final BasicBlock exception = Blocks.exception(cfg, "Failed to match entry seed of value " + seed + " of entry " + methodNode.getPredicate().getPublic());
+            final BasicBlock exception = Blocks.exception(cfg,
+                    new VirtualInvocationExpr(
+                            InvocationExpr.CallType.VIRTUAL,
+                            new Expr[] {
+                                    new VirtualInvocationExpr(
+                                            InvocationExpr.CallType.VIRTUAL,
+                                            new Expr[]{
+                                                    new InitialisedObjectExpr(
+                                                            "java/lang/StringBuilder",
+                                                            "(Ljava/lang/String;)V",
+                                                            new Expr[]{
+                                                                    new ConstantExpr(
+                                                                            "Failed to match entry seed of value "
+                                                                                    + seed + " of entry public: "
+                                                                                    + methodNode.getPredicate().getPublic()
+                                                                                    + " and private: "
+                                                                                    + methodNode.getPredicate().getPrivate()
+                                                                                    + " and value: ",
+                                                                            Type.getType(String.class)
+                                                                    )
+                                                            }
+                                                    ),
+                                                    methodNode.getPredicate().getGetter().get(entryPoint)
+                                            },
+                                            "java/lang/StringBuilder",
+                                            "append",
+                                            "(I)Ljava/lang/StringBuilder;"
+                                    )
+                            },
+                            "java/lang/StringBuilder",
+                            "toString",
+                            "()Ljava/lang/String;"
+                    )
+            );
             final Stmt jumpStmt = new FakeConditionalJumpStmt(
                     methodNode.getPredicate().getGetter().get(entryPoint),
                     new ConstantExpr(seed, Type.INT_TYPE),
@@ -832,7 +446,11 @@ import java.util.stream.Collectors;
             System.out.println(cfg.toString());
         }
         cfg.recomputeEdges();
-        cfg.verify();
+        try {
+            cfg.verify();
+        } catch (Exception e) {
+            event.warn("Failed to verify post-CFG for method " + methodNode.getName() + e);
+        }
 
         return;
     }
@@ -861,12 +479,39 @@ import java.util.stream.Collectors;
         if (DEBUG) {
             final BasicBlock exception = Blocks.exception(
                     block.cfg,
-                    block.getDisplayName() + " --> "
-                            + targetBlock.getDisplayName()
-                            + " # Failed to match seed of type "
-                            + type
-                            + " and value "
-                            + target
+                    new VirtualInvocationExpr(
+                            InvocationExpr.CallType.VIRTUAL,
+                            new Expr[] {
+                                new VirtualInvocationExpr(
+                                        InvocationExpr.CallType.VIRTUAL,
+                                        new Expr[]{
+                                                new InitialisedObjectExpr(
+                                                        "java/lang/StringBuilder",
+                                                        "(Ljava/lang/String;)V",
+                                                        new Expr[]{
+                                                                new ConstantExpr(
+                                                                        block.getDisplayName() + " --> "
+                                                                                + targetBlock.getDisplayName()
+                                                                                + " # Failed to match seed of type "
+                                                                                + type
+                                                                                + " and value "
+                                                                                + target
+                                                                                + " and got ",
+                                                                        Type.getType(String.class)
+                                                                )
+                                                        }
+                                                ),
+                                                getter.get(block)
+                                        },
+                                        "java/lang/StringBuilder",
+                                        "append",
+                                        "(I)Ljava/lang/StringBuilder;"
+                                )
+                            },
+                            "java/lang/StringBuilder",
+                            "toString",
+                            "()Ljava/lang/String;"
+                    )
             );
 
             final Stmt jumpStmt = new FakeConditionalJumpStmt(

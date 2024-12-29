@@ -8,6 +8,7 @@ import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
 import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
+import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.verifier.Verifier;
 import dev.skidfuscator.testclasses.TestRun;
@@ -34,19 +35,19 @@ import java.util.function.Consumer;
 public class TestSkidfuscator extends Skidfuscator {
     private final Class<?>[] test;
     private final Consumer<List<Map.Entry<String, byte[]>>> callback;
-    public TestSkidfuscator(Class<?>[] test, Consumer<List<Map.Entry<String, byte[]>>> callback) {
+    public TestSkidfuscator(Class<?>[] test, Consumer<List<Map.Entry<String, byte[]>>> callback, String config) {
         super(SkidfuscatorSession
                 .builder()
                 .jmod(MiscUtil.isJmod())
                 .analytics(false)
                 .debug(true)
-                .config(new File(TestSkidfuscator.class.getResource("/config/runtime.hocon").getFile()))
+                .config(new File(TestSkidfuscator.class.getResource(config).getFile()))
                 .build());
         
         this.test = test;
         this.callback = callback;
 
-        IntegerBlockPredicateRenderer.DEBUG = true;
+        IntegerBlockPredicateRenderer.DEBUG = false;
     }
 
     public static boolean SKIP = false;
@@ -58,7 +59,7 @@ public class TestSkidfuscator extends Skidfuscator {
     }
 
     @Override
-    protected void _importJvm() {
+    public Set<LibraryClassSource> _importJvm() {
         LOGGER.post("Beginning to import JVM...");
         if (!cached) {
             _cacheJvm(this);
@@ -71,10 +72,12 @@ public class TestSkidfuscator extends Skidfuscator {
             ));
         }
         LOGGER.log("Finished importing JVM!");
+
+        return new HashSet<>();
     }
 
     @Override
-    protected void _importClasspath() {
+    public SkidApplicationClassSource _importClasspath() {
         LOGGER.post("Beginning to import classpath...");
         this.jarContents = new JarContents();
 
@@ -132,14 +135,16 @@ public class TestSkidfuscator extends Skidfuscator {
                 this
         );
         LOGGER.log("Finished importing classpath!");
+
+        return classSource;
     }
 
     @Override
-    protected void _loadTransformer() {
+    protected List<Transformer> _loadTransformer() {
         if (SKIP)
-            return;
+            return new ArrayList<>();
 
-        super._loadTransformer();
+        return  super._loadTransformer();
     }
 
     @Override

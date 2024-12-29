@@ -35,7 +35,7 @@ import java.util.*;
 @Getter
 public class SkidMethodNode extends MethodNode {
     private SkidControlFlowGraph cfg;
-    private final BlockOpaquePredicate flowPredicate;
+    private BlockOpaquePredicate flowPredicate;
     private final Skidfuscator skidfuscator;
     private final List<SkidInvocation> invokers;
     private MethodOpaquePredicate predicate;
@@ -49,9 +49,12 @@ public class SkidMethodNode extends MethodNode {
         super(node, owner);
         this.skidfuscator = skidfuscator;
         this.invokers = new ArrayList<>();
-        this.flowPredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getBlockPredicate(this);
+
+        if (skidfuscator != null) {
+            this.flowPredicate = skidfuscator
+                    .getPredicateAnalysis()
+                    .getBlockPredicate(this);
+        }
         this.attributes = new AttributeMap();
     }
 

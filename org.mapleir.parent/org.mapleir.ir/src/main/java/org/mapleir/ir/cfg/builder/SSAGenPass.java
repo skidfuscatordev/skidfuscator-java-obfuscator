@@ -664,6 +664,14 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		 * the value and value type.
 		 * */
 		Expr e = copy.getExpression();
+
+		// Be more conservative with array accesses and loop variables
+		if (isInLoop(copy.getBlock()) && (containsArrayAccess(e) || isLoopVariable(ssaL))) {
+			LatestValue value = new LatestValue(builder.graph, LatestValue.VAR, ssaL, null);
+			latest.put(ssaL, value);
+			return;
+		}
+
 		int opcode = e.getOpcode();
 		if(opcode == Opcode.LOCAL_LOAD) {
 			if(copy.isSynthetic()) {
@@ -715,6 +723,25 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		
 //		System.out.println("made val " + ssaL + " -> " + latest.get(ssaL));
 	}
+
+	private boolean containsArrayAccess(Expr e) {
+		for (Expr child : e.enumerateWithSelf()) {
+			if (child.getOpcode() == Opcode.ARRAY_LOAD || 
+				child.getOpcode() == Opcode.ARRAY_STORE) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isLoopVariable(VersionedLocal local) {
+		// Check if this local is used in loop conditions
+		AbstractCopyStmt def = pool.defs.get(local);
+		if (def != null && isInLoop(def.getBlock())) {
+			return true;
+		}
+		return false;
+	}
 	
 	private void collectUses(Expr e) {
 		for(Expr c : e.enumerateWithSelf()) {
@@ -757,6 +784,11 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 	}
 	
 	private boolean canTransferHandlers(BasicBlock db, BasicBlock ub) {
+		// Add loop check
+		if (isInLoop(db) || isInLoop(ub)) {
+			return false; // Be conservative with transfers in loops
+		}
+		
 		List<ExceptionRange<BasicBlock>> dr = db.cfg.getProtectingRanges(db);
 		List<ExceptionRange<BasicBlock>> ur = ub.cfg.getProtectingRanges(ub);
 		
@@ -785,6 +817,32 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		}
 		
 		return transferable;
+	}
+
+
+	// Add helper method to detect if block is in a loop
+	private boolean isInLoop(BasicBlock block) {
+		// Simple loop detection - if block can reach itself
+		Set<BasicBlock> visited = new HashSet<>();
+		LinkedList<BasicBlock> queue = new LinkedList<>();
+		queue.add(block);
+		
+		while (!queue.isEmpty()) {
+			BasicBlock current = queue.poll();
+			if (!visited.add(current)) {
+				continue;
+			}
+			
+			for (FlowEdge<BasicBlock> edge : builder.graph.getEdges(current)) {
+				BasicBlock succ = edge.dst();
+				if (succ == block) {
+					return true;
+				}
+				queue.add(succ);
+			}
+		}
+		
+		return false;
 	}
 	
 	private void translateStmt(VarExpr var, boolean resolve, boolean isPhi) {
@@ -824,15 +882,10 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 
 		if(optimise) {
 			if(latest.containsKey(ssaL)) {
-				/* Try to propagate a simple copy local
-				 * to its use site. It is possible that
-				 * a non simple copy (including phis)
-				 * will not have a mapping. In this case
-				 * they will not have an updated target.*/
 				LatestValue value = latest.get(ssaL);
 				boolean unpredictable = value.getType() == LatestValue.PARAM || value.getType() == LatestValue.PHI;
 				
-				if(unpredictable && ssaL != value.getSuggestedValue()) {
+				if(unpredictable && value.getSuggestedValue() instanceof VersionedLocal) {
 					VersionedLocal vl = (VersionedLocal) value.getSuggestedValue();
 					if(shouldPropagate(ssaL, vl)) {
 						newL = vl;
@@ -841,92 +894,49 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 					Expr e = null;
 					
 					AbstractCopyStmt def = pool.defs.get(ssaL);
-					Expr rval = (Expr) value.getSuggestedValue();
-					if(ConstraintUtil.isUncopyable(rval)) {
-						/* A variable might have a value
-						 * that is uncopyable such as an
-						 * invoke or allocation call.
-						 * 
-						 * There are two ways this may happen:
-						 *   x = call();
-						 *  or
-						 *   x = call();
-						 *   y = x;
-						 *   
-						 * we defer optimising the first
-						 * case till the end.
-						 * 
-						 * in the second case, we can
-						 * propagate the source var (x)
-						 * in place of the target (y). */
-						newL = tryDefer(value, ssaL);
-					} else {
-						AbstractCopyStmt from = def;
-						if(value.getSource() != null) {
-							from = pool.defs.get(value.getSource());
-						}
-						
-						if(!value.hasConstraints() || (canTransferHandlers(def.getBlock(), var.getBlock()) && value.canPropagate(from, var.getRootParent(), var, false))) {
-							/*System.out.printf("d: %s%n", def);
-							System.out.printf("f: %s%n", from);
-							System.out.printf("u: %s%n", var.getRootParent());
-							System.out.printf("l: %s%n", ssaL);
-							System.out.printf("v: %s%n", value);
-							System.out.printf("rv: %s%n", rval);
-							System.out.printf("c: %b%n", value.hasConstraints());
-							System.out.println();*/
-							
-							if(shouldCopy(rval)) {
-								e = rval;
-							} else {
-								newL = tryDefer(value, ssaL);
+					Object suggestedValue = value.getSuggestedValue();
+					
+					// Make sure suggestedValue is an Expr before casting
+					if (suggestedValue instanceof Expr) {
+						Expr rval = (Expr) suggestedValue;
+						if(ConstraintUtil.isUncopyable(rval)) {
+							newL = tryDefer(value, ssaL);
+						} else {
+							AbstractCopyStmt from = def;
+							if(value.getSource() != null) {
+								from = pool.defs.get(value.getSource());
 							}
-						} else if(value.getRealValue() instanceof VersionedLocal) {
-							VersionedLocal realVal = (VersionedLocal) value.getRealValue();
-							if(shouldPropagate(ssaL, realVal)) {
-								newL = realVal;
-							} else {
-								// 1/21/2019: fix for propagation across multiple variables in a congruence class
-								// (i.e. replacing two variables with one spill later in resolveShadowedLocals)
-								merge(ssaL, realVal);
-								// This code was incorrect
-								// shadowed.getNonNull(ssaL).add(realVal);
-								// shadowed.getNonNull(realVal).add(ssaL);
+							
+							if(!value.hasConstraints() || (canTransferHandlers(def.getBlock(), var.getBlock()) && value.canPropagate(from, var.getRootParent(), var, false))) {
+								if(shouldCopy(rval)) {
+									e = rval;
+								} else {
+									newL = tryDefer(value, ssaL);
+								}
+							} else if(value.getRealValue() instanceof VersionedLocal) {
+								VersionedLocal realVal = (VersionedLocal) value.getRealValue();
+								if(shouldPropagate(ssaL, realVal)) {
+									newL = realVal;
+								} else {
+									merge(ssaL, realVal);
+								}
 							}
 						}
 					}
-					
+
 					if(e != null) {
-//						System.out.println("=====");
-//						System.out.println("   ssaL: " + ssaL);
-//						System.out.println("   bpar: " + var.getParent());
 						CodeUnit parent = var.getParent();
 						int idx = parent.indexOf(var);
 						parent.writeAt(e = e.copy(), idx);
 						
-//						System.out.println("    def: " + def);
-//						System.out.println("    idx: " + idx);
-//						System.out.println("    val: " + value);
-//						System.out.println("   apar: " + parent);
-//						System.out.println("      e: " + e);
-
-						/* Remove the use of the var before
-						 * we translate the children of the 
-						 * newly propagated expression.*/
 						pool.uses.get(ssaL).remove(var);
-//						System.out.println("   uses: " + pool.uses.get(ssaL));
 						
-						/* Account for the new pool.uses.*/
 						collectUses(e);
 						
-						/* Finally see if we can reduce
-						 * this statement further.*/
 						translate(e, false, isPhi);
 						
 						exists = false;
 					}
-				} else {
-					newL = ssaL;
 				}
 			} else {
 				throw new IllegalStateException("No (self) ancestors: " + l + " -> " + ssaL);
@@ -935,19 +945,12 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 
 		if(exists) {
 			if(optimise || false) {
-				/* If we removed the local load expression,
-				 * check to see if we need to update the
-				 * use-map.*/
-				// System.out.println("replace: " + ssaL + " with " + newL);
 				if(ssaL != newL) {
-//					System.out.println(ssaL + "  -->  " + newL);
 					pool.uses.get(ssaL).remove(var);
 					pool.uses.get(newL).add(var);
 				}
 			}
 
-			/* If the expression still exists, update
-			 * or set both variable and type information.*/
 			var.setLocal(newL);
 			Type type = types.get(ssaL);
 			if(type == null) {

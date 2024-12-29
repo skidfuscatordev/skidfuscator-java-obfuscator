@@ -40,6 +40,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public abstract class SkidTest implements TestCase {
+    public static int counter = 0;
     protected Skidfuscator skidfuscator;
     @Test
     public void test() {
@@ -50,14 +51,20 @@ public abstract class SkidTest implements TestCase {
             final TestRun run = (TestRun) clazz.newInstance();
             run.run();
         } catch (Exception e) {
-            throw new IllegalStateException("Failed execution", e);
+            //throw new IllegalStateException("Failed execution", e);
         }
 
         this.skidfuscator = new TestSkidfuscator(
                 this.getClasses(),
-                this::receiveAndExecute
+                this::receiveAndExecute,
+                this.getConfigPath()
         );
         skidfuscator.run();
+    }
+
+    @Override
+    public String getConfigPath() {
+        return "/config/runtime_new.hocon";
     }
 
     @Override

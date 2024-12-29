@@ -13,7 +13,7 @@ import org.mapleir.asm.MethodNode;
 @Data
 @Builder
 public class Exclusion {
-    private ExclusionMap testers;
+    private final ExclusionMap testers;
 
     /**
      * Test if a class is to be excluded
@@ -34,8 +34,10 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final MethodNode methodNode) {
-        assert testers.containsKey(ExclusionType.METHOD) : "Trying to test with null method tester";
+        if (test(methodNode.getOwnerClass()))
+            return true;
 
+        assert testers.containsKey(ExclusionType.METHOD) : "Trying to test with null method tester";
         return testers.poll(ExclusionType.METHOD).test(methodNode);
     }
 
@@ -46,8 +48,10 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final FieldNode fieldNode) {
-        assert testers.containsKey(ExclusionType.FIELD) : "Trying to test with null field tester";
+        if (test(fieldNode.getOwnerClass()))
+            return true;
 
+        assert testers.containsKey(ExclusionType.FIELD) : "Trying to test with null field tester";
         return testers.poll(ExclusionType.FIELD).test(fieldNode);
     }
 

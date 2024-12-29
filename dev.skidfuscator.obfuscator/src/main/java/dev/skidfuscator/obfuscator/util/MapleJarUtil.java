@@ -1,21 +1,23 @@
 package dev.skidfuscator.obfuscator.util;
 
 import com.esotericsoftware.asm.Type;
+import com.googlecode.d2j.node.DexFileNode;
+import com.googlecode.d2j.reader.DexFileReader;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.creator.SkidASMFactory;
 import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
 import dev.skidfuscator.obfuscator.creator.SkidLibASMFactory;
+import dev.skidfuscator.obfuscator.io.dex.DexJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomResolvingJarDumper;
-import dev.skidfuscator.obfuscator.skidasm.SkidClassNode;
-import dev.skidfuscator.obfuscator.verifier.Verifier;
 import lombok.SneakyThrows;
 import org.mapleir.app.service.ClassTree;
 import org.mapleir.asm.ClassNode;
-import org.mapleir.asm.MethodNode;
 import org.mapleir.deob.PassGroup;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodTooLargeException;
 import org.objectweb.asm.commons.ClassRemapper;
+import org.topdank.byteengineer.commons.asm.ASMFactory;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarInfo;
 import org.topdank.byteio.in.MultiJarDownloader;
@@ -23,6 +25,7 @@ import org.topdank.byteio.in.SingleJarDownloader;
 import org.topdank.byteio.in.SingleJmodDownloader;
 
 import java.io.*;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -38,6 +41,13 @@ public class MapleJarUtil {
 
     public static void dumpJar(Skidfuscator skidfuscator, PassGroup masterGroup, String outputFile) throws IOException {
         (new PhantomResolvingJarDumper(skidfuscator, skidfuscator.getJarContents(), skidfuscator.getClassSource()) {
+
+            private Map<String, JarClassData> jarClassDataMap = skidfuscator
+                    .getJarContents()
+                    .getClassContents()
+                    .namedMap();
+
+            private ASMFactory<ClassNode> factory = new SkidASMFactory(skidfuscator);
 
             @Override
             public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
@@ -57,11 +67,7 @@ public class MapleJarUtil {
                 //Skidfuscator.LOGGER.post("Writing " + entry.getName());
 
                 if (!cn.isVirtual() && skidfuscator.getExemptAnalysis().isExempt(cn)) {
-                    final JarClassData resource = skidfuscator
-                            .getJarContents()
-                            .getClassContents()
-                            .namedMap()
-                            .get(classData.getName());
+                    final JarClassData resource = jarClassDataMap.get(classData.getName());
 
                     if (resource == null) {
                         throw new IllegalStateException("Failed to find class source for " + cn.getName());
@@ -78,16 +84,17 @@ public class MapleJarUtil {
                     );
                     cn.node.accept(remapper);
                     out.write(writer.toByteArray());
+
                     //out.write(resource.getData());
                     return 1;
                 }
 
 
-                for (MethodNode m : cn.getMethods()) {
+                /*for (MethodNode m : cn.getMethods()) {
                     if (m.node.instructions.size() > 10000) {
                         Skidfuscator.LOGGER.warn("large method: " + m + " @" + m.node.instructions.size() + "\n");
                     }
-                }
+                }*/
 
                 try {
                     final String name = skidfuscator.getClassRemapper()
@@ -113,7 +120,39 @@ public class MapleJarUtil {
                         );
                         ClassRemapper remapper = new ClassRemapper(writer, skidfuscator.getClassRemapper());
                         cn.node.accept(remapper);
+                        cn.node = factory.create(writer.toByteArray(), cn.getName()).node;
                         out.write(writer.toByteArray());
+                    } catch (MethodTooLargeException e) {
+                        // [Failsafe] Try to output but still remap
+                        // TODO: make prettier
+                        final JarClassData resource = jarClassDataMap.get(classData.getName());
+
+                        if (resource == null) {
+                            throw new IllegalStateException("Failed to find class source for " + cn.getName());
+                        }
+
+                        ClassWriter writer = this.buildClassWriter(
+                                tree,
+                                0
+                        );
+                        ClassRemapper remapper = new ClassRemapper(
+                                writer,
+                                skidfuscator.getClassRemapper()
+                        );
+                        cn.node.accept(remapper);
+
+                        try {
+                            out.write(writer.toByteArray());
+                            Skidfuscator.LOGGER.warn(
+                                    "\r❗ Failed to write " + cn.getName() + " because the computed method was too large! Skipping class...\n"
+                            );
+                        } catch (Exception ex) {
+                            // [Failsafe] Everything else failed, just write the resource
+                            out.write(resource.getData());
+                            Skidfuscator.LOGGER.warn(
+                                    "\r❗ Failed to write " + cn.getName() + "! Input method already exceeded max size. This MAY cause issues!\n"
+                            );
+                        }
                     } catch (Exception var8) {
                         ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
                         cn.node.accept(writer);
@@ -172,6 +211,23 @@ public class MapleJarUtil {
     @SneakyThrows
     public static PhantomJarDownloader<ClassNode> importPhantomJar(File file, Skidfuscator skidfuscator) {
         PhantomJarDownloader<ClassNode> dl = new PhantomJarDownloader<>(
+                skidfuscator,
+                new SkidASMFactory(skidfuscator),
+                new JarInfo(file)
+        );
+
+        dl.download();
+
+        return dl;
+    }
+
+    @SneakyThrows
+    public static DexJarDownloader<ClassNode> importDex(File file, Skidfuscator skidfuscator) {
+        DexFileReader reader = new DexFileReader(file);
+        DexFileNode node = new DexFileNode();
+        reader.accept(node);
+
+        DexJarDownloader<ClassNode> dl = new DexJarDownloader<>(
                 skidfuscator,
                 new SkidASMFactory(skidfuscator),
                 new JarInfo(file)

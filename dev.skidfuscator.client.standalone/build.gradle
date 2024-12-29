@@ -1,6 +1,7 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'application'
+    id 'xyz.wagyourtail.jvmdowngrader' version '1.2.1'
 }
 repositories {
     mavenCentral()
@@ -11,11 +12,21 @@ application {
     mainClass = 'dev.skidfuscator.obfuscator.SkidfuscatorMain'
 }
 
+downgradeJar {
+    downgradeTo = JavaVersion.VERSION_1_8
+}
+
+shadeDowngradedApi {
+    downgradeTo = JavaVersion.VERSION_1_8
+}
+
 dependencies {
     implementation 'info.picocli:picocli:4.6.3'
     implementation 'org.jline:jline:3.21.0'
     implementation 'com.jgoodies:jgoodies-forms:1.9.0'
     implementation 'com.github.vlsi.mxgraph:jgraphx:4.2.2'
+    implementation 'com.formdev:flatlaf:3.5.4'
+    implementation 'com.formdev:flatlaf-intellij-themes:3.5.4'
 
     implementation project(':obfuscator')
 
@@ -26,3 +37,6 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17

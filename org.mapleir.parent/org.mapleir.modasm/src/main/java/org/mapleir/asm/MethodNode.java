@@ -60,6 +60,10 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
 	    return new JavaDesc(owner.getName(), getName(), getDesc(), JavaDesc.DescType.METHOD);
     }
 
+    public ClassNode getOwnerClass() {
+        return owner;
+    }
+
     public void setOwner(ClassNode owner) {
         this.owner = owner;
     }
@@ -111,6 +115,7 @@ public class MethodNode implements FastGraphVertex, IHasJavaDesc {
     public boolean isClinit() {
         return this.getName().equals("<clinit>");
     }
+
 
     public Type getOwnerType() {
         return Type.getType("L" + owner.getName() + ";");

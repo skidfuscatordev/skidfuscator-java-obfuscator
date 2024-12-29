@@ -4,6 +4,7 @@ import dev.skidfuscator.migration.ExemptToConfigMigration;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
+import dev.skidfuscator.obfuscator.util.LogoUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import picocli.CommandLine;
 
@@ -30,125 +31,65 @@ public class ObfuscateCommand implements Callable<Integer> {
             index = "0",
             description = "The file which will be obfuscated."
     )
-    private File input;
+    public File input;
 
     @CommandLine.Option(
             names = {"-rt", "--runtime"},
             description = "Path to the runtime jar"
     )
-    private File runtime;
+    public File runtime;
 
     @CommandLine.Option(
             names = {"-li", "--libs"},
             description = "Path to the libs folder"
     )
-    private File libFolder;
+    public File libFolder;
 
     @CommandLine.Option(
             names = {"-ex", "--exempt"},
             description = "Path to the exempt file"
     )
-    private File exempt;
+    public File exempt;
 
     @CommandLine.Option(
             names = {"-o", "--output"},
             description = "Path to the output jar location"
     )
-    private File output;
+    public File output;
 
     @CommandLine.Option(
             names = {"-cfg", "--config"},
             description = "Path to the config file"
     )
-    private File config;
+    public File config;
 
     @CommandLine.Option(
             names = {"-ph", "--phantom"},
             description = "Declare if phantom computation should be used"
     )
-    private boolean phantom;
+    public boolean phantom;
 
     @CommandLine.Option(
             names = {"-fuckit", "--fuckit"},
             description = "Do not use!"
     )
-    private boolean fuckit;
+    public boolean fuckit;
 
     @CommandLine.Option(
             names = {"-dbg", "--debug"},
             description = "Do not use!"
     )
-    private boolean debug;
+    public boolean debug;
 
     @CommandLine.Option(
             names = {"-notrack", "--notrack"},
             description = "If you do not wish to be part of analytics!"
     )
-    private boolean notrack;
+    public boolean notrack;
 
 
     @Override
     public Integer call()  {
-        /* Total number of processors or cores available to the JVM */
-        final String processors =
-                String.format("%19.19s", "Processors:")
-                        + "   "
-                        + String.format(
-                                 "%-19.19s",
-                            Runtime.getRuntime().availableProcessors() + " cores"
-                );
-
-        final long freeMemory = Math.round(Runtime.getRuntime().freeMemory() / 1E6);
-        final String memory =
-                String.format("%19.19s", "Current Memory:")
-                        + "   "
-                        + String.format("%-19.19s", freeMemory + "mb");
-
-        final long maxMemory = Math.round(Runtime.getRuntime().maxMemory() / 1E6);
-        final String memoryString = (maxMemory == Long.MAX_VALUE
-                ? ConsoleColors.GREEN + "no limit"
-                : maxMemory + "mb"
-        );
-        String topMemory =
-                String.format("%19.19s", "Max Memory:")
-                        + "   "
-                        + String.format("%-19.19s",
-                            memoryString + (maxMemory > 1500 ? "" : " ⚠️")
-                        );
-
-        topMemory = MiscUtil.replaceColor(
-                topMemory,
-                memoryString,
-                maxMemory > 1500 ? ConsoleColors.GREEN_BRIGHT : ConsoleColors.RED_BRIGHT
-        );
-        // slight fix for thing
-        topMemory = topMemory.replace("⚠️", "⚠️ ");
-
-        final String[] logo = new String[] {
-                "",
-                "  /$$$$$$  /$$       /$$       /$$  /$$$$$$                                           /$$",
-                " /$$__  $$| $$      |__/      | $$ /$$__  $$                                         | $$",
-                "| $$  \\__/| $$   /$$ /$$  /$$$$$$$| $$  \\__//$$   /$$  /$$$$$$$  /$$$$$$$  /$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$",
-                "|  $$$$$$ | $$  /$$/| $$ /$$__  $$| $$$$   | $$  | $$ /$$_____/ /$$_____/ |____  $$|_  $$_/   /$$__  $$ /$$__  $$",
-                " \\____  $$| $$$$$$/ | $$| $$  | $$| $$_/   | $$  | $$|  $$$$$$ | $$        /$$$$$$$  | $$    | $$  \\ $$| $$  \\__/",
-                " /$$  \\ $$| $$_  $$ | $$| $$  | $$| $$     | $$  | $$ \\____  $$| $$       /$$__  $$  | $$ /$$| $$  | $$| $$",
-                "|  $$$$$$/| $$ \\  $$| $$|  $$$$$$$| $$     |  $$$$$$/ /$$$$$$$/|  $$$$$$$|  $$$$$$$  |  $$$$/|  $$$$$$/| $$",
-                " \\______/ |__/  \\__/|__/ \\_______/|__/      \\______/ |_______/  \\_______/ \\_______/   \\___/   \\______/ |__/",
-                "",
-                "                               ┌───────────────────────────────────────────┐",
-                "                               │ "             + processors +            " │",
-                "                               │ "               + memory +              " │",
-                "                               │ "              + topMemory +            " │",
-                "                               └───────────────────────────────────────────┘",
-                "",
-                "                      Author: Ghast     Version: 2.0.7     Today: "
-                        + DateFormat.getDateTimeInstance().format(new Date(Instant.now().toEpochMilli())),
-                ""
-        };
-
-        for (String s : logo) {
-            System.out.println(s);
-        }
 
         if (input == null) {
             return -1;
@@ -169,8 +110,7 @@ public class ObfuscateCommand implements Callable<Integer> {
         }
 
         if (exempt != null) {
-            final File converted = new File(exempt.getAbsolutePath()
-                    .substring(0, exempt.getAbsolutePath().lastIndexOf("/")) + "/config.hocon");
+            final File converted = new File(new File(exempt.getAbsolutePath()).getParentFile().getAbsolutePath(), "config.hocon");
             final String warning = "\n" + ConsoleColors.YELLOW
                     + "██╗    ██╗ █████╗ ██████╗ ███╗   ██╗██╗███╗   ██╗ ██████╗ \n"
                     + "██║    ██║██╔══██╗██╔══██╗████╗  ██║██║████╗  ██║██╔════╝ \n"

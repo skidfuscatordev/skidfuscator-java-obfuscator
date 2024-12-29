@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator;
 
+import dev.skidfuscator.jvm.Jvm;
 import lombok.Builder;
 
 import java.io.File;
@@ -79,6 +80,15 @@ public class SkidfuscatorSession {
      * @return the runtime
      */
     public File getRuntime() {
+        if (runtime == null) {
+            final String home = System.getProperty("java.home");
+            return new File(
+                    home,
+                    Jvm.getJavaVersion() > 8
+                            ? "jmods"
+                            : "lib/rt.jar"
+            );
+        }
         return runtime;
     }
 
@@ -93,6 +103,9 @@ public class SkidfuscatorSession {
      * @return the boolean whether the runtime lib is in JMod format
      */
     public boolean isJmod() {
+        if (runtime == null)
+            return Jvm.isJmod();
+
         return jmod;
     }
 

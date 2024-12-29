@@ -27,7 +27,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 	private static final boolean ALLOW_PHANTOM_CLASSES = false;
 	
 	protected final ApplicationClassSource source;
-	private final ClassNode rootNode;
+	protected final ClassNode rootNode;
 	private final boolean allowPhantomClasses;
 	
 	public ClassTree(ApplicationClassSource source) {
@@ -51,6 +51,38 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 		for (ClassNode node : source.iterateWithLibraries()) {
 			verifyVertex(node);
 		}
+	}
+
+	public List<String> getMissingClasses() {
+		List<String> missing = new ArrayList<>();
+		for (ClassNode cn : source.iterate()) {
+			if(cn != rootNode) {
+				ClassNode sup = null;
+				try {
+					sup = cn.node.superName != null
+							? requestClass0(cn.node.superName, cn.getName())
+							: rootNode;
+				} catch (Exception e) {
+					// ignore
+				}
+				if(sup == null) {
+					missing.add(cn.node.superName);
+				}
+
+				for (String s : cn.node.interfaces) {
+					ClassNode iface  = null;
+					try {
+						iface = requestClass0(s, cn.getName());
+					} catch (Exception e) {
+						// ignore
+					}
+					if(iface == null) {
+						missing.add(s);
+					}
+				}
+			}
+		}
+		return missing;
 	}
 	
 	public ClassNode getRootNode() {
@@ -174,7 +206,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 		}
 	}
 	
-	private ClassNode requestClass0(String name, String from) {
+	protected ClassNode requestClass0(String name, String from) {
 		try {
 			return findClass(name);
 		} catch(RuntimeException e) {

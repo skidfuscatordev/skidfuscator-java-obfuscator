@@ -2,13 +2,18 @@ package dev.skidfuscator.obfuscator;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import dev.skidfuscator.failsafe.Failsafe;
 import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
 import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
+import dev.skidfuscator.obfuscator.creator.SkidFlowGraphDumper;
+import dev.skidfuscator.obfuscator.dependency.CommonDependency;
+import dev.skidfuscator.obfuscator.dependency.DependencyDownloader;
 import dev.skidfuscator.obfuscator.directory.SkiddedDirectory;
 import dev.skidfuscator.obfuscator.event.EventBus;
+import dev.skidfuscator.obfuscator.event.impl.TransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.ClassTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.GroupTransformEvent;
 import dev.skidfuscator.obfuscator.event.impl.transform.MethodTransformEvent;
@@ -18,12 +23,14 @@ import dev.skidfuscator.obfuscator.event.impl.transform.group.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.*;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.*;
 import dev.skidfuscator.obfuscator.exempt.ExemptManager;
+import dev.skidfuscator.obfuscator.exempt.v2.ExclusionParser;
 import dev.skidfuscator.obfuscator.hierarchy.Hierarchy;
 import dev.skidfuscator.obfuscator.hierarchy.SkidHierarchy;
+import dev.skidfuscator.obfuscator.io.apk.ApkInputSource;
+import dev.skidfuscator.obfuscator.io.jar.JarInputSource;
 import dev.skidfuscator.obfuscator.number.hash.HashTransformer;
 import dev.skidfuscator.obfuscator.order.OrderAnalysis;
 import dev.skidfuscator.obfuscator.order.priority.MethodPriority;
-import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.predicate.PredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.SimplePredicateAnalysis;
 import dev.skidfuscator.obfuscator.predicate.opaque.impl.IntegerBlockOpaquePredicate;
@@ -42,12 +49,20 @@ import dev.skidfuscator.obfuscator.transform.Transformer;
 import dev.skidfuscator.obfuscator.transform.impl.SwitchTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.*;
 import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.flow.driver.DriverTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.InterproceduralTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomInitTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.InstanceOfHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.loop.LoopConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
-import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
+import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
@@ -78,6 +93,7 @@ import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
 import java.net.URI;
+
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
@@ -96,8 +112,11 @@ public class Skidfuscator {
     public static final boolean FLATTENING = false;
     public static boolean CLOUD = false;
 
+    public static final String VERSION = "2.1.0";
+
     private final SkidfuscatorSession session;
 
+    protected Set<CommonDependency> installedDependencies = new HashSet<>();
     protected SkidApplicationClassSource classSource;
     private LibraryClassSource jvmClassSource;
     protected JarContents jarContents;
@@ -113,6 +132,7 @@ public class Skidfuscator {
     private PredicateAnalysis predicateAnalysis;
 
     private final SkidRemapper classRemapper = new SkidRemapper(new HashMap<>());
+    private final DependencyDownloader dependencyDownloader = new DependencyDownloader();
 
     private final Counter counter = new Counter();
 
@@ -122,6 +142,8 @@ public class Skidfuscator {
     private HashTransformer legacyHasher;
     @Setter
     private HashTransformer bitwiseHasher;
+    @Setter
+    private HashTransformer vmHasher;
 
     /**
      * Instantiates a new Skidfuscator.
@@ -131,44 +153,6 @@ public class Skidfuscator {
     public Skidfuscator(SkidfuscatorSession session) {
         this.session = session;
         this.exemptAnalysis = new ExemptManager();
-    }
-
-    /**
-     * Runs the execution of the obfuscator.
-     */
-    public void run() {
-        LOGGER.setDebug(session.isDebug());
-        LOGGER.post("Beginning Skidfuscator Community...");
-        if (session.isAnalytics()) {
-            _runAnalytics();
-        }
-
-        if (session.isDex()) {
-            // WIP
-        }
-
-        /*
-         * Initializes a null skid directory. This skid directory is used as a
-         * cache or a temporary directory, most often for silly things such as
-         * JPhantom or in the near future as a cache for the Ghost pre-computed
-         * mappings.
-         */
-        SkiddedDirectory.init(null);
-
-        /*
-         * Here is initialized the skid cache.
-         *
-         * The SkidCache is an extension of MapleIR's IRCache
-         */
-        this.irFactory = new SkidCache(this);
-
-        /*
-         * Here we initialize our opaque predicate type. As of right now
-         * only one has been completed: the direct integer opaque predicate.
-         * In the future, it will be possible to add compatibility for other
-         * types such as longs, byte arrays etc...
-         */
-        LOGGER.post("Resolving predicate analysis...");
         this.predicateAnalysis = new SimplePredicateAnalysis.Builder()
                 .skidfuscator(this)
                 /*
@@ -214,13 +198,55 @@ public class Skidfuscator {
 
                 /* Builder */
                 .build();
+        this.config = new DefaultSkidConfig(tsConfig, "");
+    }
+
+    /**
+     * Runs the execution of the obfuscator.
+     */
+    public void run() {
+        LOGGER.setDebug(session.isDebug());
+        LOGGER.post("Beginning Skidfuscator Community...");
+        _verifyEnvironment();
+        if (session.isAnalytics()) {
+            _runAnalytics();
+        }
+
+        if (session.isDex()) {
+            // WIP
+        }
+
+        /*
+         * Initializes a null skid directory. This skid directory is used as a
+         * cache or a temporary directory, most often for silly things such as
+         * JPhantom or in the near future as a cache for the Ghost pre-computed
+         * mappings.
+         */
+        SkiddedDirectory.init(null);
+
+        /*
+         * Here is initialized the skid cache.
+         *
+         * The SkidCache is an extension of MapleIR's IRCache
+         */
+        this.irFactory = new SkidCache(this);
+
+        /*
+         * Here we initialize our opaque predicate type. As of right now
+         * only one has been completed: the direct integer opaque predicate.
+         * In the future, it will be possible to add compatibility for other
+         * types such as longs, byte arrays etc...
+         */
+        LOGGER.post("Resolving predicate analysis...");
+
         if (session.isDebug())
             LOGGER.log("Finished resolving predicate analysis!");
 
         _importConfig();
         _importExempt();
         _importClasspath();
-        _importJvm();
+        final Set<LibraryClassSource> sources = _importJvm();
+        this.getClassSource().addLibraries(sources.toArray(new LibraryClassSource[0]));
 
         if (!session.isFuckIt()) {
             _verify();
@@ -305,7 +331,7 @@ public class Skidfuscator {
         System.out.println("┌────────────────────────────[ Results ]────────────────────────────┐");
 
         for (Transformer transformer : transformers) {
-            System.out.println("│  " + pad(transformer.getResult(), 130) + "│");
+            System.out.println("│  " + pad(transformer.getResult().replace("Annotation", "@"), 130) + "│");
         }
         System.out.println("└───────────────────────────────────────────────────────────────────┘\n\n");
 
@@ -347,8 +373,8 @@ public class Skidfuscator {
         EventBus.end();
 
         _cleanup();
-        _dump();
 
+        _dump();
 
         SkidProgressBar.RENDER_THREAD.shutdown();
         IntegerBlockPredicateRenderer.DEBUG = false;
@@ -374,7 +400,28 @@ public class Skidfuscator {
         tracker.sendRequestAsync(request);
     }
 
-    protected void _importConfig() {
+    protected void _verifyEnvironment() {
+        Path local = Paths.get("");
+
+        // If config is defined, it should be in workspace
+        if (session.getConfig() != null) {
+            LOGGER.debug(String.format("Config path: %s", session.getConfig().toPath().toString()));
+            final Path path = local.resolve(session.getConfig().getName());
+
+            if (path.toFile().getAbsolutePath().equals(session.getConfig().getAbsolutePath())) {
+                LOGGER.debug("Config is in workspace");
+            } else {
+                LOGGER.warn("-----------------------------------------------------\n"
+                        + "Config is not in workspace\n"
+                        + "Your current working directory is: " + local.toAbsolutePath() + "\n"
+                        + "Your current config path is: " + session.getConfig().getAbsolutePath() + "\n"
+                        + "Please execute Skidfuscator in the same directory as your config for best compatibility!!\n"
+                        + "----------------------------------------------------- \n");
+            }
+        }
+    }
+
+    public void _importConfig() {
         LOGGER.post("Loading config...");
 
         try (final ProgressWrapper progressBar = ProgressUtil.progressCheck(
@@ -399,11 +446,7 @@ public class Skidfuscator {
     protected void _importExempt() {
         /* Importation and exemptions */
         LOGGER.post("Importing exemptions...");
-        /*
-         * This is the parsing bit. We initiate a progress bar and
-         * simply just call the exempt analysis which builds the
-         * exclusion call and caches it.
-         */
+
         try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 config.getExemptions().size(),
                 "Imported " + config.getExemptions().size() + " exclusions"
@@ -414,12 +457,23 @@ public class Skidfuscator {
             }
         }
 
+        try(final ProgressWrapper progressBar = ProgressUtil.progressCheck(
+                config.getExemptionsv2().size(),
+                "Imported " + config.getExemptionsv2().size() + " exclusions v2"
+        )) {
+            for (String s : config.getExemptionsv2()) {
+                exemptAnalysis.add(ExclusionParser.parsePatternExclusion(s));
+                progressBar.tick();
+            }
+        }
+
         LOGGER.log("Imported: \n " + exemptAnalysis.toString());
         LOGGER.log("Finished importing exemptions");
     }
 
-    protected void _importJvm() {
+    public Set<LibraryClassSource> _importJvm() {
         /* Import JVM */
+        final Set<LibraryClassSource> sources = new HashSet<>();
         LOGGER.post("Beginning importing of the JVM...");
 
         /*
@@ -440,7 +494,8 @@ public class Skidfuscator {
                         GhostHelper.getJvm(session, LOGGER, session.getRuntime()),
                         0
                 );
-                this.classSource.addLibraries(jvmClassSource);
+
+                sources.add(jvmClassSource);
                 wrapper.tick();
             }
             LOGGER.post("✓ Success");
@@ -460,7 +515,7 @@ public class Skidfuscator {
              */
             if (libFiles == null) {
                 LOGGER.warn("FATAL! Library files for JDK are null");
-                System.exit(2);
+                throw new IllegalStateException("Null JDK files! Exiting...");
             }
 
             try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
@@ -473,33 +528,39 @@ public class Skidfuscator {
                         continue;
                     }
 
-                    this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                    jvmClassSource = new LibraryClassSource(
                             GhostHelper.getJvm(session, LOGGER, file),
                             0
-                    )));
+                    );
+                    sources.add(jvmClassSource);
                     wrapper.tick();
                 }
             }
             LOGGER.post("✓ Success");
         }
-        LOGGER.log("Finished importing the JVM!");
+        LOGGER.log("Finished importing the JVM");
+        LOGGER.log(String.format("Imported %d jvm classes!", jvmClassSource.size()));
+
+        return sources;
     }
 
-    protected void _importClasspath() {
+    public SkidApplicationClassSource _importClasspath() {
         LOGGER.post("Importing jar...");
-        /*
-         * This is the main jar download. We'll be keeping a cache of the jar
-         * download as it will simplify our output methods. In several cases,
-         * many jars have classes with names that do not align with their
-         * respective ClassNode#getName, causing conflicts, hence why the cache
-         * of the jar downloader.
-         */
-        final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
-                session.getInput(),
-                this
-        );
 
-        this.jarContents = downloader.getJarContents();
+        final String path = session.getInput().getPath();
+
+        if (path.endsWith(".apk")) {
+            this.jarContents = session.getInput().isDirectory()
+                    ? new ApkInputSource(this).download(session.getInput())
+                    : new ApkInputSource(this).download(new File(path));
+        } else if (path.endsWith(".dex")) {
+            this.jarContents = new JarInputSource(this)
+                    .download(session.getInput());
+        } else {
+            this.jarContents = new JarInputSource(this)
+                    .download(session.getInput());
+        }
+
         this.classSource = new SkidApplicationClassSource(
                 session.getInput().getName(),
                 session.isFuckIt(),
@@ -561,7 +622,7 @@ public class Skidfuscator {
             LOGGER.log("✓ Finished importing libs!");
         }
 
-        if (session.getMappings() == null && config.getLibs().length > 0) {
+        if (config.getLibs().length > 0) {
             final File[] libs = Arrays.stream(config.getLibs())
                     .filter(e -> e.getAbsolutePath().endsWith(".jar"))
                     .toArray(File[]::new);
@@ -577,6 +638,9 @@ public class Skidfuscator {
                 ));
             }
             LOGGER.log("✓ Finished importing config libs!");
+            LOGGER.log(String.format("✓ Imported %d config libs!", libs.length));
+        } else {
+            LOGGER.warn("! No libraries were imported! If this is normal, ignore this.");
         }
 
         /*
@@ -587,7 +651,8 @@ public class Skidfuscator {
          * Furthermore, since it computes classes which could be present in other
          * libraries, we set the priority to -1, making it the last fallback result.
          */
-        this.classSource.addLibraries(new LibraryClassSource(
+        // TODO: perma remove jphantom
+        /*this.classSource.addLibraries(new LibraryClassSource(
                 new ApplicationClassSource(
                         "phantom",
                         true,
@@ -598,8 +663,10 @@ public class Skidfuscator {
                                 .collect(Collectors.toList())
                 ),
                 1
-        ));
+        ));*/
         LOGGER.log("Finished importing classpath!");
+
+        return classSource;
     }
 
     protected List<Transformer> _loadTransformer() {
@@ -620,26 +687,31 @@ public class Skidfuscator {
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
 
-        if (true) {
+        if (!SkidFlowGraphDumper.TEST_COMPUTE) {
             if (tsConfig.hasPath("stringEncryption.type")) {
                 switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
-                    case STANDARD: transformers.add(new StringTransformer(this)); break;
+                    case STANDARD: transformers.add(new StringTransformerV2(this)); break;
                 }
             } else {
-                transformers.add(new StringTransformer(this));
+                transformers.add(new StringTransformerV2(this));
             }
 
             transformers.addAll(Arrays.asList(
+                    // BASE
+                    new RandomInitTransformer(this),
+                    new InterproceduralTransformer(this),
                     // ----- COMMUNITY -----
                     new NumberTransformer(this),
                     new SwitchTransformer(this),
                     new BasicConditionTransformer(this),
                     new BasicExceptionTransformer(this),
                     new BasicRangeTransformer(this),
-
-                    // Patch
-                    new DriverTransformer(this),
-
+                    new PureHashTransformer(this),
+                    new SdkInjectorTransformer(this),
+                    new StringEqualsHashTransformer(this),
+                    new StringEqualsIgnoreCaseHashTransformer(this),
+                    new InstanceOfHashTransformer(this),
+                    //new LoopConditionTransformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)
@@ -656,7 +728,7 @@ public class Skidfuscator {
         transformers.clear();
 
         for (Transformer temp : temps) {
-            if (temp.getConfig().isEnabled()) {
+            if (temp.isEnabled()) {
                 transformers.add(temp);
                 //System.out.println(temp.getName() + " -> " + Arrays.toString(temp.getConfig().getExemptions().toArray()));
                 for (String exemption : temp.getConfig().getExemptions()) {
@@ -675,25 +747,104 @@ public class Skidfuscator {
         LOGGER.post("Starting verification");
         try {
             classSource.getClassTree().verify();
-        } catch (Exception e) {
-            LOGGER.warn("\n" +
-                    "-----------------------------------------------------\n"
-                            + "/!\\ Skidfuscator failed to compute some libraries!\n"
-                            + "It it advised to read https://github.com/terminalsin/skidfuscator-java-obfuscator/wiki/Libraries\n"
-                            + "\n"
-                            + "Error: " + e.getMessage() + "\n" +
-                            (e.getCause() == null
-                                    ? "\n"
-                                    : "      " + e.getCause().getMessage() + "\n"
-                            )
-                            + "-----------------------------------------------------\n"
-            );
+        } catch (Exception ex) {
+            final List<String> missingClasses = classSource.getClassTree().getMissingClasses();
 
-            if (!CLOUD)
-                System.exit(1);
+            LOGGER.warn(
+                    "Attempting to auto-resolve missing classes..."
+                            +  "\n"
+                            + "List of missing classes:\n"
+                            + missingClasses.stream().map(f -> "   -->   " + f + "\n").collect(Collectors.joining())
+            );
+            final Set<CommonDependency> commonDependencies = Arrays.stream(CommonDependency.values())
+                    .filter(f -> f.getMatcher().test(missingClasses))
+                    .filter(f -> !installedDependencies.contains(f))
+                    .collect(Collectors.toSet());
+
+            if (commonDependencies.isEmpty()) {
+                LOGGER.warn("\n" +
+                        "-----------------------------------------------------\n"
+                        + "/!\\ Skidfuscator failed to compute some libraries!\n"
+                        + "PLEASE READ THE FOLLOWING WITH MUCH ATTENTION\n"
+                        + "-----------------------------------------------------\n"
+                        + "It it advised to read https://skidfuscator.dev/docs/libraries.html\n"
+                        + "\n"
+                        + "The following classes were NOT found. This means they are \n"
+                        +  "either not present in the libraries or the libraries are \n"
+                        +  "corrupted. Libraries themselves can have dependencies\n"
+                        +  "\n"
+                        + "List of missing classes:\n"
+                        + missingClasses.stream().map(f -> "   -->   " + f + "\n").collect(Collectors.joining())
+                        + "-----------------------------------------------------\n"
+                );
+
+                throw new IllegalStateException("Failed to compute some libraries!");
+            }
+
+            // [failsafe]   some people cancel mid download, corrupting the library
+            //              and sometimes i fuck up, rendering it wrong
+            //              so we should nuke and redownload common deps to
+            //              prevent bad things. if it fails again, i want to know
+            //              about it
+
+            Failsafe.run(() -> downloadCommonDependencies(commonDependencies))
+                    .onException()
+                    .retry(1)
+                    .execute(() -> {
+                        LOGGER.warn("Failed to download common dependencies... retrying...\n");
+                        final Path mappingsDir = Paths.get("mappings-cloud");
+                        try {
+                            Files.delete(mappingsDir);
+                        } catch (IOException e) {
+                            LOGGER.error("Failed to download common dependencies again... Please contact the developer\n", e);
+                        }
+                    })
+                    .finish();
+
+            LOGGER.warn(String.format(
+                    "Resolved %d common dependencies... retrying verification...\n",
+                    commonDependencies.size()
+            ));
+            installedDependencies.addAll(commonDependencies);
+            _verify();
             return;
         }
         LOGGER.log("Finished verification!");
+    }
+
+    private void downloadCommonDependencies(Collection<CommonDependency> dependencies) {
+        dependencies.forEach(e -> {
+            LOGGER.warn("Found common dependency: " + e.name() + "...\n");
+            dependencyDownloader.download(e);
+        });
+
+        final Path mappingsDir = Paths.get("mappings-cloud");
+        this.importMappingFolder(mappingsDir.toFile());
+    }
+
+    private void importMappingFolder(final File folder) {
+        for (File lib : folder.listFiles()) {
+            if (lib.isDirectory()) {
+                importMappingFolder(lib);
+                continue;
+            }
+
+            final String absolute = lib.getAbsolutePath();
+            if (!absolute.endsWith(".json")) {
+                LOGGER.debug(String.format("Skipping over %s since not end in json", absolute));
+                continue;
+            }
+
+            final GhostLibrary library = GhostHelper.readFromLibraryFile(LOGGER, lib);
+            final ApplicationClassSource libraryClassSource = GhostHelper.importFile(LOGGER, session.isFuckIt(), library);
+            /* Add library source to class source */
+            classSource.addLibraries(new LibraryClassSource(
+                    libraryClassSource,
+                    5
+            ));
+
+            LOGGER.style(String.format("Importing %s... please wait...\n", absolute));
+        }
     }
 
     protected void _cleanup() {
@@ -754,12 +905,14 @@ public class Skidfuscator {
     }
 
     private void run(final String phaseName, final Caller caller) {
+        final List<String> issues = new ArrayList<>();
         final SkidTransformEvent event = caller.callBase();
         EventBus.call(event);
+        issues.addAll(event.getIssues());
 
         try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 hierarchy.getClasses().size(),
-                pad("Running phase [" + phaseName + "] on " + hierarchy.getClasses().size() + " classes", 63) + "│",
+                pad("Running phase [" + phaseName + "] on " + hierarchy.getClasses().size() + " classes", 62) + "│",
                 "│  "
         )){
             for (ClassNode ccls : hierarchy.getClasses()) {
@@ -770,8 +923,9 @@ public class Skidfuscator {
                     continue;
                 }
 
+                final TransformEvent classEvent = caller.callClass(classNode);
                 EventBus.call(
-                        caller.callClass(classNode),
+                        classEvent,
                         el -> {
                             final Class<?> listener = el.getListener().getClass();
                             return !Transformer.class.isAssignableFrom(listener)
@@ -781,13 +935,15 @@ public class Skidfuscator {
                             );
                         }
                 );
+                issues.addAll(classEvent.getIssues());
                 progressBar.tick();
             }
         }
 
+
         try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 hierarchy.getGroups().size(),
-                pad("Running phase [" + phaseName + "] on " + hierarchy.getGroups().size() + " method groups", 63) + "│",
+                pad("Running phase [" + phaseName + "] on " + hierarchy.getGroups().size() + " method groups", 62) + "│",
                 "│  "
         )){
             for (SkidGroup group : hierarchy.getGroups()) {
@@ -796,8 +952,9 @@ public class Skidfuscator {
                     continue;
                 }
 
+                final TransformEvent groupEvent = caller.callGroup(group);
                 EventBus.call(
-                        caller.callGroup(group),
+                        groupEvent,
                         el -> {
                             final Class<?> listenerClazz = el.getListener().getClass();
                             return !Transformer.class.isAssignableFrom(listenerClazz)
@@ -808,10 +965,14 @@ public class Skidfuscator {
                                             exemptAnalysis.isExempt(
                                                     (Class<? extends Transformer>) listenerClazz,
                                                     e
+                                            ) || exemptAnalysis.isExempt(
+                                                    (Class<? extends Transformer>) listenerClazz,
+                                                    e.owner
                                             )
                                     );
                         }
                 );
+                issues.addAll(groupEvent.getIssues());
                 progressBar.tick();
             }
         }
@@ -820,7 +981,7 @@ public class Skidfuscator {
 
         try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 size,
-                pad("Running phase [" + phaseName + "] on " + size + " methods", 63) + "│",
+                pad("Running phase [" + phaseName + "] on " + size + " methods", 62) + "│",
                 "│  "
         )){
             for (ClassNode ccls : hierarchy.getClasses()) {
@@ -850,8 +1011,9 @@ public class Skidfuscator {
                         continue;
                     }
 
+                    final TransformEvent methodEvent = caller.callMethod(methodNode);
                     EventBus.call(
-                            caller.callMethod(methodNode),
+                            methodEvent,
                             el -> {
                                 final Class<?> listenerClazz = el.getListener().getClass();
                                 return !Transformer.class.isAssignableFrom(listenerClazz)
@@ -861,10 +1023,26 @@ public class Skidfuscator {
                                 );
                             }
                     );
+                    issues.addAll(methodEvent.getIssues());
                     methodNode.getCfg().recomputeEdges();
                     progressBar.tick();
                 }
             }
+        }
+
+        System.out.println(ansi().cursorUpLine()
+                .append("│  ")
+                .append(pad(String.format(
+                        "Found " + ConsoleColors.RED + "%d " + ConsoleColors.RESET + "issues | " + " Modified " + ConsoleColors.YELLOW + "%d" + ConsoleColors.RESET,
+                        issues.size(), event.getChanged()
+                ), 87))
+                .append("│"));
+        issues.forEach(e -> System.out.println("│  --> " + pad(e, 61) + "│"));
+
+        if (!phaseName.equals("Finalize")) {
+            System.out.println("│───────────────────────────────────────────────────────────────────│\n");
+        } else {
+            System.out.println("");
         }
     }
 

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.zip.CRC32;
 import java.util.zip.ZipException;
 
 /**
@@ -73,7 +74,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 					throw e;
 				}
 
-				contents.getClassContents().remove(cn);
+				//contents.getClassContents().remove(cn);
 				jos.flush();
 				progressBar.tick();
 			}
@@ -81,7 +82,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 			for (JarResource res : new LinkedList<>(contents.getResourceContents())) {
 				resourcesDumped += dumpResource(jos, res.getName(), res.getData());
 
-				contents.getResourceContents().remove(res);
+				//contents.getResourceContents().remove(res);
 				progressBar.tick();
 			}
 		}
@@ -121,7 +122,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 		ClassTree tree = source.getClassTree();
 		for(MethodNode m : cn.getMethods()) {
 			if(m.node.instructions.size() > 10000) {
-				System.out.println("large method: " + m + " @" + m.node.instructions.size());
+				//System.out.println("large method: " + m + " @" + m.node.instructions.size());
 			}
 		}
 
@@ -264,6 +265,13 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	@Override
 	public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
 		JarEntry entry = new JarEntry(name);
+		if (name.endsWith(".jar")){
+			entry.setMethod(JarEntry.STORED);
+			entry.setSize(file.length);
+			CRC32 crc = new CRC32();
+			crc.update(file, 0, file.length);
+			entry.setCrc(crc.getValue());
+		}
 		out.putNextEntry(entry);
 		out.write(file);
 		return 1;

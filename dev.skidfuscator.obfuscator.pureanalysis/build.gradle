@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'dev.skidfuscator.community'
+version = '2.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    mavenLocal()
+}
+
+dependencies {
+    api project(':modasm')
+    api 'io.github.terminalsin:SSVM:1.0.0-SNAPSHOT'
+    //api 'dev.xdark:ssvm-core:2.0.2'
+    //api 'dev.xdark:ssvm-invoke:2.0.2'
+    //api 'dev.xdark:ssvm-io:2.0.2'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}

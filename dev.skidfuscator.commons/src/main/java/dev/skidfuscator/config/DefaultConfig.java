@@ -2,10 +2,7 @@ package dev.skidfuscator.config;
 
 import com.typesafe.config.Config;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -22,6 +19,10 @@ public class DefaultConfig {
 
     public List<String> getExemptions() {
         return getStringList("exempt", new ArrayList<>());
+    }
+
+    public List<String> getExemptionsv2() {
+        return getStringList("exclude", Arrays.asList(DefaultExempts.DEFAULT_EXEMPTS_V2));
     }
 
     public boolean getBoolean(String path, final boolean dflt) {

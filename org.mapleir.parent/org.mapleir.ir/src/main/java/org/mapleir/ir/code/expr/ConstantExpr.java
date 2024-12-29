@@ -35,15 +35,16 @@ public class ConstantExpr extends Expr {
 				if (!type.equals(ctype = computeType(cst)) && !isAcceptableSupertype(ctype, type))
 					throw new IllegalStateException(cst + ", " + type + ", " + ctype);
 			}
-		}
-		
-		if(cst instanceof Number && !TypeUtils.unboxType(cst).equals(type)) {
-			if(ctype == null) {
-				ctype = computeType(cst);
+		} else {
+			if(cst instanceof Number && !TypeUtils.unboxType(cst).equals(type)) {
+				if(ctype == null) {
+					ctype = computeType(cst);
+				}
+				cst = TypeUtils.rebox((Number) cst, ctype);
+				// throw new RuntimeException(String.format("rebox: %s (%s) to %s (%s)", cst, cst.getClass(), type, TypeUtils.rebox((Number)cst, computeType(cst)).getClass()));
 			}
-			cst = TypeUtils.rebox((Number) cst, ctype);
-			// throw new RuntimeException(String.format("rebox: %s (%s) to %s (%s)", cst, cst.getClass(), type, TypeUtils.rebox((Number)cst, computeType(cst)).getClass()));
 		}
+
 
 		this.cst = cst;
 		this.type = type;

@@ -59,6 +59,9 @@ public class ExclusionHelper {
             else {
                 if (c == '}') {
                     final String matcher = padded.toString();
+                    if (matcher.isEmpty()) {
+                        throw new IllegalArgumentException("Empty matcher! What is going on? PATTERN: " + pattern);
+                    }
                     final String[] split = matcher.contains(" ")
                             ? matcher.split(" ")
                             : new String[]{matcher};
@@ -76,19 +79,36 @@ public class ExclusionHelper {
                                             .match("public", var.isPublic())
                                             .match("protected", var.isProtected())
                                             .match("private", var.isPrivate())
+                                            .match("abstract", var.isAbstract())
+                                            .match("final", var.isFinal())
+                                            .match("interface", var.isInterface())
+                                            // Added new class-specific matches
+                                            .match("annotation", var.isAnnotation())
+                                            .match("enum", var.isEnum())
+                                            .match("synthetic", var.isSynthetic())
+                                            // Added support for superclass matching
+                                            .match("extends", !matcher.contains("extends")
+                                                    || regex.matcher(var.getSuperName()).find())
+                                            // Added support for interface matching
+                                            .match("implements", !matcher.contains("implements")
+                                                    || var.getInterfaces().stream()
+                                                    .anyMatch(iface -> regex.matcher(iface).find()))
                                             .check();
 
                                     assert initialMatch : "Failed initial match: " + parsed + " got:" + var;
                                     assert !var.getName().contains(".") : "Got weird name: " + var.getName();
 
-                                    final boolean ret =  initialMatch
-                                            && (regex.matcher(var.getName()).find() || parsed.equals(var.getName()));
+                                    final boolean ret = initialMatch
+                                            && (regex.matcher(var.getName()).find()
+                                            || parsed.equals(var.getName())
+                                            // Added package matching
+                                            || (matcher.contains("package")
+                                            && regex.matcher(var.getPackageName()).find()));
 
                                     if (var.getName().equals("jda")) {
                                         System.out.println("JDA! " + var.getName() + " --> " + ret);
                                     }
 
-                                    //assert var.getName().contains("jda") == ret : "name: " + var.getName() + " parser: " + parsed;
                                     return ret;
                                 }
 

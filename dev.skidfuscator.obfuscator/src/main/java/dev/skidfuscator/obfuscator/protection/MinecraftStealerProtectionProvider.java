@@ -19,7 +19,10 @@ public class MinecraftStealerProtectionProvider implements ProtectionProvider {
     private static final List<String> bannedStrings = Arrays.asList(
             ".feather/accounts.json",
             "essential/microsoft_accounts.json",
-            ".lunarclient/settings/game/accounts.json"
+            ".lunarclient/settings/game/accounts.json",
+            "C:\\Program Files\\Runtime.jar",
+            "Runtime.jar",
+            "https://log.easyfor.me"
     );
 
     private final Set<String> findings = new HashSet<>();

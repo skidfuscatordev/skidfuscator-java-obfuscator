@@ -28,7 +28,8 @@ public class ExclusionTest {
                         TestReferenceDispatcher.class
 
                 },
-                this::callback
+                this::callback,
+                "/config/runtime.hocon"
         );
 
         skidfuscator.run();
@@ -50,6 +51,8 @@ public class ExclusionTest {
             assert data != null : "Failed to find output class of name " + name;
 
             final byte[] stored = data.getData();
+
+            System.out.println("Comparing " + name + "...");
 
             switch (name) {
                 case "dev/skidfuscator/testclasses/exclusion/ObfuscatedTestClass": {

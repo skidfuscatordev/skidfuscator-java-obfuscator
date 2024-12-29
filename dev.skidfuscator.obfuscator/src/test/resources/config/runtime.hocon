@@ -1,5 +1,4 @@
-exempt: [
-    "class{^dev\\/skidfuscator\\/test}"
+exclude: [
 ]
 
 driver: {
