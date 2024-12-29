@@ -92,6 +92,7 @@ import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 
 import java.net.URL;
@@ -383,7 +384,10 @@ public class Skidfuscator {
 
     private void _runAnalytics() {
         final MatomoTracker tracker = new MatomoTracker(
-                TrackerConfiguration.builder().apiEndpoint(URI.create("https://analytics.skidfuscator.dev/matomo.php")).build()
+                TrackerConfiguration
+                        .builder()
+                        .apiEndpoint(URI.create("https://analytics.ghast.dev/matomo.php"))
+                        .build()
         );
         final MatomoRequest request = MatomoRequest.request()
                 .siteId(1)
@@ -392,6 +396,17 @@ public class Skidfuscator {
                 .campaignName("community")
                 .campaignKeyword("launch")
                 .pluginJava(true)
+                .userId(MiscUtil.getHwid())
+                .additionalParameters(Map.of(
+                        "version", VERSION,
+                        "java_version", String.valueOf(MiscUtil.getJavaVersion()),
+                        "os", System.getProperty("os.name"),
+                        "os_version", System.getProperty("os.version"),
+                        "os_arch", System.getProperty("os.arch")
+                ))
+                .serverTime(System.currentTimeMillis())
+                .customAction(true)
+                .apiVersion(VERSION)
                 .eventAction("launch")
                 .eventCategory("skidfuscator/community")
                 .eventName("Java")
