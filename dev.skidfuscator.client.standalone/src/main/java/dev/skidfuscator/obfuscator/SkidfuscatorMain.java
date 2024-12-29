@@ -1,6 +1,7 @@
 package dev.skidfuscator.obfuscator;
 
 import com.formdev.flatlaf.intellijthemes.FlatDarkPurpleIJTheme;
+import com.formdev.flatlaf.intellijthemes.FlatGradiantoMidnightBlueIJTheme;
 import dev.skidfuscator.obfuscator.command.HelpCommand;
 import dev.skidfuscator.obfuscator.command.MappingsCommand;
 import dev.skidfuscator.obfuscator.command.ObfuscateCommand;

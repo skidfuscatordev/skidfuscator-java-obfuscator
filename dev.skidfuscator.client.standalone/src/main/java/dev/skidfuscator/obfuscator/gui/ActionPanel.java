@@ -6,7 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public class ActionPanel extends JPanel {
+public class ActionPanel extends JPanel implements SkidPanel{
     private final MainFrame mainFrame;
     private final JTextArea logArea;
     private final JButton startButton;
@@ -40,6 +40,8 @@ public class ActionPanel extends JPanel {
             return;
         }
 
+
+
         // Create session
         SkidfuscatorSession session = SkidfuscatorSession.builder()
                 .input(new File(config.getInputPath()))
@@ -48,10 +50,7 @@ public class ActionPanel extends JPanel {
                         ? new File[0]
                         : new File(config.getLibsPath()).listFiles()
                 )
-                .runtime(config.getRuntimePath().isEmpty()
-                        ? null
-                        : new File(config.getRuntimePath())
-                )
+                .runtime(null)
                 .phantom(false)
                 .debug(config.isDebugEnabled())
                 .build();

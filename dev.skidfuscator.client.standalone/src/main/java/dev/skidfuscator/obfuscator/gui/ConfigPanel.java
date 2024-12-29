@@ -9,26 +9,22 @@ import dev.skidfuscator.jvm.Jvm;
 import dev.skidfuscator.obfuscator.gui.autosave.AutoSaveDocumentListener;
 import dev.skidfuscator.obfuscator.gui.config.SkidfuscatorConfig;
 import dev.skidfuscator.obfuscator.util.JdkDownloader;
+import dev.skidfuscator.obfuscator.util.Observable;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
 
-public class ConfigPanel extends JPanel {
+public class ConfigPanel extends JPanel implements SkidPanel{
     private final JTextField inputField;
     private final JTextField outputField;
     private final JTextField libsField;
     private final JTextField runtimeField;
     private final JCheckBox debugBox;
     private final SkidfuscatorConfig config;
+    private Observable<Boolean> runtimeInstalled = new Observable.SimpleObservable<>(
+            JdkDownloader.isJdkDownloaded()
+    );
 
     public ConfigPanel() {
         setLayout(new GridBagLayout());
@@ -116,7 +112,9 @@ public class ConfigPanel extends JPanel {
                 boolean valid = new File(inputField.getText()).exists();
                 inputCheck.setText(valid ? "✓" : "✗");
                 inputCheck.setForeground(valid ? new Color(46, 204, 64) : new Color(255, 65, 54));
-                
+                System.out.println("Input valid: " + valid);
+                config.getValidInput().set(valid);
+
                 if (!valid) {
                     StringBuilder tooltip = new StringBuilder("<html><body style='width: 250px; padding: 3px; background-color: #FFF3CD; border: 2px solid #FFE69C; border-radius: 4px'>");
                     tooltip.append("<div style='color: #856404; font-weight: bold; margin-bottom: 5px'>⚠ Warning: Invalid Input Configuration</div>");
@@ -171,7 +169,10 @@ public class ConfigPanel extends JPanel {
 
                 boolean valid = parent != null && parent.exists() && validEnd && validInput;
                 outputCheck.setText(valid ? "✓" : "✗");
-                outputCheck.setForeground(valid ? new Color(46, 204, 64) : new Color(255, 65, 54));
+                outputCheck.setForeground(valid
+                        ? new Color(46, 204, 64)
+                        : new Color(255, 65, 54)
+                );
                 // Set tooltip explaining validation failure
                 StringBuilder tooltip = new StringBuilder("<html><body style='width: 250px; padding: 3px; background-color: #FFF3CD; border: 2px solid #FFE69C; border-radius: 4px'>");
                 tooltip.append("<div style='color: #856404; font-weight: bold; margin-bottom: 5px'>⚠ Warning: Invalid Output Configuration</div>");
@@ -186,6 +187,7 @@ public class ConfigPanel extends JPanel {
                     tooltip.append("<div style='color: #664D03; margin: 3px 0'>Output file cannot be the same as input file</div>");
                 }
                 tooltip.append("</body></html>");
+                config.getValidOutput().set(validInput);
                 
                 if (!valid) {
                     ToolTipManager.sharedInstance().setInitialDelay(0);
@@ -193,7 +195,7 @@ public class ConfigPanel extends JPanel {
 
                     outputField.setToolTipText(tooltip.toString());
                 } else {
-                    outputCheck.setToolTipText(null);
+                    outputField.setToolTipText(null);
                 }
             }
             public void insertUpdate(DocumentEvent e) { updateCheck(); }
@@ -204,9 +206,15 @@ public class ConfigPanel extends JPanel {
         if (config.getLastOutputPath() != null) {
             outputField.setText(config.getLastOutputPath());
             outputListener.insertUpdate(null);
-        } else if (config.getLastInputPath() != null) {
-            outputField.setText(config.getLastInputPath().replace(".jar", "-obf.jar"));
+        } else if (config.getLastInputPath() != null || inputField.getText() != null) {
+            final String input = config.getLastInputPath() != null
+                    ? config.getLastInputPath()
+                    : inputField.getText();
+
+            outputField.setText(input.replace(".jar", "-obf.jar"));
             outputListener.insertUpdate(null);
+        } else {
+            config.getValidOutput().set(false);
         }
         add(outputField, gbc);
         gbc.gridx = 2;
@@ -271,12 +279,14 @@ public class ConfigPanel extends JPanel {
             String jmodPath = JdkDownloader.getCachedJmodPath();
             runtimeField.setText(jmodPath);
             runtimeField.setEnabled(!JdkDownloader.isJdkDownloaded());
+            runtimeInstalled.set(JdkDownloader.isJdkDownloaded());
         } catch (IOException e) {
             // Fallback to config
             if (config.getLastRuntimePath() != null) {
                 if (config.getLastRuntimePath().isEmpty()) {
                     runtimeField.setText(Jvm.getLibsPath());
                     runtimeField.setEnabled(false);
+                    runtimeInstalled.set(true);
                 } else {
                     runtimeField.setText(config.getLastRuntimePath());
                 }
@@ -288,12 +298,19 @@ public class ConfigPanel extends JPanel {
         // Add download button next to browse button
         gbc.gridx = 2;
         JPanel runtimeButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        JButton downloadButton = new JButton("Download JDK");
-        
+        JLabel downloadCheck = new JLabel("✗");
+        downloadCheck.setForeground(new Color(255, 65, 54));
+
+        JButton downloadButton = new JButton("Install");
+        runtimeButtonPanel.setPreferredSize(new Dimension(150, 30));
+
         // Set initial button state based on JDK download status
         if (JdkDownloader.isJdkDownloaded()) {
-            downloadButton.setText("Downloaded");
+            downloadButton.setText("Installed");
             downloadButton.setEnabled(false);
+            downloadCheck.setText("✓");
+            downloadCheck.setForeground(new Color(46, 204, 64));
+            runtimeInstalled.set(true);
         }
         
         downloadButton.addActionListener(e -> {
@@ -312,8 +329,12 @@ public class ConfigPanel extends JPanel {
                         String path = get();
                         runtimeField.setText(path);
                         runtimeField.setEnabled(false);
-                        downloadButton.setText("Downloaded");
+                        downloadButton.setText("Installed");
                         downloadButton.setEnabled(false);
+                        downloadCheck.setText("✓");
+                        downloadCheck.setForeground(new Color(46, 204, 64));
+                        runtimeInstalled.set(true);
+
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(
                             ConfigPanel.this,
@@ -321,14 +342,19 @@ public class ConfigPanel extends JPanel {
                             "Download Error",
                             JOptionPane.ERROR_MESSAGE
                         );
-                        downloadButton.setText("Download JDK");
+                        downloadButton.setText("Install");
                         downloadButton.setEnabled(true);
+                        downloadCheck.setText("✗");
+                        downloadCheck.setForeground(new Color(255, 65, 54));
+                        runtimeInstalled.set(false);
                     }
                 }
             };
             worker.execute();
         });
         runtimeButtonPanel.add(downloadButton);
+        runtimeButtonPanel.add(Box.createHorizontalGlue());
+        runtimeButtonPanel.add(downloadCheck);
 
         // removing for now
         //runtimeButtonPanel.add(createBrowseButton(runtimeField, false));
@@ -412,6 +438,14 @@ public class ConfigPanel extends JPanel {
     public String getLibraryPath() {
         // TODO: Add a library path field to the config panel
         return null;
+    }
+
+    public Observable<Boolean> getRuntimeInstalled() {
+        return runtimeInstalled;
+    }
+
+    public SkidfuscatorConfig getConfig() {
+        return config;
     }
 }
 

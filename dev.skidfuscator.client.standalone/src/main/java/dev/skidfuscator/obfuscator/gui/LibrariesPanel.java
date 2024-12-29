@@ -28,7 +28,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.Timer;
 
-public class LibrariesPanel extends JPanel {
+public class LibrariesPanel extends JPanel implements SkidPanel {
     private final JList<String> libraryList;
     private final DefaultListModel<String> libraryModel;
     private final JList<String> missingClassesList;
@@ -179,6 +179,9 @@ public class LibrariesPanel extends JPanel {
         add(bottomPanel, BorderLayout.SOUTH);
 
         // Analyze the input jar if specified in config
+    }
+
+    public void open() {
         SwingUtilities.invokeLater(this::analyzeConfigJar);
     }
 

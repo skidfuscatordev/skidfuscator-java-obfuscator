@@ -109,6 +109,8 @@ public class Skidfuscator {
     public static final boolean FLATTENING = false;
     public static boolean CLOUD = false;
 
+    public static final String VERSION = "2.1.0";
+
     private final SkidfuscatorSession session;
 
     protected Set<CommonDependency> installedDependencies = new HashSet<>();
@@ -524,7 +526,7 @@ public class Skidfuscator {
              */
             if (libFiles == null) {
                 LOGGER.warn("FATAL! Library files for JDK are null");
-                System.exit(2);
+                throw new IllegalStateException("Null JDK files! Exiting...");
             }
 
             try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
@@ -787,9 +789,7 @@ public class Skidfuscator {
                         + "-----------------------------------------------------\n"
                 );
 
-                if (!CLOUD)
-                    System.exit(1);
-                return;
+                throw new IllegalStateException("Failed to compute some libraries!");
             }
 
             // [failsafe]   some people cancel mid download, corrupting the library

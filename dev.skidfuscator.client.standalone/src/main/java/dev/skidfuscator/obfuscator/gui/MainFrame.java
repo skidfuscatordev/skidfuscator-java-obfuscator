@@ -4,6 +4,8 @@ package dev.skidfuscator.obfuscator.gui;
 import com.formdev.flatlaf.ui.FlatTabbedPaneUI;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
+import dev.skidfuscator.obfuscator.util.JdkDownloader;
+import dev.skidfuscator.obfuscator.util.Observable;
 import lombok.Getter;
 
 import javax.imageio.ImageIO;
@@ -96,7 +98,7 @@ public class MainFrame extends JFrame {
                             g.drawString("Skidfuscator Community", 20, 175);
                             g.setColor(new Color(130, 130, 130));
                             g.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-                            g.drawString("Build: 2023.1", 20, 190);
+                            g.drawString("Build: " + Skidfuscator.VERSION, 20, 190);
 
                             // Draw second separator
                             g.setColor(Color.DARK_GRAY);
@@ -228,21 +230,36 @@ public class MainFrame extends JFrame {
             contentPanel.removeAll();
             switch (tabbedPane.getSelectedIndex()) {
                 case 0:
+                    configPanel.open();
                     contentPanel.add(configPanel, BorderLayout.CENTER);
                     break;
                 case 1:
+                    if (!JdkDownloader.isJdkDownloaded()) {
+                        JOptionPane.showMessageDialog(this, "Please download the JDK first", "Error", JOptionPane.ERROR_MESSAGE);
+                        tabbedPane.setSelectedIndex(0);
+                        return;
+                    }
+                    librariesPanel.open();
                     contentPanel.add(librariesPanel, BorderLayout.CENTER);
                     break;
                 case 2:
                     contentPanel.add(transformerPanel, BorderLayout.CENTER);
                     break;
                 case 3:
+                    consolePanel.open();
                     contentPanel.add(consolePanel, BorderLayout.CENTER);
                     break;
             }
             contentPanel.revalidate();
             contentPanel.repaint();
         });
+
+
+        // Observe input/output and adapt button to it
+        configPanel.getConfig().getValidInput().addObserver(value -> refreshStartButton());
+        configPanel.getConfig().getValidOutput().addObserver(value -> refreshStartButton());
+        configPanel.getRuntimeInstalled().addObserver(value -> refreshStartButton());
+        refreshStartButton();
 
         // Final setup
         pack();
@@ -309,6 +326,23 @@ public class MainFrame extends JFrame {
         tabbedPane.setEnabledAt(1, transformersEnabled);
     }
 
+    private void refreshStartButton() {
+        System.out.println("Refreshing start button");
+
+        if (!configPanel.getConfig().isValid() || !configPanel.getRuntimeInstalled().get()) {
+            // Set warning icon
+            final Image warningIcon = new ImageIcon(getClass().getResource("/images/warning.png")).getImage();
+            final Image warningImage = warningIcon.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+            final ImageIcon warningIconScaled = new ImageIcon(warningImage);
+            startButton.setIcon(warningIconScaled);
+            startButton.setEnabled(false);
+        } else {
+            startButton.setToolTipText(null);
+            startButton.setIcon(null);
+            startButton.setEnabled(true);
+        }
+    }
+
     public void startObfuscation() {
         ConfigPanel config = this.getConfigPanel();
         TransformerPanel transformers = this.getTransformerPanel();
@@ -347,15 +381,17 @@ public class MainFrame extends JFrame {
                         ? libraryFolder.toFile().listFiles()
                         : new File(config.getLibsPath()).listFiles()
                 )
-                .runtime(config.getRuntimePath().isEmpty()
-                        ? null
-                        : new File(config.getRuntimePath())
-                )
+                //.runtime(config.getRuntimePath().isEmpty()
+                //        ? null
+                //        : new File(config.getRuntimePath())
+                //)
                 .jmod(config.getRuntimePath().contains("jmods"))
                 .debug(config.isDebugEnabled())
                 .build();
         // Start obfuscation in background
         startButton.setEnabled(false);
+
+
         SwingWorker<Void, String> worker = new SwingWorker() {
             @Override
             protected Void doInBackground() {

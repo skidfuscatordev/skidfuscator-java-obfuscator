@@ -2,11 +2,10 @@ package dev.skidfuscator.obfuscator.gui.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import dev.skidfuscator.obfuscator.util.Observable;
 import lombok.Data;
 
 import java.io.*;
-import java.nio.file.*;
-import java.util.Properties;
 
 @Data
 public class SkidfuscatorConfig {
@@ -21,6 +20,14 @@ public class SkidfuscatorConfig {
     private boolean debugEnabled;
     private boolean phantomEnabled;
     private String lastDirectory;
+
+    private transient Observable<Boolean>
+            validInput = new Observable.SimpleObservable<>(false),
+            validOutput = new Observable.SimpleObservable<>(false);
+
+    public boolean isValid() {
+        return validInput.get() && validOutput.get();
+    }
 
     public static class Builder {
         private final SkidfuscatorConfig config;

@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.util;
 
+import dev.skidfuscator.obfuscator.Skidfuscator;
 import lombok.experimental.UtilityClass;
 
 import java.text.DateFormat;
@@ -61,7 +62,7 @@ public class LogoUtil {
                 "                               │ "              + topMemory +            " │",
                 "                               └───────────────────────────────────────────┘",
                 "",
-                "                      Author: Ghast     Version: 2.0.11     Today: "
+                "                      Author: Ghast     Version: " + Skidfuscator.VERSION + "  Today: "
                         + DateFormat.getDateTimeInstance().format(new Date(Instant.now().toEpochMilli())),
                 ""
         };

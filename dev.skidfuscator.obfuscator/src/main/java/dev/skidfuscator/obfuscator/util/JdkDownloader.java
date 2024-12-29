@@ -128,16 +128,11 @@ public class JdkDownloader {
                 wrapper.tick();
                 wrapper.succeed();
             } catch (IOException e) {
-                Files.deleteIfExists(jdkPath);
+                Files.deleteIfExists(getCachedJdk());
                 throw e;
             }
         }
-
-        switch (OS) {
-            case "mac os x":
-            case "mac":
-                return jdkPath.resolve("Contents/Home");
-        }
+        jdkPath = getCachedJdk();
         return jdkPath;
     }
     

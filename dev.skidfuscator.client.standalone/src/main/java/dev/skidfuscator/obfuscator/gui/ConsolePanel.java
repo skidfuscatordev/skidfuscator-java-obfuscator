@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ConsolePanel extends JPanel {
+public class ConsolePanel extends JPanel implements SkidPanel {
     private final JTextPane consoleOutput;
     private final SimpleDateFormat timeFormat;
     private final StyledDocument doc;
