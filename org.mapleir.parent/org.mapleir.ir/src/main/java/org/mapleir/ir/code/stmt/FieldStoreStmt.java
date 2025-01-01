@@ -11,6 +11,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FieldStoreStmt extends Stmt implements IUsesJavaDesc {
 
 	private Expr instanceExpression;
@@ -183,5 +186,15 @@ public class FieldStoreStmt extends Stmt implements IUsesJavaDesc {
 	@Override
 	public JavaDesc getDataUseLocation() {
 		return getBlock().getGraph().getJavaDesc();
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+
+		if (instanceExpression != null)
+			self.addAll(instanceExpression.traverse());
+		self.addAll(valueExpression.traverse());
+		return self;
 	}
 }

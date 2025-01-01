@@ -8,6 +8,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ArrayLengthExpr extends Expr {
 
 	private Expr expression;
@@ -84,5 +87,12 @@ public class ArrayLengthExpr extends Expr {
 	@Override
 	public boolean equivalent(CodeUnit s) {
 		return (s instanceof ArrayLengthExpr) && expression.equivalent(((ArrayLengthExpr)s).expression);
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		return self;
 	}
 }

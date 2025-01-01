@@ -9,6 +9,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CastExpr extends Expr {
 
 	private Expr expression;
@@ -106,5 +109,12 @@ public class CastExpr extends Expr {
 			return expression.equivalent(cast) && type.equals(cast.type);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		return self;
 	}
 }

@@ -8,10 +8,7 @@ import org.mapleir.stdlib.util.JavaDesc;
 import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This is the shared base between the {@link Stmt} and {@link Expr} classes,
@@ -404,6 +401,10 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 		TabbedStringWriter printer = new TabbedStringWriter();
 		node.toString(printer);
 		return printer.toString();
+	}
+
+	public List<CodeUnit> traverse() {
+		return Collections.emptyList();
 	}
 
 	@Override

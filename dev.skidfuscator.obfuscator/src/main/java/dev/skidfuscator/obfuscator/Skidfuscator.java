@@ -62,6 +62,7 @@ import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
+import dev.skidfuscator.obfuscator.transform.impl.vm.VmConditionTransformer;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
@@ -84,10 +85,8 @@ import org.mapleir.context.BasicAnalysisContext;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.matomo.java.tracking.MatomoTracker;
-import org.matomo.java.tracking.TrackerConfiguration;
+import org.matomo.java.tracking.*;
 import org.objectweb.asm.Opcodes;
-import org.matomo.java.tracking.MatomoRequest;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
@@ -114,6 +113,7 @@ public class Skidfuscator {
     public static boolean CLOUD = false;
 
     public static final String VERSION = "2.1.0";
+    public static final Double VERSION_DOUBLE = 2.1;
 
     private final SkidfuscatorSession session;
 
@@ -383,36 +383,62 @@ public class Skidfuscator {
     }
 
     private void _runAnalytics() {
-        final MatomoTracker tracker = new MatomoTracker(
+        final String sessionId = UUID.randomUUID().toString();
+        try (MatomoTracker tracker = new MatomoTracker(
                 TrackerConfiguration
                         .builder()
                         .apiEndpoint(URI.create("https://analytics.ghast.dev/matomo.php"))
                         .build()
-        );
-        final MatomoRequest request = MatomoRequest.request()
-                .siteId(1)
-                .actionUrl("https://app.skidfuscator.dev")
-                .actionName("skidfuscator/launch")
-                .campaignName("community")
-                .campaignKeyword("launch")
-                .pluginJava(true)
-                .userId(MiscUtil.getHwid())
-                .additionalParameters(Map.of(
-                        "version", VERSION,
-                        "java_version", String.valueOf(MiscUtil.getJavaVersion()),
-                        "os", System.getProperty("os.name"),
-                        "os_version", System.getProperty("os.version"),
-                        "os_arch", System.getProperty("os.arch")
-                ))
-                .serverTime(System.currentTimeMillis())
-                .customAction(true)
-                .apiVersion(VERSION)
-                .eventAction("launch")
-                .eventCategory("skidfuscator/community")
-                .eventName("Java")
-                .eventValue((double) MiscUtil.getJavaVersion())
-                .build();
-        tracker.sendRequestAsync(request);
+        )) {
+            final MatomoRequest versionRequest = MatomoRequests
+                    .event("skidfuscator", "version", VERSION, null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest javaRequest = MatomoRequests
+                    .event("skidfuscator", "java_version", null, (double) MiscUtil.getJavaVersion())
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest osRequest = MatomoRequests
+                    .event("skidfuscator", "os", System.getProperty("os.name"), null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest osVersionRequest = MatomoRequests
+                    .event("skidfuscator", "os_version", System.getProperty("os.version"), null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest osArchRequest = MatomoRequests
+                    .event("skidfuscator", "os_arch", System.getProperty("os.arch"), null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            tracker.sendBulkRequestAsync(versionRequest, javaRequest, osRequest, osVersionRequest, osArchRequest);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to send analytics request");
+        }
     }
 
     protected void _verifyEnvironment() {

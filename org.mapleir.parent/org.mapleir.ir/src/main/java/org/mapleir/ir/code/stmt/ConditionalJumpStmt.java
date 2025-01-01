@@ -14,6 +14,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.util.Printer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ConditionalJumpStmt extends Stmt {
 
 	public enum ComparisonType {
@@ -293,5 +296,13 @@ public class ConditionalJumpStmt extends Stmt {
 			return type == jump.type && left.equivalent(jump.left) && right.equals(jump.right) && trueSuccessor == jump.trueSuccessor;
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(left.traverse());
+		self.addAll(right.traverse());
+		return self;
 	}
 }

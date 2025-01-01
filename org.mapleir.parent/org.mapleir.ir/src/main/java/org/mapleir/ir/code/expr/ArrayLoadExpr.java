@@ -9,6 +9,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ArrayLoadExpr extends Expr {
 	
 	private Expr arrayExpression;
@@ -53,7 +56,9 @@ public class ArrayLoadExpr extends Expr {
 
 	@Override
 	public Type getType() {
-		return type.getType();
+		return arrayExpression.getType().getSort() == Type.ARRAY
+				? arrayExpression.getType().getElementType()
+				: type.getType();
 	}
 
 	@Override
@@ -124,5 +129,13 @@ public class ArrayLoadExpr extends Expr {
 			return arrayExpression.equals(load.arrayExpression) && indexExpression.equals(load.indexExpression);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(arrayExpression.traverse());
+		self.addAll(indexExpression.traverse());
+		return self;
 	}
 }

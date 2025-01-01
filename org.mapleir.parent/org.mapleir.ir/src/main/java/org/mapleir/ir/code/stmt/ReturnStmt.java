@@ -10,6 +10,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ReturnStmt extends Stmt {
 
 	private Type type;
@@ -102,5 +105,14 @@ public class ReturnStmt extends Stmt {
 			return type.equals(ret.type) && expression.equivalent(ret.expression);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		if (expression != null)
+			self.addAll(expression.traverse());
+
+		return self;
 	}
 }

@@ -210,6 +210,11 @@ public class BasicBlock implements FastGraphVertex, Collection<Stmt> {
 		return statements.set(index, stmt);
 	}
 
+	public void replace(final Stmt o, final Stmt n) {
+		statements.add(indexOf(o), n);
+		statements.remove(o);
+	}
+
 	@Override
 	public int size() {
 		return statements.size();

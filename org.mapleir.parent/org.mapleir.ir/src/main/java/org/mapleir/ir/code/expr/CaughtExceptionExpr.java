@@ -7,6 +7,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CaughtExceptionExpr extends Expr {
 
 	private Type type;
@@ -68,5 +71,11 @@ public class CaughtExceptionExpr extends Expr {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		return self;
 	}
 }

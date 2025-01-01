@@ -23,7 +23,7 @@ public class StaticInvocationExpr extends InvocationExpr {
 
 	@Override
 	public StaticInvocationExpr copy() {
-		return new StaticInvocationExpr(copyArgs(), getOwner(), getName(), getDesc());
+		return new StaticInvocationExpr(getCallType(), copyArgs(), getOwner(), getName(), getDesc());
 	}
 
 	@Override

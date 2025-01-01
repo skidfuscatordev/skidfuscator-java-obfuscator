@@ -1,14 +1,7 @@
 package org.mapleir.ir.locals;
 
-import org.mapleir.ir.TypeUtils;
-import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.Opcode;
-import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.copy.AbstractCopyStmt;
-import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.impl.BasicLocal;
 import org.mapleir.ir.locals.impl.VersionedLocal;
 import org.mapleir.stdlib.collections.bitset.BitSetIndexer;
@@ -16,10 +9,8 @@ import org.mapleir.stdlib.collections.bitset.GenericBitSet;
 import org.mapleir.stdlib.collections.bitset.IncrementalBitSetIndexer;
 import org.mapleir.stdlib.collections.map.NullPermeableHashMap;
 import org.mapleir.stdlib.collections.map.ValueCreator;
-import org.objectweb.asm.Type;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.function.Predicate;
 
 public abstract class LocalsPool implements ValueCreator<GenericBitSet<Local>> {
@@ -155,6 +146,10 @@ public abstract class LocalsPool implements ValueCreator<GenericBitSet<Local>> {
 			}
 			i++;
 		}
+	}
+
+	public BasicLocal nextFree() {
+		return get(getMaxLocals() + 1);
 	}
 	
 	public BasicLocal getNextFreeLocal(boolean isStack) {

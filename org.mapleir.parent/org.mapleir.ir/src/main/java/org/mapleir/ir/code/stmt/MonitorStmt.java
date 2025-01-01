@@ -8,6 +8,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MonitorStmt extends Stmt {
 
 	public enum MonitorMode {
@@ -85,5 +88,12 @@ public class MonitorStmt extends Stmt {
 			return mode == mon.mode && expression.equivalent(mon.expression);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		return self;
 	}
 }

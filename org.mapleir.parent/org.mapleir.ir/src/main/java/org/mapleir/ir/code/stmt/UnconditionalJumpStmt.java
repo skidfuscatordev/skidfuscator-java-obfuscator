@@ -9,6 +9,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class UnconditionalJumpStmt extends Stmt {
 
 	private BasicBlock target;
@@ -68,5 +71,11 @@ public class UnconditionalJumpStmt extends Stmt {
 			return target == jump.target;
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		return self;
 	}
 }

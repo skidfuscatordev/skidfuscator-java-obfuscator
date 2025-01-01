@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gson.internal.bind.ArrayTypeAdapter;
+import lombok.Getter;
 import org.mapleir.app.service.ApplicationClassSource;
 import org.mapleir.app.service.ClassTree;
 import org.objectweb.asm.Opcodes;
@@ -32,6 +34,7 @@ public class TypeUtils {
 	public static final Type CLASS = Type.getType(Class.class);
 	public static final Type STRING_TYPE = Type.getType(String.class);
 	public static final Type OBJECT_TYPE = Type.getType(Object.class);
+	public static final Type OBJECT_ARRAY_TYPE = Type.getType(Object[].class);
 	public static final Type CLONEABLE_TYPE = Type.getType(Cloneable.class);
 	public static final Type SERIALIZABLE_TYPE = Type.getType(Serializable.class);
 	public static final Type THROWABLE = Type.getType(Throwable.class);
@@ -39,43 +42,47 @@ public class TypeUtils {
 	public static final Type UNDEFINED_TYPE = Type.getType(Undefined.class);
 	public static final Type UNINITIALIZED_TYPE = Type.getType(Uninitialized.class);
 
+	public static final Type INT_ARRAY_TYPE = Type.getType(int[].class);
+	public static final Type LONG_ARRAY_TYPE = Type.getType(long[].class);
+	public static final Type DOUBLE_ARRAY_TYPE = Type.getType(double[].class);
+	public static final Type FLOAT_ARRAY_TYPE = Type.getType(float[].class);
 
 	// TODO: remove
 	public static final Type ANY = Type.getType("L<any>;");
 	
-	
-	public enum ArrayType {
-		INT(Type.INT_TYPE, 0),
-		LONG(Type.LONG_TYPE, 1),
-		FLOAT(Type.FLOAT_TYPE, 2),
-		DOUBLE(Type.DOUBLE_TYPE, 3),
-		OBJECT(OBJECT_TYPE, 4),
-		BYTE(Type.BYTE_TYPE, 5),
-		CHAR(Type.CHAR_TYPE, 6),
-		SHORT(Type.SHORT_TYPE, 7);
+	public static ArrayType arrayTypeOfObject(final Type type) {
+		return ArrayType.ofObj(type);
+	}
+
+	@Getter
+    public static class ArrayType {
+		public static ArrayType INT = new ArrayType(Type.INT_TYPE, 0);
+		public static ArrayType LONG = new ArrayType(Type.LONG_TYPE, 1);
+		public static ArrayType FLOAT = new ArrayType(Type.FLOAT_TYPE, 2);
+		public static ArrayType DOUBLE = new ArrayType(Type.DOUBLE_TYPE, 3);
+		public static ArrayType OBJECT = new ArrayType(OBJECT_TYPE, 4);
+		public static ArrayType BYTE = new ArrayType(Type.BYTE_TYPE, 5);
+		public static ArrayType CHAR = new ArrayType(Type.CHAR_TYPE, 6);
+		public static ArrayType SHORT = new ArrayType(Type.SHORT_TYPE, 7);
 		
 		private final Type type;
 		private final int loadOpcode, storeOpcode;
+
+		private static final ArrayType[] VALUES = new ArrayType[] {
+				INT, LONG, FLOAT, DOUBLE, OBJECT, BYTE, CHAR, SHORT
+		};
+
+		public static ArrayType[] values() {
+			return VALUES;
+		}
 		
-		private ArrayType(Type type, int offset) {
+		public ArrayType(Type type, int offset) {
 			this.type = type;
 			loadOpcode = IALOAD + offset;
 			storeOpcode = IASTORE + offset;
 		}
-		
-		public Type getType() {
-			return type;
-		}
-		
-		public int getLoadOpcode() {
-			return loadOpcode;
-		}
-		
-		public int getStoreOpcode() {
-			return storeOpcode;
-		}
-		
-		public static ArrayType resolve(int opcode) {
+
+        public static ArrayType resolve(int opcode) {
 			if(opcode >= IALOAD && opcode <= SALOAD) {
 				return values()[opcode - IALOAD];
 			} else if(opcode >= IASTORE && opcode <= SASTORE) {
@@ -83,6 +90,10 @@ public class TypeUtils {
 			} else {
 				throw new UnsupportedOperationException(Printer.OPCODES[opcode]);
 			}
+		}
+
+		public static ArrayType ofObj(final Type objectType) {
+			return new ArrayType(objectType, 4);
 		}
 	}
 	

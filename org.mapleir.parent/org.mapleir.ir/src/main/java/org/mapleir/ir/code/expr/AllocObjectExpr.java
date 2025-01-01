@@ -8,6 +8,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.Collections;
+import java.util.List;
+
 public class AllocObjectExpr extends Expr {
 
 	private Type type;
@@ -59,5 +62,10 @@ public class AllocObjectExpr extends Expr {
 	@Override
 	public boolean equivalent(CodeUnit s) {
 		return s instanceof AllocObjectExpr && type.equals(((AllocObjectExpr) s).type);
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		return List.of(this);
 	}
 }

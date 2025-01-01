@@ -9,6 +9,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PopStmt extends Stmt {
 
 	private Expr expression;
@@ -76,4 +79,11 @@ public class PopStmt extends Stmt {
 	public boolean equivalent(CodeUnit s) {
 		return s instanceof PopStmt && expression.equivalent(((PopStmt) s).expression);
 	}
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		return self;
+	}
+
 }
