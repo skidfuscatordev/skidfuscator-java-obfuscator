@@ -727,7 +727,8 @@ public class Skidfuscator {
     public List<Transformer> getTransformers() {
         final List<Transformer> transformers = new ArrayList<>();
 
-        if (!SkidFlowGraphDumper.TEST_COMPUTE) {
+        transformers.add(new VmConditionTransformer(this));
+        if (!SkidFlowGraphDumper.TEST_COMPUTE && true) {
             if (tsConfig.hasPath("stringEncryption.type")) {
                 switch (tsConfig.getEnum(StringEncryptionType.class, "stringEncryption.type")) {
                     case STANDARD: transformers.add(new StringTransformerV2(this)); break;
