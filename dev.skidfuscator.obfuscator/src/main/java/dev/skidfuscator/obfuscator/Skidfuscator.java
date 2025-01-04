@@ -105,6 +105,7 @@ import static org.fusesource.jansi.Ansi.ansi;
 /**
  * The type Skidfuscator.
  */
+#define DEBUG;
 @Getter
 public class Skidfuscator {
     public static TimedLogger LOGGER = new SkidTimedLogger(true, LogManager.getLogger(Skidfuscator.class));

@@ -1,6 +1,7 @@
 package dev.skidfuscator.obfuscator.transform.impl.hash;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.transform.AbstractExpressionTransformer;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
@@ -9,6 +10,8 @@ import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import sdk.LongHashFunction;
+
+import static dev.skidfuscator.obfuscator.manifold.InvokeExt.invoke;
 
 public class StringEqualsIgnoreCaseHashTransformer extends AbstractExpressionTransformer {
     public StringEqualsIgnoreCaseHashTransformer(final Skidfuscator skidfuscator) {
@@ -47,6 +50,7 @@ public class StringEqualsIgnoreCaseHashTransformer extends AbstractExpressionTra
         constantExpr.setConstant(
                 "" + LongHashFunction.xx3().hashChars(((String) constantExpr.getConstant()).toLowerCase())
         );
+
         otherExpr.getParent().overwrite(otherExpr, new StaticInvocationExpr(
                 new Expr[] { new VirtualInvocationExpr(
                         InvocationExpr.CallType.VIRTUAL,

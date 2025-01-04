@@ -43,7 +43,7 @@ public class SkidBlockFactory extends DefaultBlockFactory {
     @Override
     public StaticInvocationExprBuilder static_invoke_expr() {
         return new StaticInvocationExprBuilder() {
-            private InvocationExpr.CallType callType = InvocationExpr.CallType.STATIC;
+            private InvocationExpr.CallType callType;
             private Expr[] args;
             private String owner;
             private String name;
@@ -98,9 +98,11 @@ public class SkidBlockFactory extends DefaultBlockFactory {
                 final boolean isInterface = classNode != null && classNode.isInterface();
 
                 return new StaticInvocationExpr(
-                        isInterface
+                        callType == null
+                           ? isInterface
                                 ? InvocationExpr.CallType.INTERFACE
-                                : InvocationExpr.CallType.STATIC,
+                                : InvocationExpr.CallType.STATIC
+                           : callType,
                         args,
                         owner,
                         name,

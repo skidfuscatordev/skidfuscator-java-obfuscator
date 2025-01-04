@@ -11,7 +11,6 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import org.mapleir.ir.cfg.BasicBlock;
-import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.ConstantExpr;
@@ -19,9 +18,10 @@ import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
 import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.ReturnStmt;
-import org.mapleir.ir.locals.Local;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+
+import static dev.skidfuscator.obfuscator.manifold.JvmExt.push;
 
 public class LegacyHashTransformer implements HashTransformer {
     private final SkidMethodNode methodNode;
@@ -38,11 +38,11 @@ public class LegacyHashTransformer implements HashTransformer {
 
         // (starting * 31)
         final Expr var_load_a = new VarExpr(cfg.getLocals().get(0), Type.INT_TYPE);
-        final Expr const_31 = new ConstantExpr(31, Type.INT_TYPE);
-        final Expr arith_a = new FakeArithmeticExpr(var_load_a, const_31, ArithmeticExpr.Operator.MUL);
+        final Expr const_31 = push 31;
+        final Expr arith_a = var_load_a * const_31;
 
         // ((starting * 31) >>> 4)
-        final Expr const_4 = new ConstantExpr(4, Type.INT_TYPE);
+        final Expr const_4 = push 4;
         final Expr arith_b = new FakeArithmeticExpr(arith_a, const_4, ArithmeticExpr.Operator.USHR);
 
         // ((starting * 31) >>> 4) % starting)
@@ -56,7 +56,6 @@ public class LegacyHashTransformer implements HashTransformer {
 
         // (((starting * 31) >>> 4) % starting) ^ (starting >>> 16)
         final Expr hash = new FakeArithmeticExpr(arith_c, arith_d, ArithmeticExpr.Operator.XOR);
-
         final BasicBlock cond = new SkidBlock(cfg);
         cfg.addVertex(cond);
         methodNode.getCfg().getEntry().add(new ConditionalJumpStmt(

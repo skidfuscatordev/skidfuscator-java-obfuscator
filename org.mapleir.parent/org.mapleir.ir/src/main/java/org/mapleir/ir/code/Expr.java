@@ -1,5 +1,7 @@
 package org.mapleir.ir.code;
 
+import org.mapleir.ir.code.expr.ArithmeticExpr;
+import org.mapleir.ir.code.expr.NegationExpr;
 import org.objectweb.asm.Type;
 
 import java.util.Set;
@@ -108,6 +110,55 @@ public abstract class Expr extends CodeUnit {
 				return ((Expr) p).getRootParent();
 			}
 		}
+	}
+
+	// Manifold extension
+	public Expr plus(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.ADD);
+	}
+
+	public Expr minus(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.SUB);
+	}
+
+	public Expr times(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.MUL);
+	}
+
+	public Expr div(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.DIV);
+	}
+
+	public Expr rem(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.REM);
+	}
+
+	public Expr and(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.AND);
+	}
+
+	public Expr or(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.OR);
+	}
+
+	public Expr xor(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.XOR);
+	}
+
+	public Expr ushr(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.USHR);
+	}
+
+	public Expr shl(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.SHL);
+	}
+
+	public Expr shr(Expr other) {
+		return new ArithmeticExpr(other, this, ArithmeticExpr.Operator.SHR);
+	}
+
+	public Expr unaryMinus() {
+		return new NegationExpr(this);
 	}
 
 	public Iterable<Expr> enumerateWithSelf() {

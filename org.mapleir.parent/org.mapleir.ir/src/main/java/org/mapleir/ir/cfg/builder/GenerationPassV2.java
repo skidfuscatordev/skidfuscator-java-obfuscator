@@ -639,7 +639,7 @@ public class GenerationPassV2 extends ControlFlowGraphBuilder.BuilderPass {
 			case INVOKEINTERFACE:
 				MethodInsnNode min = (MethodInsnNode) ain;
 				System.out.println("New call " + ((MethodInsnNode) ain).name + " type: " + VirtualInvocationExpr.resolveCallType(min.getOpcode()).name());
-				_call(opcode, min.owner, min.name, min.desc);
+				_call(opcode, min.owner, min.name, min.desc, min.itf);
 				break;
 
 			case ILOAD:
@@ -1311,7 +1311,7 @@ public class GenerationPassV2 extends ControlFlowGraphBuilder.BuilderPass {
 		// TODO: redo vm lambdas as static resolution calls/concrete calls.
 	}
 
-	protected void _call(int op, String owner, String name, String desc) {
+	protected void _call(int op, String owner, String name, String desc, boolean itf) {
 		save_stack(false);
 		int argLen = Type.getArgumentTypes(desc).length + (op == INVOKESTATIC ? 0 : 1);
 		Expr[] args = new Expr[argLen];
@@ -1339,6 +1339,7 @@ public class GenerationPassV2 extends ControlFlowGraphBuilder.BuilderPass {
 						.owner(owner)
 						.name(name)
 						.desc(desc)
+						.callType(itf ? InvocationExpr.CallType.INTERFACE : InvocationExpr.CallType.STATIC)
 						.build();
 				break;
 			default:

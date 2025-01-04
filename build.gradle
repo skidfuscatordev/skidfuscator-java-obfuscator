@@ -17,6 +17,7 @@ allprojects {
         maven {
             url 'https://jitpack.io'
         }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
 
     apply plugin: 'java-library'
@@ -27,6 +28,12 @@ allprojects {
     dependencies {
         compileOnly 'org.projectlombok:lombok:1.18.36'
         annotationProcessor 'org.projectlombok:lombok:1.18.36'
+        implementation 'systems.manifold:manifold-ext-rt:2024.1.47'
+
+        annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2024.1.47'
+        testAnnotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2024.1.47'
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.47'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.47'
 
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
@@ -55,6 +62,18 @@ allprojects {
         }
     }
 
+    if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
+            sourceSets.main.allJava.files.any {it.name == "module-info.java"}) {
+        tasks.withType(JavaCompile) {
+            // if you DO define a module-info.java file:
+            options.compilerArgs += ['-Xplugin:Manifold', '--module-path', it.classpath.asPath]
+        }
+    } else {
+        tasks.withType(JavaCompile) {
+            // If you DO NOT define a module-info.java file:
+            options.compilerArgs += ['-Xplugin:Manifold']
+        }
+    }
 
     ext {
         asm = 'org.ow2.asm:asm:9.7.1'

@@ -66,7 +66,7 @@ public class ConditionalJumpRenderer extends AbstractInstructionRenderer<Conditi
                 "Conditional"
         );
 
-        if (IntegerBlockPredicateRenderer.DEBUG) {
+        #if DEBUG
             final Local local1 = basicBlock.cfg.getLocals().get(block.cfg.getLocals().getMaxLocals() + 2);
             basicBlock.add(
                     1,
@@ -80,6 +80,6 @@ public class ConditionalJumpRenderer extends AbstractInstructionRenderer<Conditi
                             )
                     )
             );
-        }
+        #endif
     }
 }

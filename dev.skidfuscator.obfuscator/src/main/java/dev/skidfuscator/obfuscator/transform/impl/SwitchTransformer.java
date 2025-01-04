@@ -11,12 +11,15 @@ import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.fake.FakeArithmeticExpr;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidSwitchStmt;
+import dev.skidfuscator.obfuscator.transform.AbstractExpressionTransformer;
+import dev.skidfuscator.obfuscator.transform.AbstractStatementTransformer;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
+import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.VarExpr;
 import org.mapleir.ir.code.stmt.SwitchStmt;
@@ -27,7 +30,7 @@ import org.objectweb.asm.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SwitchTransformer extends AbstractTransformer {
+public class SwitchTransformer extends AbstractTransformer implements AbstractStatementTransformer<SkidSwitchStmt> {
     public SwitchTransformer(Skidfuscator skidfuscator) {
         this(skidfuscator, Collections.emptyList());
     }
@@ -36,73 +39,54 @@ public class SwitchTransformer extends AbstractTransformer {
         super(skidfuscator,"Flow Switch", children);
     }
 
-    @Listen
-    void handle(final RunMethodTransformEvent event) {
-        final SkidMethodNode methodNode = event.getMethodNode();
-        if (methodNode.isAbstract() || methodNode.isInit()) {
-            this.skip();
-            return;
-        }
-
-        if (methodNode.node.instructions.size() > 10000) {
-            this.fail();
-            return;
-        }
-
-        final ControlFlowGraph cfg = methodNode.getCfg();
-
-        if (cfg == null) {
-            this.fail();
-            return;
-        }
-
-        cfg.vertices()
-                .stream()
-                .flatMap(Collection::stream)
-                .filter(SkidSwitchStmt.class::isInstance)
-                .map(SwitchStmt.class::cast)
-                .collect(Collectors.toList())
-                .forEach(unit -> {
-                    final BlockOpaquePredicate blockOpaquePredicate = methodNode.getFlowPredicate();
-                    final int opaquePredicate = blockOpaquePredicate.get((SkidBlock) unit.getBlock());
-
-                    final LinkedHashMap<Integer, BasicBlock> targets = unit.getTargets();
-                    final LinkedHashMap<Integer, BasicBlock> targetsUpdated = new LinkedHashMap<>();
-
-                    final HashTransformer hasher = NumberManager.randomHasher(skidfuscator);
-
-                    targets.forEach((var, bb) -> {
-                        final int hash = hasher.hash(var ^ opaquePredicate);
-                        targetsUpdated.put(hash, bb);
-                    });
-
-                    unit.setTargets(targetsUpdated);
-
-                    final Expr expr = unit.getExpression();
-                    expr.unlink();
-
-                    final Local local = cfg.getLocals().get(
-                            cfg.getLocals().getMaxLocals() + 2,
-                            true
-                    );
-                    local.setType(Type.INT_TYPE);
-                    final CopyVarStmt copyVarStmt = new CopyVarStmt(
-                            new VarExpr(local, Type.INT_TYPE),
-                            new FakeArithmeticExpr(
-                                    expr,
-                                    blockOpaquePredicate.getGetter().get(unit.getBlock()),
-                                    ArithmeticExpr.Operator.XOR
-                            )
-                    );
-                    unit.getBlock().add(unit.getBlock().indexOf(unit), copyVarStmt);
-
-                    unit.setExpression(hasher.hash(unit.getBlock(), new PredicateFlowGetter() {
-                        @Override
-                        public Expr get(final BasicBlock vertex) {
-                            return new VarExpr(local, Type.INT_TYPE);
-                        }
-                    }));
-                });
-        this.success();
+    @Override
+    public boolean matchStatement(Stmt stmt) {
+        return stmt instanceof SkidSwitchStmt;
     }
+
+    @Override
+    public boolean transformStatement(SkidSwitchStmt unit, ControlFlowGraph cfg) {
+        final SkidMethodNode methodNode = (SkidMethodNode) cfg.getMethodNode();
+        final BlockOpaquePredicate blockOpaquePredicate = methodNode.getFlowPredicate();
+        final int opaquePredicate = blockOpaquePredicate.get((SkidBlock) unit.getBlock());
+
+        final LinkedHashMap<Integer, BasicBlock> targets = unit.getTargets();
+        final LinkedHashMap<Integer, BasicBlock> targetsUpdated = new LinkedHashMap<>();
+
+        final HashTransformer hasher = NumberManager.randomHasher(skidfuscator);
+
+        targets.forEach((var, bb) -> {
+            final int hash = hasher.hash(var ^ opaquePredicate);
+            targetsUpdated.put(hash, bb);
+        });
+
+        unit.setTargets(targetsUpdated);
+
+        final Expr expr = unit.getExpression();
+        expr.unlink();
+
+        final Local local = cfg.getLocals().get(
+                cfg.getLocals().getMaxLocals() + 2,
+                true
+        );
+        local.setType(Type.INT_TYPE);
+        final CopyVarStmt copyVarStmt = new CopyVarStmt(
+                new VarExpr(local, Type.INT_TYPE),
+                new FakeArithmeticExpr(
+                        expr,
+                        blockOpaquePredicate.getGetter().get(unit.getBlock()),
+                        ArithmeticExpr.Operator.XOR
+                )
+        );
+        unit.getBlock().add(unit.getBlock().indexOf(unit), copyVarStmt);
+
+        unit.setExpression(hasher.hash(unit.getBlock(), new PredicateFlowGetter() {
+            @Override
+            public Expr get(final BasicBlock vertex) {
+                return new VarExpr(local, Type.INT_TYPE);
+            }
+        }));
+        return true;
+    }
+
 }

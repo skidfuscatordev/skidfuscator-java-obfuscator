@@ -36,4 +36,10 @@ public interface Transformer extends Listener  {
      * @return If the transformer is enabled
      */
     boolean isEnabled();
+
+    void skip();
+
+    void fail();
+
+    void success();
 }

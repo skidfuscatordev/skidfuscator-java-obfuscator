@@ -23,6 +23,8 @@ import org.objectweb.asm.Type;
 
 import java.util.*;
 
+import static dev.skidfuscator.obfuscator.manifold.JvmExt.push;
+
 public class BasicConditionTransformer extends AbstractTransformer {
     public BasicConditionTransformer(Skidfuscator skidfuscator) {
         this(skidfuscator, Collections.emptyList());
