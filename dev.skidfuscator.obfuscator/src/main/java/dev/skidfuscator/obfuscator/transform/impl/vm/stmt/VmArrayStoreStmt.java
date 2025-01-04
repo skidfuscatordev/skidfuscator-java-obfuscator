@@ -1,4 +1,4 @@
-package dev.skidfuscator.obfuscator.transform.impl.vm;
+package dev.skidfuscator.obfuscator.transform.impl.vm.stmt;
 
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.Expr;

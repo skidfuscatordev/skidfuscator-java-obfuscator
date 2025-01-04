@@ -1,7 +1,6 @@
-package dev.skidfuscator.obfuscator.transform.impl.vm;
+package dev.skidfuscator.obfuscator.transform.impl.vm.expr;
 
 import org.mapleir.ir.code.Expr;
-import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.objectweb.asm.MethodVisitor;
