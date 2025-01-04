@@ -1,5 +1,8 @@
 package org.mapleir.ir.code.stmt.copy;
 
+import com.google.errorprone.annotations.Var;
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -13,6 +16,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,6 +39,8 @@ import java.util.List;
  * entered into the children array as either the LHS or RHS as the entire
  * statement is never executed at runtime.
  */
+
+@Getter @Setter
 public abstract class AbstractCopyStmt extends Stmt {
 
 	/**
@@ -64,40 +70,34 @@ public abstract class AbstractCopyStmt extends Stmt {
 		 * and if we don't call writeAt, the callback won't be invoked to set
 		 * the expression field. */
 		this.synthetic = synthetic;
-		this.expression = expression;
-		this.variable = variable;
-		
-		if(!synthetic) {
-			writeAt(expression, 0);
-		}
-	}
-	
-	public boolean isSynthetic() {
-		return synthetic;
-	}
-
-	public VarExpr getVariable() {
-		return variable;
+		this.setExpression(expression);
+		this.setVariable(variable);
 	}
 
 	public void setVariable(VarExpr var) {
-		variable = var;
-		if(synthetic) {
-			expression = var;
+		if (this.variable != null) {
+			this.variable.unlink();
 		}
+
+		this.variable = var;
+		if(synthetic) {
+			this.expression = var;
+		}
+
+		var.setParent(this);
 	}
-	
-	public Expr getExpression() {
-		return expression;
-	}
-	
+
 	public void setExpression(Expr expression) {
+		if (this.expression != null) {
+			this.expression.unlink();
+		}
+
 		this.expression = expression;
 
-		if (!synthetic)
-			writeAt(expression, 0);
+		if (!synthetic && expression != null)
+			this.expression.setParent(this);
 	}
-	
+
 	public int getIndex() {
 		return variable.getLocal().getIndex();
 	}
@@ -106,17 +106,10 @@ public abstract class AbstractCopyStmt extends Stmt {
 		return variable.getType();
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(synthetic) {
-			raiseChildOutOfBounds(ptr);
-		} else {
-			if(ptr == 0) {
-				expression = read(0);
-			} else {
-				raiseChildOutOfBounds(ptr);
-			}
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -177,7 +170,11 @@ public abstract class AbstractCopyStmt extends Stmt {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (previous == expression) {
-			expression = newest;
+			this.setExpression(newest);
+			return;
+		} else if (previous == variable && newest instanceof VarExpr varExpr) {
+			this.setVariable(varExpr);
+			return;
 		}
 
 		super.overwrite(previous, newest);
@@ -189,11 +186,14 @@ public abstract class AbstractCopyStmt extends Stmt {
 	@Override
 	public abstract boolean equivalent(CodeUnit s);
 
+
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		self.addAll(expression.traverse());
-		self.addAll(variable.traverse());
-		return self;
+	public List<CodeUnit> linkedChildren() {
+		return List.of(expression);
+	}
+
+	@Override
+	public List<CodeUnit> children() {
+		return synthetic || expression == null ? Collections.emptyList() : List.of(expression);
 	}
 }

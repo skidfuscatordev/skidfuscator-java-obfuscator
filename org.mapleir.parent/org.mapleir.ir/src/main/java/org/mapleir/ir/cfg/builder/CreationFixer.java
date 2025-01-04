@@ -63,7 +63,7 @@ public class CreationFixer extends ControlFlowGraphBuilder.BuilderPass {
                                 System.out.println("Found initializer " + invoke);
                                 final Expr[] args = new Expr[invoke.getArgumentExprs().length - 1];
                                 for (int i = 1; i < invoke.getArgumentExprs().length; i++) {
-                                    invoke.getArgumentExprs()[i].unlink();
+                                    invoke.getArgumentExprs()[i].hardUnlink();
                                     args[i - 1] = invoke.getArgumentExprs()[i];
 
                                     assert args[i - 1] != null : "Null argument at index " + i + "?: "
@@ -71,7 +71,7 @@ public class CreationFixer extends ControlFlowGraphBuilder.BuilderPass {
                                 }
 
 
-                                invoke.unlink();
+                                invoke.hardUnlink();
                                 currentStmt.setExpression(
                                         new InitialisedObjectExpr(
                                                 currentAllocation

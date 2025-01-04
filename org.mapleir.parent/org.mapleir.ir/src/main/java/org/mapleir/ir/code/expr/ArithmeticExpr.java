@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -11,10 +13,12 @@ import org.objectweb.asm.util.Printer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.objectweb.asm.Opcodes.*;
 
+ @Getter @Setter
 public class ArithmeticExpr extends Expr {
 
 	public enum Operator {
@@ -109,32 +113,24 @@ public class ArithmeticExpr extends Expr {
 	public ArithmeticExpr(Expr right, Expr left, Operator operator) {
 		super(ARITHMETIC);
 		this.operator = operator;
-		setLeft(left);
-		setRight(right);
-	}
-
-	public Expr getLeft() {
-		return left;
+		this.setLeft(left);
+		this.setRight(right);
 	}
 
 	public void setLeft(Expr left) {
-		writeAt(left, 0);
-	}
+		if (this.left != null)
+			this.left.unlink();
 
-	public Expr getRight() {
-		return right;
+		this.left = left;
+		this.left.setParent(this);
 	}
 
 	public void setRight(Expr right) {
-		writeAt(right, 1);
-	}
+		if (this.right != null)
+			this.right.unlink();
 
-	public Operator getOperator() {
-		return operator;
-	}
-
-	public void setOperator(Operator operator) {
-		this.operator = operator;
+		this.right = right;
+		this.right.setParent(this);
 	}
 
 	@Override
@@ -161,13 +157,7 @@ public class ArithmeticExpr extends Expr {
 
 	@Override
 	public void onChildUpdated(int ptr) {
-		if (ptr == 0) {
-			left = read(0);
-		} else if (ptr == 1) {
-			right = read(1);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -292,12 +282,15 @@ public class ArithmeticExpr extends Expr {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (left == previous) {
-			left = newest;
+			this.setLeft(newest);
 		} else if (right == previous) {
-			right = newest;
+			this.setRight(newest);
+		} else {
+			throw new IllegalArgumentException(String.format(
+					"Cannot overwrite %s with %s in %s",
+					previous, newest, this
+			));
 		}
-
-		super.overwrite(previous, newest);
 	}
 
 //	@Override
@@ -308,12 +301,7 @@ public class ArithmeticExpr extends Expr {
 
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>();
-		self.add(this);
-		self.addAll(left.traverse());
-		self.addAll(right.traverse());
-
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(left, right);
 	}
 }

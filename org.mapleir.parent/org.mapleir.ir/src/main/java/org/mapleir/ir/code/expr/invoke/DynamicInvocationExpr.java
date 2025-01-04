@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr.invoke;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.log4j.Logger;
 import org.mapleir.app.service.InvocationResolver;
 import org.mapleir.ir.code.CodeUnit;
@@ -15,6 +17,7 @@ import org.mapleir.asm.MethodNode;
 import java.util.HashSet;
 import java.util.Set;
 
+@Getter @Setter
 public class DynamicInvocationExpr extends InvocationExpr {
 
 	/**
@@ -37,31 +40,10 @@ public class DynamicInvocationExpr extends InvocationExpr {
 	
 	public DynamicInvocationExpr(Handle bootstrapMethod, Object[] bootstrapArgs, String bootstrapDesc, Expr[] args, String boundName) {
 		super(CallType.DYNAMIC, args, bootstrapMethod.getOwner(), bootstrapMethod.getName(), bootstrapDesc);
-		
-		this.bootstrapMethod = bootstrapMethod;
-		this.bootstrapArgs = bootstrapArgs;
-		this.boundName = boundName;
-		//assert(Type.getArgumentTypes(bootstrapDesc).length == args.length) : "You fucked up"; // I hope this tells me when this fucks up, because this is not a matter of if, but when.
-		
-		for(int i = 0; i < args.length; i++) {
-			writeAt(args[i], i);
-		}
-	}
 
-	public Handle getBootstrapMethod() {
-		return bootstrapMethod;
-	}
-	
-	public Object[] getBootstrapArgs() {
-		return bootstrapArgs;
-	}
-
-	public void setBootstrapArgs(Object[] bootstrapArgs) {
-		this.bootstrapArgs = bootstrapArgs;
-	}
-
-	public String getBoundName() {
-		return boundName;
+		this.setBootstrapMethod(bootstrapMethod);
+		this.setBootstrapArgs(bootstrapArgs);
+		this.setBoundName(boundName);
 	}
 
 	/**

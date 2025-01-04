@@ -14,9 +14,7 @@ import dev.skidfuscator.obfuscator.transform.impl.string.generator.EncryptionGen
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.ByteBufferClinitV3EncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.BytesClinitV3EncryptionGenerator;
 import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.BytesV3EncryptionGenerator;
-import dev.skidfuscator.obfuscator.transform.impl.string.generator.v3.VirtualizedStringEncryptionGenerator;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
-import org.mapleir.asm.ClassNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;

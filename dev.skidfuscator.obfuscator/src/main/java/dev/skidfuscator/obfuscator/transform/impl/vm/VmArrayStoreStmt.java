@@ -22,10 +22,10 @@ public class VmArrayStoreStmt extends ArrayStoreStmt {
         for (int i = 0; i < iCast.length; i++)
             visitor.visitInsn(iCast[i]);
         valueExpression.toCode(visitor, assembler);
-        if (TypeUtils.isPrimitive(type.getType())) {
+        if (TypeUtils.isPrimitive(arrayType.getType())) {
 //			System.out.println(this);
 //			System.out.println(valueExpression.getType() + " -> " + type.getType());
-            int[] vCast = TypeUtils.getPrimitiveCastOpcodes(valueExpression.getType(), type.getType());
+            int[] vCast = TypeUtils.getPrimitiveCastOpcodes(valueExpression.getType(), arrayType.getType());
 //			System.out.println("vcast: " + Arrays.toString(vCast));
             for (int i = 0; i < vCast.length; i++)
                 visitor.visitInsn(vCast[i]);
@@ -36,6 +36,6 @@ public class VmArrayStoreStmt extends ArrayStoreStmt {
             visitor.visitInsn(Opcodes.DUP_X2);
             visitor.visitInsn(Opcodes.POP);
         }
-        visitor.visitInsn(type.getStoreOpcode());
+        visitor.visitInsn(arrayType.getStoreOpcode());
     }
 }

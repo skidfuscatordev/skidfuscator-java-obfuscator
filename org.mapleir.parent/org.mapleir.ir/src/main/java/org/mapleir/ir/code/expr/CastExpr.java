@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -9,26 +11,28 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
+@Getter @Setter
 public class CastExpr extends Expr {
 
+	// TODO: Add validation
 	private Expr expression;
 	private Type type;
 
 	public CastExpr(Expr expression, Type type) {
 		super(CAST);
-		this.type = type;
-		setExpression(expression);
-	}
-
-	public Expr getExpression() {
-		return expression;
+		this.setType(type);
+		this.setExpression(expression);
 	}
 
 	public void setExpression(Expr expression) {
-		writeAt(expression, 0);
+		if (this.expression != null) {
+			this.expression.unlink();
+		}
+
+		this.expression = expression;
+		this.expression.setParent(this);
 	}
 
 	@Override
@@ -36,22 +40,10 @@ public class CastExpr extends Expr {
 		return new CastExpr(expression.copy(), type);
 	}
 
-	@Override
-	public Type getType() {
-		return type;
-	}
-
-	public void setType(Type type) {
-		this.type = type;
-	}
-
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(ptr == 0) {
-			expression = read(0);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -96,10 +88,13 @@ public class CastExpr extends Expr {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (expression == previous) {
-			expression = newest;
+			this.setExpression(newest);
+		} else {
+			throw new IllegalArgumentException(String.format(
+					"Cannot overwrite %s with %s in %s",
+					previous, newest, this
+			));
 		}
-
-		super.overwrite(previous, newest);
 	}
 
 	@Override
@@ -112,9 +107,7 @@ public class CastExpr extends Expr {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		self.addAll(expression.traverse());
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(expression);
 	}
 }

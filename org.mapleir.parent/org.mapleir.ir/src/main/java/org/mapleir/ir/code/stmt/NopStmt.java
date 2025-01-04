@@ -15,9 +15,10 @@ public class NopStmt extends Stmt {
 		super(NOP);
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		raiseChildOutOfBounds(ptr);
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -43,11 +44,5 @@ public class NopStmt extends Stmt {
 	@Override
 	public boolean equivalent(CodeUnit s) {
 		return s instanceof NopStmt;
-	}
-
-	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		return self;
 	}
 }

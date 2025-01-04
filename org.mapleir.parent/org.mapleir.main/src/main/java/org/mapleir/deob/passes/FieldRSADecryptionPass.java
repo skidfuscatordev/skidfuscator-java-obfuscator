@@ -282,8 +282,10 @@ public class FieldRSADecryptionPass implements IPass, Opcode {
 //											System.out.println(cst + " -> " + res);
 //											System.out.println("  expr: " + fl.getRootParent());
 //										}
-										
-										par.writeAt(new ConstantExpr(res, ConstantExpr.computeType(res)), par.indexOf(ce));
+
+										Expr ovexpr = new ConstantExpr(res, ConstantExpr.computeType(res));
+										par.overwrite(ce, ovexpr);
+										//par.writeAt(, par.indexOf(ce));
 
 										continue;
 
@@ -291,7 +293,8 @@ public class FieldRSADecryptionPass implements IPass, Opcode {
 								}
 
 								ArithmeticExpr ae = new ArithmeticExpr(new ConstantExpr(p[0], ConstantExpr.computeType(p[0])), fl.copy(), Operator.MUL);
-								par.writeAt(ae, par.indexOf(fl));
+								//par.writeAt(ae, par.indexOf(fl));
+								par.overwrite(fl, ae);
 							}
 						}
 					}

@@ -4,27 +4,18 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.hierarchy.matching.ClassMethodHash;
 import dev.skidfuscator.obfuscator.skidasm.*;
 import dev.skidfuscator.obfuscator.skidasm.cfg.SkidControlFlowGraph;
-import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.ProgressUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
 import dev.skidfuscator.obfuscator.util.progress.ProgressWrapper;
-import lukfor.progress.Collection;
-import lukfor.progress.tasks.ITaskRunnable;
-import lukfor.progress.tasks.monitors.ITaskMonitor;
-import lukfor.progress.util.AnsiColors;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.mapleir.ir.cfg.ControlFlowGraph;
 import org.mapleir.ir.code.expr.invoke.*;
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.tree.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 

@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -10,9 +12,12 @@ import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
+@Getter @Setter
 public class PhiExpr extends Expr {
 
+	// TODO: Add validation
 	private final Map<BasicBlock, Expr> arguments;
 	private Type type;
 	
@@ -34,10 +39,6 @@ public class PhiExpr extends Expr {
 		return arguments.keySet();
 	}
 	
-	public Map<BasicBlock, Expr> getArguments() {
-		return arguments;
-	}
-	
 	public Expr getArgument(BasicBlock b) {
 		return arguments.get(b);
 	}
@@ -49,10 +50,11 @@ public class PhiExpr extends Expr {
 	public void removeArgument(BasicBlock b) {
 		arguments.remove(b);
 	}
-	
+
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		raiseChildOutOfBounds(ptr);
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -67,10 +69,6 @@ public class PhiExpr extends Expr {
 	@Override
 	public Type getType() {
 		return type;
-	}
-	
-	public void setType(Type type) {
-		this.type = type;
 	}
 	
 	protected char getPhiType() {
@@ -133,4 +131,5 @@ public class PhiExpr extends Expr {
 		}
 		return false;
 	}
+
 }

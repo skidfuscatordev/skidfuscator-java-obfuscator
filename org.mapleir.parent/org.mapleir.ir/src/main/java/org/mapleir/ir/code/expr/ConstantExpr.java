@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -10,12 +12,11 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@Getter @Setter
 public class ConstantExpr extends Expr {
 
-	private Object cst;
+	// TODO: add validation
+	private Object constant;
 	private Type type;
 		
 	public ConstantExpr(Object cst) {
@@ -49,7 +50,7 @@ public class ConstantExpr extends Expr {
 		}
 
 
-		this.cst = cst;
+		this.constant = cst;
 		this.type = type;
 	}
 	
@@ -57,17 +58,9 @@ public class ConstantExpr extends Expr {
 		this(cst, type, true);
 	}
 
-	public Object getConstant() {
-		return cst;
-	}
-	
-	public void setConstant(Object o) {
-		cst = o;
-	}
-
 	@Override
 	public ConstantExpr copy() {
-		return new ConstantExpr(cst, type, false);
+		return new ConstantExpr(constant, type, false);
 	}
 
 	private static boolean isAcceptableSupertype(Type child, Type parent) {
@@ -143,20 +136,20 @@ public class ConstantExpr extends Expr {
 
 	@Override
 	public void toString(TabbedStringWriter printer) {
-		if (cst == null) {
+		if (constant == null) {
 			printer.print("nullconst");
-		} else if (cst instanceof Integer || cst instanceof Byte || cst instanceof Short) {
-			printer.print(cst + "");
-		} else if (cst instanceof Long) {
-			printer.print(cst + "L");
-		} else if (cst instanceof Float) {
-			printer.print(cst + "F");
-		} else if (cst instanceof Double) {
-			printer.print(cst + "D");
-		} else if (cst instanceof String) {
-			printer.print("\"" + cst + "\"");
-		} else if (cst instanceof Type) {
-			Type type = (Type) cst;
+		} else if (constant instanceof Integer || constant instanceof Byte || constant instanceof Short) {
+			printer.print(constant + "");
+		} else if (constant instanceof Long) {
+			printer.print(constant + "L");
+		} else if (constant instanceof Float) {
+			printer.print(constant + "F");
+		} else if (constant instanceof Double) {
+			printer.print(constant + "D");
+		} else if (constant instanceof String) {
+			printer.print("\"" + constant + "\"");
+		} else if (constant instanceof Type) {
+			Type type = (Type) constant;
 			if (type.getSort() == Type.OBJECT || type.getSort() == Type.ARRAY) {
 				printer.print(type.getClassName() + ".class");
 			} else if (type.getSort() == Type.METHOD) {
@@ -164,18 +157,18 @@ public class ConstantExpr extends Expr {
 			} else {
 				throw new RuntimeException("WT");
 			}
-		} else if (cst instanceof Handle) {
-			printer.print("handleOf(" + cst + ")");
-		} else if (cst instanceof Boolean) {
+		} else if (constant instanceof Handle) {
+			printer.print("handleOf(" + constant + ")");
+		} else if (constant instanceof Boolean) {
 			// synthetic values
-			printer.print(cst + "");
-		} else if (cst instanceof Character) {
+			printer.print(constant + "");
+		} else if (constant instanceof Character) {
 			// TODO , normal character printing
 			printer.print('\'');
-			printer.print((char) cst);
+			printer.print((char) constant);
 			printer.print('\'');
 		} else {
-			throw new IllegalStateException(cst + " : " + cst.getClass());
+			throw new IllegalStateException(constant + " : " + constant.getClass());
 		}
 	}
 
@@ -193,44 +186,44 @@ public class ConstantExpr extends Expr {
 	
 	@Override
 	public void toCode(MethodVisitor visitor, BytecodeFrontend assembler) {
-		if (cst == null) {
+		if (constant == null) {
 			visitor.visitInsn(Opcodes.ACONST_NULL);
-		} else if (cst instanceof Integer || cst instanceof Byte || cst instanceof Short) {
-			Number n = (Number) cst;
+		} else if (constant instanceof Integer || constant instanceof Byte || constant instanceof Short) {
+			Number n = (Number) constant;
 			packInt(visitor, n.intValue());
-		} else if (cst instanceof Long) {
-			long value = (long) cst;
+		} else if (constant instanceof Long) {
+			long value = (long) constant;
 			if (value == 0L || value == 1L) {
 				visitor.visitInsn(value == 0L ? Opcodes.LCONST_0 : Opcodes.LCONST_1);
 			} else {
 				visitor.visitLdcInsn(value);
 			}
-		} else if (cst instanceof Float) {
-			float value = (float) cst;
+		} else if (constant instanceof Float) {
+			float value = (float) constant;
 			if (value == 0F || value == 1F || value == 2F) {
 				visitor.visitInsn(Opcodes.FCONST_0 + (int) value);
 			} else {
 				visitor.visitLdcInsn(value);
 			}
-		} else if (cst instanceof Double) {
-			double value = (double) cst;
+		} else if (constant instanceof Double) {
+			double value = (double) constant;
 			if (value == 0D || value == 1D) {
 				visitor.visitInsn(value == 0 ? Opcodes.DCONST_0 : Opcodes.DCONST_1);
 			} else {
 				visitor.visitLdcInsn(value);
 			}
-		} else if (cst instanceof String || cst instanceof Handle || cst instanceof Type) {
-			visitor.visitLdcInsn(cst);
+		} else if (constant instanceof String || constant instanceof Handle || constant instanceof Type) {
+			visitor.visitLdcInsn(constant);
 		}
 		// synthethic values
-		else if (cst instanceof Boolean) {
-			boolean value = (boolean) cst;
+		else if (constant instanceof Boolean) {
+			boolean value = (boolean) constant;
 			visitor.visitInsn(value ? Opcodes.ICONST_1 : Opcodes.ICONST_0);
-		} else if (cst instanceof Character) {
-			char value = (char) cst;
+		} else if (constant instanceof Character) {
+			char value = (char) constant;
 			packInt(visitor, value);
 		} else {
-			throw new IllegalStateException(cst + " : " + cst.getClass());
+			throw new IllegalStateException(constant + " : " + constant.getClass());
 		}
 	}
 
@@ -243,26 +236,20 @@ public class ConstantExpr extends Expr {
 	public boolean equivalent(CodeUnit s) {
 		if(s instanceof ConstantExpr) {
 			ConstantExpr c = (ConstantExpr) s;
-			if(cst == null) {
-				if(c.cst == null) {
+			if(constant == null) {
+				if(c.constant == null) {
 					return true;
 				} else {
 					return false;
 				}
 			} else {
-				if(c.cst == null) {
+				if(c.constant == null) {
 					return false;
 				} else {
-					return cst.equals(c.cst);
+					return constant.equals(c.constant);
 				}
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		return self;
 	}
 }

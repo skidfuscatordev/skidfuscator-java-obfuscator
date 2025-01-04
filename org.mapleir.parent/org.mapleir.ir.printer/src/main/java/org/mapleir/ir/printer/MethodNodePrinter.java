@@ -445,7 +445,7 @@ public abstract class MethodNodePrinter extends ASMPrinter<MethodNode> {
                     this.sw.print(')');
                 }
                 this.sw.print(" .instanceof ");
-                this.sw.print(ioe.getType().getClassName());
+                this.sw.print(ioe.getCheckType().getClassName());
                 break;
             }
             case Opcode.COMPARE: {

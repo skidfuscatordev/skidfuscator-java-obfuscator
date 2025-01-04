@@ -1,9 +1,8 @@
 package org.mapleir.ir.code;
 
-import java.util.Set;
-
-import org.mapleir.ir.code.expr.invoke.InvocationExpr;
 import org.objectweb.asm.Type;
+
+import java.util.Set;
 
 public abstract class Expr extends CodeUnit {
 
@@ -58,14 +57,35 @@ public abstract class Expr extends CodeUnit {
 	public CodeUnit getParent() {
 		return parent;
 	}
+
+	public void hardUnlink() {
+		if(parent != null) {
+			//parent.overwrite(this, null);
+			//System.out.append(String.format(
+			//		"Unlinking %s from %s\n", this, parent
+			//));
+			parent.overwrite(this, null);
+			//setParent(null);
+			//parent.deleteAt(parent.indexOf(this));
+		}
+	}
 	
 	public void unlink() {
 		if(parent != null) {
-			parent.deleteAt(parent.indexOf(this));
+			//parent.overwrite(this, null);
+			//System.out.append(String.format(
+			//	"Unlinking %s from %s\n", this, parent
+			//));
+			setParent(null);
+			//parent.deleteAt(parent.indexOf(this));
 		}
 	}
 	
 	public void setParent(CodeUnit parent) {
+		if (this.parent != null && parent != null && this.parent != parent) {
+			throw new IllegalStateException("Parent already set: " + this.parent);
+		}
+
 		this.parent = parent;
 		if(parent != null) {
 			setBlock(parent.getBlock());
@@ -79,7 +99,7 @@ public abstract class Expr extends CodeUnit {
 		if(p == null) {
 			/* expressions must have a parent. */
 			// except for phi args?
-//			throw new UnsupportedOperationException("We've found a dangler, " + id + ". " + this);
+			//throw new UnsupportedOperationException("We've found a dangler, " + id + ". " + this);
 			return null;
 		} else {
 			if((p.flags & FLAG_STMT) != 0) {

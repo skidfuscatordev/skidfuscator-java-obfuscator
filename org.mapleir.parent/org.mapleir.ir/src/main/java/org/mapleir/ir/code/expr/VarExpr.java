@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -12,8 +14,9 @@ import org.objectweb.asm.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter @Setter
 public class VarExpr extends Expr {
-
+	// TODO: Add validation
 	private Local local;
 	private Type type;
 	
@@ -27,31 +30,20 @@ public class VarExpr extends Expr {
 		return local.getIndex();
 	}
 	
-	public Local getLocal() {
-		return local;
-	}
-	
-	public void setLocal(Local local) {
-		this.local = local;
-	}
-
 	@Override
 	public Type getType() {
 		return type;
 	}
 	
-	public void setType(Type type) {
-		this.type = type;
-	}
-
 	@Override
 	public VarExpr copy() {
 		return new VarExpr(local, type);
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		raiseChildOutOfBounds(ptr);
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -81,10 +73,5 @@ public class VarExpr extends Expr {
 			return local == var.local && type.equals(var.type);
 		}
 		return false;
-	}
-
-	@Override
-	public List<CodeUnit> traverse() {
-        return List.of(this);
 	}
 }

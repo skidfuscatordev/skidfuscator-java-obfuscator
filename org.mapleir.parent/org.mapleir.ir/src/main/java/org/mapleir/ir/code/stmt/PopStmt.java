@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.stmt;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -9,33 +11,31 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
+@Getter @Setter
 public class PopStmt extends Stmt {
 
 	private Expr expression;
 	
 	public PopStmt(Expr expression) {
 		super(POP);
-		setExpression(expression);
-	}
-
-	public Expr getExpression() {
-		return expression;
+		this.setExpression(expression);
 	}
 
 	public void setExpression(Expr expression) {
-		writeAt(expression, 0);
+		if (this.expression != null) {
+			this.expression.unlink();
+		}
+
+		this.expression = expression;
+		this.expression.setParent(this);
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(ptr == 0) {
-			expression = read(0);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class PopStmt extends Stmt {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (expression == previous) {
-			expression = newest;
+			this.setExpression(newest);
 		}
 
 		super.overwrite(previous, newest);
@@ -80,10 +80,7 @@ public class PopStmt extends Stmt {
 		return s instanceof PopStmt && expression.equivalent(((PopStmt) s).expression);
 	}
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		self.addAll(expression.traverse());
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(expression);
 	}
-
 }

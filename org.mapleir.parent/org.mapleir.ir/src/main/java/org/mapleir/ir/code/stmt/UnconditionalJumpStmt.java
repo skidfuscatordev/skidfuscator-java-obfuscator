@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.stmt;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.flowgraph.edges.UnconditionalJumpEdge;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.CodeUnit;
@@ -12,6 +14,7 @@ import org.objectweb.asm.Opcodes;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter @Setter
 public class UnconditionalJumpStmt extends Stmt {
 
 	private BasicBlock target;
@@ -23,25 +26,10 @@ public class UnconditionalJumpStmt extends Stmt {
 		this.edge = edge;
 	}
 
-	public BasicBlock getTarget() {
-		return target;
-	}
-	
-	public void setTarget(BasicBlock b) {
-		target = b;
-	}
-
-	public UnconditionalJumpEdge<BasicBlock> getEdge() {
-		return edge;
-	}
-
-	public void setEdge(UnconditionalJumpEdge<BasicBlock> edge) {
-		this.edge = edge;
-	}
-
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		raiseChildOutOfBounds(ptr);
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -71,11 +59,5 @@ public class UnconditionalJumpStmt extends Stmt {
 			return target == jump.target;
 		}
 		return false;
-	}
-
-	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		return self;
 	}
 }

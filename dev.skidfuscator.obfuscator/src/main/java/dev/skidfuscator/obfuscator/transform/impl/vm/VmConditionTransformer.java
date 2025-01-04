@@ -4,7 +4,7 @@ import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.method.FinalMethodTransformEvent;
-import dev.skidfuscator.obfuscator.event.impl.transform.method.RunMethodTransformEvent;
+import dev.skidfuscator.obfuscator.event.impl.transform.method.InitMethodTransformEvent;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.BasicBlock;
@@ -13,19 +13,16 @@ import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.Stmt;
 import org.mapleir.ir.code.expr.*;
-import org.mapleir.ir.code.expr.invoke.InitialisedObjectExpr;
 import org.mapleir.ir.code.expr.invoke.InvocationExpr;
+import org.mapleir.ir.code.expr.invoke.StaticInvocationExpr;
+import org.mapleir.ir.code.expr.invoke.VirtualInvocationExpr;
 import org.mapleir.ir.code.stmt.ArrayStoreStmt;
-import org.mapleir.ir.code.stmt.ConditionalJumpStmt;
 import org.mapleir.ir.code.stmt.copy.CopyVarStmt;
 import org.mapleir.ir.locals.Local;
-import org.mapleir.ir.utils.CFGUtils;
 import org.objectweb.asm.Type;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class VmConditionTransformer extends AbstractTransformer {
     public VmConditionTransformer(Skidfuscator skidfuscator) {
@@ -33,14 +30,14 @@ public class VmConditionTransformer extends AbstractTransformer {
     }
 
     @Listen(EventPriority.HIGHEST)
-    void handle(final FinalMethodTransformEvent event) {
+    void handle(final InitMethodTransformEvent event) {
         final ControlFlowGraph cfg = event.getMethodNode().getCfg();
         if (cfg == null) {
             return;
         }
 
-        //if (!event.getMethodNode().getName().equalsIgnoreCase("calculate")
-        //|| !event.getMethodNode().getParent().getName().contains("FizzBuzzComputationUnit"))
+        //if (!event.getMethodNode().getName().equalsIgnoreCase("run")
+        //|| !event.getMethodNode().getParent().getName().contains("AnnotationTest"))
         //    return;
 
         int highestItem = cfg.getMethodNode().isStatic() ? 0 : 1;
@@ -73,7 +70,7 @@ public class VmConditionTransformer extends AbstractTransformer {
                     if (stmt instanceof CopyVarStmt copyVarStmt) {
                         // [precondition] skip all parameters
                         // todo: make internal method
-                        if (copyVarStmt.getVariable().getLocal().getIndex() <= highestItem)
+                        if (copyVarStmt.getVariable().getLocal().getIndex() < highestItem)
                             break copy;
 
                         if (copyVarStmt.getExpression() instanceof AllocObjectExpr)
@@ -121,9 +118,9 @@ public class VmConditionTransformer extends AbstractTransformer {
                         block.replace(stmt, replace);
 
                         stmt = replace;
-                        System.out.println(String.format(
-                                "Replaced old %s with %s", stmt, replace
-                        ));
+                        //System.out.println(String.format(
+                        //        "Replaced old %s with %s", stmt, replace
+                        //));
                     }
                 }
             }
@@ -154,12 +151,13 @@ public class VmConditionTransformer extends AbstractTransformer {
                         );
                     }
                     if (codeUnit instanceof VarExpr varExpr) {
+                        final CodeUnit parent = varExpr.getParent();
                         //System.out.println(String.format(
-                        //        "Printing out %s (parent: %s)", codeUnit, varExpr.getParent()
-                        //));
+                        //        "Printing out %s (parent: %s)", codeUnit, parent
+                        ///));
 
-                        if (varExpr.getLocal().getIndex() <= highestIndex) {
-                            //System.out.println("=> Skipping because of index");
+                        if (varExpr.getLocal().getIndex() < highestIndex) {
+                            //System.out.println("=> Skipping because of index " + varExpr.getLocal().getIndex() + " (max: " + highestIndex + ")");
                             continue;
                         }
 
@@ -168,7 +166,7 @@ public class VmConditionTransformer extends AbstractTransformer {
                             continue;
                         }
 
-                        if (varExpr.getParent() instanceof InvocationExpr invocationExpr
+                        if (parent instanceof InvocationExpr invocationExpr
                                 && invocationExpr.getName().equalsIgnoreCase("<init>")
                                 && varExpr.getType().getSort() == Type.OBJECT) {
                             if (varExpr.getType().equals(Type.getType("L" + invocationExpr.getOwner() + ";"))) {
@@ -212,7 +210,9 @@ public class VmConditionTransformer extends AbstractTransformer {
                         }
 
                         if (varExpr.getParent() == null)
-                            continue;
+                            throw new IllegalStateException(
+                                    "Hanging varexpr: " + varExpr
+                            );
 
                         Expr newExpr = new ArrayLoadExpr(
                                 new VarExpr(local, type),
@@ -221,14 +221,30 @@ public class VmConditionTransformer extends AbstractTransformer {
                         );
 
                         if (type == TypeUtils.OBJECT_ARRAY_TYPE) {
-                            newExpr = new CastExpr(
-                                    newExpr,
-                                    varExpr.getLocal().getType() == null ? varExpr.getType() : varExpr.getLocal().getType()
-                            );
+                            Type computedType = varExpr.getLocal().getType() == null ? varExpr.getType() : varExpr.getLocal().getType();
+
+                            if (parent instanceof InvocationExpr invocationExpr) {
+                                final int argumentIndex = invocationExpr.indexOf(varExpr);
+
+                                if (argumentIndex < 0) {
+                                    throw new IllegalStateException(
+                                            String.format("Cannot be null argument: %s for %s", varExpr, parent)
+                                    );
+                                }
+                                final boolean isAddedArg = invocationExpr instanceof VirtualInvocationExpr;
+                                computedType = argumentIndex == 0 && isAddedArg
+                                        ? Type.getType(String.format("L%s;", invocationExpr.getOwner()))
+                                        : Type.getArgumentTypes(invocationExpr.getDesc())[argumentIndex - (isAddedArg ? 1 : 0)];
+                            }
+                            if (!computedType.equals(TypeUtils.OBJECT_TYPE)) {
+                                newExpr = new CastExpr(
+                                        newExpr,
+                                        computedType
+                                );
+                            }
                         }
 
-                       // System.out.printf("=> Changed %s for %s%n", varExpr, newExpr);
-                        varExpr.getParent().overwrite(varExpr, newExpr);
+                        parent.overwrite(varExpr, newExpr);
                     }
                 }
             }

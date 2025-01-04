@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.TypeUtils.ArrayType;
 import org.mapleir.ir.code.CodeUnit;
@@ -9,9 +11,10 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
-import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Add validation
+@Getter @Setter
 public class ArrayLoadExpr extends Expr {
 	
 	private Expr arrayExpression;
@@ -21,32 +24,26 @@ public class ArrayLoadExpr extends Expr {
 	public ArrayLoadExpr(Expr array, Expr index, ArrayType type) {
 		super(ARRAY_LOAD);
 		this.type = type;
-		setArrayExpression(array);
-		setIndexExpression(index);
-	}
-
-	public Expr getArrayExpression() {
-		return arrayExpression;
+		this.setArrayExpression(array);
+		this.setIndexExpression(index);
 	}
 
 	public void setArrayExpression(Expr arrayExpression) {
-		writeAt(arrayExpression, 0);
-	}
+		if (this.arrayExpression != null) {
+			this.arrayExpression.unlink();
+		}
 
-	public Expr getIndexExpression() {
-		return indexExpression;
+		this.arrayExpression = arrayExpression;
+		this.arrayExpression.setParent(this);
 	}
 
 	public void setIndexExpression(Expr indexExpression) {
-		writeAt(indexExpression, 1);
-	}
+		if (this.indexExpression != null) {
+			this.indexExpression.unlink();
+		}
 
-	public ArrayType getArrayType() {
-		return type;
-	}
-
-	public void setArrayType(ArrayType type) {
-		this.type = type;
+		this.indexExpression = indexExpression;
+		this.indexExpression.setParent(this);
 	}
 
 	@Override
@@ -61,15 +58,10 @@ public class ArrayLoadExpr extends Expr {
 				: type.getType();
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if (ptr == 0) {
-			arrayExpression = read(0);
-		} else if (ptr == 1) {
-			indexExpression = read(1);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -114,12 +106,15 @@ public class ArrayLoadExpr extends Expr {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (arrayExpression == previous) {
-			arrayExpression = newest;
+			this.setArrayExpression(newest);
 		} else if (indexExpression == previous) {
-			indexExpression = newest;
+			this.setIndexExpression(newest);
+		} else {
+			throw new IllegalArgumentException(String.format(
+					"Cannot overwrite %s with %s in %s",
+					previous, newest, this
+			));
 		}
-
-		super.overwrite(previous, newest);
 	}
 
 	@Override
@@ -132,10 +127,7 @@ public class ArrayLoadExpr extends Expr {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		self.addAll(arrayExpression.traverse());
-		self.addAll(indexExpression.traverse());
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(arrayExpression, indexExpression);
 	}
 }

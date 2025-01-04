@@ -1,10 +1,7 @@
 package dev.skidfuscator.obfuscator.skidasm.cfg;
 
-import ch.qos.logback.core.rolling.helper.FileStoreUtil;
-import ch.qos.logback.core.util.FileUtil;
 import com.google.common.collect.Streams;
 import dev.skidfuscator.obfuscator.Skidfuscator;
-import dev.skidfuscator.obfuscator.util.IOUtil;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
 import dev.skidfuscator.obfuscator.util.cfg.Blocks;
 import org.mapleir.asm.MethodNode;
@@ -110,7 +107,7 @@ public class SkidControlFlowGraph extends ControlFlowGraph {
                 .stream()
                 .filter(e -> !e.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
                 .flatMap(Collection::stream)
-                .map(Stmt::enumerateWithSelf)
+                .map(Stmt::traverse)
                 .flatMap(Streams::stream);
     }
 

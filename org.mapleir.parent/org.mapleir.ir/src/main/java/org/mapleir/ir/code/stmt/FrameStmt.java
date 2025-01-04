@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.stmt;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Opcode;
 import org.mapleir.ir.code.Stmt;
@@ -9,7 +11,9 @@ import org.objectweb.asm.MethodVisitor;
 
 import java.util.Arrays;
 
+@Getter @Setter
 public class FrameStmt extends Stmt {
+    // TODO: Add validation
     private int frameType;
     private Object[] frame;
     private Object[] stack;
@@ -22,8 +26,9 @@ public class FrameStmt extends Stmt {
     }
 
     @Override
+    @Deprecated
     public void onChildUpdated(int ptr) {
-        // do nothing
+        throw new UnsupportedOperationException("Deprecated");
     }
 
     @Override

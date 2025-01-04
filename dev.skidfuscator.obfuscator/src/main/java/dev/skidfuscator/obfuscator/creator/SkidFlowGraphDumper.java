@@ -11,7 +11,6 @@ import dev.skidfuscator.obfuscator.skidasm.cfg.SkidBlock;
 import dev.skidfuscator.obfuscator.skidasm.stmt.SkidBogusStmt;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import dev.skidfuscator.obfuscator.util.misc.Parameter;
-import dev.skidfuscator.obfuscator.verifier.Verifier;
 import org.mapleir.asm.ClassNode;
 import org.mapleir.flowgraph.ExceptionRange;
 import org.mapleir.flowgraph.edges.*;

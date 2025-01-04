@@ -67,9 +67,21 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 				.flatMap(Streams::stream);
 	}
 
-    public Stream<CodeUnit> allExprStream() {
-   		return vertices().stream().flatMap(Collection::stream).map(Stmt::enumerateWithSelf).flatMap(Streams::stream);
+    public Stream<CodeUnit> allImplicitStream() {
+   		return vertices()
+				.stream()
+				.flatMap(Collection::stream)
+				.map(Stmt::traverseExplicit)
+				.flatMap(Streams::stream);
    	}
+
+	public Stream<CodeUnit> allExprStream() {
+		return vertices()
+				.stream()
+				.flatMap(Collection::stream)
+				.map(Stmt::enumerateWithSelf)
+				.flatMap(Streams::stream);
+	}
 
     /**
 	 * Properly removes the edge, and cleans up phi uses in fe.dst of phi arguments from fe.src.
@@ -138,8 +150,8 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 				locals.uses.get((VersionedLocal) var.getLocal()).add(var);
 			}
 		}
-		
-		parent.writeAt(to, parent.indexOf(from));
+
+		parent.overwrite(from, to);
 	}
 
 	@Override

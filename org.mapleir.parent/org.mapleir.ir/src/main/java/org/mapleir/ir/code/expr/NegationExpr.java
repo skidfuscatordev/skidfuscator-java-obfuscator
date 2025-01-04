@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -9,23 +11,26 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@Getter @Setter
 public class NegationExpr extends Expr {
 
 	private Expr expression;
 
 	public NegationExpr(Expr expression) {
 		super(NEGATE);
-		setExpression(expression);
-	}
-
-	public Expr getExpression() {
-		return expression;
+		this.setExpression(expression);
 	}
 
 	public void setExpression(Expr expression) {
-		writeAt(expression, 0);
+		if (this.expression != null) {
+			this.expression.unlink();
+		}
+
+		this.expression = expression;
+		this.expression.setParent(this);
 	}
 
 	@Override
@@ -45,13 +50,10 @@ public class NegationExpr extends Expr {
 		}
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(ptr == 0) {
-			expression = read(0);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 	
 	@Override
@@ -88,7 +90,8 @@ public class NegationExpr extends Expr {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (expression == previous) {
-			expression = newest;
+			this.setExpression(newest);
+			return;
 		}
 
 		super.overwrite(previous, newest);
@@ -100,9 +103,7 @@ public class NegationExpr extends Expr {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		self.addAll(expression.traverse());
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(expression);
 	}
 }

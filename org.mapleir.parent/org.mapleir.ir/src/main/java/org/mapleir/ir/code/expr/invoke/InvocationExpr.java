@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr.invoke;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -13,6 +15,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Getter @Setter
 public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc {
 	public enum CallType {
 		STATIC(Opcodes.INVOKESTATIC),
@@ -40,51 +43,24 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 
 	public InvocationExpr(CallType callType, Expr[] args, String owner, String name, String desc) {
 		super(INVOKE);
-		
-		this.callType = callType;
-		this.args = args;
-		this.owner = owner;
-		this.name = name;
-		this.desc = desc;
-		
+
+		this.setCallType(callType);
+		this.setArgumentExprs(args);
+		this.setOwner(owner);
+		this.setName(name);
+		this.setDesc(desc);
+	}
+
+	@Override
+	public int indexOf(Expr s) {
+		final Expr[] args = getArgumentExprs();
 		for (int i = 0; i < args.length; i++) {
-			writeAt(args[i], i);
+			if (args[i].equivalent(s)) {
+				return i;
+			}
 		}
-	}
 
-	public final CallType getCallType() {
-		return callType;
-	}
-
-	public void setCallType(CallType callType) {
-		this.callType = callType;
-	}
-
-	@Override
-	public final String getOwner() {
-		return owner;
-	}
-
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-
-	@Override
-	public final String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@Override
-	public final String getDesc() {
-		return desc;
-	}
-
-	public void setDesc(String desc) {
-		this.desc = desc;
+		return -1;
 	}
 
 	public Expr[] copyArgs() {
@@ -109,13 +85,7 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 
 	@Override
 	public void onChildUpdated(int index) {
-		Expr argument = read(index);
-		if (index < 0 || (index) >= args.length) {
-			throw new ArrayIndexOutOfBoundsException();
-		}
-		
-		args[index] = argument;
-		writeAt(argument, index);
+		throw new IllegalStateException("Deprecated");
 	}
 	
 	@Override
@@ -269,10 +239,16 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 	}
 
 	public void setArgumentExprs(Expr[] args) {
+		if (this.args != null) {
+			for (Expr arg : this.args) {
+				arg.unlink();
+			}
+		}
+
 		this.args = args;
 
-		for (int i = 0; i < args.length; i++) {
-			writeAt(args[i], i);
+		for (Expr arg : args) {
+			arg.setParent(this);
 		}
 	}
 
@@ -287,10 +263,11 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 		}
 
 		if (index == -1)
-			throw new IllegalStateException("Parent has already disassociated with child");
-		this.args[index] = newest;
+			super.overwrite(previous, newest);;
 
-		super.overwrite(previous, newest);
+		this.args[index].unlink();
+		this.args[index] = newest;
+		this.args[index].setParent(this);
 	}
 
 	// @Override
@@ -326,12 +303,7 @@ public abstract class InvocationExpr extends Invocation implements IUsesJavaDesc
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-
-		for (Expr expr : args) {
-			self.addAll(expr.traverse());
-		}
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(args);
 	}
 }

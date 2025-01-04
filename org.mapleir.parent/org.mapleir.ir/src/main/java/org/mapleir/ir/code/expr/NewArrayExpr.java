@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -12,13 +14,15 @@ import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+@Getter @Setter
 public class NewArrayExpr extends Expr {
 
+	// TODO: Add validation
 	private Expr[] bounds;
 	private Type type;
-
 	private Expr[] cst;
 
 	public NewArrayExpr(Expr[] bounds, Type type) {
@@ -30,37 +34,37 @@ public class NewArrayExpr extends Expr {
 
 	public NewArrayExpr(Expr[] bounds, Type type, Expr[] cst) {
 		super(NEW_ARRAY);
-		this.bounds = bounds;
-		this.type = type;
-		this.cst = cst;
+		this.setBounds(bounds);
+		this.setType(type);
+		this.setCst(cst);
+	}
 
+	public void setBounds(Expr[] bounds) {
 		for (int i = 0; i < bounds.length; i++) {
-			writeAt(bounds[i], i);
+			if (bounds[i] != null) bounds[i].unlink();
 		}
 
+		this.bounds = bounds;
+		for (Expr bound : bounds) {
+			bound.setParent(this);
+		}
+	}
+
+	public void setCst(Expr[] cst) {
 		for (int i = 0; i < cst.length; i++) {
-			writeAt(cst[i], bounds.length + i);
+			if (cst[i] != null) {
+				cst[i].unlink();
+			}
+		}
+
+		this.cst = cst;
+		for (Expr expr : cst) {
+			expr.setParent(this);
 		}
 	}
 
 	public int getDimensions() {
 		return bounds.length;
-	}
-	
-	public Expr[] getBounds() {
-		return bounds;
-	}
-
-	public Expr[] getCst() {
-		return cst;
-	}
-
-	public void setCst(Expr[] cst) {
-		this.cst = cst;
-
-		for (int i = 0; i < cst.length; i++) {
-			writeAt(cst[i], bounds.length + i);
-		}
 	}
 
 	@Override
@@ -81,19 +85,9 @@ public class NewArrayExpr extends Expr {
 		return type;
 	}
 
-	public void setType(Type type) {
-		this.type = type;
-	}
-
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(ptr >= 0 && ptr < bounds.length) {
-			bounds[ptr] = read(ptr);
-		} else if (ptr >= bounds.length && ptr < bounds.length + cst.length) {
-			cst[ptr - bounds.length] = read(ptr);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 	
 	@Override
@@ -210,8 +204,19 @@ public class NewArrayExpr extends Expr {
 	public void overwrite(Expr previous, Expr newest) {
 		for (int i = 0; i < bounds.length; i++) {
 			if (bounds[i] == previous) {
+				bounds[i].unlink();
 				bounds[i] = newest;
-				break;
+				bounds[i].setParent(this);
+				return;
+			}
+		}
+
+		for (int i = 0; i < cst.length; i++) {
+			if (cst[i] == previous) {
+				cst[i].unlink();
+				cst[i] = newest;
+				cst[i].setParent(this);
+				return;
 			}
 		}
 
@@ -236,17 +241,12 @@ public class NewArrayExpr extends Expr {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+	public List<CodeUnit> children() {
+		final List<CodeUnit> self = new ArrayList<>();
 
-		for (Expr expression : bounds) {
-			self.addAll(expression.traverse());
-		}
+        Collections.addAll(self, bounds);
+        Collections.addAll(self, cst);
 
-		for (Expr cst : cst) {
-			self.addAll(cst.traverse());
-		}
-
-		return self;
+		return Collections.unmodifiableList(self);
 	}
 }

@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.codegen.BytecodeFrontend;
@@ -9,8 +11,10 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@Getter @Setter
 public class FieldLoadExpr extends Expr implements IUsesJavaDesc {
 
 	private Expr instanceExpression;
@@ -25,46 +29,18 @@ public class FieldLoadExpr extends Expr implements IUsesJavaDesc {
 		this.name = name;
 		this.desc = desc;
 		this.isStatic = isStatic;
-		setInstanceExpression(instanceExpression);
-	}
-	
-	public boolean isStatic() {
-		return isStatic;
-	}
-
-	public Expr getInstanceExpression() {
-		return instanceExpression;
+		this.setInstanceExpression(instanceExpression);
 	}
 
 	public void setInstanceExpression(Expr instanceExpression) {
-		writeAt(instanceExpression, 0);
-	}
+		if (this.instanceExpression != null) {
+			this.instanceExpression.unlink();
+		}
 
-	@Override
-	public String getOwner() {
-		return owner;
-	}
+		this.instanceExpression = instanceExpression;
 
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@Override
-	public String getDesc() {
-		return desc;
-	}
-
-	public void setDesc(String desc) {
-		this.desc = desc;
+		if (instanceExpression != null)
+			this.instanceExpression.setParent(this);
 	}
 
 	@Override
@@ -77,17 +53,10 @@ public class FieldLoadExpr extends Expr implements IUsesJavaDesc {
 		return Type.getType(desc);
 	}
 
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(isStatic) {
-			raiseChildOutOfBounds(ptr);
-		} else {
-			if(ptr == 0) {
-				instanceExpression = read(0);
-			} else {
-				raiseChildOutOfBounds(ptr);
-			}
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 	
 	@Override
@@ -127,7 +96,7 @@ public class FieldLoadExpr extends Expr implements IUsesJavaDesc {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (instanceExpression == previous) {
-			instanceExpression = newest;
+			this.setInstanceExpression(newest);
 		}
 
 		super.overwrite(previous, newest);
@@ -167,11 +136,9 @@ public class FieldLoadExpr extends Expr implements IUsesJavaDesc {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-
-		if (instanceExpression != null)
-			self.addAll(instanceExpression.traverse());
-		return self;
+	public List<CodeUnit> children() {
+		return instanceExpression == null
+				? Collections.emptyList()
+				: List.of(instanceExpression);
 	}
 }

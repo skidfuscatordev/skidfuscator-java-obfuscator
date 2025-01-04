@@ -1,5 +1,8 @@
 package org.mapleir.ir.code.stmt;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.CodeUnit;
@@ -14,50 +17,34 @@ import org.objectweb.asm.Type;
 import java.util.*;
 import java.util.Map.Entry;
 
+@Getter @Setter
 public class SwitchStmt extends Stmt {
 
+	@NonNull
 	private Expr expression;
 	private LinkedHashMap<Integer, BasicBlock> targets;
 	private BasicBlock defaultTarget;
 
 	public SwitchStmt(Expr expr, LinkedHashMap<Integer, BasicBlock> targets, BasicBlock defaultTarget) {
 		super(SWITCH_JUMP);
-		setExpression(expr);
+		this.setExpression(expr);
 		this.targets = targets;
 		this.defaultTarget = defaultTarget;
-	}
-
-	public Expr getExpression() {
-		return expression;
 	}
 
 	public void setExpression(Expr expression) {
-		writeAt(expression, 0);
+		if (this.expression != null) {
+			this.expression.unlink();
+		}
+
+		this.expression = expression;
+		this.expression.setParent(this);
 	}
 
-	public LinkedHashMap<Integer, BasicBlock> getTargets() {
-		return targets;
-	}
-
-	public void setTargets(LinkedHashMap<Integer, BasicBlock> targets) {
-		this.targets = targets;
-	}
-
-	public BasicBlock getDefaultTarget() {
-		return defaultTarget;
-	}
-
-	public void setDefaultTarget(BasicBlock defaultTarget) {
-		this.defaultTarget = defaultTarget;
-	}
-
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if (ptr == 0) {
-			expression = read(0);
-		} else {
-			raiseChildOutOfBounds(ptr);
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 	
 	private boolean needsSort() {
@@ -167,7 +154,8 @@ public class SwitchStmt extends Stmt {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (expression == previous) {
-			expression = newest;
+			this.setExpression(newest);
+			return;
 		}
 
 		super.overwrite(previous, newest);
@@ -209,9 +197,7 @@ public class SwitchStmt extends Stmt {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-		self.addAll(expression.traverse());
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(expression);
 	}
 }

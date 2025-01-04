@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.expr.invoke;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.app.service.InvocationResolver;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
@@ -17,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Getter @Setter
 public class InitialisedObjectExpr extends Invocation {
 
 	private String owner;
@@ -27,36 +30,16 @@ public class InitialisedObjectExpr extends Invocation {
 		super(INIT_OBJ);
 		this.owner = owner;
 		this.desc = desc;
-		this.args = args;
-		for (int i = 0; i < args.length; i++) {
-			writeAt(args[i], i);
-		}
+		this.setArgumentExprs(args);
 	}
 
-	@Override
-	public String getOwner() {
-		return owner;
-	}
-
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-
-	@Override
-	public String getDesc() {
-		return desc;
-	}
-
-	public void setDesc(String desc) {
-		this.desc = desc;
-	}
 
 	@Override
 	public void setArgumentExprs(Expr[] args) {
 		this.args = args;
 
-		for (int i = 0; i < args.length; i++) {
-			writeAt(args[i], i);
+		for (Expr arg : args) {
+			arg.setParent(this);
 		}
 	}
 
@@ -69,15 +52,11 @@ public class InitialisedObjectExpr extends Invocation {
 	public Precedence getPrecedence0() {
 		return Precedence.METHOD_INVOCATION;
 	}
-	
+
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		Expr argument = read(ptr);
-		if (ptr < 0 || (ptr) >= args.length) {
-			throw new ArrayIndexOutOfBoundsException();
-		}
-		
-		args[ptr] = argument;
+		throw new IllegalStateException("Deprecated");
 	}
 
 	@Override
@@ -194,6 +173,7 @@ public class InitialisedObjectExpr extends Invocation {
 		if (index == -1)
 			throw new IllegalStateException("Parent has already disassociated with child");
 		this.args[index] = newest;
+		this.args[index].setParent(this);
 
 		super.overwrite(previous, newest);
 	}
@@ -209,12 +189,7 @@ public class InitialisedObjectExpr extends Invocation {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
-
-		for (Expr expr : args) {
-			self.addAll(expr.traverse());
-		}
-		return self;
+	public List<CodeUnit> children() {
+		return List.of(args);
 	}
 }

@@ -1,5 +1,7 @@
 package org.mapleir.ir.code.stmt;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.mapleir.ir.TypeUtils;
 import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
@@ -12,10 +14,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@Getter @Setter
 public class FieldStoreStmt extends Stmt implements IUsesJavaDesc {
 
+	// TODO: Add validation
 	private Expr instanceExpression;
 	private Expr valueExpression;
 	private String owner;
@@ -25,87 +30,37 @@ public class FieldStoreStmt extends Stmt implements IUsesJavaDesc {
 
 	public FieldStoreStmt(Expr instanceExpression, Expr valueExpression, String owner, String name, String desc, boolean isStatic) {
 		super(FIELD_STORE);
-		this.owner = owner;
-		this.name = name;
-		this.desc = desc;
-		this.isStatic = isStatic;
-		
-		writeAt(instanceExpression, 0);
-		writeAt(valueExpression, instanceExpression == null ? 0 : 1);
-	}
-
-	public boolean isStatic() {
-		return isStatic;
-	}
-	
-	public Expr getInstanceExpression() {
-		return instanceExpression;
+		this.setOwner(owner);
+		this.setName(name);
+		this.setDesc(desc);
+		this.setStatic(isStatic);
+		this.setInstanceExpression(instanceExpression);
+		this.setValueExpression(valueExpression);
 	}
 
 	public void setInstanceExpression(Expr instanceExpression) {
-		if (this.instanceExpression == null && instanceExpression != null) {
-			this.instanceExpression = instanceExpression;
-			writeAt(valueExpression, 1);
-			writeAt(this.instanceExpression, 0);
-		} else if (this.instanceExpression != null && instanceExpression == null) {
-			this.instanceExpression = instanceExpression;
-			writeAt(valueExpression, 0);
-			writeAt(null, 1);
-		} else {
-			this.instanceExpression = instanceExpression;
-			writeAt(this.instanceExpression, 0);
+		if (this.instanceExpression != null) {
+			this.instanceExpression.unlink();
 		}
-	}
 
-	public Expr getValueExpression() {
-		return valueExpression;
+		this.instanceExpression = instanceExpression;
+		if (instanceExpression != null)
+			instanceExpression.setParent(this);
 	}
 
 	public void setValueExpression(Expr valueExpression) {
-		writeAt(valueExpression, instanceExpression == null ? 0 : 1);
+		if (this.valueExpression != null) {
+			this.valueExpression.unlink();
+		}
+
+		this.valueExpression = valueExpression;
+		this.valueExpression.setParent(this);
 	}
 
-	public String getOwner() {
-		return owner;
-	}
-
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getDesc() {
-		return desc;
-	}
-
-	public void setDesc(String desc) {
-		this.desc = desc;
-	}
-
+	@Deprecated
 	@Override
 	public void onChildUpdated(int ptr) {
-		if(isStatic) {
-			if(ptr == 0) {
-				valueExpression = read(0);
-			} else {
-				raiseChildOutOfBounds(ptr);
-			}
-		} else {
-			if(ptr == 0) {
-				instanceExpression = read(0);
-			} else if(ptr == 1) {
-				valueExpression = read(1);
-			} else {
-				raiseChildOutOfBounds(ptr);
-			}
-		}
+		throw new UnsupportedOperationException("Deprecated");
 	}
 
 	@Override
@@ -148,14 +103,14 @@ public class FieldStoreStmt extends Stmt implements IUsesJavaDesc {
 	@Override
 	public void overwrite(Expr previous, Expr newest) {
 		if (valueExpression == previous) {
-			setValueExpression(newest);
-			valueExpression = newest;
+			this.setValueExpression(newest);
+			return;
 		} else if (instanceExpression == previous) {
-			setInstanceExpression(newest);
-			instanceExpression = newest;
+			this.setInstanceExpression(newest);
+			return;
 		}
 
-		//super.overwrite(previous, newest);
+		super.overwrite(previous, newest);
 	}
 
 	@Override
@@ -189,12 +144,13 @@ public class FieldStoreStmt extends Stmt implements IUsesJavaDesc {
 	}
 
 	@Override
-	public List<CodeUnit> traverse() {
-		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+	public List<CodeUnit> children() {
+		final List<CodeUnit> self = new ArrayList<>();
 
 		if (instanceExpression != null)
-			self.addAll(instanceExpression.traverse());
-		self.addAll(valueExpression.traverse());
-		return self;
+			self.add(instanceExpression);
+		self.add(valueExpression);
+
+		return Collections.unmodifiableList(self);
 	}
 }

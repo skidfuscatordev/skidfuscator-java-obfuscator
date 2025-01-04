@@ -35,6 +35,7 @@ import org.objectweb.asm.Type;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * The compiler pass responsible for converting a non-SSA flow graph into a SSA-form flow graph.
@@ -759,6 +760,10 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 		if(u.getOpcode() == Opcode.LOCAL_LOAD) {
 			translateStmt((VarExpr) u, resolve, isPhi);
 		} else if(!isPhi) {
+			//System.out.printf("Searching children of %s with:%n %s%n",
+			//		u, u.getChildren().stream().map(Expr::toString)
+		//					.collect(Collectors.joining("\n"))
+		//			);
 			for(Expr c : u.getChildren()) {
 				translate(c, resolve, false);
 			}
@@ -906,8 +911,16 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 							if(value.getSource() != null) {
 								from = pool.defs.get(value.getSource());
 							}
-							
-							if(!value.hasConstraints() || (canTransferHandlers(def.getBlock(), var.getBlock()) && value.canPropagate(from, var.getRootParent(), var, false))) {
+
+							// [validation]: this can cause issues if root parent is unlinked or null
+							if (var.getRootParent() == null) {
+								throw new IllegalStateException(String.format(
+										"No root parent for %s (supposed parent %s) from %s", var, var.getParent(), from
+								));
+							}
+
+							if(!value.hasConstraints() || (canTransferHandlers(def.getBlock(), var.getBlock())
+									&& value.canPropagate(from, var.getRootParent(), var, false))) {
 								if(shouldCopy(rval)) {
 									e = rval;
 								} else {
@@ -926,8 +939,10 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 
 					if(e != null) {
 						CodeUnit parent = var.getParent();
-						int idx = parent.indexOf(var);
-						parent.writeAt(e = e.copy(), idx);
+						//System.out.println("Propagating " + e + " to " + var);
+						parent.overwrite(var, e = e.copy());
+						//int idx = parent.indexOf(var);
+						//parent.writeAt(e = e.copy(), idx);
 						
 						pool.uses.get(ssaL).remove(var);
 						
@@ -1033,9 +1048,9 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 								
 								Expr[] args = invoke.getParameterExprs();
 								// we want to reuse the exprs, so free it first.
-								invoke.unlink();
+								invoke.hardUnlink();
 								for(Expr e : args) {
-									e.unlink();
+									e.hardUnlink();
 								}
 								
 								Expr[] newArgs = Arrays.copyOf(args, args.length);
@@ -1325,12 +1340,17 @@ public class SSAGenPass extends ControlFlowGraphBuilder.BuilderPass {
 								}
 								
 								
-								rhs.unlink();
+								rhs.hardUnlink();
 								def.getBlock().remove(def);
 								pool.defs.remove(vl);
 								
 								useSet.clear();
-								parent.writeAt(rhs, parent.indexOf(use));
+								//System.out.printf(
+								//		"Propagating rhs %s for use %s",
+								//		rhs, use
+								//);
+								parent.overwrite(use, rhs);
+								//parent.writeAt(rhs, parent.indexOf(use));
 								
 								i++;
 								it.remove();

@@ -10,8 +10,6 @@ import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.expr.ConstantExpr;
 import org.mapleir.ir.code.stmt.PopStmt;
 
-import javax.swing.text.html.Option;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 

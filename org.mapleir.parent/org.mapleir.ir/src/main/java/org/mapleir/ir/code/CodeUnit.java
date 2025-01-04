@@ -4,11 +4,11 @@ import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.code.expr.PhiExpr;
 import org.mapleir.ir.codegen.BytecodeFrontend;
 import org.mapleir.stdlib.collections.graph.FastGraphVertex;
-import org.mapleir.stdlib.util.JavaDesc;
 import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This is the shared base between the {@link Stmt} and {@link Expr} classes,
@@ -56,18 +56,8 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 	 */
 	private BasicBlock block;
 
-	/**
-	 * The children of this unit.
-	 */
-	public Expr[] children;
-	/**
-	 * Index of the last item in the children array.
-	 */
-	private int ptr;
-
 	public CodeUnit(int opcode) {
 		this.opcode = opcode;
-		children = new Expr[8];
 	}
 
 	public void setFlag(int flag, boolean val) {
@@ -111,17 +101,7 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 
 	public void setBlock(BasicBlock block) {
 		this.block = block;
-		
-		// TODO: may invalidate the statement if block is null
-
-		for(Expr s : children) {
-			if(s != null) {
-				if (s == this) {
-					throw new IllegalStateException("Self hierarchy? " + this);
-				}
-				s.setBlock(block);
-			}
-		}
+		this.children().forEach(c -> c.setBlock(block));
 	}
 
 	/**
@@ -133,10 +113,8 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 	 */
 	public int deepSize() {
 		int size = 1;
-		for (int i = 0; i < children.length; i++) {
-			if (children[i] != null) {
-				size += children[i].deepSize();
-			}
+		for (CodeUnit codeUnit : children()) {
+			size += codeUnit.deepSize();
 		}
 		return size;
 	}
@@ -148,183 +126,48 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 	 */
 	public int size() {
 		int size = 0;
-		for (int i = 0; i < children.length; i++) {
-			if (children[i] != null) {
-				size++;
-			}
+		for (CodeUnit codeUnit : children()) {
+			size++;
 		}
 		return size;
 	}
 
 	public int capacity() {
-		return children.length;
-	}
-
-	protected boolean shouldExpand() {
-		double max = children.length * 0.50;
-		return (double) size() > max;
-	}
-
-	protected void expand() {
-		if (children.length >= Integer.MAX_VALUE)
-			throw new UnsupportedOperationException();
-		long len = children.length * 2;
-		if (len > Integer.MAX_VALUE)
-			len = Integer.MAX_VALUE;
-		Expr[] newArray = new Expr[(int) len];
-		System.arraycopy(children, 0, newArray, 0, children.length);
-		children = newArray;
+		return children().size();
 	}
 
 	public int indexOf(Expr s) {
-		for (int i = 0; i < children.length; i++) {
-			if (children[i] == s) {
-				return i;
-			}
-		}
+		//for (int i = 0; i < children.length; i++) {
+		//	if (children[i] == s) {
+		//		return i;
+		//	}
+		//}
 		return -1;
 	}
 
-	/**
-	 * Gets the child {@link Expr} at the given index.
-	 * 
-	 * @param newPtr The index of the child.
-	 * @return The child {@link Expr}.
-	 */
-	public Expr read(int newPtr) {
-		if (newPtr < 0 || newPtr >= children.length || (newPtr > 0 && children[newPtr - 1] == null))
-			throw new ArrayIndexOutOfBoundsException(String.format("%s, ptr=%d, len=%d, addr=%d", this.getClass().getSimpleName(), ptr, children.length, newPtr));
-		return children[newPtr];
-	}
-
-	/**
-	 * Writes the given expression as a child of the current unit at the given
-	 * index. The expression to write must be unassociated with any current
-	 * unit, i.e. have no parent already.<br>
-	 * When the node is updated the {@link #onChildUpdated(int)} callback is
-	 * invoked with the given index.<br>
-	 * 
-	 * @param s The new expression to write at the given index.
-	 * @param index The index of the children to update.
-	 * @return The expression that was previously at the given index or null if
-	 * there was no change to the state of the children array.
-	 * @throws IllegalStateException if the given expression already has a
-	 * parent unit (TODO: return null).
-	 * @throws ArrayIndexOutOfBoundsException if the index is 
-	 */
-	public Expr writeAt(Expr s, int index) {
-		if (index < 0 || index >= children.length 
-				|| (index > 0 && children[index - 1] == null)) {
-			throw new ArrayIndexOutOfBoundsException(String.format("ptr=%d, "
-					+ "len=%d, addr=%d", ptr, children.length, index));
-		}
-		Expr prev = children[index];
-		/* check this before checking if there is a parent for 's' as the
-		 * parent may be this node. */
-		if(prev == s) {
-			/* no point replacing an expr with itself, no change. */
-			return null;
-		}
-		if(s != null && s.parent != null) {
-			throw new IllegalStateException(String.format("%s already belongs "
-					+ "to %s (new: %s)", s, s.parent, getRootParent0()));
-		}
-		
-		if(shouldExpand()) {
-			expand();
-		}
-		
-		if(prev != null) {
-			prev.setParent(null);
-		}
-		children[index] = s;
-		if(s != null) {
-			s.setParent(this);
-		}
-		onChildUpdated(index);
-		return prev;
-	}
-
-	public void deleteAt(int _ptr) {
-		if (_ptr < 0 || _ptr >= children.length || (_ptr > 0 && children[_ptr - 1] == null))
-			throw new ArrayIndexOutOfBoundsException(String.format("ptr=%d, len=%d, addr=%d", ptr, children.length, _ptr));
-		if (children[_ptr] == null)
-			throw new UnsupportedOperationException("No statement at " + _ptr);
-
-		if ((_ptr + 1) < children.length && children[_ptr + 1] == null) {
-			// ptr: s5 (4)
-			// len = 8
-			// before: [s1, s2, s3, s4, s5  , null, null, null]
-			// after : [s1, s2, s3, s4, null, null, null, null]
-			writeAt(null, _ptr);
-		} else {
-			// ptr: s2 (1)
-			// len = 8
-			// before: [s1, s2, s3, s4, s5 ,  null, null, null]
-			// del s2 (1)
-			// before: [s1, null, s3, s4, s5 ,  null, null, null]
-			// ptr+1 = s3 (2)
-			// (ptr+1 to len) = {2, 3, 4, 5, 6, 7}
-			// shift elements down 1
-			// after : [s1, s3, s4, s5, null, null, null, null]
-			writeAt(null, _ptr);
-			for (int i = _ptr + 1; i < children.length; i++) {
-				Expr s = children[i];
-				// set the parent to null, since
-				// the intermediary step in this
-				// shifting looks like:
-				//   [s1, s3, s3, s4, s5, null, null, null]
-				// then we remove the second one
-				//   [s1, s3, null, s4, s5, null, null, null]
-				
-				// end of active stmts in child array.
-				if(s == null) {
-					break;
-				}
-				
-				if(s != null) {
-					s.setParent(null);
-				}
-				writeAt(s, i-1);
-				writeAt(null, i);
-				// we need to set the parent again,
-				// because we have 2 of the same
-				// node in the children array, which
-				// means the last writeAt call, sets
-				// the parent as null.
-				if(s != null) {
-					s.setParent(this);
-				}
-			}
-		}
+	public List<Expr> getLinkedChildren() {
+		return linkedChildren()
+				.stream()
+				// [notice] explicit forcing behaviour since no
+				// 			expr can be a child besides exprs
+				.map(Expr.class::cast)
+				.toList();
 	}
 
 	public List<Expr> getChildren() {
-		List<Expr> list = new ArrayList<>();
-		for (int i = 0; i < children.length; i++) {
-			if (children[i] != null) {
-				list.add(children[i]);
-			}
-		}
-		return list;
-	}
-
-	public void setChildPointer(int _ptr) {
-		if (_ptr < 0 || _ptr >= children.length || (_ptr > 0 && children[_ptr - 1] == null))
-			throw new ArrayIndexOutOfBoundsException(String.format("ptr=%d, len=%d, addr=%d", ptr, children.length, _ptr));
-		ptr = _ptr;
-	}
-
-	public int getChildPointer() {
-		return ptr;
+		return children()
+				.stream()
+				// [notice] explicit forcing behaviour since no
+				// 			expr can be a child besides exprs
+				.map(Expr.class::cast)
+				.toList();
 	}
 
 	public void overwrite(final Expr previous, final Expr newest) {
-		final int index = this.indexOf(previous);
-		writeAt(newest, index);
-		assert children[index] == newest;
-		//children[index] = newest;
-		previous.unlink();
+		throw new IllegalArgumentException(String.format(
+				"Cannot overwrite %s with %s --> %s",
+				this, previous, newest
+		));
 	}
 
 	public abstract void onChildUpdated(int ptr);
@@ -347,6 +190,7 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 		}
 	}
 
+	@Deprecated
 	public Set<Expr> _enumerate() {
 		Set<Expr> set = new HashSet<>();
 
@@ -362,7 +206,9 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 				set.addAll(e._enumerate());
 			}
 		} else {
-			for(Expr c : children) {
+			for(Expr c : children().stream()
+					.map(Expr.class::cast)
+					.toList()) {
 				if(c != null) {
 					set.add(c);
 					set.addAll(c._enumerate());
@@ -378,7 +224,9 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 	}
 
 	protected void dfsStmt(List<CodeUnit> list) {
-		for(Expr c : children) {
+		for(Expr c : children().stream()
+				.map(Expr.class::cast)
+				.toList()) {
 			if(c != null) {
 				c.dfsStmt(list);
 			}
@@ -403,7 +251,50 @@ public abstract class CodeUnit implements FastGraphVertex, Opcode {
 		return printer.toString();
 	}
 
-	public List<CodeUnit> traverse() {
+	public final List<CodeUnit> traverseExplicit() {
+		final List<CodeUnit> units = new ArrayList<>();
+
+		for (CodeUnit child : children()) {
+			units.addAll(child.traverseExplicit());
+		}
+		units.addAll(self());
+
+		return Collections.unmodifiableList(units);
+	}
+
+	// THIS METHOD IS DIFFERENT AS IT TRAVERSES ALL REFERENCED
+	// VARIABLES THAT ARE IMPLICITLY CALLED LIKE VAREXPR IN
+	// COPY VARS
+	public final List<CodeUnit> traverse() {
+		final List<CodeUnit> units = new ArrayList<>();
+
+		for (CodeUnit child : linkedChildren()) {
+			units.addAll(child.traverse());
+		}
+		units.addAll(self());
+
+		return Collections.unmodifiableList(units);
+	}
+
+	public final List<CodeUnit> traverseChildren() {
+		final List<CodeUnit> units = new ArrayList<>();
+
+		for (CodeUnit child : children()) {
+			units.addAll(child.traverseExplicit());
+		}
+
+		return Collections.unmodifiableList(units);
+	}
+
+	public List<CodeUnit> self() {
+		return List.of(this);
+	}
+
+	public List<CodeUnit> linkedChildren() {
+		return children();
+	}
+
+	public List<CodeUnit> children() {
 		return Collections.emptyList();
 	}
 
