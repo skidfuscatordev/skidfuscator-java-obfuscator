@@ -59,6 +59,7 @@ import dev.skidfuscator.obfuscator.transform.impl.loop.LoopConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.remapper.mixin.MixinTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
@@ -754,9 +755,10 @@ public class Skidfuscator {
                     //new LoopConditionTransformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
-                    new AhegaoTransformer(this)
-                    //new SimpleOutlinerTransformer()
+                    new AhegaoTransformer(this),
+                    //new SimpleOutlinerTransformer(),
                     //
+                    new MixinTransformer(this)
             ));
         } else {
             transformers.addAll(Arrays.asList(
