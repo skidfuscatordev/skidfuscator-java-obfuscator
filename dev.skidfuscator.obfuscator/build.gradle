@@ -22,7 +22,8 @@ dependencies {
 
     implementation project(':sdk')
     implementation 'com.github.lukfor:magic-progress:0.3.2'
-    implementation 'com.github.matomo-org:matomo-java-tracker:v1.7'
+    implementation("org.piwik.java.tracking:matomo-java-tracker:3.4.0")
+
     api 'com.github.Col-E:jphantom:1.4.3'
     implementation 'dev.dirs:directories:26'
     implementation 'de.femtopedia.dex2jar:dex2jar:2.4.24'
@@ -39,12 +40,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs += [
-            '--add-exports', 'java.base/jdk.internal.reflect=ALL-UNNAMED',
-            '--add-exports', 'java.base/jdk.internal.util=ALL-UNNAMED'
-    ]
-}
 
 jar {
     into('resources') {
@@ -68,8 +63,6 @@ processTestResources {
 test {
     useJUnitPlatform()
 }
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
 
 configurations {
     downgrade

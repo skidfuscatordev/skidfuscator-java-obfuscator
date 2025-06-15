@@ -26,9 +26,9 @@ public class SkidClassNode extends ClassNode {
     @Getter
     private final Skidfuscator skidfuscator;
     @Getter
-    private final ClassOpaquePredicate classPredicate;
+    private ClassOpaquePredicate classPredicate;
     @Getter
-    private final ClassOpaquePredicate staticPredicate;
+    private ClassOpaquePredicate staticPredicate;
     private transient SkidMethodNode clinitNode;
     private transient Boolean mixin;
     @Getter
@@ -42,12 +42,15 @@ public class SkidClassNode extends ClassNode {
     public SkidClassNode(org.objectweb.asm.tree.ClassNode node, Skidfuscator session) {
         super(node, false);
         this.skidfuscator = session;
-        this.classPredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getClassPredicate(this);
-        this.staticPredicate = skidfuscator
-                .getPredicateAnalysis()
-                .getClassStaticPredicate(this);
+
+        if (skidfuscator != null) {
+            this.classPredicate = skidfuscator
+                    .getPredicateAnalysis()
+                    .getClassPredicate(this);
+            this.staticPredicate = skidfuscator
+                    .getPredicateAnalysis()
+                    .getClassStaticPredicate(this);
+        }
 
         for (MethodNode method : node.methods) {
             super.getMethods().add(new SkidMethodNode(method, this, session));

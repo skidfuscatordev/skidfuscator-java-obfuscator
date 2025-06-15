@@ -1,10 +1,14 @@
 package dev.skidfuscator.obfuscator.transform.impl.sdk;
 
 import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.transform.skid.InitSkidTransformEvent;
+import dev.skidfuscator.obfuscator.phantom.jphantom.PhantomJarDownloader;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
+import org.mapleir.app.service.ApplicationClassSource;
+import org.mapleir.app.service.LibraryClassSource;
 import org.mapleir.asm.ClassNode;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteio.in.SingleJarDownloader;
@@ -42,7 +46,7 @@ public class SdkInjectorTransformer extends AbstractTransformer {
             }
 
             // Import the SDK jar classes
-            final SingleJarDownloader<ClassNode> downloader = MapleJarUtil.importJar(
+            final PhantomJarDownloader<ClassNode> downloader = MapleJarUtil.importPhantomJar(
                 sdkFile,
                 skidfuscator
             );
@@ -51,6 +55,13 @@ public class SdkInjectorTransformer extends AbstractTransformer {
             for (JarClassData classData : downloader.getJarContents().getClassContents()) {
                 skidfuscator.getJarContents().getClassContents().add(classData);
             }
+            ApplicationClassSource library = new SkidApplicationClassSource("Library",
+                    false,
+                    downloader.getJarContents(),
+                    skidfuscator
+            );
+
+            skidfuscator.getClassSource().addLibraries(new LibraryClassSource(library, 5));
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to inject SDK", e);

@@ -26,6 +26,10 @@ public class LibraryClassSource extends ClassSource {
 		this(Collections.emptySet(), parent, priority);
 	}
 
+	public ApplicationClassSource getParent() {
+		return parent;
+	}
+
 	/* public lookup method, polls parent first (which can
 	 * call its children to look for the */
 	@Override

@@ -10,9 +10,24 @@ fileCrasher: {
     enabled: false
 }
 
+numberEncryption {
+    enabled: false
+    exempt: []
+}
+
+flowRange {
+    enabled: false
+    exempt: []
+}
+
+flowSwitch {
+    enabled: false
+    exempt: []
+}
+
 stringEncryption {
     type: STANDARD
-    enabled: false
+    enabled: true
     exempt: []
 }
 
@@ -55,3 +70,12 @@ flowException {
     exempt: []
 }
 
+flowCondition {
+    enabled: false
+}
+
+flowException {
+    enabled: false
+    strength: AGGRESSIVE
+    exempt: []
+}

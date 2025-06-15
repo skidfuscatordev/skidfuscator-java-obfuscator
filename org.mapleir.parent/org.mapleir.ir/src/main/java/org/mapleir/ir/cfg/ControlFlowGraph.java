@@ -61,6 +61,12 @@ public class ControlFlowGraph extends FlowGraph<BasicBlock, FlowEdge<BasicBlock>
 		return blockCounter++;
 	}
 
+	public Stream<CodeUnit> traverse() {
+		return vertices().stream().flatMap(Collection::stream)
+				.map(Stmt::traverse)
+				.flatMap(Streams::stream);
+	}
+
     public Stream<CodeUnit> allExprStream() {
    		return vertices().stream().flatMap(Collection::stream).map(Stmt::enumerateWithSelf).flatMap(Streams::stream);
    	}

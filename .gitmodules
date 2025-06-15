@@ -1,2 +1,2 @@
 [submodule "dev.xdark.ssvm"]
-	url = git@github.com:terminalsin/SSVM.git
+	url = https://github.com/terminalsin/SSVM.git

@@ -157,7 +157,7 @@ public class BasicExceptionTransformer extends AbstractTransformer {
 
             // Todo change blocks to be skiddedblocks to add method to directly add these
             final ConstantExpr var_const = new AlertableConstantExpr(hash.getHash(), Type.INT_TYPE);
-            final ConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(hash.getExpr(), var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
+            final ConditionalJumpStmt jump_stmt = new FakeConditionalJumpStmt(hash.getExpr().copy() , var_const, fuckup, ConditionalJumpStmt.ComparisonType.NE);
 
             if (entry.get(entry.size() - 1) instanceof UnconditionalJumpStmt)
                 entry.add(entry.size() - 1, jump_stmt);

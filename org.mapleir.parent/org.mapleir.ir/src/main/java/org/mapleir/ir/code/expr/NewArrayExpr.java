@@ -10,7 +10,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class NewArrayExpr extends Expr {
 
@@ -231,5 +233,20 @@ public class NewArrayExpr extends Expr {
 			return type.equals(e.type);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+
+		for (Expr expression : bounds) {
+			self.addAll(expression.traverse());
+		}
+
+		for (Expr cst : cst) {
+			self.addAll(cst.traverse());
+		}
+
+		return self;
 	}
 }

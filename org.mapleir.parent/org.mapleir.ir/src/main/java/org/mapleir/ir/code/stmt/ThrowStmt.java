@@ -8,6 +8,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ThrowStmt extends Stmt {
 
 	private Expr expression;
@@ -73,5 +76,12 @@ public class ThrowStmt extends Stmt {
 			return expression.equivalent(thr.expression);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		return self;
 	}
 }

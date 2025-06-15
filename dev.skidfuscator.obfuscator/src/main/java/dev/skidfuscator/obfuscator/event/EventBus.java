@@ -2,6 +2,7 @@ package dev.skidfuscator.obfuscator.event;
 
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
 import dev.skidfuscator.obfuscator.event.impl.Event;
+import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,7 +22,17 @@ public class EventBus {
      * @param instance Instance of the listener to be registered
      */
     public static void register(final Listener instance) {
-        for (Method declaredMethod : instance.getClass().getDeclaredMethods()) {
+        final Set<Method> methods = new HashSet<>();
+
+        // get parent until abstract transformer is reached
+        Class<?> clazz = instance.getClass();
+
+        while (!clazz.equals(Listener.class) && !clazz.equals(Object.class)) {
+            methods.addAll(Arrays.asList(clazz.getDeclaredMethods()));
+            clazz = clazz.getSuperclass();
+        }
+
+        for (Method declaredMethod : methods) {
             if (!declaredMethod.isAnnotationPresent(Listen.class))
                 continue;
 

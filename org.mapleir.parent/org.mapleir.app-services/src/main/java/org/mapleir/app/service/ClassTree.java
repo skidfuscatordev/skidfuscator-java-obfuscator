@@ -62,7 +62,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 					sup = cn.node.superName != null
 							? requestClass0(cn.node.superName, cn.getName())
 							: rootNode;
-				} catch (RuntimeException e) {
+				} catch (Exception e) {
 					// ignore
 				}
 				if(sup == null) {
@@ -73,7 +73,7 @@ public class ClassTree extends FastDirectedGraph<ClassNode, InheritanceEdge> {
 					ClassNode iface  = null;
 					try {
 						iface = requestClass0(s, cn.getName());
-					} catch (RuntimeException e) {
+					} catch (Exception e) {
 						// ignore
 					}
 					if(iface == null) {

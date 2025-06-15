@@ -4,6 +4,7 @@ import com.google.common.base.CaseFormat;
 import lombok.experimental.UtilityClass;
 
 import java.lang.reflect.Array;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 
@@ -60,6 +61,15 @@ public class MiscUtil {
         return CaseFormat.UPPER_UNDERSCORE.to(
                 CaseFormat.LOWER_CAMEL,
                 s.toUpperCase(Locale.ROOT).replace(' ', '_')
+        );
+    }
+
+    public static String getHwid(){
+        return "%s (%s [%s] C: %d)".formatted(
+                System.getProperty("user.name"),
+                System.getProperty("os.name"),
+                System.getProperty("os.arch"),
+                Runtime.getRuntime().availableProcessors()
         );
     }
 }

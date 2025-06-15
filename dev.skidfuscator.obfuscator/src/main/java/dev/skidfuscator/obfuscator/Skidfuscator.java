@@ -5,7 +5,6 @@ import com.typesafe.config.ConfigFactory;
 import dev.skidfuscator.failsafe.Failsafe;
 import dev.skidfuscator.jghost.GhostHelper;
 import dev.skidfuscator.jghost.tree.GhostLibrary;
-import dev.skidfuscator.obfuscator.analytics.SkidTracker;
 import dev.skidfuscator.config.DefaultSkidConfig;
 import dev.skidfuscator.obfuscator.creator.SkidApplicationClassSource;
 import dev.skidfuscator.obfuscator.creator.SkidCache;
@@ -53,13 +52,15 @@ import dev.skidfuscator.obfuscator.transform.impl.flow.condition.BasicConditionT
 import dev.skidfuscator.obfuscator.transform.impl.flow.exception.BasicExceptionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.InterproceduralTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.flow.interprocedural.RandomInitTransformer;
-import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTranformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.InstanceOfHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsIgnoreCaseHashTransformer;
+import dev.skidfuscator.obfuscator.transform.impl.loop.LoopConditionTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.misc.AhegaoTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.number.NumberTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
-import dev.skidfuscator.obfuscator.transform.impl.hash.StringEqualsHashTranformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
@@ -83,12 +84,15 @@ import org.mapleir.context.BasicAnalysisContext;
 import org.mapleir.deob.PassGroup;
 import org.mapleir.deob.dataflow.LiveDataFlowAnalysisImpl;
 import org.mapleir.ir.cfg.ControlFlowGraph;
+import org.matomo.java.tracking.*;
 import org.objectweb.asm.Opcodes;
-import org.piwik.java.tracking.PiwikRequest;
+import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
@@ -106,6 +110,9 @@ public class Skidfuscator {
     public static final int ASM_VERSION = Opcodes.ASM9;
     public static final boolean FLATTENING = false;
     public static boolean CLOUD = false;
+
+    public static final String VERSION = "2.1.0";
+    public static final Double VERSION_DOUBLE = 2.1;
 
     private final SkidfuscatorSession session;
 
@@ -146,45 +153,6 @@ public class Skidfuscator {
     public Skidfuscator(SkidfuscatorSession session) {
         this.session = session;
         this.exemptAnalysis = new ExemptManager();
-    }
-
-    /**
-     * Runs the execution of the obfuscator.
-     */
-    public void run() {
-        LOGGER.setDebug(session.isDebug());
-        LOGGER.post("Beginning Skidfuscator Community...");
-        _verifyEnvironment();
-        if (session.isAnalytics()) {
-            _runAnalytics();
-        }
-
-        if (session.isDex()) {
-            // WIP
-        }
-
-        /*
-         * Initializes a null skid directory. This skid directory is used as a
-         * cache or a temporary directory, most often for silly things such as
-         * JPhantom or in the near future as a cache for the Ghost pre-computed
-         * mappings.
-         */
-        SkiddedDirectory.init(null);
-
-        /*
-         * Here is initialized the skid cache.
-         *
-         * The SkidCache is an extension of MapleIR's IRCache
-         */
-        this.irFactory = new SkidCache(this);
-
-        /*
-         * Here we initialize our opaque predicate type. As of right now
-         * only one has been completed: the direct integer opaque predicate.
-         * In the future, it will be possible to add compatibility for other
-         * types such as longs, byte arrays etc...
-         */
-        LOGGER.post("Resolving predicate analysis...");
         this.predicateAnalysis = new SimplePredicateAnalysis.Builder()
                 .skidfuscator(this)
                 /*
@@ -230,13 +198,55 @@ public class Skidfuscator {
 
                 /* Builder */
                 .build();
+        this.config = new DefaultSkidConfig(tsConfig, "");
+    }
+
+    /**
+     * Runs the execution of the obfuscator.
+     */
+    public void run() {
+        LOGGER.setDebug(session.isDebug());
+        LOGGER.post("Beginning Skidfuscator Community...");
+        _verifyEnvironment();
+        if (session.isAnalytics()) {
+            _runAnalytics();
+        }
+
+        if (session.isDex()) {
+            // WIP
+        }
+
+        /*
+         * Initializes a null skid directory. This skid directory is used as a
+         * cache or a temporary directory, most often for silly things such as
+         * JPhantom or in the near future as a cache for the Ghost pre-computed
+         * mappings.
+         */
+        SkiddedDirectory.init(null);
+
+        /*
+         * Here is initialized the skid cache.
+         *
+         * The SkidCache is an extension of MapleIR's IRCache
+         */
+        this.irFactory = new SkidCache(this);
+
+        /*
+         * Here we initialize our opaque predicate type. As of right now
+         * only one has been completed: the direct integer opaque predicate.
+         * In the future, it will be possible to add compatibility for other
+         * types such as longs, byte arrays etc...
+         */
+        LOGGER.post("Resolving predicate analysis...");
+
         if (session.isDebug())
             LOGGER.log("Finished resolving predicate analysis!");
 
         _importConfig();
         _importExempt();
         _importClasspath();
-        _importJvm();
+        final Set<LibraryClassSource> sources = _importJvm();
+        this.getClassSource().addLibraries(sources.toArray(new LibraryClassSource[0]));
 
         if (!session.isFuckIt()) {
             _verify();
@@ -372,35 +382,61 @@ public class Skidfuscator {
     }
 
     private void _runAnalytics() {
-        try {
-            final SkidTracker tracker = new SkidTracker(
-                    "https://analytics.skidfuscator.dev/matomo.php"
-            );
-
-            final PiwikRequest request = new PiwikRequest(
-                    1,
-                    null
-            );
-
-            final URL url = new URL("https://app.skidfuscator.dev");
-            request.setActionUrl(url);
-            request.setActionName("skidfuscator/launch");
-
-            request.setCampaignName("community");
-            request.setCampaignKeyword("launch");
-
-            request.setPluginJava(true);
-
-            request.setEventAction("launch");
-            request.setEventCategory("skidfuscator/community");
-            request.setEventName("Java");
-            request.setEventValue(MiscUtil.getJavaVersion());
-
-            tracker.sendRequestAsync(request);
-            tracker.getHttpClient().getConnectionManager().shutdown();
-            tracker.getHttpAsyncClient().close();
-        } catch (Exception e){
-            //e.printStackTrace();
+        final String sessionId = UUID.randomUUID().toString();
+        try (MatomoTracker tracker = new MatomoTracker(
+                TrackerConfiguration
+                        .builder()
+                        .apiEndpoint(URI.create("https://analytics.ghast.dev/matomo.php"))
+                        .build()
+        )) {
+            final MatomoRequest versionRequest = MatomoRequests
+                    .event("skidfuscator", "version", VERSION, null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest javaRequest = MatomoRequests
+                    .event("skidfuscator", "java_version", null, (double) MiscUtil.getJavaVersion())
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest osRequest = MatomoRequests
+                    .event("skidfuscator", "os", System.getProperty("os.name"), null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest osVersionRequest = MatomoRequests
+                    .event("skidfuscator", "os_version", System.getProperty("os.version"), null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            final MatomoRequest osArchRequest = MatomoRequests
+                    .event("skidfuscator", "os_arch", System.getProperty("os.arch"), null)
+                    .userId(MiscUtil.getHwid())
+                    .siteId(1)
+                    .pluginJava(true)
+                    .campaignName("community")
+                    .campaignKeyword("launch")
+                    .sessionId(sessionId)
+                    .build();
+            tracker.sendBulkRequestAsync(versionRequest, javaRequest, osRequest, osVersionRequest, osArchRequest);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to send analytics request");
         }
     }
 
@@ -425,7 +461,7 @@ public class Skidfuscator {
         }
     }
 
-    protected void _importConfig() {
+    public void _importConfig() {
         LOGGER.post("Loading config...");
 
         try (final ProgressWrapper progressBar = ProgressUtil.progressCheck(
@@ -475,8 +511,9 @@ public class Skidfuscator {
         LOGGER.log("Finished importing exemptions");
     }
 
-    protected void _importJvm() {
+    public Set<LibraryClassSource> _importJvm() {
         /* Import JVM */
+        final Set<LibraryClassSource> sources = new HashSet<>();
         LOGGER.post("Beginning importing of the JVM...");
 
         /*
@@ -497,7 +534,8 @@ public class Skidfuscator {
                         GhostHelper.getJvm(session, LOGGER, session.getRuntime()),
                         0
                 );
-                this.classSource.addLibraries(jvmClassSource);
+
+                sources.add(jvmClassSource);
                 wrapper.tick();
             }
             LOGGER.post("✓ Success");
@@ -517,7 +555,7 @@ public class Skidfuscator {
              */
             if (libFiles == null) {
                 LOGGER.warn("FATAL! Library files for JDK are null");
-                System.exit(2);
+                throw new IllegalStateException("Null JDK files! Exiting...");
             }
 
             try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
@@ -530,10 +568,11 @@ public class Skidfuscator {
                         continue;
                     }
 
-                    this.classSource.addLibraries((jvmClassSource = new LibraryClassSource(
+                    jvmClassSource = new LibraryClassSource(
                             GhostHelper.getJvm(session, LOGGER, file),
                             0
-                    )));
+                    );
+                    sources.add(jvmClassSource);
                     wrapper.tick();
                 }
             }
@@ -541,9 +580,11 @@ public class Skidfuscator {
         }
         LOGGER.log("Finished importing the JVM");
         LOGGER.log(String.format("Imported %d jvm classes!", jvmClassSource.size()));
+
+        return sources;
     }
 
-    protected void _importClasspath() {
+    public SkidApplicationClassSource _importClasspath() {
         LOGGER.post("Importing jar...");
 
         final String path = session.getInput().getPath();
@@ -664,6 +705,8 @@ public class Skidfuscator {
                 1
         ));*/
         LOGGER.log("Finished importing classpath!");
+
+        return classSource;
     }
 
     protected List<Transformer> _loadTransformer() {
@@ -705,8 +748,10 @@ public class Skidfuscator {
                     new BasicRangeTransformer(this),
                     new PureHashTransformer(this),
                     new SdkInjectorTransformer(this),
-                    new StringEqualsHashTranformer(this),
-                    new StringEqualsIgnoreCaseHashTranformer(this),
+                    new StringEqualsHashTransformer(this),
+                    new StringEqualsIgnoreCaseHashTransformer(this),
+                    new InstanceOfHashTransformer(this),
+                    //new LoopConditionTransformer(this),
                 /*
                 new FlatteningFlowTransformer(this),*/
                     new AhegaoTransformer(this)
@@ -723,7 +768,7 @@ public class Skidfuscator {
         transformers.clear();
 
         for (Transformer temp : temps) {
-            if (temp.getConfig().isEnabled()) {
+            if (temp.isEnabled()) {
                 transformers.add(temp);
                 //System.out.println(temp.getName() + " -> " + Arrays.toString(temp.getConfig().getExemptions().toArray()));
                 for (String exemption : temp.getConfig().getExemptions()) {
@@ -773,9 +818,7 @@ public class Skidfuscator {
                         + "-----------------------------------------------------\n"
                 );
 
-                if (!CLOUD)
-                    System.exit(1);
-                return;
+                throw new IllegalStateException("Failed to compute some libraries!");
             }
 
             // [failsafe]   some people cancel mid download, corrupting the library

@@ -1,3 +1,6 @@
+import org.gradle.api.JavaVersion
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     id 'java'
     id 'java-library'
@@ -16,11 +19,10 @@ allprojects {
         }
     }
 
-    apply plugin: 'java'
     apply plugin: 'java-library'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 
     dependencies {
         compileOnly 'org.projectlombok:lombok:1.18.36'
@@ -33,6 +35,26 @@ allprojects {
     compileJava {
         options.encoding = "UTF-8" // Will fail on the non-ascii comments if not set
     }
+
+    tasks.withType(JavaCompile).configureEach {
+        if (sourceCompatibility == JavaVersion.VERSION_17) {
+            options.compilerArgs += [
+                '--add-exports', 'java.base/jdk.internal.reflect=ALL-UNNAMED',
+                '--add-exports', 'java.base/jdk.internal.util=ALL-UNNAMED',
+                '--add-exports', 'java.base/sun.io.ch=ALL-UNNAMED'
+        ]
+        }
+    }
+    tasks.withType(Test).configureEach {
+        if (sourceCompatibility == JavaVersion.VERSION_17) {
+            jvmArgs += [
+                '--add-exports', 'java.base/jdk.internal.reflect=ALL-UNNAMED',
+                '--add-exports', 'java.base/jdk.internal.util=ALL-UNNAMED',
+                '--add-exports', 'java.base/sun.io.ch=ALL-UNNAMED'
+        ]
+        }
+    }
+
 
     ext {
         asm = 'org.ow2.asm:asm:9.7.1'

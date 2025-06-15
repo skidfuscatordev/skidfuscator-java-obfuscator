@@ -102,6 +102,10 @@ import java.util.stream.Collectors;
 
         skidfuscator.setLegacyHasher(new LegacyHashTransformer(skidfuscator));
         skidfuscator.setBitwiseHasher(new BitwiseHashTransformer(skidfuscator));
+
+        if (skidfuscator.getVmHasher() != null) {
+            throw new IllegalStateException("VmHasher is already initialized");
+        }
         skidfuscator.setVmHasher(new BitwiseHashTransformer(skidfuscator));
     }
 

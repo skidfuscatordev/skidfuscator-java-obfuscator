@@ -12,7 +12,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.mapleir.asm.MethodNode;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class InitialisedObjectExpr extends Invocation {
@@ -204,5 +206,15 @@ public class InitialisedObjectExpr extends Invocation {
 	@Override
 	public Set<MethodNode> resolveTargets(InvocationResolver res) {
 		return CollectionUtils.asCollection(HashSet::new, res.resolveVirtualInitCall(getOwner(), getDesc()));
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+
+		for (Expr expr : args) {
+			self.addAll(expr.traverse());
+		}
+		return self;
 	}
 }

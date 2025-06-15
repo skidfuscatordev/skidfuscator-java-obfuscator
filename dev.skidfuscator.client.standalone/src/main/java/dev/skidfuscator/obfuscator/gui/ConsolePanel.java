@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ConsolePanel extends JPanel {
+public class ConsolePanel extends JPanel implements SkidPanel {
     private final JTextPane consoleOutput;
     private final SimpleDateFormat timeFormat;
     private final StyledDocument doc;
@@ -130,7 +130,13 @@ public class ConsolePanel extends JPanel {
                         Element line = root.getElement(currentLine);
                         int start = line.getStartOffset();
                         int end = line.getEndOffset();
-                        doc.remove(start, end - start);
+                        if (end - start > 0) {
+                            doc.remove(start, end - start);
+                        } else {
+                            // Remove last line if it's empty
+                            Element prevLine = root.getElement(currentLine - 1);
+                            doc.remove(prevLine.getStartOffset(), prevLine.getEndOffset());
+                        }
                     } catch (BadLocationException e) {
                         e.printStackTrace(originalErr);
                     }

@@ -9,6 +9,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class VarExpr extends Expr {
 
 	private Local local;
@@ -78,5 +81,10 @@ public class VarExpr extends Expr {
 			return local == var.local && type.equals(var.type);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+        return List.of(this);
 	}
 }

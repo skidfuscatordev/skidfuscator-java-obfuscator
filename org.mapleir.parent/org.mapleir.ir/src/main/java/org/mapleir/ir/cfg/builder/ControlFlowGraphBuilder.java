@@ -21,7 +21,7 @@ public class ControlFlowGraphBuilder {
 
 	public final MethodNode method;
 	protected final SSAFactory factory;
-	protected final ControlFlowGraph graph;
+	public final ControlFlowGraph graph;
 	protected final Set<Local> locals;
 	protected final NullPermeableHashMap<Local, Set<BasicBlock>> assigns;
 	protected BasicBlock head;

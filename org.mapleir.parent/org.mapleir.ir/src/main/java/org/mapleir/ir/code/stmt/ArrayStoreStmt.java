@@ -11,12 +11,15 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ArrayStoreStmt extends Stmt {
 
-	private Expr arrayExpression;
-	private Expr indexExpression;
-	private Expr valueExpression;
-	private ArrayType type;
+	protected Expr arrayExpression;
+	protected Expr indexExpression;
+	protected Expr valueExpression;
+	protected ArrayType type;
 
 	public ArrayStoreStmt(Expr arrayExpression, Expr indexExpression, Expr valueExpression, ArrayType type) {
 		super(ARRAY_STORE);
@@ -139,5 +142,14 @@ public class ArrayStoreStmt extends Stmt {
 					&& valueExpression.equivalent(store.valueExpression) && type.equals(store.type);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(arrayExpression.traverse());
+		self.addAll(indexExpression.traverse());
+		self.addAll(valueExpression.traverse());
+		return self;
 	}
 }

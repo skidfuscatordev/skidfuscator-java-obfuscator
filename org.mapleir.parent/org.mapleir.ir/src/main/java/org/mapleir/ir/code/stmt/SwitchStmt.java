@@ -207,4 +207,11 @@ public class SwitchStmt extends Stmt {
 		}
 		return false;
 	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		return self;
+	}
 }

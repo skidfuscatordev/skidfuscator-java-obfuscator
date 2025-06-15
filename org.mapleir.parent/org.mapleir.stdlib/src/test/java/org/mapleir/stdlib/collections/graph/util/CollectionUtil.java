@@ -10,7 +10,7 @@ import org.mapleir.stdlib.collections.graph.FastGraph;
 import org.mapleir.stdlib.collections.graph.FastGraphEdge;
 import org.mapleir.stdlib.collections.graph.FastGraphVertex;
 
-import static junit.framework.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CollectionUtil {
 

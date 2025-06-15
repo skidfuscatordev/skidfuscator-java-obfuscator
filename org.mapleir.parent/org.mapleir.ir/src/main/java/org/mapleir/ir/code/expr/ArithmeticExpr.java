@@ -9,6 +9,10 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.util.Printer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.objectweb.asm.Opcodes.*;
 
 public class ArithmeticExpr extends Expr {
@@ -301,4 +305,15 @@ public class ArithmeticExpr extends Expr {
 //		// TODO Auto-generated method stub
 //		return 0;
 //	}
+
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>();
+		self.add(this);
+		self.addAll(left.traverse());
+		self.addAll(right.traverse());
+
+		return self;
+	}
 }

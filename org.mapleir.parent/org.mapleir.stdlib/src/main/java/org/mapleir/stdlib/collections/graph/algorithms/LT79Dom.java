@@ -1,11 +1,13 @@
 package org.mapleir.stdlib.collections.graph.algorithms;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.mapleir.stdlib.collections.graph.FastDirectedGraph;
 import org.mapleir.stdlib.collections.graph.FastGraphEdge;
@@ -314,5 +316,135 @@ public class LT79Dom<N extends FastGraphVertex, E extends FastGraphEdge<N>> {
 		} else {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public Map<N, Set<N>> findNaturalLoops() {
+		Map<N, Set<N>> naturalLoops = new HashMap<>();
+		
+		// First identify back edges by doing a DFS traversal
+		Set<N> visited = new HashSet<>();
+		Set<N> inProgress = new HashSet<>();
+		dfsIdentifyBackEdges(root, visited, inProgress, naturalLoops);
+		
+		return naturalLoops;
+	}
+
+	private void dfsIdentifyBackEdges(N current, Set<N> visited, Set<N> inProgress, Map<N, Set<N>> naturalLoops) {
+		visited.add(current);
+		inProgress.add(current);
+		
+		for (E edge : graph.getEdges(current)) {
+			N succ = edge.dst();
+			
+			if (inProgress.contains(succ)) {
+				// Found a back edge - this creates a loop
+				Set<N> loopBody = identifyLoopBody(succ, current);
+				naturalLoops.merge(succ, loopBody, (existing, newSet) -> {
+					existing.addAll(newSet);
+					return existing;
+				});
+			} else if (!visited.contains(succ)) {
+				dfsIdentifyBackEdges(succ, visited, inProgress, naturalLoops);
+			}
+		}
+		
+		inProgress.remove(current);
+	}
+
+	/**
+	 * Identifies the body of a natural loop given its header and back edge source
+	 */
+	private Set<N> identifyLoopBody(N header, N backEdgeSource) {
+		// Special case for self-loops
+		if (header == backEdgeSource) {
+			return new HashSet<>(Collections.singleton(header));
+		}
+		
+		Set<N> loopBody = new HashSet<>();
+		Stack<N> workList = new Stack<>();
+		
+		// Add back edge source to start
+		workList.push(backEdgeSource);
+		loopBody.add(backEdgeSource);
+		loopBody.add(header);  // Always include the header
+		
+		// Find all nodes that can reach the back edge source without going through the header
+		while (!workList.isEmpty()) {
+			N current = workList.pop();
+			
+			// Look at all predecessors
+			for (E predEdge : graph.getReverseEdges(current)) {
+				N pred = predEdge.src();
+				// Include nodes we haven't seen yet, but don't process header's predecessors
+				if (!loopBody.contains(pred)) {
+					loopBody.add(pred);
+					if (pred != header) {  // Don't process header's predecessors
+						workList.push(pred);
+					}
+				}
+			}
+		}
+		
+		return loopBody;
+	}	
+
+	/**
+	 * Returns true if node is dominated by dominator
+	 */
+	public boolean isDominatedBy(N node, N dominator) {
+		if (node == dominator) {
+			return true;
+		}
+		
+		// Walk up the dominator tree
+		N current = idoms.get(node);
+		while (current != null) {
+			if (current == dominator) {
+				return true;
+			}
+			current = idoms.get(current);
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Gets the loop nesting depth of a node
+	 */
+	public int getLoopNestingDepth(N node, Map<N, Set<N>> naturalLoops) {
+		int depth = 0;
+		
+		for (Map.Entry<N, Set<N>> loop : naturalLoops.entrySet()) {
+			if (loop.getValue().contains(node)) {
+				depth++;
+				// Check if the loop header is contained in other loops
+				depth += getLoopNestingDepth(loop.getKey(), naturalLoops);
+			}
+		}
+		
+		return depth;
+	}
+
+	/**
+	 * Checks if a node is loop-invariant relative to a given loop
+	 */
+	public boolean isLoopInvariant(N node, Set<N> loopBody) {
+		// A node is loop-invariant if:
+		// 1. It's not in the loop body, or
+		// 2. All its dependencies are loop-invariant
+		
+		if (!loopBody.contains(node)) {
+			return true;
+		}
+		
+		// Check if all predecessors are outside the loop or are the loop header
+		for (E predEdge : graph.getReverseEdges(node)) {
+			N pred = predEdge.src();
+			if (loopBody.contains(pred) && !isDominatedBy(node, pred)) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 }

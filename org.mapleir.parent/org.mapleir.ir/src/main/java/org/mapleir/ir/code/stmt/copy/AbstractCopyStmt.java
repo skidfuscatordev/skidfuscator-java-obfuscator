@@ -12,6 +12,9 @@ import org.mapleir.stdlib.util.TabbedStringWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This class is the base for the two types of copy/move statements in the IR:
  * {@link CopyVarStmt} and {@link CopyPhiStmt}.<br>
@@ -37,15 +40,15 @@ public abstract class AbstractCopyStmt extends Stmt {
 	/**
 	 * Whether or not this copy is a synthetic copy. See class javadocs.
 	 */
-	private final boolean synthetic;
+	protected final boolean synthetic;
 	/**
 	 * The RHS expression (source).
 	 */
-	private Expr expression;
+	protected Expr expression;
 	/**
 	 * The LHS variable (destination).
 	 */
-	private VarExpr variable;
+	protected VarExpr variable;
 	
 	public AbstractCopyStmt(int opcode, VarExpr variable, Expr expression) {
 		this(opcode, variable, expression, false);
@@ -185,4 +188,12 @@ public abstract class AbstractCopyStmt extends Stmt {
 
 	@Override
 	public abstract boolean equivalent(CodeUnit s);
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(expression.traverse());
+		self.addAll(variable.traverse());
+		return self;
+	}
 }

@@ -24,7 +24,7 @@ public class JdkDownloader {
 
         switch (OS) {
             case "linux":
-                JDK_URL = "https://download.java.net/java/GA/jdk17.0.2/0d483333a00540d886896a45e7e18309295e7f3a/jdk-17.0.2_linux-x64_bin.tar.gz";
+                JDK_URL = "https://corretto.aws/downloads/resources/17.0.13.11.1/amazon-corretto-17.0.13.11.1-linux-x64.tar.gz";
                 break;
             case "mac os x":
             case "mac":
@@ -106,7 +106,7 @@ public class JdkDownloader {
                 wrapper.tick();
                 wrapper.succeed();
             } catch (IOException e) {
-                Files.deleteIfExists(jdkPath);
+                Files.deleteIfExists(getCachedJdk());
                 throw e;
             }
         } else {
@@ -128,16 +128,11 @@ public class JdkDownloader {
                 wrapper.tick();
                 wrapper.succeed();
             } catch (IOException e) {
-                Files.deleteIfExists(jdkPath);
+                Files.deleteIfExists(getCachedJdk());
                 throw e;
             }
         }
-
-        switch (OS) {
-            case "mac os x":
-            case "mac":
-                return jdkPath.resolve("Contents/Home");
-        }
+        jdkPath = getCachedJdk();
         return jdkPath;
     }
     

@@ -2,9 +2,12 @@ package org.mapleir.stdlib.collections.graph.algorithms;
 
 import java.io.IOException;
 
+import org.junit.jupiter.api.Test;
 import org.mapleir.stdlib.collections.graph.AbstractFastGraphTest;
 import org.mapleir.stdlib.collections.graph.GraphUtils;
 import org.mapleir.stdlib.collections.graph.directed.FakeFastDirectedGraph;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ReducibleLoopTest extends AbstractFastGraphTest {
 
@@ -12,6 +15,7 @@ public class ReducibleLoopTest extends AbstractFastGraphTest {
 		super(true);
 	}
 
+	@Test
 	public void testIrreducible1() throws IOException {
 		FakeFastDirectedGraph g = new FakeFastDirectedGraph();
 		g.addVertex(node(1));

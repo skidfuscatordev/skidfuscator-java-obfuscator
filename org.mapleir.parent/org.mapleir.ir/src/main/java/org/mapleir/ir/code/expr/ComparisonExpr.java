@@ -11,6 +11,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.util.Printer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ComparisonExpr extends Expr {
 
 	public enum ValueComparisonType {
@@ -155,5 +158,13 @@ public class ComparisonExpr extends Expr {
 			return type == comp.type && left.equivalent(comp.left) && right.equals(comp.right);
 		}
 		return false;
+	}
+
+	@Override
+	public List<CodeUnit> traverse() {
+		final List<CodeUnit> self = new ArrayList<>(List.of(this));
+		self.addAll(left.traverse());
+		self.addAll(right.traverse());
+		return self;
 	}
 }

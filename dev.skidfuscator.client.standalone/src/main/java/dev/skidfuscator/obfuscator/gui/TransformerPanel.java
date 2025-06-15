@@ -29,7 +29,7 @@ public class TransformerPanel extends JPanel {
         setBorder(BorderFactory.createCompoundBorder(
                 // Outer titled border
                 BorderFactory.createTitledBorder(
-                        BorderFactory.createEtchedBorder(EtchedBorder.RAISED), // Rounded line border with increased arc
+                        BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
                         "Transformers",
                         javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
                         javax.swing.border.TitledBorder.DEFAULT_POSITION,
@@ -38,12 +38,21 @@ public class TransformerPanel extends JPanel {
                 // Inner empty border for padding
                 BorderFactory.createEmptyBorder(20, 0, 10, 0)
         ));
-        // Create transformer sections panel
-        JPanel sectionsPanel = new JPanel(new GridLayout(0, 1, 5, 5));
+        
+        // Create transformer sections panel with BoxLayout
+        JPanel sectionsPanel = new JPanel();
+        sectionsPanel.setLayout(new BoxLayout(sectionsPanel, BoxLayout.Y_AXIS));
+        sectionsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         transformerSections = new HashMap<>();
 
         // Initialize transformer sections with their options
         initializeTransformerSections(sectionsPanel);
+
+        // Add rigid areas between sections
+        Component[] components = sectionsPanel.getComponents();
+        for (int i = 0; i < components.length - 1; i++) {
+            sectionsPanel.add(Box.createRigidArea(new Dimension(0, 10)), i * 2 + 1);
+        }
 
         // Add sections to a scrollable panel
         JScrollPane scrollPane = new JScrollPane(sectionsPanel);
@@ -152,14 +161,20 @@ public class TransformerPanel extends JPanel {
             this.optionComponents = new HashMap<>();
 
             setLayout(new BorderLayout(5, 5));
-            setBorder(BorderFactory.createEtchedBorder());
+            setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(0, 0, 0, 0),
+                BorderFactory.createCompoundBorder(
+                    BorderFactory.createRaisedBevelBorder(),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)
+                )
+            ));
 
             // Create header panel with checkbox and toggle button
             JPanel headerPanel = new JPanel(new BorderLayout());
             enabledBox = new JCheckBox(name);
             enabledBox.setSelected(defaultEnabled);
+            enabledBox.setFont(enabledBox.getFont().deriveFont(Font.BOLD));
 
-            // Add tooltip with description if provided
             // Add description if provided
             if (description != null && !description.trim().isEmpty()) {
                 JTextArea descriptionArea = new JTextArea(description);
@@ -173,7 +188,7 @@ public class TransformerPanel extends JPanel {
 
                 // Calculate preferred height based on content
                 FontMetrics fm = descriptionArea.getFontMetrics(descriptionArea.getFont());
-                int availableWidth = 400; // Adjust this value based on your panel width
+                int availableWidth = 400;
                 int lineHeight = fm.getHeight();
 
                 // Create a temporary text area to calculate wrapped height
@@ -204,11 +219,13 @@ public class TransformerPanel extends JPanel {
             if (!options.isEmpty()) {
                 optionsPanel = new JPanel();
                 optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
-                optionsPanel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 5));
+                optionsPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 5, 5));
 
                 for (TransformerOptionDefinition option : options) {
                     JPanel optionPanel = createOptionPanel(option);
                     optionsPanel.add(optionPanel);
+                    optionPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, optionPanel.getPreferredSize().height));
+                    optionPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
                 }
 
                 optionsPanel.setVisible(false);
@@ -216,6 +233,13 @@ public class TransformerPanel extends JPanel {
             } else {
                 optionsPanel = null;
             }
+
+            // Ensure proper initial sizing
+            SwingUtilities.invokeLater(() -> {
+                invalidate();
+                setMaximumSize(new Dimension(Integer.MAX_VALUE, getPreferredSize().height));
+                revalidate();
+            });
         }
 
         private JPanel createOptionPanel(TransformerOptionDefinition option) {
@@ -270,8 +294,17 @@ public class TransformerPanel extends JPanel {
             optionsVisible = !optionsVisible;
             optionsPanel.setVisible(optionsVisible);
             toggleButton.setText(optionsVisible ? "▲" : "▼");
+            
+            // Update the maximum size of the section
             revalidate();
-            repaint();
+            setMaximumSize(new Dimension(Integer.MAX_VALUE, getPreferredSize().height));
+            
+            // Request parent container to update layout
+            Container parent = getParent();
+            if (parent != null) {
+                parent.revalidate();
+                parent.repaint();
+            }
         }
 
         public String getId() {

@@ -6,9 +6,7 @@ import java.util.Map;
 import org.mapleir.stdlib.collections.graph.util.FakeFastEdge;
 import org.mapleir.stdlib.collections.graph.util.FakeFastVertex;
 
-import junit.framework.TestCase;
-
-public abstract class AbstractFastGraphTest extends TestCase {
+public abstract class AbstractFastGraphTest {
 
 	private final boolean directed;
 	protected final Map<Integer, FakeFastVertex> nodes = new HashMap<>();

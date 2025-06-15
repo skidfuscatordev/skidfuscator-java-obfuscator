@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 plugins {
     id 'java-library'
 }
@@ -7,6 +9,14 @@ version = '2.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+    ]
 }
 
 dependencies {

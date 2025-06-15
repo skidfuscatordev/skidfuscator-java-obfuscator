@@ -1,0 +1,694 @@
+handler=Block #AX, types=[Ljava/lang/IllegalStateException;], range=[Block #C, Block #D, Block #E, Block #G, Block #F, Block #I, Block #H]
+handler=Block #BG, types=[Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;], range=[Block #C, Block #D, Block #E, Block #G, Block #F, Block #I, Block #H]
+handler=Block #BP, types=[Ljava/io/IOException;], range=[Block #P, Block #O]
+handler=Block #BT, types=[Ljava/lang/IllegalAccessException;], range=[Block #S, Block #R]
+handler=Block #BX, types=[Ljava/lang/IllegalAccessException;], range=[Block #V, Block #U]
+handler=Block #CB, types=[Ljava/io/IOException;], range=[Block #Y, Block #X]
+===#Block A(size=4, flags=1)===
+   0. lvar10 = {121108282 ^ {411229400 ^ 973850498}};
+   1. synth(lvar0 = lvar0);
+   2. if ({65537 % {155 * ({1231600938 ^ java.lang.Integer.numberOfTrailingZeros(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {155 * ({1231600938 ^ 2})}})
+      goto AA
+   3. lvar10 = {1245982948 ^ lvar10};
+      -> ConditionalJump[IF_ICMPNE] #A -> #AA
+      -> Immediate #A -> #B
+===#Block B(size=1, flags=0)===
+   0. lvar10 = {342164135 ^ lvar10};
+      -> Immediate #B -> #C
+      <- Immediate #A -> #B
+===#Block C(size=4, flags=0)===
+   0. _consume(dev.skidfuscator.testclasses.opaque.OpaqueConditionClazz$AES.main(new java.lang.String[{2074074659 ^ lvar10}]));
+   1. if (dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.data[{2074074659 ^ lvar10}] != {2074074659 ^ lvar10})
+      goto AT
+   2. if ({65537 % {93 * ({1687319821 ^ java.text.CollationElementIterator.primaryOrder(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {93 * ({1687319821 ^ 3973})}})
+      goto AI
+   3. lvar10 = {2032112291 ^ lvar10};
+      -> TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      -> Immediate #C -> #D
+      -> ConditionalJump[IF_ICMPNE] #C -> #AT
+      -> ConditionalJump[IF_ICMPNE] #C -> #AI
+      -> TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- Immediate #B -> #C
+===#Block AI(size=4, flags=0)===
+   0. if ({65537 % {23 * ({1201895448 ^ java.text.CollationElementIterator.primaryOrder(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {23 * ({1201895448 ^ 3973})}})
+      goto AI
+   1. if ({65537 % {37 * ({908644760 ^ java.text.CollationElementIterator.primaryOrder(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {37 * ({908644760 ^ {151745895 ^ lvar10}})}})
+      goto AI
+   2. _consume({1449725187 ^ lvar10});
+   3. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AI -> #AI
+      <- ConditionalJump[IF_ICMPNE] #AI -> #AI
+      <- ConditionalJump[IF_ICMPNE] #C -> #AI
+===#Block AT(size=1, flags=10100)===
+   0. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10)) {
+      case 199801669:
+      	 goto	#AB
+      case 260425212:
+      	 goto	#AU
+      case 866115707:
+      	 goto	#I
+      case 1930052144:
+      	 goto	#AT
+      default:
+      	 goto	#AB
+   }
+      -> Immediate #AT -> #AU
+      -> Switch[1930052144] #AT -> #AT
+      -> DefaultSwitch #AT -> #AB
+      -> Switch[866115707] #AT -> #I
+      -> Switch[260425212] #AT -> #AU
+      -> Switch[199801669] #AT -> #AB
+      <- Switch[1930052144] #AT -> #AT
+      <- ConditionalJump[IF_ICMPNE] #C -> #AT
+===#Block AU(size=2, flags=100)===
+   0. lvar10 = {1394522035 ^ lvar10};
+   1. goto I
+      -> UnconditionalJump[GOTO] #AU -> #I
+      <- Immediate #AT -> #AU
+      <- Switch[260425212] #AT -> #AU
+===#Block I(size=4, flags=0)===
+   0. lvar5 = new java.lang.IllegalArgumentException;
+   1. _consume(lvar5.<init>(dynamic_invoke<java.lang.String>(java.lang.invoke.StringConcatFactory.makeConcatWithConstants("Failed test! Stage: ", {679569810 ^ lvar10}))));
+   2. throw lvar5;
+   3. if ({65537 % {125 * ({1324992040 ^ java.lang.Math.floorDiv(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 1688355228)})}} != {65537 % {125 * ({1324992040 ^ 0})}})
+      goto AB
+      -> ConditionalJump[IF_ICMPNE] #I -> #AB
+      -> TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- Switch[866115707] #AT -> #I
+      <- UnconditionalJump[GOTO] #AU -> #I
+===#Block D(size=3, flags=0)===
+   0. svar12 = {dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.data[{41962625 ^ lvar10}] ^ lvar10};
+   1. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(svar12)) {
+      case 39339320:
+      	 goto	#AV
+      default:
+      	 goto	#AW
+   }
+   2. if ({65537 % {189 * ({788652090 ^ java.lang.Math.addExact(1373963789, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {189 * ({788652090 ^ 1413303109})}})
+      goto AH
+      -> Switch[39339320] #D -> #AV
+      -> TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      -> DefaultSwitch #D -> #AW
+      -> TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> ConditionalJump[IF_ICMPNE] #D -> #AH
+      <- Immediate #C -> #D
+===#Block AH(size=4, flags=0)===
+   0. if ({65537 % {85 * ({877467349 ^ java.lang.Math.addExact(1373963789, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {85 * ({877467349 ^ 1413303109})}})
+      goto AH
+   1. if ({65537 % {45 * ({216586328 ^ java.lang.Math.addExact(1373963789, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {45 * ({216586328 ^ {59536465 ^ lvar10}})}})
+      goto AH
+   2. _consume({2076725377 ^ lvar10});
+   3. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AH -> #AH
+      <- ConditionalJump[IF_ICMPNE] #AH -> #AH
+      <- ConditionalJump[IF_ICMPNE] #D -> #AH
+===#Block AW(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 2130205897);
+   1. goto F
+      -> UnconditionalJump[GOTO] #AW -> #F
+      <- DefaultSwitch #D -> #AW
+===#Block F(size=3, flags=0)===
+   0. lvar7 = {-2088243278 ^ lvar10};
+   1. if ({65537 % {191 * ({39871346 ^ java.lang.Character.toLowerCase(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {191 * ({39871346 ^ 19457013})}})
+      goto AC
+   2. goto AL
+      -> TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> UnconditionalJump[GOTO] #F -> #AL
+      -> ConditionalJump[IF_ICMPNE] #F -> #AC
+      -> TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- UnconditionalJump[GOTO] #AW -> #F
+===#Block AL(size=2, flags=10100)===
+   0. lvar10 = {1848747158 ^ lvar10};
+   1. goto Y
+      -> UnconditionalJump[GOTO] #AL -> #Y
+      <- UnconditionalJump[GOTO] #F -> #AL
+===#Block Y(size=3, flags=0)===
+   0. if ({65537 % {65 * ({1038450005 ^ dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10)})}} == {65537 % {65 * ({1038450005 ^ 57596985})}})
+      goto X
+   1. throw nullconst;
+   2. if ({65537 % {61 * ({32761098 ^ java.lang.Integer.reverseBytes(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {61 * ({32761098 ^ 970747395})}})
+      goto AA
+      -> ConditionalJump[IF_ICMPEQ] #Y -> #X
+      -> ConditionalJump[IF_ICMPNE] #Y -> #AA
+      -> TryCatch range: [Y...X] -> CB ([Ljava/io/IOException;])
+      <- UnconditionalJump[GOTO] #AL -> #Y
+===#Block X(size=2, flags=0)===
+   0. throw new java/io/IOException();
+   1. if ({65537 % {113 * ({67551708 ^ java.lang.Character.digit('', dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {113 * ({67551708 ^ -1})}})
+      goto AA
+      -> TryCatch range: [Y...X] -> CB ([Ljava/io/IOException;])
+      -> ConditionalJump[IF_ICMPNE] #X -> #AA
+      <- ConditionalJump[IF_ICMPEQ] #Y -> #X
+===#Block CB(size=1, flags=0)===
+   0. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.qdkqxmbnisxwndcp(lvar10)) {
+      case -1840404744:
+      	 goto	#CC
+      case 1702273875:
+      	 goto	#CD
+      default:
+      	 goto	#CE
+   }
+      -> DefaultSwitch #CB -> #CE
+      -> Switch[-1840404744] #CB -> #CC
+      -> Switch[1702273875] #CB -> #CD
+      <- TryCatch range: [Y...X] -> CB ([Ljava/io/IOException;])
+      <- TryCatch range: [Y...X] -> CB ([Ljava/io/IOException;])
+===#Block CD(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 1785353420);
+   1. goto Z
+      -> UnconditionalJump[GOTO] #CD -> #Z
+      <- Switch[1702273875] #CB -> #CD
+===#Block CC(size=2, flags=10100)===
+   0. lvar10 = {344798329 ^ lvar10};
+   1. goto Z
+      -> UnconditionalJump[GOTO] #CC -> #Z
+      <- Switch[-1840404744] #CB -> #CC
+===#Block Z(size=3, flags=0)===
+   0. _consume(catch());
+   1. if ({65537 % {149 * ({1737487068 ^ java.lang.Integer.rotateLeft(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 1835327768)})}} != {65537 % {149 * ({1737487068 ^ 1594251326})}})
+      goto AB
+   2. goto AP
+      -> UnconditionalJump[GOTO] #Z -> #AP
+      -> ConditionalJump[IF_ICMPNE] #Z -> #AB
+      <- UnconditionalJump[GOTO] #CD -> #Z
+      <- UnconditionalJump[GOTO] #CC -> #Z
+===#Block AP(size=2, flags=10100)===
+   0. lvar10 = {1240074118 ^ lvar10};
+   1. goto H
+      -> UnconditionalJump[GOTO] #AP -> #H
+      <- UnconditionalJump[GOTO] #Z -> #AP
+===#Block CE(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Error in hash");
+      <- DefaultSwitch #CB -> #CE
+===#Block AV(size=2, flags=10100)===
+   0. lvar10 = {1846021237 ^ lvar10};
+   1. goto G
+      -> UnconditionalJump[GOTO] #AV -> #G
+      <- Switch[39339320] #D -> #AV
+===#Block G(size=3, flags=0)===
+   0. lvar7 = {1820868854 ^ lvar10};
+   1. if ({65537 % {45 * ({43072936 ^ java.lang.Integer.rotateLeft(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 2103019665)})}} != {65537 % {45 * ({43072936 ^ 581174415})}})
+      goto AC
+   2. goto AN
+      -> TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      -> UnconditionalJump[GOTO] #G -> #AN
+      -> ConditionalJump[IF_ICMPNE] #G -> #AC
+      <- UnconditionalJump[GOTO] #AV -> #G
+===#Block AN(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 1320850292);
+   1. goto S
+      -> UnconditionalJump[GOTO] #AN -> #S
+      <- UnconditionalJump[GOTO] #G -> #AN
+===#Block S(size=3, flags=0)===
+   0. if ({65537 % {173 * ({1173346919 ^ dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10)})}} == {65537 % {173 * ({1173346919 ^ 37903355})}})
+      goto R
+   1. throw nullconst;
+   2. if ({65537 % {153 * ({1875527437 ^ java.lang.Character.toLowerCase(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {153 * ({1875527437 ^ 37903355})}})
+      goto AB
+      -> ConditionalJump[IF_ICMPNE] #S -> #AB
+      -> ConditionalJump[IF_ICMPEQ] #S -> #R
+      -> TryCatch range: [S...R] -> BT ([Ljava/lang/IllegalAccessException;])
+      <- UnconditionalJump[GOTO] #AN -> #S
+===#Block R(size=2, flags=0)===
+   0. throw new java/lang/IllegalAccessException();
+   1. if ({65537 % {179 * ({397001432 ^ java.lang.Integer.hashCode(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {179 * ({397001432 ^ 109960954})}})
+      goto AJ
+      -> ConditionalJump[IF_ICMPNE] #R -> #AJ
+      -> TryCatch range: [S...R] -> BT ([Ljava/lang/IllegalAccessException;])
+      <- ConditionalJump[IF_ICMPEQ] #S -> #R
+===#Block BT(size=1, flags=0)===
+   0. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.qdkqxmbnisxwndcp(lvar10)) {
+      case 295083017:
+      	 goto	#BU
+      case 938318296:
+      	 goto	#BV
+      default:
+      	 goto	#BW
+   }
+      -> Switch[938318296] #BT -> #BV
+      -> DefaultSwitch #BT -> #BW
+      -> Switch[295083017] #BT -> #BU
+      <- TryCatch range: [S...R] -> BT ([Ljava/lang/IllegalAccessException;])
+      <- TryCatch range: [S...R] -> BT ([Ljava/lang/IllegalAccessException;])
+===#Block BU(size=2, flags=10100)===
+   0. lvar10 = {581257794 ^ lvar10};
+   1. goto T
+      -> UnconditionalJump[GOTO] #BU -> #T
+      <- Switch[295083017] #BT -> #BU
+===#Block BW(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("Error in hash");
+      <- DefaultSwitch #BT -> #BW
+===#Block BV(size=2, flags=10100)===
+   0. lvar10 = {107621112 ^ lvar10};
+   1. goto T
+      -> UnconditionalJump[GOTO] #BV -> #T
+      <- Switch[938318296] #BT -> #BV
+===#Block T(size=3, flags=0)===
+   0. _consume(catch());
+   1. if ({65537 % {15 * ({1729336264 ^ java.awt.event.KeyEvent.getExtendedKeyCodeForChar(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {15 * ({1729336264 ^ 0})}})
+      goto AA
+   2. goto AO
+      -> ConditionalJump[IF_ICMPNE] #T -> #AA
+      -> UnconditionalJump[GOTO] #T -> #AO
+      <- UnconditionalJump[GOTO] #BU -> #T
+      <- UnconditionalJump[GOTO] #BV -> #T
+===#Block AO(size=2, flags=10100)===
+   0. lvar10 = {1337532131 ^ lvar10};
+   1. goto H
+      -> UnconditionalJump[GOTO] #AO -> #H
+      <- UnconditionalJump[GOTO] #T -> #AO
+===#Block H(size=5, flags=0)===
+   0. _consume(lvar0.self(lvar7, 1754638706));
+   1. lvar2 = new java.lang.IllegalArgumentException;
+   2. _consume(lvar2.<init>(dynamic_invoke<java.lang.String>(java.lang.invoke.StringConcatFactory.makeConcatWithConstants("Failed test! Stage: ", lvar7))));
+   3. throw lvar2;
+   4. if ({65537 % {129 * ({2108348666 ^ java.lang.Integer.compare(1198832818, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {129 * ({2108348666 ^ 1})}})
+      goto AD
+      -> TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> ConditionalJump[IF_ICMPNE] #H -> #AD
+      <- UnconditionalJump[GOTO] #AP -> #H
+      <- UnconditionalJump[GOTO] #AQ -> #H
+      <- UnconditionalJump[GOTO] #AO -> #H
+===#Block AJ(size=4, flags=0)===
+   0. if ({65537 % {97 * ({1331006998 ^ java.lang.Integer.hashCode(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {97 * ({1331006998 ^ 109960954})}})
+      goto AJ
+   1. if ({65537 % {103 * ({1085177758 ^ java.lang.Integer.hashCode(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {103 * ({1085177758 ^ {891184122 ^ lvar10}})}})
+      goto AJ
+   2. _consume({675117789 ^ lvar10});
+   3. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #R -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+===#Block BG(size=1, flags=0)===
+   0. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.qdkqxmbnisxwndcp(lvar10)) {
+      case -587271909:
+      	 goto	#BH
+      case -473922997:
+      	 goto	#BL
+      case 58845571:
+      	 goto	#BJ
+      case 335700992:
+      	 goto	#BI
+      case 1141591169:
+      	 goto	#BM
+      case 1682048939:
+      	 goto	#BK
+      case 2037659906:
+      	 goto	#BN
+      default:
+      	 goto	#BO
+   }
+      -> Switch[335700992] #BG -> #BI
+      -> DefaultSwitch #BG -> #BO
+      -> Switch[-587271909] #BG -> #BH
+      -> Switch[1682048939] #BG -> #BK
+      -> Switch[1141591169] #BG -> #BM
+      -> Switch[58845571] #BG -> #BJ
+      -> Switch[-473922997] #BG -> #BL
+      -> Switch[2037659906] #BG -> #BN
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> BG ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+===#Block BN(size=2, flags=10100)===
+   0. lvar10 = {2094980488 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BN -> #J
+      <- Switch[2037659906] #BG -> #BN
+===#Block BL(size=2, flags=10100)===
+   0. lvar10 = {1334332129 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BL -> #J
+      <- Switch[-473922997] #BG -> #BL
+===#Block BJ(size=2, flags=10100)===
+   0. lvar10 = {1400924056 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BJ -> #J
+      <- Switch[58845571] #BG -> #BJ
+===#Block BM(size=2, flags=10100)===
+   0. lvar10 = {460403512 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BM -> #J
+      <- Switch[1141591169] #BG -> #BM
+===#Block BK(size=2, flags=10100)===
+   0. lvar10 = {1601706589 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BK -> #J
+      <- Switch[1682048939] #BG -> #BK
+===#Block BH(size=2, flags=10100)===
+   0. lvar10 = {1215267979 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BH -> #J
+      <- Switch[-587271909] #BG -> #BH
+===#Block BO(size=1, flags=0)===
+   0. throw new java/lang/RuntimeException("Error in hash");
+      <- DefaultSwitch #BG -> #BO
+===#Block BI(size=2, flags=10100)===
+   0. lvar10 = {829429288 ^ lvar10};
+   1. goto J
+      -> UnconditionalJump[GOTO] #BI -> #J
+      <- Switch[335700992] #BG -> #BI
+===#Block J(size=5, flags=0)===
+   0. lvar1 = catch();
+   1. _consume(lvar1.printStackTrace());
+   2. lvar6 = {-871389865 ^ lvar10};
+   3. if ({65537 % {73 * ({704406811 ^ java.lang.StrictMath.absExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {73 * ({704406811 ^ 77700181})}})
+      goto AC
+   4. lvar10 = {438503329 ^ lvar10};
+      -> Immediate #J -> #L
+      -> ConditionalJump[IF_ICMPNE] #J -> #AC
+      <- UnconditionalJump[GOTO] #BH -> #J
+      <- UnconditionalJump[GOTO] #BN -> #J
+      <- UnconditionalJump[GOTO] #BL -> #J
+      <- UnconditionalJump[GOTO] #BM -> #J
+      <- UnconditionalJump[GOTO] #BI -> #J
+      <- UnconditionalJump[GOTO] #BK -> #J
+      <- UnconditionalJump[GOTO] #BJ -> #J
+===#Block AX(size=1, flags=0)===
+   0. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.qdkqxmbnisxwndcp(lvar10)) {
+      case -587271909:
+      	 goto	#AY
+      case -473922997:
+      	 goto	#BC
+      case 58845571:
+      	 goto	#BA
+      case 335700992:
+      	 goto	#AZ
+      case 1141591169:
+      	 goto	#BD
+      case 1682048939:
+      	 goto	#BB
+      case 2037659906:
+      	 goto	#BE
+      default:
+      	 goto	#BF
+   }
+      -> Switch[1141591169] #AX -> #BD
+      -> Switch[335700992] #AX -> #AZ
+      -> Switch[58845571] #AX -> #BA
+      -> Switch[-587271909] #AX -> #AY
+      -> Switch[1682048939] #AX -> #BB
+      -> Switch[2037659906] #AX -> #BE
+      -> DefaultSwitch #AX -> #BF
+      -> Switch[-473922997] #AX -> #BC
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> AX ([Ljava/lang/IllegalStateException;])
+===#Block BC(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 1913741066);
+   1. goto K
+      -> UnconditionalJump[GOTO] #BC -> #K
+      <- Switch[-473922997] #AX -> #BC
+===#Block BF(size=1, flags=0)===
+   0. throw new java/io/IOException("Error in hash");
+      <- DefaultSwitch #AX -> #BF
+===#Block BE(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 1095223395);
+   1. goto K
+      -> UnconditionalJump[GOTO] #BE -> #K
+      <- Switch[2037659906] #AX -> #BE
+===#Block BB(size=2, flags=10100)===
+   0. lvar10 = {1658916790 ^ lvar10};
+   1. goto K
+      -> UnconditionalJump[GOTO] #BB -> #K
+      <- Switch[1682048939] #AX -> #BB
+===#Block AY(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 1979093344);
+   1. goto K
+      -> UnconditionalJump[GOTO] #AY -> #K
+      <- Switch[-587271909] #AX -> #AY
+===#Block BA(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 1847161459);
+   1. goto K
+      -> UnconditionalJump[GOTO] #BA -> #K
+      <- Switch[58845571] #AX -> #BA
+===#Block AZ(size=2, flags=10100)===
+   0. lvar10 = {216597443 ^ lvar10};
+   1. goto K
+      -> UnconditionalJump[GOTO] #AZ -> #K
+      <- Switch[335700992] #AX -> #AZ
+===#Block BD(size=2, flags=10100)===
+   0. lvar10 = {652748499 ^ lvar10};
+   1. goto K
+      -> UnconditionalJump[GOTO] #BD -> #K
+      <- Switch[1141591169] #AX -> #BD
+===#Block K(size=4, flags=0)===
+   0. lvar4 = catch();
+   1. lvar6 = {241782599 ^ lvar10};
+   2. if ({65537 % {123 * ({369185384 ^ java.lang.Integer.signum(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {123 * ({369185384 ^ 1})}})
+      goto AA
+   3. goto AK
+      -> ConditionalJump[IF_ICMPNE] #K -> #AA
+      -> UnconditionalJump[GOTO] #K -> #AK
+      <- UnconditionalJump[GOTO] #BD -> #K
+      <- UnconditionalJump[GOTO] #AY -> #K
+      <- UnconditionalJump[GOTO] #BB -> #K
+      <- UnconditionalJump[GOTO] #BA -> #K
+      <- UnconditionalJump[GOTO] #BE -> #K
+      <- UnconditionalJump[GOTO] #BC -> #K
+      <- UnconditionalJump[GOTO] #AZ -> #K
+===#Block AK(size=2, flags=10100)===
+   0. lvar10 = dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.eenrhxofanhihblp(lvar10, 916929795);
+   1. goto V
+      -> UnconditionalJump[GOTO] #AK -> #V
+      <- UnconditionalJump[GOTO] #K -> #AK
+===#Block V(size=3, flags=0)===
+   0. if ({65537 % {61 * ({1279470676 ^ dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10)})}} == {65537 % {61 * ({1279470676 ^ 235914642})}})
+      goto U
+   1. throw nullconst;
+   2. if ({65537 % {139 * ({1681635630 ^ java.lang.StrictMath.min(1394584022, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {139 * ({1681635630 ^ 235914642})}})
+      goto AB
+      -> ConditionalJump[IF_ICMPEQ] #V -> #U
+      -> TryCatch range: [V...U] -> BX ([Ljava/lang/IllegalAccessException;])
+      -> ConditionalJump[IF_ICMPNE] #V -> #AB
+      <- UnconditionalJump[GOTO] #AK -> #V
+===#Block AB(size=13, flags=0)===
+   0. if ({65537 % {197 * ({1678716225 ^ java.lang.Integer.rotateLeft(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 1835327768)})}} != {65537 % {197 * ({1678716225 ^ 1594251326})}})
+      goto AB
+   1. if ({65537 % {199 * ({608936940 ^ java.lang.Integer.rotateLeft(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 1835327768)})}} != {65537 % {199 * ({608936940 ^ {249054319 ^ lvar10}})}})
+      goto AB
+   2. _consume({1597765569 ^ lvar10});
+   3. if ({65537 % {33 * ({986401313 ^ java.lang.Character.toLowerCase(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {33 * ({986401313 ^ 37903355})}})
+      goto AB
+   4. if ({65537 % {147 * ({219066752 ^ java.lang.Character.toLowerCase(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {147 * ({219066752 ^ {1476657618 ^ lvar10}})}})
+      goto AB
+   5. _consume({326075738 ^ lvar10});
+   6. if ({65537 % {17 * ({581176272 ^ java.lang.StrictMath.min(1394584022, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {17 * ({581176272 ^ 235914642})}})
+      goto AB
+   7. if ({65537 % {165 * ({1147761769 ^ java.lang.StrictMath.min(1394584022, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {165 * ({1147761769 ^ {1299469601 ^ lvar10}})}})
+      goto AB
+   8. _consume({401168802 ^ lvar10});
+   9. if ({65537 % {135 * ({954340815 ^ java.lang.Math.floorDiv(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 1688355228)})}} != {65537 % {135 * ({954340815 ^ 0})}})
+      goto AB
+   10. if ({65537 % {75 * ({1167888247 ^ java.lang.Math.floorDiv(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 1688355228)})}} != {65537 % {75 * ({1167888247 ^ {2066039075 ^ lvar10}})}})
+      goto AB
+   11. _consume({805523482 ^ lvar10});
+   12. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AB -> #AB
+      <- ConditionalJump[IF_ICMPNE] #I -> #AB
+      <- ConditionalJump[IF_ICMPNE] #V -> #AB
+      <- ConditionalJump[IF_ICMPNE] #Z -> #AB
+      <- ConditionalJump[IF_ICMPNE] #S -> #AB
+      <- DefaultSwitch #AT -> #AB
+      <- ConditionalJump[IF_ICMPNE] #AB -> #AB
+      <- Switch[199801669] #AT -> #AB
+===#Block U(size=2, flags=0)===
+   0. throw new java/lang/IllegalAccessException();
+   1. if ({65537 % {147 * ({2110620885 ^ java.lang.Math.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {147 * ({2110620885 ^ 111804805})}})
+      goto AD
+      -> TryCatch range: [V...U] -> BX ([Ljava/lang/IllegalAccessException;])
+      -> ConditionalJump[IF_ICMPNE] #U -> #AD
+      <- ConditionalJump[IF_ICMPEQ] #V -> #U
+===#Block BX(size=1, flags=0)===
+   0. switch (dzmtsyhedbeyduip.bgzkmtovhuxplopt.qdkqxmbnisxwndcp(lvar10)) {
+      case -965504511:
+      	 goto	#BY
+      case -92411261:
+      	 goto	#BZ
+      default:
+      	 goto	#CA
+   }
+      -> Switch[-92411261] #BX -> #BZ
+      -> DefaultSwitch #BX -> #CA
+      -> Switch[-965504511] #BX -> #BY
+      <- TryCatch range: [V...U] -> BX ([Ljava/lang/IllegalAccessException;])
+      <- TryCatch range: [V...U] -> BX ([Ljava/lang/IllegalAccessException;])
+===#Block BY(size=2, flags=10100)===
+   0. lvar10 = {920631171 ^ lvar10};
+   1. goto W
+      -> UnconditionalJump[GOTO] #BY -> #W
+      <- Switch[-965504511] #BX -> #BY
+===#Block CA(size=1, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Error in hash");
+      <- DefaultSwitch #BX -> #CA
+===#Block BZ(size=2, flags=10100)===
+   0. lvar10 = {1902016659 ^ lvar10};
+   1. goto W
+      -> UnconditionalJump[GOTO] #BZ -> #W
+      <- Switch[-92411261] #BX -> #BZ
+===#Block W(size=3, flags=0)===
+   0. _consume(catch());
+   1. if ({65537 % {25 * ({1063640007 ^ java.lang.Character.digit('', dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {25 * ({1063640007 ^ -1})}})
+      goto AE
+   2. goto AR
+      -> UnconditionalJump[GOTO] #W -> #AR
+      -> ConditionalJump[IF_ICMPNE] #W -> #AE
+      <- UnconditionalJump[GOTO] #BZ -> #W
+      <- UnconditionalJump[GOTO] #BY -> #W
+===#Block AR(size=2, flags=10100)===
+   0. lvar10 = {667064522 ^ lvar10};
+   1. goto L
+      -> UnconditionalJump[GOTO] #AR -> #L
+      <- UnconditionalJump[GOTO] #W -> #AR
+===#Block L(size=3, flags=0)===
+   0. if (dev.skidfuscator.testclasses.exclusion.UnobfuscatedTestClass.data[{701717771 ^ lvar10}] == lvar6)
+      goto AS
+   1. if ({65537 % {169 * ({1558692472 ^ java.lang.Integer.signum(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {169 * ({1558692472 ^ 1})}})
+      goto AE
+   2. lvar10 = {392508312 ^ lvar10};
+      -> Immediate #L -> #M
+      -> ConditionalJump[IF_ICMPNE] #L -> #AE
+      -> ConditionalJump[IF_ICMPEQ] #L -> #AS
+      <- Immediate #J -> #L
+      <- UnconditionalJump[GOTO] #AR -> #L
+===#Block AS(size=2, flags=10100)===
+   0. lvar10 = {459417745 ^ lvar10};
+   1. goto N
+      -> UnconditionalJump[GOTO] #AS -> #N
+      <- ConditionalJump[IF_ICMPEQ] #L -> #AS
+===#Block N(size=2, flags=0)===
+   0. return;
+   1. if ({65537 % {129 * ({1465931937 ^ java.lang.Character.getType(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {129 * ({1465931937 ^ 0})}})
+      goto AC
+      -> ConditionalJump[IF_ICMPNE] #N -> #AC
+      <- UnconditionalJump[GOTO] #AS -> #N
+===#Block AC(size=13, flags=0)===
+   0. if ({65537 % {65 * ({1301071467 ^ java.lang.Integer.rotateLeft(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 2103019665)})}} != {65537 % {65 * ({1301071467 ^ 581174415})}})
+      goto AC
+   1. if ({65537 % {51 * ({1515029398 ^ java.lang.Integer.rotateLeft(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10), 2103019665)})}} != {65537 % {51 * ({1515029398 ^ {893981250 ^ lvar10}})}})
+      goto AC
+   2. _consume({1446409840 ^ lvar10});
+   3. if ({65537 % {115 * ({1178639310 ^ java.lang.Character.getType(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {115 * ({1178639310 ^ 0})}})
+      goto AC
+   4. if ({65537 % {113 * ({1120077318 ^ java.lang.Character.getType(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {113 * ({1120077318 ^ {1156110062 ^ lvar10}})}})
+      goto AC
+   5. _consume({906919752 ^ lvar10});
+   6. if ({65537 % {31 * ({1643524366 ^ java.lang.Character.toLowerCase(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {31 * ({1643524366 ^ 19457013})}})
+      goto AC
+   7. if ({65537 % {131 * ({1463875363 ^ java.lang.Character.toLowerCase(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {131 * ({1463875363 ^ {592625078 ^ lvar10}})}})
+      goto AC
+   8. _consume({307640782 ^ lvar10});
+   9. if ({65537 % {181 * ({1476078322 ^ java.lang.StrictMath.absExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {181 * ({1476078322 ^ 77700181})}})
+      goto AC
+   10. if ({65537 % {17 * ({1506030693 ^ java.lang.StrictMath.absExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {17 * ({1506030693 ^ {833619153 ^ lvar10}})}})
+      goto AC
+   11. _consume({271248693 ^ lvar10});
+   12. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AC -> #AC
+      <- ConditionalJump[IF_ICMPNE] #F -> #AC
+      <- ConditionalJump[IF_ICMPNE] #G -> #AC
+      <- ConditionalJump[IF_ICMPNE] #J -> #AC
+      <- ConditionalJump[IF_ICMPNE] #N -> #AC
+      <- ConditionalJump[IF_ICMPNE] #AC -> #AC
+===#Block AE(size=7, flags=0)===
+   0. if ({65537 % {171 * ({1117692001 ^ java.lang.Character.digit('', dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {171 * ({1117692001 ^ -1})}})
+      goto AE
+   1. if ({65537 % {5 * ({330107120 ^ java.lang.Character.digit('', dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {5 * ({330107120 ^ {1216743580 ^ lvar10}})}})
+      goto AE
+   2. _consume({1611630797 ^ lvar10});
+   3. if ({65537 % {25 * ({1658682634 ^ java.lang.Integer.signum(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {25 * ({1658682634 ^ 1})}})
+      goto AE
+   4. if ({65537 % {97 * ({1622527528 ^ java.lang.Integer.signum(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {97 * ({1622527528 ^ {1055780153 ^ lvar10}})}})
+      goto AE
+   5. _consume({506337821 ^ lvar10});
+   6. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AE -> #AE
+      <- ConditionalJump[IF_ICMPNE] #AE -> #AE
+      <- ConditionalJump[IF_ICMPNE] #L -> #AE
+      <- ConditionalJump[IF_ICMPNE] #W -> #AE
+===#Block M(size=4, flags=0)===
+   0. lvar3 = new java.lang.IllegalArgumentException;
+   1. _consume(lvar3.<init>(dynamic_invoke<java.lang.String>(java.lang.invoke.StringConcatFactory.makeConcatWithConstants("Failed test! Stage: ", lvar6))));
+   2. throw lvar3;
+   3. if ({65537 % {195 * ({1354774324 ^ java.lang.StrictMath.floorMod(1820564784, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {195 * ({1354774324 ^ 66420502})}})
+      goto AD
+      -> ConditionalJump[IF_ICMPNE] #M -> #AD
+      <- Immediate #L -> #M
+===#Block AD(size=10, flags=0)===
+   0. if ({65537 % {119 * ({1537298630 ^ java.lang.Math.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {119 * ({1537298630 ^ 111804805})}})
+      goto AD
+   1. if ({65537 % {195 * ({1386709888 ^ java.lang.Math.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {195 * ({1386709888 ^ {544039179 ^ lvar10}})}})
+      goto AD
+   2. _consume({1904267273 ^ lvar10});
+   3. if ({65537 % {149 * ({1260789343 ^ java.lang.StrictMath.floorMod(1820564784, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {149 * ({1260789343 ^ 66420502})}})
+      goto AD
+   4. if ({65537 % {137 * ({1710717329 ^ java.lang.StrictMath.floorMod(1820564784, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {137 * ({1710717329 ^ {1652559946 ^ lvar10}})}})
+      goto AD
+   5. _consume({110405781 ^ lvar10});
+   6. if ({65537 % {17 * ({48513479 ^ java.lang.Integer.compare(1198832818, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {17 * ({48513479 ^ 1})}})
+      goto AD
+   7. if ({65537 % {57 * ({1232596160 ^ java.lang.Integer.compare(1198832818, dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {57 * ({1232596160 ^ {14925890 ^ lvar10}})}})
+      goto AD
+   8. _consume({613660170 ^ lvar10});
+   9. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AD -> #AD
+      <- ConditionalJump[IF_ICMPNE] #H -> #AD
+      <- ConditionalJump[IF_ICMPNE] #AD -> #AD
+      <- ConditionalJump[IF_ICMPNE] #M -> #AD
+      <- ConditionalJump[IF_ICMPNE] #U -> #AD
+===#Block AA(size=22, flags=0)===
+   0. if ({65537 % {69 * ({557381387 ^ java.lang.StrictMath.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {69 * ({557381387 ^ 171031009})}})
+      goto AA
+   1. if ({65537 % {179 * ({646373645 ^ java.lang.StrictMath.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {179 * ({646373645 ^ {2007615715 ^ lvar10}})}})
+      goto AA
+   2. _consume({858338061 ^ lvar10});
+   3. if ({65537 % {109 * ({1485820007 ^ java.awt.event.KeyEvent.getExtendedKeyCodeForChar(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {109 * ({1485820007 ^ 0})}})
+      goto AA
+   4. if ({65537 % {105 * ({1198192893 ^ java.awt.event.KeyEvent.getExtendedKeyCodeForChar(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {105 * ({1198192893 ^ {678021821 ^ lvar10}})}})
+      goto AA
+   5. _consume({1294142648 ^ lvar10});
+   6. if ({65537 % {193 * ({917795662 ^ java.lang.Integer.reverseBytes(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {193 * ({917795662 ^ 970747395})}})
+      goto AA
+   7. if ({65537 % {101 * ({404500609 ^ java.lang.Integer.reverseBytes(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {101 * ({404500609 ^ {330024636 ^ lvar10}})}})
+      goto AA
+   8. _consume({347670800 ^ lvar10});
+   9. if ({65537 % {69 * ({993499522 ^ java.lang.Integer.signum(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {69 * ({993499522 ^ 1})}})
+      goto AA
+   10. if ({65537 % {77 * ({181296939 ^ java.lang.Integer.signum(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {77 * ({181296939 ^ {732805485 ^ lvar10}})}})
+      goto AA
+   11. _consume({1619604414 ^ lvar10});
+   12. if ({65537 % {95 * ({1207081061 ^ java.lang.Character.digit('', dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {95 * ({1207081061 ^ -1})}})
+      goto AA
+   13. if ({65537 % {165 * ({1237374496 ^ java.lang.Character.digit('', dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {165 * ({1237374496 ^ {1045595117 ^ lvar10}})}})
+      goto AA
+   14. _consume({427800009 ^ lvar10});
+   15. if ({65537 % {85 * ({1100248794 ^ java.lang.Math.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {85 * ({1100248794 ^ 27441856})}})
+      goto AA
+   16. if ({65537 % {123 * ({2025355521 ^ java.lang.Math.incrementExact(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {123 * ({2025355521 ^ {1065932738 ^ lvar10}})}})
+      goto AA
+   17. _consume({20284411 ^ lvar10});
+   18. if ({65537 % {187 * ({1124178481 ^ java.lang.Integer.numberOfTrailingZeros(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {187 * ({1124178481 ^ 2})}})
+      goto AA
+   19. if ({65537 % {127 * ({2008412479 ^ java.lang.Integer.numberOfTrailingZeros(dzmtsyhedbeyduip.bgzkmtovhuxplopt.mozumcvumeseeeoo(lvar10))})}} != {65537 % {127 * ({2008412479 ^ {1463752575 ^ lvar10}})}})
+      goto AA
+   20. _consume({2080369144 ^ lvar10});
+   21. throw new java/io/IOException();
+      -> ConditionalJump[IF_ICMPNE] #AA -> #AA
+      <- ConditionalJump[IF_ICMPNE] #A -> #AA
+      <- ConditionalJump[IF_ICMPNE] #K -> #AA
+      <- ConditionalJump[IF_ICMPNE] #AA -> #AA
+      <- ConditionalJump[IF_ICMPNE] #O -> #AA
+      <- ConditionalJump[IF_ICMPNE] #T -> #AA
+      <- ConditionalJump[IF_ICMPNE] #X -> #AA
+      <- ConditionalJump[IF_ICMPNE] #Y -> #AA
+      <- ConditionalJump[IF_ICMPNE] #Q -> #AA

@@ -1,0 +1,673 @@
+handler=Block #K, types=[Ljava/lang/IllegalStateException;], range=[Block #C, Block #D, Block #F, Block #G, Block #E, Block #I, Block #H]
+handler=Block #J, types=[Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;], range=[Block #C, Block #D, Block #F, Block #G, Block #E, Block #I, Block #H]
+handler=Block #T, types=[Ljava/io/IOException;], range=[Block #S, Block #R]
+handler=Block #W, types=[Ljava/lang/RuntimeException;], range=[Block #V, Block #U]
+handler=Block #Z, types=[Ljava/lang/RuntimeException;], range=[Block #Y, Block #X]
+handler=Block #AC, types=[Ljava/io/IOException;], range=[Block #AB, Block #AA]
+handler=Block #AF, types=[Ljava/io/IOException;], range=[Block #AE, Block #AD]
+handler=Block #AI, types=[Ljava/io/IOException;], range=[Block #AH, Block #AG]
+===#Block A(size=3, flags=1)===
+   0. synth(lvar0 = lvar0);
+   1. lvar18 = "A : var expect: -1";
+   2. if (java.lang.Character.getNumericValue(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != -1)
+      goto P
+      -> Immediate #A -> #B
+      -> ConditionalJump[IF_ICMPNE] #A -> #P
+===#Block B(size=0, flags=0)===
+      -> Immediate #B -> #C
+      <- Immediate #A -> #B
+===#Block C(size=7, flags=0)===
+   0. _consume(dev.skidfuscator.testclasses.opaque.OpaqueConditionClazz$AES.main(new java.lang.String[{246959904 ^ lvar10}]));
+   1. lvar142 = "[Constant] 0 -> 246959904 predicate=246959904";
+   2. if (dev.skidfuscator.testclasses.exclusion.ObfuscatedTestClass.data[{246959904 ^ lvar10}] != {246959904 ^ lvar10})
+      goto O
+   3. lvar146 = "[Constant] 0 -> 246959904 predicate=246959904";
+   4. lvar144 = "[Constant] 0 -> 246959904 predicate=246959904";
+   5. lvar22 = "C : var expect: 1307126627";
+   6. if (java.lang.Math.subtractExact(1517175641, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1307126627)
+      goto AL
+      -> ConditionalJump[IF_ICMPNE] #C -> #AL
+      -> ConditionalJump[IF_ICMPNE] #C -> #O
+      -> TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> Immediate #C -> #D
+      <- Immediate #B -> #C
+===#Block D(size=5, flags=0)===
+   0. svar12 = {dev.skidfuscator.testclasses.exclusion.ObfuscatedTestClass.data[{86509569 ^ lvar10}] ^ lvar10};
+   1. lvar102 = "[Constant] 1 -> 86509569 predicate=86509568";
+   2. switch (pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(svar12)) {
+      case 81101480:
+      	 goto	#G
+      default:
+      	 goto	#E
+   }
+   3. lvar56 = "D : var expect: 1717058136";
+   4. if (java.lang.Math.max(1717058136, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1717058136)
+      goto AU
+      -> Switch[81101480] #D -> #G
+      -> ConditionalJump[IF_ICMPNE] #D -> #AU
+      -> TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      -> DefaultSwitch #D -> #E
+      -> TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- Immediate #C -> #D
+===#Block E(size=5, flags=0)===
+   0. lvar7 = {-1380444818 ^ lvar10};
+   1. lvar104 = "[Constant] -5 -> -1380444818 predicate=1380444821";
+   2. lvar58 = "E : var expect: 4";
+   3. if (java.lang.Integer.numberOfLeadingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 4)
+      goto AQ
+   4. goto AB
+      -> ConditionalJump[IF_ICMPNE] #E -> #AQ
+      -> TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> UnconditionalJump[GOTO] #E -> #AB
+      <- DefaultSwitch #D -> #E
+===#Block AB(size=4, flags=0)===
+   0. if (pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10) == 119289491)
+      goto AA
+   1. throw nullconst;
+   2. lvar72 = "AB : var expect: 119289491";
+   3. if (java.lang.Math.absExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 119289491)
+      goto AZ
+      -> ConditionalJump[IF_ICMPNE] #AB -> #AZ
+      -> TryCatch range: [AB...AA] -> AC ([Ljava/io/IOException;])
+      -> ConditionalJump[IF_ICMPEQ] #AB -> #AA
+      <- UnconditionalJump[GOTO] #E -> #AB
+===#Block AA(size=3, flags=0)===
+   0. throw new java/io/IOException();
+   1. lvar24 = "AA : var expect: -2115371073";
+   2. if (java.lang.Integer.sum(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 2092181537) != -2115371073)
+      goto AJ
+      -> ConditionalJump[IF_ICMPNE] #AA -> #AJ
+      -> TryCatch range: [AB...AA] -> AC ([Ljava/io/IOException;])
+      <- ConditionalJump[IF_ICMPEQ] #AB -> #AA
+===#Block AC(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar50 = "AC : var expect: 0";
+   2. if (java.lang.Integer.numberOfTrailingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 0)
+      goto AS
+   3. goto H
+      -> ConditionalJump[IFNE] #AC -> #AS
+      -> UnconditionalJump[GOTO] #AC -> #H
+      <- TryCatch range: [AB...AA] -> AC ([Ljava/io/IOException;])
+      <- TryCatch range: [AB...AA] -> AC ([Ljava/io/IOException;])
+===#Block AS(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (java.lang.Integer.numberOfTrailingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 0)
+      goto AS
+   2. if (java.lang.Integer.numberOfTrailingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {2126190611 ^ lvar10})
+      goto AS
+   3. lvar100 = "[Constant] 1533136363 -> 2126190611 predicate=635098616";
+   4. _consume({1372789340 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IFNE] #AS -> #AS
+      <- ConditionalJump[IFNE] #AC -> #AS
+      <- ConditionalJump[IFNE] #AS -> #AS
+===#Block AZ(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (java.lang.Math.absExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 119289491)
+      goto AZ
+   2. if (java.lang.Math.absExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1415843332 ^ lvar10})
+      goto AZ
+   3. lvar134 = "[Constant] 240830319 -> 1415843332 predicate=1514064235";
+   4. _consume({213937309 ^ lvar10});
+   5. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AZ -> #AZ
+      <- ConditionalJump[IF_ICMPNE] #AB -> #AZ
+      <- ConditionalJump[IF_ICMPNE] #AZ -> #AZ
+===#Block AU(size=6, flags=0)===
+   0. throw new java/io/IOException("Failed to proper vm");
+   1. if (java.lang.Math.max(1717058136, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1717058136)
+      goto AU
+   2. if (java.lang.Math.max(1717058136, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {135912782 ^ lvar10})
+      goto AU
+   3. lvar82 = "[Constant] 224589921 -> 135912782 predicate=91956527";
+   4. _consume({1938054222 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AU -> #AU
+      <- ConditionalJump[IF_ICMPNE] #D -> #AU
+      <- ConditionalJump[IF_ICMPNE] #AU -> #AU
+===#Block G(size=5, flags=0)===
+   0. lvar7 = {782781548 ^ lvar10};
+   1. lvar124 = "[Constant] 3 -> 782781548 predicate=782781551";
+   2. lvar74 = "G : var expect: 174471872";
+   3. if (java.lang.Math.incrementExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 174471872)
+      goto AP
+   4. goto AE
+      -> UnconditionalJump[GOTO] #G -> #AE
+      -> TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      -> ConditionalJump[IF_ICMPNE] #G -> #AP
+      <- Switch[81101480] #D -> #G
+===#Block AE(size=4, flags=0)===
+   0. if (pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10) == 116000559)
+      goto AD
+   1. throw nullconst;
+   2. lvar52 = "AE : var expect: 0";
+   3. if (java.lang.Math.floorDiv(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 740656974) != 0)
+      goto AP
+      -> ConditionalJump[IFNE] #AE -> #AP
+      -> TryCatch range: [AE...AD] -> AF ([Ljava/io/IOException;])
+      -> ConditionalJump[IF_ICMPEQ] #AE -> #AD
+      <- UnconditionalJump[GOTO] #G -> #AE
+===#Block AD(size=3, flags=0)===
+   0. throw new java/io/IOException();
+   1. lvar64 = "AD : var expect: 672834169";
+   2. if (java.lang.StrictMath.floorMod(6909346245057239445L, 1346717428) != 672834169)
+      goto AJ
+      -> TryCatch range: [AE...AD] -> AF ([Ljava/io/IOException;])
+      -> ConditionalJump[IF_ICMPNE] #AD -> #AJ
+      <- ConditionalJump[IF_ICMPEQ] #AE -> #AD
+===#Block AF(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar46 = "AF : var expect: 1";
+   2. if (java.lang.Math.floorDiv(304399280, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1)
+      goto AJ
+   3. goto H
+      -> ConditionalJump[IF_ICMPNE] #AF -> #AJ
+      -> UnconditionalJump[GOTO] #AF -> #H
+      <- TryCatch range: [AE...AD] -> AF ([Ljava/io/IOException;])
+      <- TryCatch range: [AE...AD] -> AF ([Ljava/io/IOException;])
+===#Block H(size=6, flags=0)===
+   0. _consume(lvar0.self(lvar7, 1388402073));
+   1. lvar2 = new java.lang.IllegalArgumentException;
+   2. _consume(lvar2.<init>(dynamic_invoke<java.lang.String>(java.lang.invoke.StringConcatFactory.makeConcatWithConstants("Failed test! Stage: ", lvar7))));
+   3. throw lvar2;
+   4. lvar54 = "H : var expect: -221101857";
+   5. if (java.lang.StrictMath.negateExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != -221101857)
+      goto AT
+      -> ConditionalJump[IF_ICMPNE] #H -> #AT
+      -> TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- UnconditionalJump[GOTO] #AC -> #H
+      <- UnconditionalJump[GOTO] #T -> #H
+      <- UnconditionalJump[GOTO] #AF -> #H
+===#Block O(size=4, flags=0)===
+   0. if (java.lang.Integer.highestOneBit(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) == 67108864)
+      goto I
+   1. lvar78 = "O : var expect: 0";
+   2. if (java.lang.Integer.divideUnsigned(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 717799781) != 0)
+      goto AT
+   3. goto AH
+      -> UnconditionalJump[GOTO] #O -> #AH
+      -> ConditionalJump[IF_ICMPEQ] #O -> #I
+      -> ConditionalJump[IFNE] #O -> #AT
+      <- ConditionalJump[IF_ICMPNE] #C -> #O
+===#Block AT(size=11, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Integer.divideUnsigned(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 717799781) != 0)
+      goto AT
+   2. if (java.lang.Integer.divideUnsigned(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 717799781) != {1875980090 ^ lvar10})
+      goto AT
+   3. lvar118 = "[Constant] 1565228851 -> 1875980090 predicate=848973833";
+   4. _consume({1279866343 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (java.lang.StrictMath.negateExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != -221101857)
+      goto AT
+   7. if (java.lang.StrictMath.negateExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1435161180 ^ lvar10})
+      goto AT
+   8. lvar120 = "[Constant] 1729135189 -> 1435161180 predicate=848973833";
+   9. _consume({1670266440 ^ lvar10});
+   10. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IFNE] #AT -> #AT
+      <- ConditionalJump[IFNE] #AT -> #AT
+      <- ConditionalJump[IFNE] #O -> #AT
+      <- ConditionalJump[IF_ICMPNE] #H -> #AT
+===#Block I(size=6, flags=0)===
+   0. lvar5 = new java.lang.IllegalArgumentException;
+   1. _consume(lvar5.<init>(dynamic_invoke<java.lang.String>(java.lang.invoke.StringConcatFactory.makeConcatWithConstants("Failed test! Stage: ", {1868635508 ^ lvar10}))));
+   2. lvar148 = "[Constant] 2 -> 1868635508 predicate=1868635510";
+   3. throw lvar5;
+   4. lvar26 = "I : var expect: 130827894";
+   5. if (java.lang.Math.incrementExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 130827894)
+      goto AM
+      -> TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      -> TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      -> ConditionalJump[IF_ICMPNE] #I -> #AM
+      <- ConditionalJump[IF_ICMPEQ] #O -> #I
+===#Block AM(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Math.incrementExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 130827894)
+      goto AM
+   2. if (java.lang.Math.incrementExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {534608025 ^ lvar10})
+      goto AM
+   3. lvar150 = "[Constant] 799953346 -> 534608025 predicate=812853595";
+   4. _consume({1482674342 ^ lvar10});
+   5. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AM -> #AM
+      <- ConditionalJump[IF_ICMPNE] #AM -> #AM
+      <- ConditionalJump[IF_ICMPNE] #I -> #AM
+===#Block J(size=6, flags=0)===
+   0. lvar1 = catch();
+   1. _consume(lvar1.printStackTrace());
+   2. lvar6 = {-1642027151 ^ lvar10};
+   3. lvar84 = "[Constant] -1 -> -1642027151 predicate=1642027150";
+   4. lvar36 = "J : var expect: 844826032";
+   5. if (java.lang.Integer.reverse(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 844826032)
+      goto AP
+      -> ConditionalJump[IF_ICMPNE] #J -> #AP
+      -> Immediate #J -> #L
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+      <- TryCatch range: [C...H] -> J ([Ljavax/crypto/BadPaddingException;, Ljavax/crypto/IllegalBlockSizeException;, Ljavax/crypto/NoSuchPaddingException;, Ljava/security/InvalidKeyException;, Ljava/security/NoSuchAlgorithmException;])
+===#Block AP(size=16, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Math.incrementExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 174471872)
+      goto AP
+   2. if (java.lang.Math.incrementExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {2030182280 ^ lvar10})
+      goto AP
+   3. lvar98 = "[Constant] 1632662628 -> 2030182280 predicate=408054764";
+   4. _consume({1744682858 ^ lvar10});
+   5. throw new java/io/IOException("Failed to proper vm");
+   6. if (java.lang.Math.floorDiv(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 740656974) != 0)
+      goto AP
+   7. if (java.lang.Math.floorDiv(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 740656974) != {2056186139 ^ lvar10})
+      goto AP
+   8. lvar96 = "[Constant] 1658618615 -> 2056186139 predicate=408054764";
+   9. _consume({1914135807 ^ lvar10});
+   10. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   11. if (java.lang.Integer.reverse(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 844826032)
+      goto AP
+   12. if (java.lang.Integer.reverse(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1146406566 ^ lvar10})
+      goto AP
+   13. lvar94 = "[Constant] 1543941450 -> 1146406566 predicate=408054764";
+   14. _consume({1985284243 ^ lvar10});
+   15. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AP -> #AP
+      <- ConditionalJump[IF_ICMPNE] #J -> #AP
+      <- ConditionalJump[IF_ICMPNE] #AP -> #AP
+      <- ConditionalJump[IFNE] #AE -> #AP
+      <- ConditionalJump[IF_ICMPNE] #G -> #AP
+===#Block K(size=6, flags=0)===
+   0. lvar4 = catch();
+   1. lvar6 = {323490043 ^ lvar10};
+   2. lvar80 = "[Constant] 4 -> 323490043 predicate=323490047";
+   3. lvar20 = "K : var expect: 2096829093";
+   4. if (java.lang.Integer.rotateRight(1053075807, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 2096829093)
+      goto AK
+   5. goto Y
+      -> ConditionalJump[IF_ICMPNE] #K -> #AK
+      -> UnconditionalJump[GOTO] #K -> #Y
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+      <- TryCatch range: [C...H] -> K ([Ljava/lang/IllegalStateException;])
+===#Block Y(size=4, flags=0)===
+   0. if (pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10) == 161914808)
+      goto X
+   1. throw nullconst;
+   2. lvar30 = "Y : var expect: 161914808";
+   3. if (java.lang.StrictMath.abs(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 161914808)
+      goto AO
+      -> ConditionalJump[IF_ICMPEQ] #Y -> #X
+      -> ConditionalJump[IF_ICMPNE] #Y -> #AO
+      -> TryCatch range: [Y...X] -> Z ([Ljava/lang/RuntimeException;])
+      <- UnconditionalJump[GOTO] #K -> #Y
+===#Block X(size=3, flags=0)===
+   0. throw new java/lang/RuntimeException();
+   1. lvar34 = "X : var expect: 1";
+   2. if (java.lang.Integer.lowestOneBit(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1)
+      goto AK
+      -> ConditionalJump[IF_ICMPNE] #X -> #AK
+      -> TryCatch range: [Y...X] -> Z ([Ljava/lang/RuntimeException;])
+      <- ConditionalJump[IF_ICMPEQ] #Y -> #X
+===#Block Z(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar16 = "Z : var expect: 1";
+   2. if (java.lang.Integer.signum(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1)
+      goto AJ
+   3. goto L
+      -> UnconditionalJump[GOTO] #Z -> #L
+      -> ConditionalJump[IF_ICMPNE] #Z -> #AJ
+      <- TryCatch range: [Y...X] -> Z ([Ljava/lang/RuntimeException;])
+      <- TryCatch range: [Y...X] -> Z ([Ljava/lang/RuntimeException;])
+===#Block L(size=4, flags=0)===
+   0. if (dev.skidfuscator.testclasses.exclusion.ObfuscatedTestClass.data[{920850576 ^ lvar10}] == lvar6)
+      goto Q
+   1. lvar106 = "[Constant] 2 -> 920850576 predicate=920850578";
+   2. lvar68 = "L : var expect: 173524729";
+   3. if (java.lang.Math.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 400518036) != 173524729)
+      goto AR
+      -> ConditionalJump[IF_ICMPEQ] #L -> #Q
+      -> ConditionalJump[IF_ICMPNE] #L -> #AR
+      -> Immediate #L -> #M
+      <- UnconditionalJump[GOTO] #Z -> #L
+      <- Immediate #J -> #L
+===#Block M(size=5, flags=0)===
+   0. lvar3 = new java.lang.IllegalArgumentException;
+   1. _consume(lvar3.<init>(dynamic_invoke<java.lang.String>(java.lang.invoke.StringConcatFactory.makeConcatWithConstants("Failed test! Stage: ", lvar6))));
+   2. throw lvar3;
+   3. lvar70 = "M : var expect: -1";
+   4. if (java.lang.Character.digit(1730944408, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != -1)
+      goto AY
+      -> ConditionalJump[IF_ICMPNE] #M -> #AY
+      <- Immediate #L -> #M
+===#Block AY(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Character.digit(1730944408, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != -1)
+      goto AY
+   2. if (java.lang.Character.digit(1730944408, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1414932870 ^ lvar10})
+      goto AY
+   3. lvar90 = "[Constant] 118288580 -> 1414932870 predicate=1398462786";
+   4. _consume({1129199961 ^ lvar10});
+   5. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AY -> #AY
+      <- ConditionalJump[IF_ICMPNE] #M -> #AY
+      <- ConditionalJump[IF_ICMPNE] #AY -> #AY
+===#Block AR(size=11, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (java.lang.Math.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 400518036) != 173524729)
+      goto AR
+   2. if (java.lang.Math.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 400518036) != {1447666497 ^ lvar10})
+      goto AR
+   3. lvar116 = "[Constant] 1788260121 -> 1447666497 predicate=1021250648";
+   4. _consume({1374273480 ^ lvar10});
+   5. throw new java/lang/RuntimeException("Failed to proper vm");
+   6. if (java.lang.StrictMath.max(1707464269, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1707464269)
+      goto AR
+   7. if (java.lang.StrictMath.max(1707464269, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1786344253 ^ lvar10})
+      goto AR
+   8. lvar114 = "[Constant] 1453752165 -> 1786344253 predicate=1021250648";
+   9. _consume({185204503 ^ lvar10});
+   10. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AR -> #AR
+      <- ConditionalJump[IF_ICMPNE] #R -> #AR
+      <- ConditionalJump[IF_ICMPNE] #L -> #AR
+      <- ConditionalJump[IF_ICMPNE] #AR -> #AR
+===#Block Q(size=4, flags=0)===
+   0. if (java.lang.Integer.numberOfLeadingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) == 5)
+      goto N
+   1. lvar12 = "Q : var expect: 68094140";
+   2. if (java.lang.Integer.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1105305961) != 68094140)
+      goto P
+   3. goto V
+      -> UnconditionalJump[GOTO] #Q -> #V
+      -> ConditionalJump[IF_ICMPEQ] #Q -> #N
+      -> ConditionalJump[IF_ICMPNE] #Q -> #P
+      <- ConditionalJump[IF_ICMPEQ] #L -> #Q
+===#Block N(size=3, flags=0)===
+   0. return;
+   1. lvar32 = "N : var expect: 314";
+   2. if (java.lang.StrictMath.floorDiv(2061171791, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 314)
+      goto AJ
+      -> ConditionalJump[IF_ICMPNE] #N -> #AJ
+      <- ConditionalJump[IF_ICMPEQ] #Q -> #N
+===#Block AJ(size=26, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.StrictMath.floorMod(6909346245057239445L, 1346717428) != 672834169)
+      goto AJ
+   2. if (java.lang.StrictMath.floorMod(6909346245057239445L, 1346717428) != {1846725310 ^ lvar10})
+      goto AJ
+   3. lvar158 = "[Constant] 655625094 -> 1846725310 predicate=1225179448";
+   4. _consume({1218594415 ^ lvar10});
+   5. throw new java/io/IOException("Failed to proper vm");
+   6. if (java.lang.Math.floorDiv(304399280, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1)
+      goto AJ
+   7. if (java.lang.Math.floorDiv(304399280, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {433705380 ^ lvar10})
+      goto AJ
+   8. lvar156 = "[Constant] 1356796060 -> 433705380 predicate=1225179448";
+   9. _consume({1178814505 ^ lvar10});
+   10. throw new java/lang/RuntimeException("Failed to proper vm");
+   11. if (java.lang.StrictMath.floorDiv(2061171791, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 314)
+      goto AJ
+   12. if (java.lang.StrictMath.floorDiv(2061171791, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {334178431 ^ lvar10})
+      goto AJ
+   13. lvar154 = "[Constant] 1525541191 -> 334178431 predicate=1225179448";
+   14. _consume({1912106380 ^ lvar10});
+   15. throw new java/lang/RuntimeException("Failed to proper vm");
+   16. if (java.lang.Integer.sum(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 2092181537) != -2115371073)
+      goto AJ
+   17. if (java.lang.Integer.sum(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 2092181537) != {72919272 ^ lvar10})
+      goto AJ
+   18. lvar160 = "[Constant] 1298033104 -> 72919272 predicate=1225179448";
+   19. _consume({114206829 ^ lvar10});
+   20. throw new java/lang/RuntimeException("Failed to proper vm");
+   21. if (java.lang.Integer.signum(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1)
+      goto AJ
+   22. if (java.lang.Integer.signum(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {161741336 ^ lvar10})
+      goto AJ
+   23. lvar152 = "[Constant] 1084570400 -> 161741336 predicate=1225179448";
+   24. _consume({1314252186 ^ lvar10});
+   25. throw new java/io/IOException("double");
+      -> ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AA -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #N -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AJ -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AF -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #Z -> #AJ
+      <- ConditionalJump[IF_ICMPNE] #AD -> #AJ
+===#Block V(size=4, flags=0)===
+   0. if (pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10) == 74656824)
+      goto U
+   1. throw nullconst;
+   2. lvar60 = "V : var expect: 23";
+   3. if (java.lang.StrictMath.floorDiv(1751083165, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 23)
+      goto AV
+      -> ConditionalJump[IF_ICMPNE] #V -> #AV
+      -> TryCatch range: [V...U] -> W ([Ljava/lang/RuntimeException;])
+      -> ConditionalJump[IF_ICMPEQ] #V -> #U
+      <- UnconditionalJump[GOTO] #Q -> #V
+===#Block U(size=3, flags=0)===
+   0. throw new java/lang/RuntimeException();
+   1. lvar44 = "U : var expect: 118257104";
+   2. if (java.lang.StrictMath.floorMod(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 218158239) != 118257104)
+      goto AO
+      -> ConditionalJump[IF_ICMPNE] #U -> #AO
+      -> TryCatch range: [V...U] -> W ([Ljava/lang/RuntimeException;])
+      <- ConditionalJump[IF_ICMPEQ] #V -> #U
+===#Block AO(size=11, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.StrictMath.floorMod(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 218158239) != 118257104)
+      goto AO
+   2. if (java.lang.StrictMath.floorMod(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 218158239) != {1846145018 ^ lvar10})
+      goto AO
+   3. lvar136 = "[Constant] 1748173870 -> 1846145018 predicate=104524756";
+   4. _consume({1422396881 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (java.lang.StrictMath.abs(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 161914808)
+      goto AO
+   7. if (java.lang.StrictMath.abs(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1048097773 ^ lvar10})
+      goto AO
+   8. lvar138 = "[Constant] 943872057 -> 1048097773 predicate=104524756";
+   9. _consume({1106757231 ^ lvar10});
+   10. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AO -> #AO
+      <- ConditionalJump[IF_ICMPNE] #Y -> #AO
+      <- ConditionalJump[IF_ICMPNE] #AO -> #AO
+      <- ConditionalJump[IF_ICMPNE] #U -> #AO
+===#Block W(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar42 = "W : var expect: -199414816";
+   2. if (java.lang.Integer.rotateRight(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1529987227) != -199414816)
+      goto AL
+   3. goto P
+      -> ConditionalJump[IF_ICMPNE] #W -> #AL
+      -> UnconditionalJump[GOTO] #W -> #P
+      <- TryCatch range: [V...U] -> W ([Ljava/lang/RuntimeException;])
+      <- TryCatch range: [V...U] -> W ([Ljava/lang/RuntimeException;])
+===#Block AV(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (java.lang.StrictMath.floorDiv(1751083165, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 23)
+      goto AV
+   2. if (java.lang.StrictMath.floorDiv(1751083165, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {575435872 ^ lvar10})
+      goto AV
+   3. lvar140 = "[Constant] 737862807 -> 575435872 predicate=162959607";
+   4. _consume({2037543923 ^ lvar10});
+   5. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AV -> #AV
+      <- ConditionalJump[IF_ICMPNE] #V -> #AV
+      <- ConditionalJump[IF_ICMPNE] #AV -> #AV
+===#Block AK(size=11, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Integer.lowestOneBit(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1)
+      goto AK
+   2. if (java.lang.Integer.lowestOneBit(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1320643140 ^ lvar10})
+      goto AK
+   3. lvar164 = "[Constant] 799158104 -> 1320643140 predicate=1628783900";
+   4. _consume({941867786 ^ lvar10});
+   5. throw new java/io/IOException("Failed to proper vm");
+   6. if (java.lang.Integer.rotateRight(1053075807, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 2096829093)
+      goto AK
+   7. if (java.lang.Integer.rotateRight(1053075807, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1992433651 ^ lvar10})
+      goto AK
+   8. lvar162 = "[Constant] 399989487 -> 1992433651 predicate=1628783900";
+   9. _consume({880283429 ^ lvar10});
+   10. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AK -> #AK
+      <- ConditionalJump[IF_ICMPNE] #X -> #AK
+      <- ConditionalJump[IF_ICMPNE] #AK -> #AK
+      <- ConditionalJump[IF_ICMPNE] #K -> #AK
+===#Block AH(size=4, flags=0)===
+   0. if (pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10) == 26034181)
+      goto AG
+   1. throw nullconst;
+   2. lvar28 = "AH : var expect: 26034181";
+   3. if (java.lang.Math.absExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 26034181)
+      goto AN
+      -> ConditionalJump[IF_ICMPNE] #AH -> #AN
+      -> ConditionalJump[IF_ICMPEQ] #AH -> #AG
+      -> TryCatch range: [AH...AG] -> AI ([Ljava/io/IOException;])
+      <- UnconditionalJump[GOTO] #O -> #AH
+===#Block AG(size=3, flags=0)===
+   0. throw new java/io/IOException();
+   1. lvar66 = "AG : var expect: 96268669";
+   2. if (java.lang.Character.toLowerCase(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 96268669)
+      goto AX
+      -> ConditionalJump[IF_ICMPNE] #AG -> #AX
+      -> TryCatch range: [AH...AG] -> AI ([Ljava/io/IOException;])
+      <- ConditionalJump[IF_ICMPEQ] #AH -> #AG
+===#Block AI(size=4, flags=0)===
+   0. _consume(catch());
+   1. lvar40 = "AI : var expect: 0";
+   2. if (java.lang.Character.getType(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 0)
+      goto AQ
+   3. goto P
+      -> ConditionalJump[IFNE] #AI -> #AQ
+      -> UnconditionalJump[GOTO] #AI -> #P
+      <- TryCatch range: [AH...AG] -> AI ([Ljava/io/IOException;])
+      <- TryCatch range: [AH...AG] -> AI ([Ljava/io/IOException;])
+===#Block P(size=23, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Character.digit(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1157052188) != -1)
+      goto P
+   2. if (java.lang.Character.digit(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1157052188) != {2087345862 ^ lvar10})
+      goto P
+   3. lvar132 = "[Constant] 1297991678 -> 2087345862 predicate=825727288";
+   4. _consume({233399223 ^ lvar10});
+   5. throw new java/lang/RuntimeException("Failed to proper vm");
+   6. if (java.lang.Character.getNumericValue(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != -1)
+      goto P
+   7. if (java.lang.Character.getNumericValue(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1431189994 ^ lvar10})
+      goto P
+   8. lvar126 = "[Constant] 1685692626 -> 1431189994 predicate=825727288";
+   9. _consume({2051377248 ^ lvar10});
+   10. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   11. if (java.lang.Math.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1127856956) != 21977833)
+      goto P
+   12. if (java.lang.Math.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1127856956) != {1630057163 ^ lvar10})
+      goto P
+   13. lvar128 = "[Constant] 1344220147 -> 1630057163 predicate=825727288";
+   14. _consume({370507441 ^ lvar10});
+   15. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   16. if (java.lang.Integer.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1105305961) != 68094140)
+      goto P
+   17. if (java.lang.Integer.min(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1105305961) != {201406604 ^ lvar10})
+      goto P
+   18. lvar130 = "[Constant] 1026990516 -> 201406604 predicate=825727288";
+   19. _consume({1445331241 ^ lvar10});
+   20. throw new java/io/IOException();
+   21. lvar76 = "P : var expect: 257657323";
+   22. if (java.lang.Integer.hashCode(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 257657323)
+      goto BA
+      -> ConditionalJump[IF_ICMPNE] #P -> #BA
+      -> ConditionalJump[IF_ICMPNE] #P -> #P
+      <- ConditionalJump[IF_ICMPNE] #P -> #P
+      <- ConditionalJump[IF_ICMPNE] #F -> #P
+      <- UnconditionalJump[GOTO] #W -> #P
+      <- ConditionalJump[IF_ICMPNE] #Q -> #P
+      <- UnconditionalJump[GOTO] #AI -> #P
+      <- ConditionalJump[IF_ICMPNE] #T -> #P
+      <- ConditionalJump[IF_ICMPNE] #A -> #P
+===#Block BA(size=6, flags=0)===
+   0. throw new java/io/IOException("Failed to proper vm");
+   1. if (java.lang.Integer.hashCode(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 257657323)
+      goto BA
+   2. if (java.lang.Integer.hashCode(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {2139306365 ^ lvar10})
+      goto BA
+   3. lvar112 = "[Constant] 2133386653 -> 2139306365 predicate=11263200";
+   4. _consume({1300692355 ^ lvar10});
+   5. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #BA -> #BA
+      <- ConditionalJump[IF_ICMPNE] #BA -> #BA
+      <- ConditionalJump[IF_ICMPNE] #P -> #BA
+===#Block AQ(size=11, flags=0)===
+   0. throw new java/io/IOException("Failed to proper vm");
+   1. if (java.lang.Integer.numberOfLeadingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 4)
+      goto AQ
+   2. if (java.lang.Integer.numberOfLeadingZeros(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1721181494 ^ lvar10})
+      goto AQ
+   3. lvar168 = "[Constant] 1091931915 -> 1721181494 predicate=662874685";
+   4. _consume({1424722734 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (java.lang.Character.getType(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 0)
+      goto AQ
+   7. if (java.lang.Character.getType(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1208442658 ^ lvar10})
+      goto AQ
+   8. lvar166 = "[Constant] 1871050015 -> 1208442658 predicate=662874685";
+   9. _consume({144412276 ^ lvar10});
+   10. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AQ -> #AQ
+      <- ConditionalJump[IF_ICMPNE] #E -> #AQ
+      <- ConditionalJump[IFNE] #AI -> #AQ
+      <- ConditionalJump[IF_ICMPNE] #AQ -> #AQ
+===#Block AX(size=6, flags=0)===
+   0. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   1. if (java.lang.Character.toLowerCase(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 96268669)
+      goto AX
+   2. if (java.lang.Character.toLowerCase(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {1217868518 ^ lvar10})
+      goto AX
+   3. lvar122 = "[Constant] 800241795 -> 1217868518 predicate=1730513509";
+   4. _consume({2124593970 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("double");
+      -> ConditionalJump[IF_ICMPNE] #AX -> #AX
+      <- ConditionalJump[IF_ICMPNE] #AX -> #AX
+      <- ConditionalJump[IF_ICMPNE] #AG -> #AX
+===#Block AN(size=6, flags=0)===
+   0. throw new java/lang/RuntimeException("Failed to proper vm");
+   1. if (java.lang.Math.absExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 26034181)
+      goto AN
+   2. if (java.lang.Math.absExact(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {776031309 ^ lvar10})
+      goto AN
+   3. lvar86 = "[Constant] 1959685424 -> 776031309 predicate=1519329661";
+   4. _consume({284603248 ^ lvar10});
+   5. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AN -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AH -> #AN
+      <- ConditionalJump[IF_ICMPNE] #AN -> #AN
+===#Block AL(size=11, flags=0)===
+   0. throw new java/io/IOException("Failed to proper vm");
+   1. if (java.lang.Integer.rotateRight(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1529987227) != -199414816)
+      goto AL
+   2. if (java.lang.Integer.rotateRight(pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10), 1529987227) != {2144908761 ^ lvar10})
+      goto AL
+   3. lvar108 = "[Constant] 1203066869 -> 2144908761 predicate=946725420";
+   4. _consume({1316129242 ^ lvar10});
+   5. throw new java/lang/IllegalAccessException("Failed to proper vm");
+   6. if (java.lang.Math.subtractExact(1517175641, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != 1307126627)
+      goto AL
+   7. if (java.lang.Math.subtractExact(1517175641, pslmxlxlobvpuknt.ycljuptvbdeihrjh.rovephdzuhsjqppr(lvar10)) != {326198746 ^ lvar10})
+      goto AL
+   8. lvar110 = "[Constant] 723290102 -> 326198746 predicate=946725420";
+   9. _consume({1375778798 ^ lvar10});
+   10. throw new java/lang/RuntimeException("double");
+      -> ConditionalJump[IF_ICMPNE] #AL -> #AL
+      <- ConditionalJump[IF_ICMPNE] #AL -> #AL
+      <- ConditionalJump[IF_ICMPNE] #C -> #AL
+      <- ConditionalJump[IF_ICMPNE] #W -> #AL
