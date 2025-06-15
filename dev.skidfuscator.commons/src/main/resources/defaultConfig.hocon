@@ -110,3 +110,8 @@ fieldRenamer {
   enabled: false
   type: ALPHABETICAL
 }
+
+factoryRenamer {
+  enabled: false
+  name: factory/factory
+}
