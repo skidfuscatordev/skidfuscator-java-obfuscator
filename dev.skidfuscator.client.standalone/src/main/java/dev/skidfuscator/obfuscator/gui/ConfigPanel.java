@@ -102,8 +102,12 @@ public class ConfigPanel extends JPanel implements SkidPanel{
 
         // Input file
         gbc.gridx = 0; gbc.gridy = 0;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
         add(new JLabel("Input JAR:"), gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1.0; // IMPORTANTE: el campo se expande
+        gbc.fill = GridBagConstraints.HORIZONTAL; // IMPORTANTE: llena horizontal
         inputField = new JTextField(30);
         JLabel inputCheck = new JLabel("✗");
         inputCheck.setForeground(new Color(255, 65, 54));
@@ -149,8 +153,12 @@ public class ConfigPanel extends JPanel implements SkidPanel{
 
         // Output file
         gbc.gridx = 0; gbc.gridy = 1;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
         add(new JLabel("Output JAR:"), gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1.0; // IMPORTANTE: el campo se expande
+        gbc.fill = GridBagConstraints.HORIZONTAL; // IMPORTANTE
         outputField = new JTextField(30);
         JLabel outputCheck = new JLabel("✗");
         outputCheck.setForeground(new Color(255, 65, 54));
@@ -228,8 +236,12 @@ public class ConfigPanel extends JPanel implements SkidPanel{
 
         // Libraries
         gbc.gridx = 0; gbc.gridy = 2;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
         add(new JLabel("Libraries:"), gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1.0; // IMPORTANTE: el campo se expande
+        gbc.fill = GridBagConstraints.HORIZONTAL; // IMPORTANTE
         libsField = new JTextField(30);
         JLabel libsCheck = new JLabel("✗");
         libsCheck.setForeground(new Color(255, 65, 54));
@@ -270,8 +282,12 @@ public class ConfigPanel extends JPanel implements SkidPanel{
 
         // Runtime
         gbc.gridx = 0; gbc.gridy = 3;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
         add(new JLabel("Runtime:"), gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1.0; // IMPORTANTE: el campo se expande
+        gbc.fill = GridBagConstraints.HORIZONTAL; // IMPORTANTE
         runtimeField = new JTextField(30);
         
         // Check if JDK was previously downloaded
