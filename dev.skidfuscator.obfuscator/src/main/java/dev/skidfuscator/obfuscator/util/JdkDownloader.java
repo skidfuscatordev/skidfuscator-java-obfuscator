@@ -17,6 +17,8 @@ public class JdkDownloader {
     private static final String OS;
     private static final String JDK_URL;
     private static boolean jdkDownloaded = false;
+    private static final String REGEX_TAR_GZ = ".tar.gz";
+    public static final Path CACHE_DIR = Paths.get(System.getProperty("user.home"), ".ssvm", "jdk");
 
     static {
         // handle for all os
@@ -40,14 +42,12 @@ public class JdkDownloader {
         }
     }
 
-    public static final Path CACHE_DIR = Paths.get(System.getProperty("user.home"), ".ssvm", "jdk");
-
     public static Path getCachedJdk() throws IOException {
         String cacheName;
 
         switch (OS) {
             case "linux":
-                cacheName = "jdk-17.0.2";
+                cacheName = Paths.get(JDK_URL).getFileName().toString().split(REGEX_TAR_GZ)[0];
                 break;
             case "mac os x":
             case "mac":
