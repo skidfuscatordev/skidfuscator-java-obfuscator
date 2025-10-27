@@ -11,6 +11,7 @@ import dev.skidfuscator.obfuscator.gui.config.SkidfuscatorConfig;
 import dev.skidfuscator.obfuscator.util.JdkDownloader;
 import dev.skidfuscator.obfuscator.util.Observable;
 
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -38,16 +39,7 @@ public class ConfigPanel extends JPanel implements SkidPanel {
     public ConfigPanel() {
         setLayout(new GridBagLayout());
         // Create compound border with titled border and empty border for padding
-        setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
-                        "Configuration",
-                        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
-                        javax.swing.border.TitledBorder.DEFAULT_POSITION,
-                        new Font(SEGOE_UI, Font.BOLD, 16)
-                ),
-                BorderFactory.createEmptyBorder(20, 0, 10, 0)
-        ));
+        setBorder(createBorder());
         // Input file
         int currentRow = 0;
         addConfigRow(currentRow++, "Input JAR:", inputField, createInputValidation(), false);
@@ -60,6 +52,19 @@ public class ConfigPanel extends JPanel implements SkidPanel {
         addSaveButtonRow(currentRow++);
         createDescriptionAreaAndIndicatorPanel(currentRow++);
         setupAutoSave();
+    }
+
+    private CompoundBorder createBorder() {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(
+                        BorderFactory.createEtchedBorder(EtchedBorder.RAISED),
+                        "Configuration",
+                        javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+                        javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                        new Font(SEGOE_UI, Font.BOLD, 16)
+                ),
+                BorderFactory.createEmptyBorder(20, 0, 10, 0)
+        );
     }
 
     /**
@@ -126,7 +131,7 @@ public class ConfigPanel extends JPanel implements SkidPanel {
 
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        buttonPanel.setPreferredSize(new Dimension(BUTTON_PANEL_WIDTH, 30));
+        buttonPanel.setPreferredSize(new Dimension(BUTTON_PANEL_WIDTH, 35));
 
         JButton browseButton = createBrowseButton(field, isDirectory);
         JLabel checkLabel = new JLabel("✗");
@@ -159,7 +164,7 @@ public class ConfigPanel extends JPanel implements SkidPanel {
 
         // Button panel with install button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        buttonPanel.setPreferredSize(new Dimension(BUTTON_PANEL_WIDTH, 30));
+        buttonPanel.setPreferredSize(new Dimension(BUTTON_PANEL_WIDTH, 35));
 
         JLabel downloadCheck = new JLabel("✗");
         downloadCheck.setForeground(new Color(255, 65, 54));
