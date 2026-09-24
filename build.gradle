@@ -57,12 +57,12 @@ allprojects {
 
 
     ext {
-        asm = 'org.ow2.asm:asm:9.9.1'
-        asm_commons = 'org.ow2.asm:asm-commons:9.9.1'
-        asm_tree = 'org.ow2.asm:asm-tree:9.9.1'
-        cafedude = 'com.github.Col-E:CAFED00D:2.1.1'
+        asm = 'org.ow2.asm:asm:9.10.1'
+        asm_commons = 'org.ow2.asm:asm-commons:9.10.1'
+        asm_tree = 'org.ow2.asm:asm-tree:9.10.1'
+        cafedude = 'com.github.Col-E:CAFED00D:2.6.7'
         slf4j_api = 'org.slf4j:slf4j-api:1.7.36'
-        jlinker = 'com.github.xxDark:jlinker:1.0.7'
+        jlinker = 'com.github.xxDark:jlinker:3.0.1'
     }
 }
 
