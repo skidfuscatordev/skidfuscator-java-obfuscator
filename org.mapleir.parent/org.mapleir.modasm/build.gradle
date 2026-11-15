@@ -12,3 +12,7 @@ dependencies {
 
 group = 'dev.skidfuscator.mapleir'
 description = 'MapleIR-modasm'
+
+test {
+    useJUnitPlatform()
+}
