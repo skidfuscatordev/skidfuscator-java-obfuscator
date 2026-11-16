@@ -27,6 +27,8 @@ default-branch build publishes the pre-release. The JAR requires Java 17+.
    source commit, workflow URL and SHA-256 checksums. The `verified-distribution`
    artifact remains downloadable from the Actions run page as a ZIP.
 3. `verify-download` downloads that artifact and checks its contents and hashes.
+   `windows-script` also checks the protection script's success/failure paths on
+   Windows PowerShell 5.1 with Java 8 and Java 17 using the same downloaded JAR.
 4. `publish-main` reuses the downloaded bundle and updates only the `main-build`
    pre-release/tag. It does not recompile the JAR or create a versioned release.
 

@@ -113,7 +113,7 @@ public class Skidfuscator {
     public static final boolean FLATTENING = false;
     public static boolean CLOUD = false;
 
-    public static final String VERSION = "2.2.0";
+    public static final String VERSION = "2.2.1";
     public static final Double VERSION_DOUBLE = 2.2;
 
     private final SkidfuscatorSession session;

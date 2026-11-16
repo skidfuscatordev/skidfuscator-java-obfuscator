@@ -70,6 +70,12 @@ also runs `:ir:test :pure-analysis:test`, generates the SBOM and exercises the
 reference `:integration` project. Runtime compatibility jobs compile payloads
 with the selected Java 8/11/17/21/25 JDK while the build tool remains on JDK 17.
 
+The compatibility corpus also checks null String operands, Object arguments,
+single evaluation and Unicode/Turkish/Azeri case comparisons. Its comparison
+class is excluded only from string-literal encryption so both comparison passes
+must actually execute; the rest of the fixture retains the profile defaults.
+Windows PowerShell 5.1 validation is described in [WINDOWS_VALIDATION.md](WINDOWS_VALIDATION.md).
+
 The approved artifact is packaged into a flat download bundle, downloaded again
 and verified before publication. Pull requests validate the same bundle and run
 a publication preview without release writes. Default-branch pushes may update

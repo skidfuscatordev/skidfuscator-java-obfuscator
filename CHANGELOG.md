@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.2.1 — 2026-11-16
+
+- Preserve null argument/receiver semantics in String comparison transformations.
+- Mask comparison literals with hash-derived UTF-16 keys, then use native `equals`
+  and `equalsIgnoreCase` to retain exact Object, Unicode and locale behavior.
+  Hash collisions cannot make unequal strings equal.
+- Accept the documented `stringEqualsIgnoreCaseHash` configuration path and the
+  legacy `stringEqigcaseHash` spelling. Preserve literals that would exceed the
+  class-file modified-UTF-8 constant limit after masking.
+- Extend reference applications and the Java compatibility matrix with null,
+  Object argument, evaluation-order and Turkish/Azeri case-comparison regressions.
+- Add a PowerShell 5.1 validation script that stops after failures and reports
+  success only after checking the exit code, report, output checksum and input hash.
+
 ## 2.2.0 — 2026-11-16
 
 ### Protection and reliability
