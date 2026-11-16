@@ -13,6 +13,10 @@ on:
 
 jobs:
   update-formula:
+    # This legacy integration belongs to upstream and must not publish preview builds.
+    if: >-
+      github.repository == 'skidfuscatordev/skidfuscator-java-obfuscator' &&
+      (github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false)
     runs-on: ubuntu-latest
     steps:
       - name: Extract version from input or release
