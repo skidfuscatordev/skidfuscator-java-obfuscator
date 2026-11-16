@@ -9,10 +9,10 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: '17'
           distribution: temurin
@@ -37,7 +37,7 @@ jobs:
         env:
           EVALUATE_PROTECTION: '1'
         run: bash scripts/framework-tests.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: validation-reports
@@ -45,21 +45,21 @@ jobs:
             **/build/reports/
           if-no-files-found: error
   compatibility:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         java: ['8', '11', '17', '21', '25']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: '17'
           distribution: temurin
           cache: gradle
       - run: bash scripts/prepare-test-jdk.sh
       - run: ./gradlew --no-daemon --max-workers=2 --dependency-verification strict :client-standalone:shadowJar
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: ${{ matrix.java }}
           distribution: temurin
@@ -71,7 +71,7 @@ jobs:
           export JAVA_HOME="$JAVA_HOME_17_X64"
           export PATH="$JAVA_HOME/bin:$PATH"
           python3 scripts/compatibility-tests.py "$target_home" "$TARGET_RELEASE"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: compatibility-java-${{ matrix.java }}
@@ -79,17 +79,17 @@ jobs:
           if-no-files-found: error
   distribution:
     needs: [build, compatibility]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: '17'
           distribution: temurin
           cache: gradle
       - name: Package after every validation job passes
         run: ./gradlew --no-daemon --max-workers=2 --dependency-verification strict generateSbom
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: verified-distribution
           path: |

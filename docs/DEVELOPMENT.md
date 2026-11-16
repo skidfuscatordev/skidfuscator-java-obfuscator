@@ -33,7 +33,8 @@ smoke test compiles a Java 17 application, protects it with the default settings
 and executes both versions with `-Xverify:all`. It compares their output and
 checks that an invalid CLI invocation exits with status 2.
 
-The CI builds with Java 17 and tests target JVMs 8, 11, 17, 21 and 25. Reports are retained even when tests
+The CI uses Ubuntu 24.04 and commit-pinned Actions running on Node 24. It builds
+with Java 17 and tests target JVMs 8, 11, 17, 21 and 25. Reports are retained even when tests
 fail; a failed check prevents uploading the distribution artifact. Individual
 module HTML reports are in `build/reports/tests/test`.
 
@@ -43,6 +44,10 @@ stored in `gradle/verification-metadata.xml`, and the wrapper distribution has i
 own checksum. Builds do not use `mavenLocal()`. Dependency changes require review
 of the upstream source and artifacts before updating both the lockfiles and
 verification metadata; do not accept a new checksum merely to bypass a failure.
+Check both POM and Gradle `.module` metadata against publisher checksums when
+reviewing a BOM update. Validate resolution with an isolated `GRADLE_USER_HOME`;
+an existing cache may hide metadata needed by a fresh GitHub runner. Compatibility
+jobs retain dependency-verification diagnostics as well as their test reports.
 Archive timestamps and entry ordering are normalized. This makes build packaging
 stable. Obfuscation can be reproduced with `--seed` and identical input, tool,
 configuration, dependencies and target runtime, as described in RELIABILITY.md.
