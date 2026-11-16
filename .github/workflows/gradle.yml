@@ -75,7 +75,7 @@ jobs:
         if: always()
         with:
           name: compatibility-java-${{ matrix.java }}
-          path: build/reports/compatibility-java-*/
+          path: build/reports/
           if-no-files-found: error
   distribution:
     needs: [build, compatibility]
