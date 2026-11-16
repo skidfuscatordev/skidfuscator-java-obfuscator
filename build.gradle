@@ -6,9 +6,13 @@ plugins {
     id 'java-library'
 }
 
+// The runtime constant also versions every distribution module and its manifest.
+def skidfuscatorVersion = (file('dev.skidfuscator.obfuscator/src/main/java/dev/skidfuscator/obfuscator/Skidfuscator.java').text
+        =~ /public static final String VERSION = "([^"]+)"/)[0][1]
+
 allprojects {
+    version = skidfuscatorVersion
     repositories {
-        mavenLocal()
         mavenCentral()
         maven {
             url 'https://repo.cleanroommc.com/releases/'
@@ -20,10 +24,32 @@ allprojects {
 
     apply plugin: 'java-library'
 
+    dependencyLocking {
+        lockAllConfigurations()
+    }
+
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+
+    tasks.withType(Jar).configureEach {
+        manifest.attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version.toString())
+    }
+
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 
+    configurations.configureEach { exclude group: 'log4j', module: 'log4j' }
     dependencies {
+        constraints {
+            api 'org.slf4j:slf4j-api:2.0.20'
+            api 'ch.qos.logback:logback-classic:1.5.38'
+            api 'ch.qos.logback:logback-core:1.5.38'
+            api 'com.google.guava:guava:33.8.0-jre'
+            api 'org.apache.commons:commons-lang3:3.22.0'
+        }
         compileOnly 'org.projectlombok:lombok:1.18.36'
         annotationProcessor 'org.projectlombok:lombok:1.18.36'
 
@@ -66,7 +92,6 @@ allprojects {
 }
 
 group 'dev.skidfuscator.community'
-version '2.0.0-SNAPSHOT'
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
@@ -76,3 +101,5 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+apply from: 'scripts/sbom.gradle'

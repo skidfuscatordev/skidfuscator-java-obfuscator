@@ -20,6 +20,7 @@ public class ExclusionMap extends EnumMap<ExclusionType, ExclusionTester<?>> {
                 return "ExclusionTester={DefaultExemptTester}";
             }
         });
+        this.put(ExclusionType.FIELD, (ExclusionTester<org.mapleir.asm.FieldNode>) field -> false);
         this.put(ExclusionType.METHOD, new ExclusionTester<MethodNode>() {
             @Override
             public boolean test(MethodNode var) {

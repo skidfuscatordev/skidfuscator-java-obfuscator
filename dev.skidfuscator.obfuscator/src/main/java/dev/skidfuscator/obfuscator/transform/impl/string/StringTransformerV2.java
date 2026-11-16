@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class StringTransformerV2 extends AbstractTransformer {
     private final Map<SkidClassNode, EncryptionGeneratorV3> keyMap = new HashMap<>();
 
-    private final Set<String> INJECTED = new HashSet<>();
+    private final Set<String> INJECTED = new LinkedHashSet<>();
 
     public StringTransformerV2(Skidfuscator skidfuscator) {
         this(skidfuscator, Collections.emptyList());

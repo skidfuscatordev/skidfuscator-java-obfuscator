@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.transform.impl.loop;
 
+import java.util.LinkedHashSet;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.util.RandomUtil;
@@ -30,8 +31,8 @@ public class LoopConditionTransformer extends AbstractTransformer {
         }
 
         // We need to work on a copy since we'll be modifying the blocks
-        for (BasicBlock block : new HashSet<>(cfg.vertices())) {
-            for (Stmt stmt : new HashSet<>(block)) {
+        for (BasicBlock block : new LinkedHashSet<>(cfg.vertices())) {
+            for (Stmt stmt : new LinkedHashSet<>(block)) {
                 if (!(stmt instanceof ConditionalJumpStmt)) {
                     continue;
                 }

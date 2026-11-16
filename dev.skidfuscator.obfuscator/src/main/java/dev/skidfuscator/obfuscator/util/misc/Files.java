@@ -33,7 +33,7 @@ public class Files {
         OutputStream os = new BufferedOutputStream(java.nio.file.Files.newOutputStream(output.toPath()), 1048576);
         try (ZipOutputStream jos = ("zip".equals(extension)) ? new ZipOutputStream(os) :
                 /* Let's assume it's a jar */ new JarOutputStream(os)) {
-            Set<String> dirsVisited = new HashSet<>();
+            Set<String> dirsVisited = new LinkedHashSet<>();
             // Contents is iterated in sorted order (because 'archiveContent' is TreeMap).
             // This allows us to insert directory entries before file entries of that directory occur.
             CRC32 crc = new CRC32();

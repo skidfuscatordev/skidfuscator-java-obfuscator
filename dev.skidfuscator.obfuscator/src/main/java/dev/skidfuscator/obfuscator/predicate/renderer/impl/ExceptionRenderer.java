@@ -47,7 +47,7 @@ public class ExceptionRenderer implements InstructionRenderer<ExceptionRange<Bas
         final HashTransformer hashTransformer = base.getBitwiseHasher();
 
         // Add support for duplicate keys
-        final Set<Integer> calledHashes = new HashSet<>();
+        final Set<Integer> calledHashes = new LinkedHashSet<>();
 
         // For all block being read
         for (BasicBlock node : blockRange.getNodes()) {

@@ -48,7 +48,7 @@ public class BasicConditionTransformer extends AbstractTransformer {
             return;
         }
 
-        for (BasicBlock parent : new HashSet<>(cfg.vertices())) {
+        for (BasicBlock parent : new LinkedHashSet<>(cfg.vertices())) {
             if (parent.size() == 0)
                 continue;
 

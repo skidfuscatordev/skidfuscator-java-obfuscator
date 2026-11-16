@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.predicate.renderer.impl;
 
+import java.util.LinkedHashSet;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.predicate.renderer.IntegerBlockPredicateRenderer;
 import dev.skidfuscator.obfuscator.skidasm.SkidMethodNode;
@@ -35,7 +36,7 @@ public class SwitchJumpRenderer extends AbstractInstructionRenderer<SwitchStmt> 
         final SkidBlock seededBlock = (SkidBlock) currentBlock;
 
         final LinkedHashMap<Integer, BasicBlock> targets = new LinkedHashMap<>();
-        final Set<Integer> completed = new HashSet<>();
+        final Set<Integer> completed = new LinkedHashSet<>();
         for (Map.Entry<Integer, BasicBlock> entry : stmt.getTargets().entrySet()) {
             final int seed = entry.getKey();
             final BasicBlock value = entry.getValue();

@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.frame_V2.frame.type;
 
+import java.util.LinkedHashSet;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.util.TypeUtil;
 import org.objectweb.asm.Type;
@@ -29,7 +30,7 @@ public class TypeHeader {
     private final Set<Type>[] excluded;
 
     public TypeHeader(Type[] types) {
-        this(types, new HashSet<>(), new HashSet[types.length]);
+        this(types, new LinkedHashSet<>(), new HashSet[types.length]);
     }
 
     public TypeHeader(Type[] types, Set<TypeHeader> parents, Set<Type>[] excluded) {
@@ -39,7 +40,7 @@ public class TypeHeader {
     }
 
     public Set<Type> get(final int index) {
-        return _get(index, new HashSet<>());
+        return _get(index, new LinkedHashSet<>());
     }
 
     public void set(final int index, final Type type) {
@@ -52,7 +53,7 @@ public class TypeHeader {
 
     public void addExclusion(final int index, final Type type) {
         if (excluded[index] == null) {
-            excluded[index] = new HashSet<>();
+            excluded[index] = new LinkedHashSet<>();
         }
         excluded[index].add(type);
     }
@@ -79,7 +80,7 @@ public class TypeHeader {
                 throw new IllegalStateException("Root type excluded by root composition");
             }
             
-            return new HashSet<>(Collections.singleton(type));
+            return new LinkedHashSet<>(Collections.singleton(type));
         }
         
         /*if (depth >= maxDepth) {
@@ -93,10 +94,10 @@ public class TypeHeader {
             return type;
         */
 
-        final Set<Type> types = new HashSet<>();
+        final Set<Type> types = new LinkedHashSet<>();
 
         if (type != null && (excluded == null || !excluded.contains(type))) {
-            return new HashSet<>(Collections.singleton(type));
+            return new LinkedHashSet<>(Collections.singleton(type));
         }
 
         for (TypeHeader parent : parents) {

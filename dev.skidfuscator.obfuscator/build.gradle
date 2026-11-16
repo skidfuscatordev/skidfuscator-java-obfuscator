@@ -27,11 +27,10 @@ dependencies {
     api 'com.github.Col-E:jphantom:1.4.3'
     implementation 'dev.dirs:directories:26'
     implementation 'de.femtopedia.dex2jar:dex2jar:2.4.24'
-    implementation 'org.apache.commons:commons-compress:1.24.0'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
 
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.36'
     implementation 'org.fusesource.jansi:jansi:2.4.0'
-    implementation 'org.yaml:snakeyaml:1.33'
 
     testImplementation files("$buildDir/classes/jasm/test")
     testImplementation 'org.mockito:mockito-core:4.2.0'

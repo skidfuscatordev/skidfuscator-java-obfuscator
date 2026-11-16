@@ -18,6 +18,11 @@
 > for commercial use, we recommend you contact us at mastermind [at] zenrho.net or visit https://zenrho.com 
 
 
+Version **2.2.0** adds protection profiles, reproducible seeds, atomic validated
+output, verified dependencies and a Java 8/11/17/21/25 test matrix. Read the
+[release notes](CHANGELOG.md), [reliability contracts](docs/RELIABILITY.md) and
+[build checks](docs/DEVELOPMENT.md) before upgrading.
+
 * [🚀 Quickstart](#-quickstart)
     + [🔥 Homebrew (macOS)](#-homebrew-macos)
     + [🔥 Bash (Linux/macOS)](#-bash-linuxmacos)

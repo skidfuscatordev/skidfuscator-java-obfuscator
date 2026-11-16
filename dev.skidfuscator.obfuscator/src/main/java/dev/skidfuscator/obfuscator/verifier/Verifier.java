@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.verifier;
 
+import java.util.LinkedHashSet;
 import org.mapleir.asm.MethodNode;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.tree.ClassNode;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class Verifier {
     public static void verify(final ClassNode classNode) {
-        final Set<String> fields = new HashSet<>();
+        final Set<String> fields = new LinkedHashSet<>();
         for (FieldNode field : classNode.fields) {
             final String name = field.name;
 

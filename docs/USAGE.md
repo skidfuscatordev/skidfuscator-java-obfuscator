@@ -7,7 +7,10 @@ class-file version**.
 
 > **Supported inputs:** class-file major versions **52 (Java 8) through 69 (Java 25)**
 > are read, obfuscated and written back with the input version preserved. The tool
-> itself runs on any JDK 8+ runtime (the distribution is downgraded to Java 8 bytecode).
+> built by `:client-standalone:shadowJar` requires Java 17 or later. Separate
+> downgrade tasks exist, but Java 8 tool-runtime compatibility is not validated by
+> the standard build. Reading a class-file version does not by itself establish
+> compatibility with every language feature of that Java release.
 
 ---
 
@@ -58,7 +61,7 @@ java -jar skidfuscator.jar obfuscate <input> [options]
 | `--config` | `-cfg` | file | built-in `defaultConfig.hocon` | HOCON config file selecting and tuning transformers (see §4). |
 | `--exempt` | `-ex` | file | – | **Deprecated.** Legacy exemption file; it is auto-migrated to a `config.hocon` on use. Prefer `--config`. |
 | `--phantom` | `-ph` | flag | off | Enable JPhantom computation of missing/phantom classes when the classpath is incomplete. |
-| `--notrack` | `-notrack` | flag | off (analytics on) | Opt out of anonymous usage analytics. |
+| `--notrack` | `-notrack` | flag | off (analytics off) | Opt out of anonymous usage analytics. |
 | `--debug` | `-dbg` | flag | off | Internal debugging. Marked "do not use". |
 | `--fuckit` | `-fuckit` | flag | off | Force-continue past recoverable errors ("fuck it" mode). Marked "do not use". |
 
@@ -179,4 +182,6 @@ list applies only to that pass.
 - **Automatic dependency download / phantom resolution** (`-ph`) helps when some
   library classes are missing from the classpath; for best results provide them via
   `-li`.
-- **Analytics** are on by default; pass `--notrack` to disable.
+- **Analytics** are off by default; `--analytics` opts in, and `--offline` disables network operations.
+
+See [RELIABILITY.md](RELIABILITY.md) for profiles, seeds, dry runs, reports, resource bounds and packaging constraints.

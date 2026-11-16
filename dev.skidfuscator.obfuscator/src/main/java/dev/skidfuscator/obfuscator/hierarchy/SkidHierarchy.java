@@ -502,7 +502,7 @@ public class SkidHierarchy implements Hierarchy {
                 );*/
             }
             final Set<MethodNode> h = methodNode.isStatic()
-                    ? new HashSet<>(Collections.singleton(methodNode))
+                    ? new LinkedHashSet<>(Collections.singleton(methodNode))
 
                     : session
                     .getCxt()
@@ -624,12 +624,12 @@ public class SkidHierarchy implements Hierarchy {
 
     @Override
     public List<SkidGroup> getGroups() {
-        return groups;
+        return groups.stream().sorted(java.util.Comparator.comparing(g -> g.getMethodNodeList().stream().map(m -> m.getOwnerClass().getName()+"#"+m.getName()+m.getDesc()).sorted().findFirst().orElse(""))).collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     public List<ClassNode> getClasses() {
-        return nodes;
+        return nodes.stream().sorted(java.util.Comparator.comparing(ClassNode::getName)).collect(java.util.stream.Collectors.toList());
     }
 
     @Override

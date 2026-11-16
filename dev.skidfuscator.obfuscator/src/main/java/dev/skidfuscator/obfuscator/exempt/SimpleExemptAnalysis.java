@@ -9,6 +9,8 @@ import java.util.*;
 public class SimpleExemptAnalysis implements ExemptAnalysis {
     private final Class<? extends Transformer> transformer;
     private final List<Exclusion> exclusions;
+    private final Set<ClassNode> explicitClasses = new LinkedHashSet<>();
+    private final Set<MethodNode> explicitMethods = new LinkedHashSet<>();
     private final Map<MethodNode, Boolean> methodCache = new HashMap<>();
     private final Map<ClassNode, Boolean> classCache = new HashMap<>();
 
@@ -24,26 +26,31 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
     public void add(final String exclusionStr) {
         final Exclusion exclusion = ExclusionHelper.renderExclusion(exclusionStr);
         exclusions.add(exclusion);
+        methodCache.clear(); classCache.clear();
 
         //System.out.println(this);
     }
 
     public void add(final Exclusion exclusion) {
         exclusions.add(exclusion);
+        methodCache.clear(); classCache.clear();
     }
 
     @Override
     public void add(ClassNode exclusion) {
+        explicitClasses.add(exclusion);
         classCache.put(exclusion, true);
     }
 
     @Override
     public void add(MethodNode exclusion) {
+        explicitMethods.add(exclusion);
         methodCache.put(exclusion, true);
     }
 
     @Override
     public boolean isExempt(MethodNode methodNode) {
+        if (explicitMethods.contains(methodNode)) return true;
         final Boolean var = methodCache.get(methodNode);
 
         if (var != null)
@@ -68,6 +75,7 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
 
     @Override
     public boolean isExempt(ClassNode classNode) {
+        if (explicitClasses.contains(classNode)) return true;
         final Boolean var = classCache.get(classNode);
 
         if (var != null)
@@ -89,6 +97,10 @@ public class SimpleExemptAnalysis implements ExemptAnalysis {
         //System.out.println("INCLUDED --> " + classNode.getName());
         classCache.put(classNode, false);
         return false;
+    }
+
+    public boolean isExempt(org.mapleir.asm.FieldNode field) {
+        return isExempt(field.getOwnerClass()) || exclusions.stream().anyMatch(rule -> rule.test(field));
     }
 
     @Override

@@ -94,6 +94,7 @@ public class ExclusionParser {
         if (braceIndex != -1) {
             header = input.substring(0, braceIndex).trim();
             int closingBrace = input.lastIndexOf("}");
+            if (closingBrace < braceIndex || !input.substring(closingBrace+1).isBlank()) throw new ExclusionParseException("Unbalanced class rule braces");
             if (closingBrace != -1) {
                 body = input.substring(braceIndex + 1, closingBrace).trim();
             }
@@ -104,7 +105,6 @@ public class ExclusionParser {
         // Check for inclusion prefix
         boolean include = header.startsWith("!");
         if (include) {
-            System.out.println("include: " + include);
             header = header.substring(1);
         }
 
@@ -118,7 +118,6 @@ public class ExclusionParser {
             throw new ExclusionParseException("Invalid class declaration");
         }
 
-        //System.out.println("tokens: " + tokens);
 
         // Parse class type
         String classType = tokens.get(0);
@@ -128,10 +127,10 @@ public class ExclusionParser {
         tokens.remove(0);
 
         // Parse modifiers and name
-        Set<String> modifiers = new HashSet<>();
+        Set<String> modifiers = new LinkedHashSet<>();
         String className = null;
         String extendsClass = null;
-        Set<String> interfaces = new HashSet<>();
+        Set<String> interfaces = new LinkedHashSet<>();
 
         int i = 0;
         while (i < tokens.size()) {
@@ -176,7 +175,6 @@ public class ExclusionParser {
             while (state.hasMore()) {
                 ParsedMember member = state.parseNextMember(className);
                 if (member != null) {
-                    System.out.println("member: " + member);
                     members.add(member);
                 }
             }
@@ -224,7 +222,6 @@ public class ExclusionParser {
                         if (c == '!') {
                             isInclusion = true;
                             position++;
-                            System.out.println("isInclusion: " + isInclusion);
                             continue;
                         } else if (c == '@') {
                             state = ParserState.READING_MEMBER;
@@ -240,11 +237,11 @@ public class ExclusionParser {
                         if (c == '@' || c == '!') {
                             // Found start of next member
                             String memberDecl = currentToken.toString().trim();
-                            System.out.println("memberDecl: " + memberDecl);
+                            state = ParserState.LOOKING_FOR_AT;
                             if (!memberDecl.isEmpty()) {
                                 return createParsedMember(memberDecl, className);
                             }
-                            position--; // Back up to reprocess the @ or !
+                            // Reprocess the current @ or ! in the next member.
                             state = ParserState.LOOKING_FOR_AT;
                         } else if (c == '\n' || c == ';') {
                             // End of member declaration
@@ -316,10 +313,10 @@ public class ExclusionParser {
         }
         tokens.remove(0);
 
-        Set<String> modifiers = new HashSet<>();
+        Set<String> modifiers = new LinkedHashSet<>();
         String returnType = null;
         String name = null;
-        List<String> parameters = new ArrayList<>();
+        List<String> parameters = null;
 
         int i = 0;
         while (i < tokens.size()) {
@@ -330,7 +327,7 @@ public class ExclusionParser {
             } else if (token.startsWith("#")) {
                 returnType = parseType(token.substring(1));
             } else if (token.startsWith("(")) {
-                parameters.addAll(parseParameters(token));
+                parameters = parseParameters(token);
             } else if (name == null) {
                 name = token;
             } else {
@@ -404,7 +401,7 @@ public class ExclusionParser {
             memberPattern.append(member.getName());
 
             // Add parameters for methods
-            if (member.getType().equals("method") && !member.getParameters().isEmpty()) {
+            if (member.getType().equals("method") && member.getParameters() != null) {
                 memberPattern.append("(")
                         .append(String.join(", ", member.getParameters()))
                         .append(")");
@@ -533,16 +530,12 @@ public class ExclusionParser {
                 .collect(Collectors.toList());
     }
 
+    private String glob(String pattern) {
+        return Arrays.stream(pattern.split("\\*", -1)).map(Pattern::quote).collect(Collectors.joining(".*"));
+    }
     private String convertClassPattern(String pattern) {
-        if (pattern.contains("*")) {
-            if (pattern.endsWith(".*")) {
-                return "^" + pattern.substring(0, pattern.length() - 2).replace(".", "\\/") + ".*";
-            } else if (pattern.startsWith("*.")) {
-                return pattern.substring(2) + "$";
-            }
-            return pattern.replace(".", "\\/").replace("*", ".*");
-        }
-        return pattern.replace(".", "\\/");
+        String normalized = pattern.replace('.', '/');
+        return (normalized.contains("/") ? "^" : "(?:^|/)") + glob(normalized) + "$";
     }
 
     /**
@@ -597,39 +590,23 @@ public class ExclusionParser {
         // Generate field testers
         generateFieldTesters(map, parsedClass);
 
-        return Exclusion.builder().testers(map).build();
+        return Exclusion.builder().testers(map).scopedMembers(parsedClass.getMembers().stream().anyMatch(m -> !m.getType().equals("class"))).build();
     }
 
     private void generateClassTester(ExclusionMap map, ParsedClass parsedClass) {
         final Pattern regex = Pattern.compile(convertClassPattern(parsedClass.getName()));
-        //System.out.println("regex: " + regex.pattern());
 
         map.put(ExclusionType.CLASS, new ExclusionTester<ClassNode>() {
             @Override
             public boolean test(ClassNode var) {
-                //System.out.println("testing: " + var.getName());
-                parsedClass.getModifiers().forEach(System.out::println);
-                final boolean initialMatch = Match.of("")
-                        .match("static", var.isStatic())
-                        .match("public", var.isPublic())
-                        .match("protected", var.isProtected())
-                        .match("private", var.isPrivate())
-                        .match("abstract", var.isAbstract())
-                        .match("final", var.isFinal())
-                        .match("interface", var.isInterface() && parsedClass.getType().equals("interface"))
-                        .match("annotation", var.isAnnotation() && parsedClass.getType().equals("annotation"))
-                        .match("enum", var.isEnum() && parsedClass.getType().equals("enum"))
-                        .match("synthetic", var.isSynthetic())
-                        .match("extends", parsedClass.getExtendsClass() == null ||
-                                regex.matcher(var.getSuperName()).find())
-                        .match("implements", parsedClass.getInterfaces().isEmpty() ||
-                                var.getInterfaces().stream()
-                                        .anyMatch(iface -> parsedClass.getInterfaces().stream()
-                                                .anyMatch(required -> Pattern.compile(convertClassPattern(required))
-                                                        .matcher(iface).find())))
-                        .check();
-
-                if (!initialMatch) return false;
+                if (parsedClass.getType().equals("interface") && !var.isInterface()
+                        || parsedClass.getType().equals("annotation") && !var.isAnnotation()
+                        || parsedClass.getType().equals("enum") && !var.isEnum()
+                        || parsedClass.getType().equals("abstract") && !var.isAbstract()) return false;
+                if (parsedClass.getExtendsClass() != null && (var.getSuperName()==null || !Pattern.compile(
+                        convertClassPattern(parsedClass.getExtendsClass())).matcher(var.getSuperName()).find())) return false;
+                if (!parsedClass.getInterfaces().stream().allMatch(required -> var.getInterfaces().stream()
+                        .anyMatch(iface -> Pattern.compile(convertClassPattern(required)).matcher(iface).find()))) return false;
 
                 // Check modifiers match
                 for (String modifier : parsedClass.getModifiers()) {
@@ -650,7 +627,7 @@ public class ExclusionParser {
                         continue;
 
                     final boolean match = Pattern
-                            .compile(convertClassPattern(parsedClass.getName() + member.getName()))
+                            .compile(convertClassPattern((parsedClass.getName().endsWith("*") ? parsedClass.getName().substring(0,parsedClass.getName().length()-1) : parsedClass.getName()+".") + member.getName()))
                             .matcher(var.getName())
                             .find();
 
@@ -684,13 +661,14 @@ public class ExclusionParser {
                 }
                 case "method" -> {
                     methodPatterns.add(new MethodPattern(
-                            member.getName().replace("*", ".*"),
+                            glob(member.getName()),
                             member.getModifiers(),
                             member.getReturnType(),
                             member.getParameters(),
                             member.isInclusion()
                     ));
                 }
+                case "field" -> { /* Handled by generateFieldTesters. */ }
                 default -> throw new ExclusionParseException("Invalid member type: " + member.getType());
             }
         }
@@ -698,7 +676,9 @@ public class ExclusionParser {
         map.put(ExclusionType.METHOD, new ExclusionTester<MethodNode>() {
             @Override
             public boolean test(MethodNode var) {
+                if (!map.<ClassNode>poll(ExclusionType.CLASS).test(var.getOwnerClass())) return false;
                 String ownerName = var.getOwnerClass().getName();
+                if (!classRegex.matcher(ownerName).find()) return false;
 
                 // First check if the method's class matches any inclusion pattern
                 for (Pattern includePattern : includedClassPatterns) {
@@ -708,6 +688,9 @@ public class ExclusionParser {
                 }
 
                 // Check if the method matches any specific method patterns
+                for (MethodPattern pattern : methodPatterns) {
+                    if (pattern.isInclusion() && pattern.matches(var)) return false;
+                }
                 for (MethodPattern pattern : methodPatterns) {
                     if (pattern.matches(var)) {
                         return !pattern.isInclusion(); // Return false for inclusions, true for exclusions
@@ -741,7 +724,7 @@ public class ExclusionParser {
 
         public boolean matches(MethodNode method) {
             // Check name pattern
-            if (!namePattern.matcher(method.getDisplayName()).matches()) {
+            if (!namePattern.matcher(method.getName()).matches()) {
                 return false;
             }
 
@@ -760,15 +743,18 @@ public class ExclusionParser {
 
             // Check return type if specified
             if (returnType != null) {
-                if (!Pattern.compile(returnType).matcher(method.getDesc()).find()) {
+                if (!matchesType(returnType, org.objectweb.asm.Type.getReturnType(method.getDesc()))) {
                     return false;
                 }
             }
 
             // Check parameters if specified
-            if (!parameters.isEmpty()) {
-                // TODO: Add parameter matching logic
-                // This would require parsing the method descriptor
+            if (parameters != null) {
+                org.objectweb.asm.Type[] arguments = org.objectweb.asm.Type.getArgumentTypes(method.getDesc());
+                if (arguments.length != parameters.size()) return false;
+                for (int i = 0; i < arguments.length; i++) {
+                    if (!matchesType(parameters.get(i), arguments[i])) return false;
+                }
             }
 
             return true;
@@ -783,19 +769,20 @@ public class ExclusionParser {
             return (inclusion ? "!" : "") + namePattern.pattern() + 
                    (modifiers.isEmpty() ? "" : " " + modifiers) +
                    (returnType != null ? " returns " + returnType : "") +
-                   (parameters.isEmpty() ? "" : " params " + parameters);
+                   (parameters == null ? "" : " params " + parameters);
         }
     }
 
     private void generateFieldTesters(ExclusionMap map, ParsedClass parsedClass) {
+        final Pattern classRegex = Pattern.compile(convertClassPattern(parsedClass.getName()));
         List<ExclusionTester<FieldNode>> fieldTesters = new ArrayList<>();
+        List<Boolean> inclusions = new ArrayList<>();
 
         for (ParsedMember member : parsedClass.getMembers()) {
             if (!member.getType().equals("field")) continue;
 
-            final Pattern nameRegex = Pattern.compile(member.getName().replace("*", ".*"));
-            final Pattern typeRegex = member.getReturnType() != null ?
-                    Pattern.compile(member.getReturnType()) : null;
+            final Pattern nameRegex = Pattern.compile(glob(member.getName()));
+            inclusions.add(member.isInclusion());
 
             fieldTesters.add(new ExclusionTester<FieldNode>() {
                 @Override
@@ -824,12 +811,13 @@ public class ExclusionParser {
                     }
 
                     // Check field type if specified
-                    if (typeRegex != null && !typeRegex.matcher(var.getDesc()).lookingAt()) {
+                    if (member.getReturnType() != null && !matchesType(member.getReturnType(),
+                            org.objectweb.asm.Type.getType(var.getDesc()))) {
                         return false;
                     }
 
                     // Check field name
-                    return nameRegex.matcher(var.getDisplayName()).lookingAt();
+                    return nameRegex.matcher(var.getDisplayName()).matches();
                 }
 
                 @Override
@@ -843,7 +831,14 @@ public class ExclusionParser {
         map.put(ExclusionType.FIELD, new ExclusionTester<FieldNode>() {
             @Override
             public boolean test(FieldNode var) {
-                return fieldTesters.stream().anyMatch(tester -> tester.test(var));
+                if (!map.<ClassNode>poll(ExclusionType.CLASS).test(var.getOwnerClass())) return false;
+                if (!classRegex.matcher(var.getOwnerClass().getName()).find()) return false;
+                boolean matched=false;
+                for (int i=0;i<fieldTesters.size();i++) if (fieldTesters.get(i).test(var)) {
+                    if (inclusions.get(i)) return false;
+                    matched=true;
+                }
+                return matched;
             }
 
             @Override
@@ -851,5 +846,11 @@ public class ExclusionParser {
                 return "CombinedFieldTester";
             }
         });
+    }
+
+    private boolean matchesType(String pattern, org.objectweb.asm.Type type) {
+        String erased = pattern.replaceAll("<.*>", "");
+        String name = type.getClassName();
+        return erased.equals(name) || erased.equals(name.substring(name.lastIndexOf('.') + 1));
     }
 }

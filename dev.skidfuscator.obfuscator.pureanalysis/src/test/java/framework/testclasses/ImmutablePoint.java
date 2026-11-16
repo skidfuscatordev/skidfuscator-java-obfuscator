@@ -25,6 +25,7 @@ public class ImmutablePoint {
 
     @Pure(description = "Pure distance calculation",
          because = {"Uses Math functions", "No state modification"})
+    @framework.Unsupported("Object/array input purity is not proven by the primitive-input analysis")
     public double distanceTo(ImmutablePoint other) {
         double dx = x - other.x;
         double dy = y - other.y;

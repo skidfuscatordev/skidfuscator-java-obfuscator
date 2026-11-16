@@ -39,7 +39,7 @@ public class TokenLoggerProtectionProvider implements ProtectionProvider {
             "(dQw4w9WgXcQ:)([^.*\\\\['(.*)\\\\]$][^\"]*)"
     );
 
-    private final Set<String> findings = new HashSet<>();
+    private final Set<String> findings = new LinkedHashSet<>();
 
     @Listen
     void handle(final InitMethodTransformEvent event) {

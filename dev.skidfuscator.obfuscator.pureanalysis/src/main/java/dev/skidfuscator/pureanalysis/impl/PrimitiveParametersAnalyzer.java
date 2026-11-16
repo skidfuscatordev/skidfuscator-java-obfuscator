@@ -36,7 +36,7 @@ public class PrimitiveParametersAnalyzer extends Analyzer {
 
         for (Type type : argumentTypes) {
             if (!isPrimitiveType(type)) {
-                return impure(String.format(
+                return PurityReport.unsupported("Primitive Parameters", String.format(
                         "Argument %s is not a primitive type and not a pure class", type.getDescriptor()
                 ));
             }
@@ -45,7 +45,7 @@ public class PrimitiveParametersAnalyzer extends Analyzer {
         // Also check return type
         Type returnType = Type.getReturnType(methodNode.desc);
         if (!isPrimitiveType(returnType) && !returnType.getDescriptor().equals("V") && !context.isPure(returnType.getInternalName())) {
-            return impure(
+            return PurityReport.unsupported("Primitive Parameters",
                     String.format("Return type %s is not a primitive type and not a pure class", returnType.getDescriptor())
             );
         }

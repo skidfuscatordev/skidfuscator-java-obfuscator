@@ -22,7 +22,7 @@ public class SkidLocalsReallocator {
         LocalsPool locals = cfg.getLocals();
         NullPermeableHashMap<Local, Set<Type>> types = new NullPermeableHashMap<>(HashSet::new);
         int min = 0;
-        Set<Local> safe = new HashSet<>();
+        Set<Local> safe = new LinkedHashSet<>();
         for(BasicBlock b : cfg.vertices()) {
             for(Stmt stmt : b) {
                 if(stmt.getOpcode() == Opcode.LOCAL_STORE) {
@@ -51,7 +51,7 @@ public class SkidLocalsReallocator {
 
         for(Map.Entry<Local, Set<Type>> e : types.entrySet()) {
             Set<Type> set = e.getValue();
-            Set<Type> refined = new HashSet<>();
+            Set<Type> refined = new LinkedHashSet<>();
             if(set.size() > 1) {
                 for(Type t : set) {
                     refined.add(TypeUtils.asSimpleType(t));

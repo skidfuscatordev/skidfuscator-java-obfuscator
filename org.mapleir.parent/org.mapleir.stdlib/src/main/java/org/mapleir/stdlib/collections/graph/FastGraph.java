@@ -42,7 +42,7 @@ public interface FastGraph<N extends FastGraphVertex, E extends FastGraphEdge<N>
 	}
 
 	default Map<N, Set<E>> createMap() {
-		return new HashMap<>();
+		return new LinkedHashMap<>();
 	}
 	
 	default Map<N, Set<E>> createMap(Map<N, Set<E>> map) {
@@ -54,7 +54,7 @@ public interface FastGraph<N extends FastGraphVertex, E extends FastGraphEdge<N>
 	}
 	
 	default Set<E> createSet() {
-		return new HashSet<>();
+		return new LinkedHashSet<>();
 	}
 	
 	default Set<E> createSet(Set<E> set) {

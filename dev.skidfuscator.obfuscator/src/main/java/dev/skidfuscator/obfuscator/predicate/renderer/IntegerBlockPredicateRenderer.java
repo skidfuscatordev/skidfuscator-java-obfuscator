@@ -251,6 +251,9 @@ import java.util.stream.Collectors;
         cfg.recomputeEdges();
 
         try {
+            org.mapleir.ir.utils.CFGUtils.deleteUnreachableBlocks(cfg);
+            cfg.relabel(cfg.vertices().stream().sorted(java.util.Comparator.comparingInt(BasicBlock::getNumericId)).collect(java.util.stream.Collectors.toList()));
+            cfg.recomputeEdges();
             cfg.verify();
         } catch (Exception e) {
             event.warn("Failed to verify CFG for method " + methodNode.getName());
@@ -366,11 +369,11 @@ import java.util.stream.Collectors;
          * \____/_/ /_/\___/\____/_/ /_/\__,_/_/\__/_/\____/_/ /_/\__,_/_/
          *
          */
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+        for (BasicBlock vertex : new LinkedHashSet<>(cfg.vertices())) {
             if (vertex instanceof FakeBlock)
                 continue;
 
-            new HashSet<>(cfg.getEdges(vertex))
+            new LinkedHashSet<>(cfg.getEdges(vertex))
                     .stream()
                     .filter(e -> e instanceof ImmediateEdge)
                     .forEach(e -> {
@@ -388,8 +391,8 @@ import java.util.stream.Collectors;
         }
 
         final InstructionRenderer<UnconditionalJumpStmt> unconditionalRenderer = new UnconditionalJumpRenderer();
-        for (BasicBlock block : new HashSet<>(cfg.vertices())) {
-            new HashSet<>(block)
+        for (BasicBlock block : new LinkedHashSet<>(cfg.vertices())) {
+            new LinkedHashSet<>(block)
                     .stream()
                     .filter(e -> e instanceof UnconditionalJumpStmt && !(e instanceof FakeUnconditionalJumpStmt))
                     .map(e -> (UnconditionalJumpStmt) e)
@@ -405,8 +408,8 @@ import java.util.stream.Collectors;
          *
          */
         final InstructionRenderer<ConditionalJumpStmt> conditionRenderer = new ConditionalJumpRenderer();
-        for (BasicBlock block : new HashSet<>(cfg.vertices())) {
-            new HashSet<>(block)
+        for (BasicBlock block : new LinkedHashSet<>(cfg.vertices())) {
+            new LinkedHashSet<>(block)
                     .stream()
                     .filter(e -> e instanceof ConditionalJumpStmt && !(e instanceof FakeConditionalJumpStmt))
                     .map(e -> (ConditionalJumpStmt) e)
@@ -421,8 +424,8 @@ import java.util.stream.Collectors;
          *
          */
         final InstructionRenderer<SwitchStmt> switchRenderer = new SwitchJumpRenderer();
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
-            new HashSet<>(vertex)
+        for (BasicBlock vertex : new LinkedHashSet<>(cfg.vertices())) {
+            new LinkedHashSet<>(vertex)
                     .stream()
                     .filter(e -> e instanceof SkidSwitchStmt)
                     .map(e -> (SwitchStmt) e)
@@ -447,6 +450,9 @@ import java.util.stream.Collectors;
         }
         cfg.recomputeEdges();
         try {
+            org.mapleir.ir.utils.CFGUtils.deleteUnreachableBlocks(cfg);
+            cfg.relabel(cfg.vertices().stream().sorted(java.util.Comparator.comparingInt(BasicBlock::getNumericId)).collect(java.util.stream.Collectors.toList()));
+            cfg.recomputeEdges();
             cfg.verify();
         } catch (Exception e) {
             event.warn("Failed to verify post-CFG for method " + methodNode.getName() + e);

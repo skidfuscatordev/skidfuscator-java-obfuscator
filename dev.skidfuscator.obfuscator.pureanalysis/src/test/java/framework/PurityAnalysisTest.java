@@ -127,7 +127,7 @@ public class PurityAnalysisTest {
             Impure impureAnnotation = originalMethod.getAnnotation(Impure.class);
 
             if (pureAnnotation != null || impureAnnotation != null) {
-                testMethods.add(new MethodTestInfo(
+                MethodTestInfo info = new MethodTestInfo(
                         originalClass.getName(),
                         methodNode.name,
                         methodNode.desc,
@@ -136,7 +136,9 @@ public class PurityAnalysisTest {
                         pureAnnotation != null ? pureAnnotation.because() : impureAnnotation.because(),
                         classNode,
                         methodNode
-                ));
+                );
+                info.expectedUnsupported=originalMethod.isAnnotationPresent(Unsupported.class);
+                testMethods.add(info);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to process method: " + methodNode.name, e);
@@ -153,7 +155,10 @@ public class PurityAnalysisTest {
     private void verifyMethodPurity(MethodTestInfo testInfo) {
         PurityReport actualPure = analyzer.analyzeMethodPurity(testInfo.methodNode, testInfo.classNode);
 
-        if (testInfo.expectedPure) {
+        if (testInfo.expectedUnsupported) {
+            assertFalse(actualPure.isPure(), "Unsupported inputs must never be certified pure");
+            org.junit.jupiter.api.Assertions.assertEquals(PurityReport.Outcome.UNSUPPORTED,actualPure.getOutcome(),actualPure.toString());
+        } else if (testInfo.expectedPure) {
             assertTrue(actualPure.isPure(), actualPure.toString());
         } else {
             assertFalse(actualPure.isPure(), actualPure.toString());

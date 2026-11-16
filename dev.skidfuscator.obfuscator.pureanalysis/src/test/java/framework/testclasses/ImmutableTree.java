@@ -9,6 +9,7 @@ public class ImmutableTree<T extends Comparable<T>> {
 
     @Pure(description = "Creates leaf node",
          because = {"Only initializes final fields", "Immutable structure"})
+    @framework.Unsupported("Object/array input purity is not proven by the primitive-input analysis")
     public static <T extends Comparable<T>> ImmutableTree<T> leaf(T value) {
         return new ImmutableTree<>(value, null, null);
     }
@@ -21,6 +22,7 @@ public class ImmutableTree<T extends Comparable<T>> {
 
     @Pure(description = "Inserts value maintaining immutability",
          because = {"Creates new tree", "No modification of original"})
+    @framework.Unsupported("Object/array input purity is not proven by the primitive-input analysis")
     public ImmutableTree<T> insert(T newValue) {
         if (newValue.compareTo(value) < 0) {
             return new ImmutableTree<>(value,

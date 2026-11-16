@@ -8,6 +8,7 @@ class MethodTestInfo {
     final String methodName;
     final String descriptor;
     final boolean expectedPure;
+    boolean expectedUnsupported;
     final String description;
     final String[] reasons;
     final ClassNode classNode;
@@ -31,7 +32,7 @@ class MethodTestInfo {
             className.substring(className.lastIndexOf('.') + 1),
             methodName, 
             descriptor,
-            expectedPure ? "pure" : "impure"
+            expectedUnsupported ? "unsupported; must remain ineligible" : expectedPure ? "pure" : "impure"
         );
     }
 }

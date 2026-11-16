@@ -59,9 +59,12 @@ public class VmHashTransformer implements HashTransformer {
 
     }
 
+    public String selectedFunction() {
+        return selectedMethod==null?"unselected":selectedMethod.getOwner().getName()+"#"+selectedMethod.getName()+selectedMethod.getDesc();
+    }
     private JavaMethod selectedMethod;
     private ParameterMatch predicateParam;
-    private final Random random = new Random();
+    private final Random random = dev.skidfuscator.obfuscator.util.RandomUtil.stream();
     private Object[] randomArgs;  // Store random values for consistency
     private InvocationUtil invocationUtil;
     private JavaMethod printStackTrace;
@@ -106,6 +109,7 @@ public class VmHashTransformer implements HashTransformer {
         }
 
         List<JavaMethod> methods = new ArrayList<>(methodMatches.keySet());
+        methods.sort(Comparator.comparing(method -> method.getOwner().getName() + method.getName() + method.getDesc()));
         this.selectedMethod = methods.get(random.nextInt(methods.size()));
 
         Set<ParameterMatch> matches = methodMatches.get(selectedMethod);
@@ -406,9 +410,11 @@ public class VmHashTransformer implements HashTransformer {
         // Phase 3:
         potentialCandidates.forEach((method, matches) -> {
             final InstanceClass klass = classes.get(method.getOwnerClass());
+            if (klass == null) return;
             final JavaMethod javaMethod = klass.getMethod(method.getName(), method.getDesc());
 
-            methodMatches.put(javaMethod, matches);
+            // The analysis runtime may be newer than SSVM's pinned JDK 17 image.
+            if (javaMethod != null) methodMatches.put(javaMethod, matches);
         });
 
         //System.out.println("Method matches: " + methodMatches.size());
@@ -419,7 +425,15 @@ public class VmHashTransformer implements HashTransformer {
 
     private final Map<JavaMethod, Set<ParameterMatch>> methodMatches = new HashMap<>();
 
+    private static final Set<String> STABLE_INTEGER_FUNCTIONS = Set.of(
+            "bitCount","numberOfLeadingZeros","numberOfTrailingZeros","reverse","reverseBytes",
+            "rotateLeft","rotateRight","signum","sum","max","min","compare","compareUnsigned","hashCode");
+
     private boolean isCandidate(final org.mapleir.asm.MethodNode method) {
+        // Only Java SE specified integer functions with stable cross-JDK semantics.
+        // An arbitrary pure implementation in the target JDK can differ from SSVM's JDK 17.
+        if (!method.getOwnerClass().getName().equals("java/lang/Integer")
+                || !STABLE_INTEGER_FUNCTIONS.contains(method.getName())) return false;
         if (!method.isStatic() || method.isClinit() || method.isInit() || method.isAbstract() || method.isNative() || !method.isPublic())
             return false;
 
@@ -437,7 +451,7 @@ public class VmHashTransformer implements HashTransformer {
 
     private Set<ParameterMatch> getCandidate(final org.mapleir.asm.MethodNode method) {
         final Type[] types = Type.getArgumentTypes(method.getDesc());
-        final Set<ParameterMatch> matches = new HashSet<>();
+        final Set<ParameterMatch> matches = new LinkedHashSet<>();
 
         int index = 0;
         for (Type type : types) {

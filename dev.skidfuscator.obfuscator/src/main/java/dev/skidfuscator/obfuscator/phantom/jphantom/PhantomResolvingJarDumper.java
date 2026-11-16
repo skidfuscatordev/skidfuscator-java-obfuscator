@@ -10,6 +10,7 @@ import org.mapleir.asm.ClassNode;
 import org.mapleir.asm.MethodNode;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.util.CheckClassAdapter;
 import org.topdank.byteengineer.commons.data.JarClassData;
 import org.topdank.byteengineer.commons.data.JarContents;
 import org.topdank.byteengineer.commons.data.JarResource;
@@ -17,11 +18,15 @@ import org.topdank.byteio.out.JarDumper;
 import org.topdank.byteio.util.Debug;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.io.IOException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.jar.JarFile;
 import java.util.zip.CRC32;
 import java.util.zip.ZipException;
 
@@ -54,97 +59,90 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	 */
 	@Override
 	public void dump(File file) throws IOException {
-		if (file.exists())
-			file.delete();
-		file.createNewFile();
-		final JarOutputStream jos = new JarOutputStream(new FileOutputStream(file));
-		int classesDumped = 0;
-		int resourcesDumped = 0;
-
-
-		try (ProgressWrapper progressBar = ProgressUtil.progressCheck(
-				contents.getClassContents().size() + contents.getResourceContents().size(),
-			 "Outputting " + contents.getClassContents().size() + " classes to " + file.getPath()
-		)) {
-			for (JarClassData cn : new LinkedList<>(contents.getClassContents())) {
-				try {
-					classesDumped += dumpClass(jos, cn);
-				} catch (ZipException e) {
-					System.out.println("\r[!] Failed to dump " + cn.getName() + "!\n");
-					throw e;
+		Path target = file.toPath().toAbsolutePath();
+		List<JarClassData> classes = new ArrayList<>(contents.getClassContents());
+		List<JarResource> resources = new ArrayList<>(contents.getResourceContents());
+		classes.sort(Comparator.comparing(JarClassData::getName));
+		resources.sort(Comparator.comparing(JarResource::getName));
+		Path temporary = Files.createTempFile(target.getParent(), ".skidfuscator-", ".tmp");
+		try {
+			try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(temporary));
+				 ProgressWrapper progress = ProgressUtil.progressCheck(classes.size() + resources.size(),
+						 "Outputting " + classes.size() + " classes to " + file.getPath())) {
+				for (JarClassData data : classes) {
+					if (dumpClass(out, data) != 1) {
+						throw new IOException("Class was not written: " + data.getName());
+					}
+					progress.tick();
 				}
-
-				//contents.getClassContents().remove(cn);
-				jos.flush();
-				progressBar.tick();
+				for (JarResource resource : resources) {
+					if (dumpResource(out, resource.getName(), resource.getData()) != 1) {
+						throw new IOException("Resource was not written: " + resource.getName());
+					}
+					progress.tick();
+				}
 			}
-
-			for (JarResource res : new LinkedList<>(contents.getResourceContents())) {
-				resourcesDumped += dumpResource(jos, res.getName(), res.getData());
-
-				//contents.getResourceContents().remove(res);
-				progressBar.tick();
-			}
+			validateJar(temporary, classes.size() + resources.size());
+			if (skidfuscator != null && skidfuscator.getRunReport() != null) skidfuscator.getRunReport().outputBudget(temporary);
+			// If atomic replacement is unsupported, fail and preserve the previous JAR.
+			Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+		} finally {
+			Files.deleteIfExists(temporary);
 		}
-
-		//if(!Debug.debugging)
-		//	System.out.println("Dumped " + classesDumped + " classes and " + resourcesDumped + " resources to " + file.getAbsolutePath());
-		jos.flush();
-		jos.close();
 	}
 
-	/**
-	 * Writes the {@link ClassNode} to the Jar.
-	 *
-	 * @param out The {@link JarOutputStream}.
-	 * @param classData The {@link JarClassData}
-	 * @throws IOException If there is a write error.
-	 * @return The amount of things dumped, 1 or if you're not dumping it 0.
-	 */
+	private static void validateJar(Path path, int expectedEntries) throws IOException {
+		try (JarFile jar = new JarFile(path.toFile())) {
+			if (jar.size() != expectedEntries) {
+				throw new IOException("Incomplete output JAR: expected " + expectedEntries + " entries, found " + jar.size());
+			}
+			Enumeration<JarEntry> entries = jar.entries();
+			byte[] buffer = new byte[8192];
+			while (entries.hasMoreElements()) {
+				JarEntry entry = entries.nextElement();
+				boolean isClass = entry.getName().endsWith(".class") || entry.getName().endsWith(".class/");
+				CRC32 crc = new CRC32();
+				try (InputStream input = jar.getInputStream(entry)) {
+					if (isClass) {
+						byte[] bytes = input.readAllBytes();
+						crc.update(bytes);
+						try {
+							new ClassReader(bytes).accept(new CheckClassAdapter(new ClassWriter(0), true), 0);
+						} catch (RuntimeException e) {
+							throw new IOException("Invalid output class: " + entry.getName(), e);
+						}
+					} else {
+						int length;
+						while ((length = input.read(buffer)) != -1) crc.update(buffer, 0, length);
+					}
+				}
+				if (crc.getValue() != entry.getCrc()) {
+					throw new IOException("Output checksum mismatch: " + entry.getName());
+				}
+			}
+		}
+	}
+
 	@Override
 	public int dumpClass(JarOutputStream out, JarClassData classData) throws IOException {
 		ClassNode cn = classData.getClassNode();
-		JarEntry entry = new JarEntry(cn.getName());
-		out.putNextEntry(entry);
-
-		if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
-			out.write(
-					skidfuscator
-					.getJarContents()
-					.getClassContents()
-					.namedMap()
-					.get(classData.getName())
-					.getData()
-			);
-			return 1;
-		}
-
-		ClassTree tree = source.getClassTree();
-		for(MethodNode m : cn.getMethods()) {
-			if(m.node.instructions.size() > 10000) {
-				//System.out.println("large method: " + m + " @" + m.node.instructions.size());
-			}
-		}
-
 		try {
-			try {
-				ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
-				cn.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
-				out.write(writer.toByteArray());
-			} catch (Exception e) {
-				e.printStackTrace();
-				ClassWriter writer = this.buildClassWriter(tree, ClassWriter.COMPUTE_MAXS);
-				cn.node.accept(writer); // must use custom writer which overrides getCommonSuperclass
-				out.write(writer.toByteArray());
-				System.err.println("\rFailed to write " + cn.getName() + "! Writing with COMPUTE_MAXS, " +
-						"which may cause runtime abnormalities\n");
+			byte[] bytes;
+			if (skidfuscator.getExemptAnalysis().isExempt(cn)) {
+				bytes = classData.getData();
+			} else {
+				ClassWriter writer = buildClassWriter(source.getClassTree(), ClassWriter.COMPUTE_FRAMES);
+				cn.node.accept(writer);
+				bytes = writer.toByteArray();
 			}
+			JarEntry entry = new JarEntry(cn.getName() + ".class"); entry.setTime(0);
+			out.putNextEntry(entry);
+			out.write(bytes);
+			out.closeEntry();
+			return 1;
 		} catch (Exception e) {
-			System.err.println("Failed to write " + cn.getName() + "! Skipping class...");
-			e.printStackTrace();
+			throw new IOException("Failed to emit class " + cn.getName(), e);
 		}
-
-		return 1;
 	}
 
 	public ClassWriter buildClassWriter(ClassTree tree, int flags) {
@@ -174,8 +172,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 						c = new SkidClassNode(node, skidfuscator);
 						skidfuscator.getClassSource().getClassTree().addVertex(c);
 					} catch (IOException e) {
-						System.err.println("[FATAL] Failed to find common superclass due to failed " + type1);
-						return "java/lang/Object";
+						throw new IllegalStateException("Cannot resolve frame type " + type1, e);
 					}
 
 					ccn = c;
@@ -184,15 +181,14 @@ public class PhantomResolvingJarDumper implements JarDumper {
 				if(dcn == null) {
 					ClassNode c;
 					try {
-						final ClassReader reader = new ClassReader(type1);
+						final ClassReader reader = new ClassReader(type2);
 						final org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
 						reader.accept(node, ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES | ClassReader.SKIP_CODE);
 
 						c = new SkidClassNode(node, skidfuscator);
 						skidfuscator.getClassSource().getClassTree().addVertex(c);
 					} catch (IOException e) {
-						System.err.println("[FATAL] Failed to find common superclass due to failed " + type1);
-						return "java/lang/Object";
+						throw new IllegalStateException("Cannot resolve frame type " + type2, e);
 					}
 
 					dcn = c;
@@ -265,6 +261,7 @@ public class PhantomResolvingJarDumper implements JarDumper {
 	@Override
 	public int dumpResource(JarOutputStream out, String name, byte[] file) throws IOException {
 		JarEntry entry = new JarEntry(name);
+		entry.setTime(0);
 		if (name.endsWith(".jar")){
 			entry.setMethod(JarEntry.STORED);
 			entry.setSize(file.length);

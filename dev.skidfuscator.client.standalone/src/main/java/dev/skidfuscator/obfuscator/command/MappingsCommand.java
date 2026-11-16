@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @CommandLine.Command(
         aliases = "mappings",
         mixinStandardHelpOptions = true,
-        version = "1.0.0",
+        version = "Skidfuscator " + Skidfuscator.VERSION,
         description = "Creates a collated mappings file given a specific directory"
 )
 public class MappingsCommand implements Callable<Integer> {

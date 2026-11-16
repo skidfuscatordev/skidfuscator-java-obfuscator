@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.command;
 
+import dev.skidfuscator.obfuscator.Skidfuscator;
 import picocli.CommandLine;
 
 import java.util.concurrent.Callable;
@@ -7,7 +8,7 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(
         aliases = "help",
         mixinStandardHelpOptions = true,
-        version = "help 1.0.0",
+        version = "Skidfuscator " + Skidfuscator.VERSION,
         description = "Shows all the options"
 )
 public class HelpCommand implements Callable<Integer> {

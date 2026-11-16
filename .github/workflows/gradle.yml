@@ -1,31 +1,98 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
 name: Java CI with Gradle
-
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
-
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'adopt'
-        #cache: maven
-    - name: Build with Gradle
-      run: |
-        ./gradlew shadowJar --no-daemon
-        mkdir staging/ && cp dev.skidfuscator.client.standalone/build/libs/client-standalone-all.jar staging
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.1.0
-      with:
-        name: Skidfuscator.jar
-        path: staging/client-standalone-all.jar
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: gradle
+      - name: Prepare verified SSVM runtime
+        run: bash scripts/prepare-test-jdk.sh
+      - name: Build, test and inventory
+        run: >-
+          ./gradlew --no-daemon --no-parallel --max-workers=2 --console=plain
+          --dependency-verification strict --continue
+          :modasm:test :stdlib:test :ir:test :pure-analysis:test :obfuscator:test :client-standalone:test
+          :integration:jar :integration:writeClasspath :integration:copyDecompiler generateSbom
+      - name: Audit runtime dependencies
+        run: python3 scripts/audit-dependencies.py build/reports/sbom.cdx.json build/reports/dependency-audit.json
+      - name: Check protection controls and signatures
+        run: |
+          python3 scripts/test-reliability.py
+          python3 scripts/test-signing.py
+          python3 scripts/test-audit.py
+          bash scripts/smoke-test.sh
+      - name: Framework, differential and native integration
+        env:
+          EVALUATE_PROTECTION: '1'
+        run: bash scripts/framework-tests.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-reports
+          path: |
+            **/build/reports/
+          if-no-files-found: error
+  compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['8', '11', '17', '21', '25']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: gradle
+      - run: bash scripts/prepare-test-jdk.sh
+      - run: ./gradlew --no-daemon --max-workers=2 --dependency-verification strict :client-standalone:shadowJar
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+      - name: Verify target JVM compatibility
+        env:
+          TARGET_RELEASE: ${{ matrix.java }}
+        run: |
+          target_home="$JAVA_HOME"
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          python3 scripts/compatibility-tests.py "$target_home" "$TARGET_RELEASE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compatibility-java-${{ matrix.java }}
+          path: build/reports/compatibility-java-*/
+          if-no-files-found: error
+  distribution:
+    needs: [build, compatibility]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: gradle
+      - name: Package after every validation job passes
+        run: ./gradlew --no-daemon --max-workers=2 --dependency-verification strict generateSbom
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-distribution
+          path: |
+            dev.skidfuscator.client.standalone/build/libs/client-standalone-all.jar
+            build/reports/sbom.cdx.json
+          if-no-files-found: error

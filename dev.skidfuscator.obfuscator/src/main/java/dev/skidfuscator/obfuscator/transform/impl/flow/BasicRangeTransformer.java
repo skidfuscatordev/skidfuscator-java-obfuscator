@@ -90,7 +90,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
             return;
         }
 
-        for (BasicBlock entry : new HashSet<>(cfg.vertices())) {
+        for (BasicBlock entry : new LinkedHashSet<>(cfg.vertices())) {
             if (entry.size() == 0)
                 continue;
 
@@ -211,7 +211,7 @@ public class BasicRangeTransformer extends AbstractTransformer {
                 range.addVertex(throwBridge);
                 range.addVertex(blockThrow);
                 range.setHandler(targetBridge);
-                range.setTypes(new HashSet<>(Collections.singleton(exceptionType)));
+                range.setTypes(new LinkedHashSet<>(Collections.singleton(exceptionType)));
                 cfg.addEdge(new TryCatchEdge<>(throwBridge, range));
                 cfg.addEdge(new TryCatchEdge<>(blockThrow, range));
                 cfg.addRange(range);

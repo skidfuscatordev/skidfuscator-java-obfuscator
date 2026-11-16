@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public class StringTransformer extends AbstractTransformer {
     private final Map<ClassNode, EncryptionGenerator> keyMap = new HashMap<>();
 
-    private final Set<String> INJECTED = new HashSet<>();
+    private final Set<String> INJECTED = new LinkedHashSet<>();
 
     public StringTransformer(Skidfuscator skidfuscator) {
         this(skidfuscator, Collections.emptyList());

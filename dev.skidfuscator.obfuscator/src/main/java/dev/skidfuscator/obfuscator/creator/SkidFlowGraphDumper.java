@@ -365,7 +365,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			frameMap.put(vertex, frame);
 		}
 
-		final Set<BasicBlock> visited = new HashSet<>();
+		final Set<BasicBlock> visited = new LinkedHashSet<>();
 		final Stack<BasicBlock> bucket = new Stack<>();
 
 		/*
@@ -420,7 +420,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			final Frame poppedFrame = frameMap.get(popped);
 			visited.add(popped);
 
-			final Set<BasicBlock> next = new HashSet<>();
+			final Set<BasicBlock> next = new LinkedHashSet<>();
 			for (Stmt stmt : popped) {
 				final Map<BasicBlock, Stmt> vars = new HashMap<>();
 
@@ -503,7 +503,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		}
 
 		final Stack<Frame> frameStack = new Stack<>();
-		final Set<Frame> visitedFrames = new HashSet<>();
+		final Set<Frame> visitedFrames = new LinkedHashSet<>();
 
 		/*
 		 * Iterate by the roots of the tree then
@@ -672,7 +672,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			);*/
 		}
 
-		final Set<BasicBlock> visited = new HashSet<>();
+		final Set<BasicBlock> visited = new LinkedHashSet<>();
 		final Stack<BasicBlock> bucket = new Stack<>();
 
 		/*
@@ -725,9 +725,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				.filter(e -> e.getLocal().isStoredInLocal())
 				//.filter(e -> e.getIndex() > finalProtectedIndex)
 				.forEach(e -> {
-					defMap.computeIfAbsent(e.getBlock(), b -> new HashSet<>())
+					defMap.computeIfAbsent(e.getBlock(), b -> new LinkedHashSet<>())
 							.add(e.getIndex());
-					reverseDefMap.computeIfAbsent(e.getIndex(), b -> new HashSet<>())
+					reverseDefMap.computeIfAbsent(e.getIndex(), b -> new LinkedHashSet<>())
 							.add(e.getBlock());
 
 					localAccessors.computeIfAbsent(e.getBlock(), b -> new Type[frame.size()])
@@ -743,9 +743,9 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 				.filter(e -> e.getLocal().isStoredInLocal())
 				//.filter(e -> e.getIndex() > finalProtectedIndex)
 				.forEach(e -> {
-					defMap.computeIfAbsent(e.getBlock(), b -> new HashSet<>())
+					defMap.computeIfAbsent(e.getBlock(), b -> new LinkedHashSet<>())
 							.add(e.getIndex());
-					reverseDefMap.computeIfAbsent(e.getIndex(), b -> new HashSet<>())
+					reverseDefMap.computeIfAbsent(e.getIndex(), b -> new LinkedHashSet<>())
 							.add(e.getBlock());
 
 					localProviders.computeIfAbsent(e.getBlock(), b -> new Type[frame.size()])
@@ -773,14 +773,14 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			);
 
 			final SkidExpressionPool clone = expressionPool.copy();
-			final Set<Integer> uses = defMap.computeIfAbsent(popped, c -> new HashSet<>());
+			final Set<Integer> uses = defMap.computeIfAbsent(popped, c -> new LinkedHashSet<>());
 			for (Integer use : uses) {
 				if (!reverseDefMap.containsKey(use)) {
 					continue;
 				}
 
 				if (!scopeSetMap.containsKey(use)) {
-					scopeMap.put(use, new HashSet<>(Collections.singleton(popped)));
+					scopeMap.put(use, new LinkedHashSet<>(Collections.singleton(popped)));
 					scopeSetMap.put(use, true);
 				}
 
@@ -807,7 +807,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 			}
 
 
-			final Set<BasicBlock> next = new HashSet<>();
+			final Set<BasicBlock> next = new LinkedHashSet<>();
 			for (Stmt stmt : popped) {
 				if (stmt instanceof CopyVarStmt) {
 					final CopyVarStmt copyVarStmt = (CopyVarStmt) stmt;
@@ -836,7 +836,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 
 					expressionPool.set(copyVarStmt.getIndex(), type);
 				} else {
-					final Set<BasicBlock> vars = new HashSet<>();
+					final Set<BasicBlock> vars = new LinkedHashSet<>();
 
 					if (stmt instanceof SwitchStmt) {
 						final SwitchStmt switchStmt = (SwitchStmt) stmt;
@@ -1509,7 +1509,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		
 		// Linearize & flatten
 		order = new IndexedList<>();
-		Set<BlockBundle> bundlesSet = new HashSet<>(bundles.values()); // for efficiency
+		Set<BlockBundle> bundlesSet = new LinkedHashSet<>(bundles.values()); // for efficiency
 		SkidFlowGraphDumper.linearize(bundlesSet, bundleGraph, entryBundle).forEach(order::addAll);
 	}
 	
@@ -1518,7 +1518,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		BundleGraph subgraph = GraphUtils.inducedSubgraph(fullGraph, bundles, BundleGraph::new);
 
 		// Experimental: kill backedges
-		for (FastGraphEdge<BlockBundle> e : new HashSet<>(subgraph.getReverseEdges(entryBundle))) {
+		for (FastGraphEdge<BlockBundle> e : new LinkedHashSet<>(subgraph.getReverseEdges(entryBundle))) {
 			subgraph.removeEdge(e);
 		}
 		
@@ -1542,8 +1542,8 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	}
 	
 	private static BlockBundle chooseEntry(BundleGraph graph, List<BlockBundle> scc) {
-		Set<BlockBundle> sccSet = new HashSet<>(scc);
-		Set<BlockBundle> candidates = new HashSet<>(scc);
+		Set<BlockBundle> sccSet = new LinkedHashSet<>(scc);
+		Set<BlockBundle> candidates = new LinkedHashSet<>(scc);
 		candidates.removeIf(bundle -> { // No incoming edges from within the SCC.
 			for (FastGraphEdge<BlockBundle> e : graph.getReverseEdges(bundle)) {
 				if (sccSet.contains(e.src()))
@@ -1559,7 +1559,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 	private void naturalise() {
 		for (int i = 0; i < order.size(); i++) {
 			BasicBlock b = order.get(i);
-			for (FlowEdge<BasicBlock> e : new HashSet<>(cfg.getEdges(b))) {
+			for (FlowEdge<BasicBlock> e : new LinkedHashSet<>(cfg.getEdges(b))) {
 				BasicBlock dst = e.dst();
 				if (e instanceof ImmediateEdge && order.indexOf(dst) != i + 1) {
 					// Fix immediates
@@ -1659,7 +1659,7 @@ public class SkidFlowGraphDumper implements BytecodeFrontend {
 		Set<Type> typeSet = er.getTypes();
 		if (typeSet.size() != 1) {
 			// TODO: find base exception
-			final Set<ClassNode> classNodes = new HashSet<>();
+			final Set<ClassNode> classNodes = new LinkedHashSet<>();
 			for (Type typec : er.getTypes()) {
 				final String type1 = typec.getClassName().replace(".", "/");
 				ClassNode classNode = skidfuscator

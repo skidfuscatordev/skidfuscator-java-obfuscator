@@ -7,6 +7,7 @@ public class PolynomialFunction {
 
     @Pure(description = "Creates polynomial from coefficients",
          because = {"Copies input array", "Internal state initialization"})
+    @framework.Unsupported("Object/array input purity is not proven by the primitive-input analysis")
     public static PolynomialFunction fromCoefficients(double... coeffs) {
         double[] copy = new double[coeffs.length];
         System.arraycopy(coeffs, 0, copy, 0, coeffs.length);
@@ -41,6 +42,7 @@ public class PolynomialFunction {
 
     @Pure(description = "Adds two polynomials",
          because = {"Creates new polynomial", "No input modification"})
+    @framework.Unsupported("Object/array input purity is not proven by the primitive-input analysis")
     public static PolynomialFunction add(PolynomialFunction p1, PolynomialFunction p2) {
         int maxLength = Math.max(p1.coefficients.length, p2.coefficients.length);
         double[] result = new double[maxLength];

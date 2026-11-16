@@ -54,7 +54,7 @@ public class AhegaoTransformer extends AbstractTransformer {
 
         String ahegaoName = DEFAULT_AHEGAO_FIELD_NAME;
         while (fieldNames.contains(ahegaoName))
-            ahegaoName += (char) ThreadLocalRandom.current().nextInt(Character.MAX_CODE_POINT);
+            ahegaoName += RandomUtil.randomAlphabeticalString(1);
 
         final FieldNode mapleNode = new SkidFieldNodeBuilder(skidfuscator, classNode)
                 .access(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC)

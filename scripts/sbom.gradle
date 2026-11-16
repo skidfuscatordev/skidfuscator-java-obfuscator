@@ -1,0 +1,39 @@
+import groovy.json.JsonOutput
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+
+// Kept dependency-free so SBOM generation uses the same locked, verified graph.
+    rootProject.tasks.register('generateSbom') {
+        dependsOn ':client-standalone:shadowJar'
+        doLast {
+            def client = rootProject.project(':client-standalone')
+            def configuration = client.configurations.runtimeClasspath
+            def hashes = [:]
+            configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+                def digest = java.security.MessageDigest.getInstance('SHA-256')
+                artifact.file.withInputStream { stream ->
+                    byte[] buffer = new byte[8192]; int count
+                    while ((count = stream.read(buffer)) != -1) digest.update(buffer, 0, count)
+                }
+                hashes[artifact.id.componentIdentifier.toString()] = digest.digest().encodeHex().toString()
+            }
+            def components = configuration.incoming.resolutionResult.allComponents.toList()
+            def libraries = components.findAll { it.id instanceof ModuleComponentIdentifier }.collect { component ->
+                def id = component.id
+                def row = [type:'library', 'bom-ref':id.toString(), group:id.group, name:id.module,
+                           version:id.version, purl:"pkg:maven/${id.group}/${id.module}@${id.version}"]
+                if (hashes[id.toString()]) row.hashes = [[alg:'SHA-256', content:hashes[id.toString()]]]
+                row
+            }.sort { it['bom-ref'] }
+            def refs = libraries.collect { it['bom-ref'] }.toSet()
+            def dependencies = components.findAll { refs.contains(it.id.toString()) }.collect { component ->
+                [ref:component.id.toString(), dependsOn:component.dependencies.findAll { it instanceof org.gradle.api.artifacts.result.ResolvedDependencyResult }
+                    .collect { it.selected.id.toString() }.findAll { refs.contains(it) }.unique().sort()]
+            }.sort { it.ref }
+            def version = rootProject.version.toString()
+            def result = [bomFormat:'CycloneDX', specVersion:'1.5', version:1,
+                metadata:[component:[type:'application','bom-ref':'skidfuscator', name:'Skidfuscator',version:version]],
+                components:libraries, dependencies:[[ref:'skidfuscator',dependsOn:refs.toList().sort()]]+dependencies]
+            def target = rootProject.layout.buildDirectory.file('reports/sbom.cdx.json').get().asFile
+            target.parentFile.mkdirs(); target.text = JsonOutput.prettyPrint(JsonOutput.toJson(result))+'\n'
+        }
+    }

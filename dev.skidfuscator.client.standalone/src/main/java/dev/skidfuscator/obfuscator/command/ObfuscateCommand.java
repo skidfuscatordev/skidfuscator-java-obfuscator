@@ -3,6 +3,7 @@ package dev.skidfuscator.obfuscator.command;
 import dev.skidfuscator.migration.ExemptToConfigMigration;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
+import dev.skidfuscator.obfuscator.ReliabilityOptions;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.LogoUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
@@ -23,7 +24,7 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(
         aliases = "obfuscate",
         mixinStandardHelpOptions = true,
-        version = "obfuscate 1.0.0",
+        version = "Skidfuscator " + Skidfuscator.VERSION,
     description = "Obfuscates and runs a specific jar"
 )
 public class ObfuscateCommand implements Callable<Integer> {
@@ -35,7 +36,7 @@ public class ObfuscateCommand implements Callable<Integer> {
 
     @CommandLine.Option(
             names = {"-rt", "--runtime"},
-            description = "Path to the runtime jar"
+            description = "Target JDK jmods directory, lib/modules image or Java 8 rt.jar"
     )
     public File runtime;
 
@@ -88,6 +89,19 @@ public class ObfuscateCommand implements Callable<Integer> {
     public boolean notrack;
 
 
+    @CommandLine.Option(names="--seed", description="Seed recorded in the run report") public Long seed;
+    @CommandLine.Option(names="--report", description="JSON run report (default: output.report.json)") public File report;
+    @CommandLine.Option(names="--dry-run", description="Plan exclusions without transforming or writing a JAR") public boolean dryRun;
+    @CommandLine.Option(names="--offline", description="Never download missing dependencies") public boolean offline;
+    @CommandLine.Option(names="--non-interactive", description="Explicit automation mode; never prompt") public boolean nonInteractive;
+    @CommandLine.Option(names="--analytics", description="Opt in to usage analytics") public boolean analytics;
+    @CommandLine.Option(names="--profile", defaultValue="BALANCED", description="CONSERVATIVE, BALANCED or STRONG") public ReliabilityOptions.Profile profile;
+    @CommandLine.Option(names="--max-duration-ms", defaultValue="300000") public long maxDuration;
+    @CommandLine.Option(names="--max-input-bytes", defaultValue="536870912") public long maxInput;
+    @CommandLine.Option(names="--max-output-bytes", defaultValue="536870912") public long maxOutput;
+    @CommandLine.Option(names="--max-growth-ratio", defaultValue="0") public double maxGrowth;
+    @CommandLine.Option(names="--max-method-instructions", defaultValue="0") public int maxInstructions;
+
     @Override
     public Integer call()  {
 
@@ -107,6 +121,7 @@ public class ObfuscateCommand implements Callable<Integer> {
                             ? "jmods"
                             : "lib/rt.jar"
             );
+            if (!runtime.exists() && MiscUtil.getJavaVersion() > 8) runtime = new File(home, "lib/modules");
         }
 
         if (exempt != null) {
@@ -130,9 +145,15 @@ public class ObfuscateCommand implements Callable<Integer> {
             config = converted;
         }
 
+        ReliabilityOptions options = ReliabilityOptions.builder().profile(profile).seed(seed).report(report)
+                .dryRun(dryRun).offline(offline).maxDurationMillis(maxDuration).maxOutputBytes(maxOutput)
+                .maxInputBytes(maxInput).maxGrowthRatio(maxGrowth).maxMethodInstructions(maxInstructions).build();
+        options.validate();
         final File[] libs;
         if (libFolder != null) {
-            libs = libFolder.listFiles();
+            libs = libFolder.listFiles(file -> file.isFile() && file.getName().endsWith(".jar"));
+            if (libs == null) throw new IllegalArgumentException("Library directory cannot be read: " + libFolder);
+            java.util.Arrays.sort(libs, java.util.Comparator.comparing(File::getName));
         } else {
             libs = new File[0];
         }
@@ -144,12 +165,13 @@ public class ObfuscateCommand implements Callable<Integer> {
                 .runtime(runtime)
                 .exempt(exempt)
                 .phantom(phantom)
-                .jmod(MiscUtil.getJavaVersion() > 8)
+                .jmod(runtime.isDirectory())
                 .fuckit(fuckit)
                 .config(config)
                 .debug(debug)
                 .renamer(false)
-                .analytics(!notrack)
+                .analytics(analytics && !notrack)
+                .reliability(options)
                 .build();
 
         final Skidfuscator skidfuscator = new Skidfuscator(skidInstance);
