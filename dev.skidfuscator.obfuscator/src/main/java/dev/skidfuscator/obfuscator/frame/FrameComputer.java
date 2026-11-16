@@ -80,7 +80,7 @@ public class FrameComputer {
         /*
          * This is just shit for iterating.
          */
-        final Set<BasicBlock> visited = new HashSet<>();
+        final Set<BasicBlock> visited = new LinkedHashSet<>();
         final Stack<BasicBlock> bucket = new Stack<>();
 
         /*
@@ -155,7 +155,7 @@ public class FrameComputer {
             final FrameNode poppedFrame = frameMap.get(popped);
             visited.add(popped);
 
-            final Set<BasicBlock> next = new HashSet<>();
+            final Set<BasicBlock> next = new LinkedHashSet<>();
 
             SkidExpressionPool currentPool = new SkidExpressionPool(
                     poppedFrame.getPool(),
@@ -388,8 +388,8 @@ public class FrameComputer {
             final FrameNode poppedFrame = frameMap.get(popped);
             visited.add(popped);
 
-            final Set<BasicBlock> next = new HashSet<>();
-            Set<Integer> visitedLocal = new HashSet<>();
+            final Set<BasicBlock> next = new LinkedHashSet<>();
+            Set<Integer> visitedLocal = new LinkedHashSet<>();
 
             for (Stmt stmt : popped) {
                 for (Expr e : stmt.enumerateOnlyChildren()) {
@@ -742,7 +742,7 @@ public class FrameComputer {
         Set<Type> typeSet = er.getTypes();
         if (typeSet.size() != 1) {
             // TODO: find base exception
-            final Set<ClassNode> classNodes = new HashSet<>();
+            final Set<ClassNode> classNodes = new LinkedHashSet<>();
             for (Type typec : er.getTypes()) {
                 final String type1 = typec.getClassName().replace(".", "/");
                 ClassNode classNode = skidfuscator

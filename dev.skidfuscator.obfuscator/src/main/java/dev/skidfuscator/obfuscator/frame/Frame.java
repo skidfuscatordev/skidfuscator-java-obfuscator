@@ -34,7 +34,7 @@ public class Frame {
         this.skidfuscator = skidfuscator;
         this.block = block;
         this.parents = new HashMap<>();
-        this.children = new HashSet<>();
+        this.children = new LinkedHashSet<>();
 
         this.frame = new Type[block.cfg.getLocals().getMaxLocals() + 2];
         this.inputTypes = new Type[block.cfg.getLocals().getMaxLocals() + 2];
@@ -54,7 +54,7 @@ public class Frame {
                  * is no longer something computed from the
                  * frame, so we exempt it.
                  */
-                defs.computeIfAbsent(copyVarStmt.getIndex(), b -> new HashSet<>()).add(copyVarStmt);
+                defs.computeIfAbsent(copyVarStmt.getIndex(), b -> new LinkedHashSet<>()).add(copyVarStmt);
 
                 /*
                  * Since this is assigned in here, we can set
@@ -72,7 +72,7 @@ public class Frame {
                          * We want to make sure we know that we're using
                          * this index *somewhere* in this block
                          */
-                        this.uses.computeIfAbsent(varExpr.getIndex(), b -> new HashSet<>())
+                        this.uses.computeIfAbsent(varExpr.getIndex(), b -> new LinkedHashSet<>())
                                 .add(varExpr);
 
                         /*
@@ -134,7 +134,7 @@ public class Frame {
     }
 
     private Type getOutput(final int index) {
-        return this.getOutput(index, new HashSet<>());
+        return this.getOutput(index, new LinkedHashSet<>());
     }
 
     /**
@@ -202,7 +202,7 @@ public class Frame {
     }
 
     public Set<Integer> getUsesNoDefined() {
-        final Set<Integer> undefined = new HashSet<>();
+        final Set<Integer> undefined = new LinkedHashSet<>();
         for (Map.Entry<Integer, Set<VarExpr>> integerSetEntry : uses.entrySet()) {
             final Integer use = integerSetEntry.getKey();
 
@@ -340,7 +340,7 @@ public class Frame {
     }
 
     public void addParent(final Frame parent, final Stmt caller) {
-        parents.computeIfAbsent(parent, e -> new HashSet<>()).add(caller);
+        parents.computeIfAbsent(parent, e -> new LinkedHashSet<>()).add(caller);
         parent.addChildren(this);
     }
 

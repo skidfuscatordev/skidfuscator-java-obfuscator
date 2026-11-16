@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.transform;
 
+import java.util.LinkedHashSet;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
@@ -33,7 +34,7 @@ public abstract class AbstractExpressionTransformer extends AbstractTransformer 
             return;
         }
 
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+        for (BasicBlock vertex : new LinkedHashSet<>(cfg.vertices())) {
             if (vertex.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
                 continue;
 
@@ -41,7 +42,7 @@ public abstract class AbstractExpressionTransformer extends AbstractTransformer 
                 continue;
             }
 
-            for (Stmt stmt : new HashSet<>(vertex)) {
+            for (Stmt stmt : new LinkedHashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
                     if (matchesExpression(expr)) {
                         if (transformExpression(expr, cfg)) {

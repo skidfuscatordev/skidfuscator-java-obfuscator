@@ -8,34 +8,38 @@ import java.util.Random;
 
 @UtilityClass
 public class RandomUtil {
-    private final Random random = new Random();
+    private final ThreadLocal<Random> random = ThreadLocal.withInitial(Random::new);
+
+    public void begin(long seed) { random.set(new Random(seed)); }
+    public void end() { random.remove(); }
+    public Random stream() { return new Random(nextLong()); }
 
     public int nextInt() {
         return nextInt(Integer.MAX_VALUE);
     }
 
     public int nextInt(int bound) {
-        return random.nextInt(bound);
+        return random.get().nextInt(bound);
     }
 
     public long nextLong() {
-        return random.nextLong();
+        return random.get().nextLong();
     }
 
     public boolean nextBoolean() {
-        return random.nextBoolean();
+        return random.get().nextBoolean();
     }
 
     public byte[] randomBytes(int size) {
         byte[] bytes = new byte[size];
-        random.nextBytes(bytes);
+        random.get().nextBytes(bytes);
         return bytes;
     }
 
     public String randomIsoString(int size) {
         final int leftLimit = 48; // numeral '0'
         final int rightLimit = 122; // letter 'z'
-        return random.ints(leftLimit, rightLimit + 1)
+        return random.get().ints(leftLimit, rightLimit + 1)
                 .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
                 .limit(size)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
@@ -46,7 +50,7 @@ public class RandomUtil {
         final int leftLimit = 97; // letter 'a'
         final int rightLimit = 122; // letter 'z'
 
-        return random.ints(leftLimit, rightLimit + 1)
+        return random.get().ints(leftLimit, rightLimit + 1)
                 .limit(size)
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
@@ -60,6 +64,6 @@ public class RandomUtil {
     };
 
     public static Type nextException() {
-        return Type.getType(exceptionClasses[nextInt(exceptionClasses.length - 1)]);
+        return Type.getType(exceptionClasses[nextInt(exceptionClasses.length)]);
     }
 }

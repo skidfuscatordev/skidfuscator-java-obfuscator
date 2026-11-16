@@ -42,6 +42,8 @@ public class ExemptManager {
         return globalExempt.isExempt(methodNode);
     }
 
+    public boolean isExempt(org.mapleir.asm.FieldNode field) { return globalExempt.isExempt(field); }
+
     public void add(final Class<? extends Transformer> clazz, String exempt) {
         exemptAnalysisMap
                 .computeIfAbsent(clazz, e -> new SimpleExemptAnalysis(clazz))

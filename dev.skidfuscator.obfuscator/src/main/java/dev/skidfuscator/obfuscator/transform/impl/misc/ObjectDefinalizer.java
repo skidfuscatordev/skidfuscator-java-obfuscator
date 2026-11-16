@@ -25,7 +25,7 @@ import java.util.*;
  * @author ryan
  */
 public class ObjectDefinalizer extends AbstractTransformer {
-    private static final Set<Type> TYPES = new HashSet<>(Arrays.asList(
+    private static final Set<Type> TYPES = new LinkedHashSet<>(Arrays.asList(
             Type.INT_TYPE,
             Type.SHORT_TYPE,
             Type.BYTE_TYPE,

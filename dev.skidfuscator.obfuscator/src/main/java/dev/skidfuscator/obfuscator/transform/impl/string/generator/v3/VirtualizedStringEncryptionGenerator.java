@@ -32,7 +32,7 @@ public class VirtualizedStringEncryptionGenerator extends AbstractEncryptionGene
         for (int i = 0; i < OpcodeType.values().length; i++) {
             values.add(i);
         }
-        Collections.shuffle(values);
+        Collections.shuffle(values, RandomUtil.stream());
         
         for (int i = 0; i < OpcodeType.values().length; i++) {
             map.put(RandomUtil.nextInt(1000) + 1000, values.get(i));

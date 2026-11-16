@@ -1,0 +1,27 @@
+plugins { id 'java' }
+dependencies {
+    implementation 'org.springframework.boot:spring-boot:3.5.16'
+    implementation 'org.springframework.boot:spring-boot-loader-tools:3.5.16'
+    implementation 'org.hibernate.orm:hibernate-core:6.6.59.Final'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.20.2'
+    implementation 'com.h2database:h2:2.5.252'
+}
+jar {
+    archiveFileName = 'integration.jar'
+    manifest { attributes 'Main-Class':'fixtures.FrameworkApp' }
+}
+tasks.register('copyLibraries', Copy) {
+    from configurations.runtimeClasspath
+    into layout.buildDirectory.dir('libs/dependencies')
+}
+tasks.register('writeClasspath') {
+    dependsOn classes, copyLibraries
+    doLast { layout.buildDirectory.file('runtime-classpath.txt').get().asFile.text = sourceSets.main.runtimeClasspath.asPath }
+}
+
+configurations { decompiler }
+dependencies { decompiler 'org.benf:cfr:0.152' }
+tasks.register('copyDecompiler', Copy) {
+    from configurations.decompiler
+    into layout.buildDirectory.dir('tools')
+}

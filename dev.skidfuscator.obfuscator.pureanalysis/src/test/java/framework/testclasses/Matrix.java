@@ -17,6 +17,7 @@ public class Matrix {
 
     @Pure(description = "Pure matrix multiplication",
          because = {"Creates new matrix", "No modification of inputs"})
+    @framework.Unsupported("Object/array input purity is not proven by the primitive-input analysis")
     public static Matrix multiply(Matrix a, Matrix b) {
         if (a.data[0].length != b.data.length) {
             throw new IllegalArgumentException("Invalid dimensions");

@@ -1,85 +1,34 @@
 package dev.skidfuscator.obfuscator.dependency;
 
-import dev.skidfuscator.obfuscator.Skidfuscator;
+import dev.skidfuscator.obfuscator.util.VerifiedDownloads;
 import lombok.SneakyThrows;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.net.URI;
+import java.nio.channels.FileChannel;
+import java.nio.file.*;
+import java.util.Locale;
 
 public class DependencyDownloader {
-
     @SneakyThrows
-    public void download(final CommonDependency dependency) {
-        final String url = dependency.getUrl();
-
-        // Resolve path
-        Path mappingsDir = Paths.get("mappings-cloud");
-        Files.createDirectories(mappingsDir);
-
-        if (Files.exists(mappingsDir.resolve(dependency.name().toLowerCase()))) {
-            Skidfuscator.LOGGER.style(String.format("Dependency %s already exists\n", dependency.name()));
-            return;
+    public Path download(CommonDependency dependency) {
+        Path cache=Paths.get("mappings-cloud"); Files.createDirectories(cache);
+        String name=dependency.name().toLowerCase(Locale.ROOT);
+        Path destination=cache.resolve(name+"-"+dependency.getSha256().substring(0,12));
+        try (FileChannel channel=FileChannel.open(cache.resolve("."+name+".lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);
+             var lock=channel.lock()) {
+            if (Files.isRegularFile(destination.resolve(".verified-sha256"))
+                    && Files.readString(destination.resolve(".verified-sha256")).equals(dependency.getSha256())) return destination;
+            Path stage=Files.createTempDirectory(cache,".download-");
+            try {
+                Path archive=stage.resolve("artifact");
+                VerifiedDownloads.download(URI.create(dependency.getUrl()),archive,dependency.getSha256(),256L*1024*1024);
+                Path expanded=stage.resolve("content"); Files.createDirectories(expanded);
+                if (dependency.getUrl().endsWith(".zip")) VerifiedDownloads.extract(archive,expanded,true,512L*1024*1024);
+                else Files.move(archive,expanded.resolve(name+".json"));
+                Files.writeString(expanded.resolve(".verified-sha256"),dependency.getSha256());
+                if (Files.exists(destination)) throw new java.io.IOException("Invalid dependency cache: "+destination);
+                Files.move(expanded,destination,StandardCopyOption.ATOMIC_MOVE);
+            } finally { VerifiedDownloads.deleteTree(stage); }
+            return destination;
         }
-
-        Path resolvedMappingPath = mappingsDir.resolve(dependency.name().toLowerCase() + "/download.mappings");
-        Files.createDirectories(resolvedMappingPath.getParent());
-
-        // Download the zip file
-        Skidfuscator.LOGGER.style(String.format("Downloading dependency %s from %s\n", dependency.name(), url));
-        try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
-             FileOutputStream fileOutputStream = new FileOutputStream(resolvedMappingPath.toFile())) {
-            byte[] dataBuffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                fileOutputStream.write(dataBuffer, 0, bytesRead);
-            }
-        }
-
-        if (!Files.exists(resolvedMappingPath)) {
-            throw new IOException("Failed to download the file: " + resolvedMappingPath);
-        }
-
-        Skidfuscator.LOGGER.style(String.format("Downloaded dependency %s to %s\n", dependency.name(), resolvedMappingPath));
-
-        if (url.endsWith(".jar")) {
-            throw new IllegalArgumentException("Invalid dependency type");
-        } else if (url.endsWith(".zip")) {
-            try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(resolvedMappingPath))) {
-                ZipEntry entry;
-                while ((entry = zipInputStream.getNextEntry()) != null) {
-                    Path filePath = mappingsDir.resolve(entry.getName());
-                    if (entry.isDirectory()) {
-                        Files.createDirectories(filePath);
-                    } else {
-                        Files.createDirectories(filePath.getParent());
-                        try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
-                            byte[] buffer = new byte[1024];
-                            int len;
-                            while ((len = zipInputStream.read(buffer)) > 0) {
-                                fos.write(buffer, 0, len);
-                            }
-                        }
-                    }
-                    zipInputStream.closeEntry();
-                }
-            }
-            Skidfuscator.LOGGER.style(String.format("Extracted dependency %s to %s\n", dependency.name(), mappingsDir.toFile().getAbsolutePath()));
-        } else if (url.endsWith(".json")) {
-            // Copy the file to the mappings directory
-            Files.copy(resolvedMappingPath, mappingsDir.resolve(dependency.name().toLowerCase() + ".json"));
-            Skidfuscator.LOGGER.style(String.format("Extracted JSON particular dependency %s to %s\n", dependency.name(), mappingsDir.toFile().getAbsolutePath()));
-        }
-        else {
-            Skidfuscator.LOGGER.style(String.format("Unsupported file type for %s\n", url));
-        }
-        Files.delete(resolvedMappingPath);
     }
 }

@@ -1,0 +1,12 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath
+org.junit.jupiter:junit-jupiter-api:5.9.0=testCompileClasspath,testRuntimeClasspath
+org.junit.jupiter:junit-jupiter-engine:5.9.0=testRuntimeClasspath
+org.junit.platform:junit-platform-commons:1.9.0=testCompileClasspath,testRuntimeClasspath
+org.junit.platform:junit-platform-engine:1.9.0=testRuntimeClasspath
+org.junit:junit-bom:5.9.0=testCompileClasspath,testRuntimeClasspath
+org.opentest4j:opentest4j:1.2.0=testCompileClasspath,testRuntimeClasspath
+org.projectlombok:lombok:1.18.36=annotationProcessor,compileClasspath
+empty=runtimeClasspath,testAnnotationProcessor

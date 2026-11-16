@@ -495,7 +495,6 @@ public class LibrariesPanel extends JPanel implements SkidPanel {
         SwingWorker<File, Integer> worker = new SwingWorker<>() {
             @Override
             protected File doInBackground() throws Exception {
-                progressBar.setVisible(true);
                 String mavenUrl = String.format(
                         "https://repo1.maven.org/maven2/%s/%s/%s/%s-%s.jar",
                         artifact.groupId.replace('.', '/'),
@@ -505,24 +504,13 @@ public class LibrariesPanel extends JPanel implements SkidPanel {
                         artifact.version
                 );
 
-                HttpURLConnection connection = (HttpURLConnection) new URL(mavenUrl).openConnection();
-                int fileSize = connection.getContentLength();
-                
-                File outputFile = libraryFolder.resolve(artifact.artifactId + "-" + artifact.version + ".jar").toFile();
-                try (InputStream in = new BufferedInputStream(connection.getInputStream());
-                     FileOutputStream out = new FileOutputStream(outputFile)) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    long totalBytesRead = 0;
-                    
-                    while ((bytesRead = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, bytesRead);
-                        totalBytesRead += bytesRead;
-                        if (fileSize > 0) {
-                            publish((int) ((totalBytesRead * 100) / fileSize));
-                        }
-                    }
-                }
+                String checksum=dev.skidfuscator.obfuscator.command.TrustedLibraryCatalog.checksum(
+                        artifact.groupId,artifact.artifactId,artifact.version);
+                File outputFile = libraryFolder.resolve(artifact.artifactId+"-"+artifact.version+".jar").toFile();
+                if (outputFile.exists()) throw new IOException("Library already exists; remove it explicitly before replacing it");
+                dev.skidfuscator.obfuscator.util.VerifiedDownloads.download(java.net.URI.create(mavenUrl),
+                        outputFile.toPath(),checksum,256L*1024*1024);
+                publish(100);
                 return outputFile;
             }
 

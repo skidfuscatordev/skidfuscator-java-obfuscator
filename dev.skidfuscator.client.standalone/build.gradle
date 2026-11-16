@@ -12,6 +12,10 @@ application {
     mainClass = 'dev.skidfuscator.obfuscator.SkidfuscatorMain'
 }
 
+shadowJar {
+    archiveFileName = 'client-standalone-all.jar'
+}
+
 downgradeJar {
     downgradeTo = JavaVersion.VERSION_1_8
 }
@@ -40,3 +44,10 @@ test {
 
 sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
+
+processResources {
+    from(rootProject.file('gradle/verification-metadata.xml')) {
+        into 'security'
+        rename { 'library-checksums.xml' }
+    }
+}

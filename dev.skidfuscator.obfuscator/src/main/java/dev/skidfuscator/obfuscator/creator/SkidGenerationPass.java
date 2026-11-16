@@ -36,7 +36,7 @@ public class SkidGenerationPass extends GenerationPass {
             }
 
             this.handler(tc);
-            handlers.computeIfAbsent(tc.handler, e -> new HashSet<>());
+            handlers.computeIfAbsent(tc.handler, e -> new LinkedHashSet<>());
 
             if (tc.type == null)
                 continue;

@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.resolver;
 
+import java.util.LinkedHashSet;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -138,7 +139,7 @@ public class SkidHierarchyMethods {
 	 */
 	private Set<MethodNode> findMethods(ClassNode cn, String name, String desc, int returnTypes, int allowedMask, int requiredMask) {
 		allowedMask |= requiredMask;
-		Set<MethodNode> findM = new HashSet<>();
+		Set<MethodNode> findM = new LinkedHashSet<>();
 		
 		Type[] expectedParams = Type.getArgumentTypes(desc);
 		
@@ -211,13 +212,13 @@ public class SkidHierarchyMethods {
 	public Set<MethodNode> getHierarchyMethodChain(ClassNode cn, String name, String desc, boolean exact) {
 		ClassTree structures = app.getClassTree();
 		
-		Set<MethodNode> foundMethods = new HashSet<>();
+		Set<MethodNode> foundMethods = new LinkedHashSet<>();
 		Collection<ClassNode> toSearch = structures.getAllBranches(cn);
 		for (ClassNode viable : toSearch) {
 			foundMethods.addAll(findMethods(viable, name, desc, exact? EXACT_TYPES : CONGRUENT_TYPES, VIRTUAL_METHOD | Modifier.ABSTRACT | Opcodes.ACC_BRIDGE, 0));
 		}
 
-		for (MethodNode foundMethod : new HashSet<>(foundMethods)) {
+		for (MethodNode foundMethod : new LinkedHashSet<>(foundMethods)) {
 			for (ClassNode allChild : structures.getAllChildren(foundMethod.owner)) {
 				foundMethods.addAll(findMethods(allChild, name, desc, exact? EXACT_TYPES : CONGRUENT_TYPES, VIRTUAL_METHOD | Modifier.ABSTRACT | Opcodes.ACC_BRIDGE, 0));
 			}

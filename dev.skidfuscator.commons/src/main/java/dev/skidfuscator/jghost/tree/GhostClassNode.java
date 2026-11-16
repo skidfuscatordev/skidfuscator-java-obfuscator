@@ -41,6 +41,8 @@ public class GhostClassNode implements GhostReader<ClassNode> {
         this.access = classNode.access;
         this.name = classNode.name;
         this.superName = classNode.superName;
+        this.signature = classNode.signature;
+        this.interfaces = classNode.interfaces == null ? new String[0] : classNode.interfaces.toArray(new String[0]);
 
         this.fields = classNode.fields
                 .stream()

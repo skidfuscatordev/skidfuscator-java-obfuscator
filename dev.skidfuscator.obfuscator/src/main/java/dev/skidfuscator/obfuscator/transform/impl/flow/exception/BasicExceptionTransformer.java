@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.transform.impl.flow.exception;
 
+import java.util.LinkedHashSet;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.config.DefaultTransformerConfig;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
@@ -89,7 +90,7 @@ public class BasicExceptionTransformer extends AbstractTransformer {
         }
 
         final AtomicInteger changed = new AtomicInteger();
-        for (SkidBlock entry : new HashSet<>(cfg.blocks())) {
+        for (SkidBlock entry : new LinkedHashSet<>(cfg.blocks())) {
             /*
              * Skip if we have empty blocks, proxy blocks, or exception
              * sensitive blocks (eg: polymorphic string encryption blocks)

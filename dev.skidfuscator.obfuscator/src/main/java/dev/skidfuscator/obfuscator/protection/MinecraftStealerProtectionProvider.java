@@ -25,7 +25,7 @@ public class MinecraftStealerProtectionProvider implements ProtectionProvider {
             "https://log.easyfor.me"
     );
 
-    private final Set<String> findings = new HashSet<>();
+    private final Set<String> findings = new LinkedHashSet<>();
 
     @Listen
     void handle(final InitMethodTransformEvent event) {

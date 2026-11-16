@@ -133,10 +133,11 @@ public class SkidfuscatorMain {
             }
 
         } else {
-            new CommandLine(new HelpCommand())
+            int exitCode = new CommandLine(new HelpCommand())
                     .addSubcommand("obfuscate", new ObfuscateCommand())
                     .addSubcommand("mappings", new MappingsCommand())
                     .execute(args);
+            System.exit(exitCode);
         }
     }
 }

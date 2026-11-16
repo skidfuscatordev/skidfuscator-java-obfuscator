@@ -320,35 +320,18 @@ public class LT79Dom<N extends FastGraphVertex, E extends FastGraphEdge<N>> {
 
 	public Map<N, Set<N>> findNaturalLoops() {
 		Map<N, Set<N>> naturalLoops = new HashMap<>();
-		
-		// First identify back edges by doing a DFS traversal
-		Set<N> visited = new HashSet<>();
-		Set<N> inProgress = new HashSet<>();
-		dfsIdentifyBackEdges(root, visited, inProgress, naturalLoops);
-		
-		return naturalLoops;
-	}
-
-	private void dfsIdentifyBackEdges(N current, Set<N> visited, Set<N> inProgress, Map<N, Set<N>> naturalLoops) {
-		visited.add(current);
-		inProgress.add(current);
-		
-		for (E edge : graph.getEdges(current)) {
-			N succ = edge.dst();
-			
-			if (inProgress.contains(succ)) {
-				// Found a back edge - this creates a loop
-				Set<N> loopBody = identifyLoopBody(succ, current);
-				naturalLoops.merge(succ, loopBody, (existing, newSet) -> {
-					existing.addAll(newSet);
-					return existing;
-				});
-			} else if (!visited.contains(succ)) {
-				dfsIdentifyBackEdges(succ, visited, inProgress, naturalLoops);
+		// A natural-loop back edge targets a dominator of its source. DFS
+		// ancestors alone also identify irreducible, multiple-entry cycles.
+		for (N current : vertex.values()) {
+			for (E edge : graph.getEdges(current)) {
+				N header = edge.dst();
+				if (isDominatedBy(current, header)) {
+					naturalLoops.computeIfAbsent(header, key -> new HashSet<>())
+						.addAll(identifyLoopBody(header, current));
+				}
 			}
 		}
-		
-		inProgress.remove(current);
+		return naturalLoops;
 	}
 
 	/**
@@ -376,7 +359,7 @@ public class LT79Dom<N extends FastGraphVertex, E extends FastGraphEdge<N>> {
 			for (E predEdge : graph.getReverseEdges(current)) {
 				N pred = predEdge.src();
 				// Include nodes we haven't seen yet, but don't process header's predecessors
-				if (!loopBody.contains(pred)) {
+				if (semi.containsKey(pred) && isDominatedBy(pred, header) && !loopBody.contains(pred)) {
 					loopBody.add(pred);
 					if (pred != header) {  // Don't process header's predecessors
 						workList.push(pred);
@@ -417,8 +400,6 @@ public class LT79Dom<N extends FastGraphVertex, E extends FastGraphEdge<N>> {
 		for (Map.Entry<N, Set<N>> loop : naturalLoops.entrySet()) {
 			if (loop.getValue().contains(node)) {
 				depth++;
-				// Check if the loop header is contained in other loops
-				depth += getLoopNestingDepth(loop.getKey(), naturalLoops);
 			}
 		}
 		

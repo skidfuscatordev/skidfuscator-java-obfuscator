@@ -42,7 +42,7 @@ public class SkidGroup {
     public SkidGroup(List<MethodNode> methodNodeList, Skidfuscator skidfuscator) {
         this.methodNodeList = methodNodeList;
         this.skidfuscator = skidfuscator;
-        this.invokers = new HashSet<>();
+        this.invokers = new LinkedHashSet<>();
         this.predicate = skidfuscator
                 .getPredicateAnalysis()
                 .getMethodPredicate(this);

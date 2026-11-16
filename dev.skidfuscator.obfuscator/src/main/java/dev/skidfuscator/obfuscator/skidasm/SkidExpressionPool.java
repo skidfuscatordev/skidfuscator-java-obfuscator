@@ -43,7 +43,7 @@ public class SkidExpressionPool extends ExpressionPool {
 
     @Override
     public Type get(int index, Predicate<Type> nullifier) {
-        return get(index, nullifier, new HashSet<>());
+        return get(index, nullifier, new LinkedHashSet<>());
     }
 
     public Type get(int index, Predicate<Type> predicate, Set<ExpressionPool> visited) {
@@ -106,7 +106,7 @@ public class SkidExpressionPool extends ExpressionPool {
     }
 
     public Set<Type> getTypes(int index) {
-        return getTypes(index, new HashSet<>(), new HashSet<>());
+        return getTypes(index, new LinkedHashSet<>(), new LinkedHashSet<>());
     }
 
     protected Set<Type> getTypes(int index, Set<Type> computedTypes, Set<ExpressionPool> visited) {
@@ -135,6 +135,6 @@ public class SkidExpressionPool extends ExpressionPool {
 
     @Override
     public SkidExpressionPool copy() {
-        return new SkidExpressionPool(new HashSet<>(parents), Arrays.copyOf(types, types.length), skidfuscator);
+        return new SkidExpressionPool(new LinkedHashSet<>(parents), Arrays.copyOf(types, types.length), skidfuscator);
     }
 }

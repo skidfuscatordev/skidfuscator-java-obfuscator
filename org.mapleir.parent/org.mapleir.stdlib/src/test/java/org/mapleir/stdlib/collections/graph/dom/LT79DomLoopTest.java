@@ -151,17 +151,9 @@ public class LT79DomLoopTest {
         
         Map<FakeFastVertex, Set<FakeFastVertex>> loops = domTree.findNaturalLoops();
 
-        loops.forEach((k, v) -> System.out.println(k + " -> " + v.stream().map(FakeFastVertex::toString).reduce("", (a, b) -> a + " " + b)));
-        
-        // Should identify both B and C as loop headers since both are entry points
-        assertTrue(loops.containsKey(builder.getVertex("B")), "B should be loop header");
-        assertTrue(loops.containsKey(builder.getVertex("D")), "C should be loop header");
-        
-        // Both loops should contain D as it's part of both cycles
-        assertTrue(loops.get(builder.getVertex("B")).contains(builder.getVertex("D")), 
-            "B's loop should contain D");
-        assertTrue(loops.get(builder.getVertex("D")).contains(builder.getVertex("D")),
-            "D's loop should contain D");
+        // Neither entry B nor C dominates D; this SCC has no natural-loop header.
+        assertTrue(loops.isEmpty(), "Irreducible cycles must not be reported as natural loops");
+
     }
 
     @Test
@@ -301,32 +293,9 @@ public class LT79DomLoopTest {
         )), "Second loop should contain Y and Z");
     }
 
-    /**
-     * Example graph structure showing natural loops:
-     *
-     *           A
-     *           |
-     *           v
-     *     +---> B <---+
-     *     |     | \   |
-     *     |     v  v  |
-     *     |     C   D |
-     *     |     |   | |
-     *     |     v   v |
-     *     |     E ----+
-     *     |    / \
-     *     F <-'   v
-     *             G
-     *             |
-     *             +-> C
-     *
-     * Contains two natural loops:
-     * 1. B -> F -> B (outer loop)
-     * 2. C -> G -> C (inner loop)
-     */
     @Test
     void testLoopWithCrossEdges() {
-        String graphText = """
+        GraphTestBuilder builder = new GraphTestBuilder("""
             A -> B
             B -> C, D
             C -> E
@@ -334,37 +303,33 @@ public class LT79DomLoopTest {
             E -> F, G
             F -> B
             G -> C
-            """;
-        
-        GraphTestBuilder builder = new GraphTestBuilder(graphText);
-        LT79Dom<FakeFastVertex, FakeFastEdge> domTree = 
-            new LT79Dom<>(builder.getGraph(), builder.getRoot());
-        
+            """);
+        LT79Dom<FakeFastVertex, FakeFastEdge> domTree =
+                new LT79Dom<>(builder.getGraph(), builder.getRoot());
         Map<FakeFastVertex, Set<FakeFastVertex>> loops = domTree.findNaturalLoops();
+        // C does not dominate G: B -> D -> E -> G bypasses C.
+        assertEquals(Set.of(builder.getVertex("B")), loops.keySet());
+        assertEquals(Set.of(builder.getVertex("B"), builder.getVertex("C"),
+                builder.getVertex("D"), builder.getVertex("E"), builder.getVertex("F"),
+                builder.getVertex("G")), loops.get(builder.getVertex("B")));
+        assertFalse(loops.get(builder.getVertex("B")).contains(builder.getVertex("A")));
+    }
 
-        loops.forEach((k, v) -> System.out.println(k + " -> " + v.stream().map(FakeFastVertex::toString).reduce("", (a, b) -> a + " " + b)));
-        // Should find two interleaved loops
-        assertEquals(2, loops.size(), "Should find two loops: B->F and C->G");
-        
-        Set<FakeFastVertex> loopB = loops.get(builder.getVertex("B"));
-        Set<FakeFastVertex> loopC = loops.get(builder.getVertex("E"));
-        
-        assertNotNull(loopB, "B should be a loop header");
-        assertNotNull(loopC, "E should be a loop header");
-        
-        // Check that cross edges are handled correctly
-        assertTrue(loopB.containsAll(Set.of(
-            builder.getVertex("B"),
-            builder.getVertex("C"),
-            builder.getVertex("D"),
-            builder.getVertex("E"),
-            builder.getVertex("F")
-        )), "B's loop should contain all nodes except G");
-        
-        assertTrue(loopC.containsAll(Set.of(
-            builder.getVertex("C"),
-            builder.getVertex("E"),
-            builder.getVertex("G")
-        )), "E's loop should contain C, E, and G");
+    @Test
+    void nestingDepthCountsContainingLoopsWithoutRecursingOnItsOwnHeader() {
+        GraphTestBuilder builder = new GraphTestBuilder("""
+            A -> B
+            B -> C, Exit
+            C -> D
+            D -> C, B
+            """);
+        LT79Dom<FakeFastVertex, FakeFastEdge> domTree =
+                new LT79Dom<>(builder.getGraph(), builder.getRoot());
+        Map<FakeFastVertex, Set<FakeFastVertex>> loops = domTree.findNaturalLoops();
+        assertEquals(0, domTree.getLoopNestingDepth(builder.getVertex("A"), loops));
+        assertEquals(0, domTree.getLoopNestingDepth(builder.getVertex("Exit"), loops));
+        assertEquals(1, domTree.getLoopNestingDepth(builder.getVertex("B"), loops));
+        assertEquals(2, domTree.getLoopNestingDepth(builder.getVertex("C"), loops));
+        assertEquals(2, domTree.getLoopNestingDepth(builder.getVertex("D"), loops));
     }
 }

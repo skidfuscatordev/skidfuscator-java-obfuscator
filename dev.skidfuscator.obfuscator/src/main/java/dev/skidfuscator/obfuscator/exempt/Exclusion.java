@@ -12,8 +12,11 @@ import org.mapleir.asm.MethodNode;
  */
 @Data
 @Builder
+@lombok.AllArgsConstructor
 public class Exclusion {
     private final ExclusionMap testers;
+    @Builder.Default private final boolean scopedMembers = false;
+    public Exclusion(ExclusionMap testers) { this(testers,false); }
 
     /**
      * Test if a class is to be excluded
@@ -22,6 +25,7 @@ public class Exclusion {
      * @return the boolean
      */
     public boolean test(final ClassNode classNode) {
+        if (scopedMembers) return false;
         assert testers.containsKey(ExclusionType.CLASS) : "Trying to test with null class tester";
 
         return testers.poll(ExclusionType.CLASS).test(classNode);

@@ -509,7 +509,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 		} else if(col.size() == 1) {
 			return col.iterator().next().node.exceptions.toArray(new String[0]);
 		} else {
-			Set<String> set = new HashSet<>();
+			Set<String> set = new LinkedHashSet<>();
 			Iterator<MethodNode> it = col.iterator();
 			set.addAll(it.next().node.exceptions);
 			
@@ -617,7 +617,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 			return Collections.emptySet();
 		}
 		
-		Set<MethodNode> result = new HashSet<>();
+		Set<MethodNode> result = new LinkedHashSet<>();
 		
 		for(ClassNode receiver : app.getClassTree().getAllChildren(cn)) {
 			if(!Modifier.isAbstract(receiver.node.access)) {
@@ -639,21 +639,21 @@ public class SkidInvocationResolver implements InvocationResolver {
 
 	@Override
 	public FieldNode findStaticField(String owner, String name, String desc) {
-		Set<FieldNode> set = new HashSet<>();
+		Set<FieldNode> set = new LinkedHashSet<>();
 		
 		ClassNode cn = app.findClassNode(owner);
 		
 		/* we do this because static fields can be in
 		 * interfaces. */
 		if(cn != null) {
-			Set<ClassNode> lvl = new HashSet<>();
+			Set<ClassNode> lvl = new LinkedHashSet<>();
 			lvl.add(cn);
 			for(;;) {
 				if(lvl.size() == 0) {
 					break;
 				}
 				
-				Set<FieldNode> lvlSites = new HashSet<>();
+				Set<FieldNode> lvlSites = new LinkedHashSet<>();
 				
 				for(ClassNode c : lvl) {
 					for(FieldNode f : c.getFields()) {
@@ -672,7 +672,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 					break;
 				}
 				
-				Set<ClassNode> newLvl = new HashSet<>();
+				Set<ClassNode> newLvl = new LinkedHashSet<>();
 				for(ClassNode c : lvl) {
 					ClassNode sup = app.findClassNode(c.node.superName);
 					if(sup != null) {
@@ -759,7 +759,7 @@ public class SkidInvocationResolver implements InvocationResolver {
 	
 	private <N> void assertIntersection(Set<N> s1, Set<N> s2, Set<N> expected) {
 		if(debugLevel >= 1) {
-			Set<N> tmp = new HashSet<>();
+			Set<N> tmp = new LinkedHashSet<>();
 			tmp.addAll(s1);
 			tmp.retainAll(s2);
 			

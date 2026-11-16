@@ -130,7 +130,7 @@ class MapleExclusionParserTest {
             """;
         
         when(mockMethodNode.getName()).thenReturn("getData");
-        when(mockFieldNode.getDisplayName()).thenReturn("userDatav");
+        when(mockFieldNode.getDisplayName()).thenReturn("userData");
         
         Exclusion exclusion = ExclusionParser.parsePatternExclusion(input);
         ExclusionTester<MethodNode> methodTester = exclusion.getTesters().poll(ExclusionType.METHOD);
@@ -145,6 +145,7 @@ class MapleExclusionParserTest {
     @MethodSource("provideClassTypePatterns")
     void testClassTypes(String classType, boolean isInterface, boolean isAnnotation, boolean isEnum) {
         String input = String.format("@%s com.example.Test { }", classType);
+        when(mockClassNode.getName()).thenReturn("com/example/Test");
         
         when(mockClassNode.isInterface()).thenReturn(isInterface);
         when(mockClassNode.isAnnotation()).thenReturn(isAnnotation);
@@ -257,15 +258,19 @@ class MapleExclusionParserTest {
         
         MethodNode getMethod = mock(MethodNode.class);
         when(getMethod.getName()).thenReturn("getName");
+        when(getMethod.getOwnerClass()).thenReturn(mockClassNode);
         
         MethodNode setMethod = mock(MethodNode.class);
         when(setMethod.getName()).thenReturn("setName");
+        when(setMethod.getOwnerClass()).thenReturn(mockClassNode);
         
         FieldNode dataField = mock(FieldNode.class);
         when(dataField.getDisplayName()).thenReturn("userData");
+        when(dataField.getOwnerClass()).thenReturn(mockClassNode);
         
         FieldNode countField = mock(FieldNode.class);
         when(countField.getDisplayName()).thenReturn("userCount");
+        when(countField.getOwnerClass()).thenReturn(mockClassNode);
         
         Exclusion exclusion = ExclusionParser.parsePatternExclusion(input);
         ExclusionTester<MethodNode> methodTester = exclusion.getTesters().poll(ExclusionType.METHOD);
@@ -275,5 +280,34 @@ class MapleExclusionParserTest {
         assertTrue(methodTester.test(setMethod));
         assertTrue(fieldTester.test(dataField));
         assertTrue(fieldTester.test(countField));
+    }
+
+    @Test
+    void memberRulesRespectOwnerModifiersAndDescriptors() {
+        Exclusion exclusion = ExclusionParser.parsePatternExclusion("""
+            @class com.example.TestClass {
+                @method public #void process(String, int)
+                @field private static final #String testField
+            }
+            """);
+        ExclusionTester<MethodNode> methods = exclusion.getTesters().poll(ExclusionType.METHOD);
+        ExclusionTester<FieldNode> fields = exclusion.getTesters().poll(ExclusionType.FIELD);
+        when(mockMethodNode.getName()).thenReturn("process");
+        when(mockMethodNode.getDesc()).thenReturn("(Ljava/lang/String;I)V");
+        when(mockMethodNode.isPublic()).thenReturn(true);
+        when(mockFieldNode.isPrivate()).thenReturn(true);
+        when(mockFieldNode.isStatic()).thenReturn(true);
+        when(mockFieldNode.isFinal()).thenReturn(true);
+        assertTrue(methods.test(mockMethodNode));
+        assertTrue(fields.test(mockFieldNode));
+        when(mockMethodNode.getDesc()).thenReturn("(Ljava/lang/String;)V");
+        assertFalse(methods.test(mockMethodNode));
+        when(mockFieldNode.getDesc()).thenReturn("I");
+        assertFalse(fields.test(mockFieldNode));
+        when(mockMethodNode.getDesc()).thenReturn("(Ljava/lang/String;I)V");
+        when(mockFieldNode.getDesc()).thenReturn("Ljava/lang/String;");
+        when(mockClassNode.getName()).thenReturn("other/Application");
+        assertFalse(methods.test(mockMethodNode));
+        assertFalse(fields.test(mockFieldNode));
     }
 }

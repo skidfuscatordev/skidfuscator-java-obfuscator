@@ -1,5 +1,6 @@
 package dev.skidfuscator.obfuscator.transform.impl.number;
 
+import java.util.LinkedHashSet;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.event.EventPriority;
 import dev.skidfuscator.obfuscator.event.annotation.Listen;
@@ -39,7 +40,7 @@ public class NumberTransformer extends AbstractTransformer {
         super(skidfuscator, "Number Encryption", children);
     }
 
-    private static final Set<Type> TYPES = new HashSet<>(Arrays.asList(
+    private static final Set<Type> TYPES = new LinkedHashSet<>(Arrays.asList(
             Type.INT_TYPE,
             Type.SHORT_TYPE,
             Type.BYTE_TYPE,
@@ -68,7 +69,7 @@ public class NumberTransformer extends AbstractTransformer {
             return;
         }
 
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
+        for (BasicBlock vertex : new LinkedHashSet<>(cfg.vertices())) {
             if (vertex.isFlagSet(SkidBlock.FLAG_NO_OPAQUE))
                 continue;
 
@@ -76,7 +77,7 @@ public class NumberTransformer extends AbstractTransformer {
                 continue;
             }
 
-            for (Stmt stmt : new HashSet<>(vertex)) {
+            for (Stmt stmt : new LinkedHashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
                     if (!(expr instanceof SkidConstantExpr))
                         continue;

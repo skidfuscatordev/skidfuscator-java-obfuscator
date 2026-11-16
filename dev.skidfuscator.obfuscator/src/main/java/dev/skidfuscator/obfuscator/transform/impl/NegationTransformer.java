@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  * @author ryan (vaz@mdma.dev)
  */
 public class NegationTransformer extends AbstractTransformer {
-    private static final Set<Type> TYPES = new HashSet<>(Arrays.asList(
+    private static final Set<Type> TYPES = new LinkedHashSet<>(Arrays.asList(
             Type.INT_TYPE,
             Type.SHORT_TYPE,
             Type.BYTE_TYPE,
@@ -77,8 +77,8 @@ public class NegationTransformer extends AbstractTransformer {
         if (cfg == null)
             return;
 
-        for (BasicBlock vertex : new HashSet<>(cfg.vertices())) {
-            for (Stmt stmt : new HashSet<>(vertex)) {
+        for (BasicBlock vertex : new LinkedHashSet<>(cfg.vertices())) {
+            for (Stmt stmt : new LinkedHashSet<>(vertex)) {
                 for (Expr expr : stmt.enumerateOnlyChildren()) {
                     if (!(expr instanceof ConstantExpr))
                         continue;

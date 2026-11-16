@@ -62,6 +62,8 @@ import dev.skidfuscator.obfuscator.transform.impl.pure.PureHashTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.sdk.SdkInjectorTransformer;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringEncryptionType;
 import dev.skidfuscator.obfuscator.transform.impl.string.StringTransformerV2;
+import dev.skidfuscator.obfuscator.util.RandomUtil;
+import dev.skidfuscator.obfuscator.reliability.*;
 import dev.skidfuscator.obfuscator.util.ConsoleColors;
 import dev.skidfuscator.obfuscator.util.MapleJarUtil;
 import dev.skidfuscator.obfuscator.util.MiscUtil;
@@ -111,12 +113,12 @@ public class Skidfuscator {
     public static final boolean FLATTENING = false;
     public static boolean CLOUD = false;
 
-    public static final String VERSION = "2.1.0";
-    public static final Double VERSION_DOUBLE = 2.1;
+    public static final String VERSION = "2.2.0";
+    public static final Double VERSION_DOUBLE = 2.2;
 
     private final SkidfuscatorSession session;
 
-    protected Set<CommonDependency> installedDependencies = new HashSet<>();
+    protected Set<CommonDependency> installedDependencies = new LinkedHashSet<>();
     protected SkidApplicationClassSource classSource;
     private LibraryClassSource jvmClassSource;
     protected JarContents jarContents;
@@ -204,11 +206,44 @@ public class Skidfuscator {
     /**
      * Runs the execution of the obfuscator.
      */
+    private RunReport runReport;
+    private List<Transformer> activeTransformers = Collections.emptyList();
+
     public void run() {
+        Throwable failure = null;
+        runReport = null;
+        activeTransformers = Collections.emptyList();
+        try {
+            session.getReliability().validate();
+            long seed = session.getReliability().getSeed() == null
+                    ? new java.security.SecureRandom().nextLong() : session.getReliability().getSeed();
+            RandomUtil.begin(seed);
+            dev.skidfuscator.obfuscator.util.VerifiedDownloads.offline(session.getReliability().isOffline());
+            runReport = new RunReport(session, seed);
+            ArchiveChecks.validate(session.getInput(),session.getReliability().getMaxInputBytes());
+            runSession();
+        } catch (RuntimeException | Error e) { failure = e; throw e;
+        } catch (IOException e) { failure = e; throw new java.io.UncheckedIOException(e);
+        } finally {
+            try {
+                if (runReport != null) runReport.finish(failure, activeTransformers);
+            } catch (IOException e) {
+                if (failure != null) failure.addSuppressed(e);
+                else throw new java.io.UncheckedIOException("Failed to write run report", e);
+            } finally {
+                EventBus.end(); RandomUtil.end();
+                dev.skidfuscator.obfuscator.util.VerifiedDownloads.clearContext();
+                IntegerBlockPredicateRenderer.DEBUG = false;
+                _cleanup();
+            }
+        }
+    }
+
+    private void runSession() {
         LOGGER.setDebug(session.isDebug());
         LOGGER.post("Beginning Skidfuscator Community...");
         _verifyEnvironment();
-        if (session.isAnalytics()) {
+        if (session.isAnalytics() && !session.getReliability().isOffline()) {
             _runAnalytics();
         }
 
@@ -251,8 +286,11 @@ public class Skidfuscator {
         if (!session.isFuckIt()) {
             _verify();
         } else {
-            LOGGER.warn("Skipped verification...");
+            throw new IllegalArgumentException("Unsafe verification bypass is not supported");
         }
+
+        plan();
+        if (session.getReliability().isDryRun()) return;
 
         /* Resolve context */
         try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
@@ -299,6 +337,7 @@ public class Skidfuscator {
          * Here though shall puteth all your transformers. Enjoy!
          */
         final List<Transformer> transformers = _loadTransformer();
+        activeTransformers = transformers;
 
         LOGGER.log("Finished loading transformers...");
 
@@ -308,7 +347,7 @@ public class Skidfuscator {
                 hierarchy.getClasses().size(),
                 "Hot-loaded " + hierarchy.getClasses().size() + " classes"
         )) {
-            for (ClassNode ccls : hierarchy.getClasses()) {
+            for (ClassNode ccls : hierarchy.getClasses().stream().sorted(Comparator.comparing(ClassNode::getName)).collect(Collectors.toList())) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
                 if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
@@ -343,12 +382,16 @@ public class Skidfuscator {
             LOGGER.post("\n\n" + protectionProvider.getWarning());
         }
 
+        for (Transformer transformer : activeTransformers)
+            if (transformer instanceof dev.skidfuscator.obfuscator.transform.AbstractTransformer
+                    && ((dev.skidfuscator.obfuscator.transform.AbstractTransformer)transformer).getFailed()>0)
+                throw new IllegalStateException("Protection transformer reported failures: "+transformer.getName());
         LOGGER.post("Dumping classes...");
         try(ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 this.getIrFactory().size(),
                 "Dumped " + this.getIrFactory().size() + " classes"
         )) {
-            for(Map.Entry<MethodNode, ControlFlowGraph> e : new HashSet<>(this.getIrFactory().entrySet())) {
+            for(Map.Entry<MethodNode, ControlFlowGraph> e : new LinkedHashSet<>(this.getIrFactory().entrySet())) {
                 SkidMethodNode mn = (SkidMethodNode) e.getKey();
                 ControlFlowGraph cfg = e.getValue();
 
@@ -361,24 +404,44 @@ public class Skidfuscator {
                     cfg.recomputeEdges();
                     mn.dump();
                 } catch (Exception ex){
-                    if (ex instanceof IllegalStateException) {
-                        throw ex;
-                    }
-                    ex.printStackTrace();
+                    throw new IllegalStateException("Failed to emit method " + mn, ex);
                 }
                 progressBar.tick();
             }
         }
         LOGGER.log("Finished dumping classes...");
-        EventBus.end();
-
-        _cleanup();
-
         _dump();
 
-        SkidProgressBar.RENDER_THREAD.shutdown();
-        IntegerBlockPredicateRenderer.DEBUG = false;
         LOGGER.post("Goodbye!");
+    }
+
+    private void plan() {
+        java.util.stream.StreamSupport.stream(classSource.iterate().spliterator(),false).sorted(Comparator.comparing(ClassNode::getName)).forEach(c -> {
+            boolean record = (c.node.access & org.objectweb.asm.Opcodes.ACC_RECORD) != 0;
+            boolean serialized = serializationContract(c,new java.util.HashSet<>());
+            if (record || serialized) exemptAnalysis.add(c);
+            boolean keepClass = exemptAnalysis.isExempt(c);
+            runReport.element("class",c.getName(),keepClass,record?"record-metadata-contract":serialized?"serialization-contract":keepClass?"exclusion":"selected");
+            for (MethodNode m : c.getMethods()) {
+                boolean overBudget = m.node.instructions.size() > session.getReliability().instructionLimit();
+                if (overBudget) exemptAnalysis.add(m);
+                boolean keep = keepClass || exemptAnalysis.isExempt(m) || m.isNative() || m.isAbstract();
+                runReport.element("method",c.getName()+"#"+m.getName()+m.getDesc(),keep,
+                        overBudget?"instruction-budget":keep?"exclusion-or-no-bytecode":"selected");
+            }
+            for (org.mapleir.asm.FieldNode field : c.getFields())
+                runReport.element("field",c.getName()+"#"+field.getName()+":"+field.getDesc(),true,
+                        exemptAnalysis.isExempt(field)?"exclusion":"structural-renaming-disabled");
+            runReport.checkpoint();
+        });
+    }
+
+    private boolean serializationContract(ClassNode node, java.util.Set<String> visited) {
+        if (node==null || !visited.add(node.getName())) return false;
+        if (node.getName().equals("java/io/Serializable") || node.getName().equals("java/io/Externalizable")) return true;
+        for (String iface : node.getInterfaces())
+            if (serializationContract(classSource.findClassNode(iface),visited)) return true;
+        return node.getSuperName()!=null && serializationContract(classSource.findClassNode(node.getSuperName()),visited);
     }
 
     private void _runAnalytics() {
@@ -468,9 +531,12 @@ public class Skidfuscator {
                 1,
                 "Imported configuration")){
 
+            if (session.getConfig() != null && !session.getConfig().isFile())
+                throw new IllegalArgumentException("Configuration file not found: " + session.getConfig());
             this.tsConfig = this.session.getConfig() == null
                     ? ConfigFactory.parseString("").resolve()
                     : ConfigFactory.parseFile(session.getConfig()).resolve();
+            this.tsConfig = Profiles.apply(tsConfig, session.getReliability().getProfile());
             this.config = new DefaultSkidConfig(tsConfig, "");
 
             progressBar.tick();
@@ -513,7 +579,7 @@ public class Skidfuscator {
 
     public Set<LibraryClassSource> _importJvm() {
         /* Import JVM */
-        final Set<LibraryClassSource> sources = new HashSet<>();
+        final Set<LibraryClassSource> sources = new LinkedHashSet<>();
         LOGGER.post("Beginning importing of the JVM...");
 
         /*
@@ -525,7 +591,19 @@ public class Skidfuscator {
          *
          * + I love J8,... death to "var" in Java
          */
-        if (!session.isJmod()) {
+        if (session.getRuntime().isFile() && session.getRuntime().getName().equals("modules")) {
+            try {
+                jvmClassSource = new LibraryClassSource(
+                        dev.skidfuscator.obfuscator.util.RuntimeImage.read(session.getRuntime(), () -> {
+                            if (runReport != null) runReport.checkpoint();
+                        }), 0);
+                sources.add(jvmClassSource);
+            } catch (IOException failure) {
+                throw new java.io.UncheckedIOException("Could not import selected runtime image", failure);
+            }
+        } else if (!session.isJmod()) {
+            if (!session.getRuntime().isFile())
+                throw new IllegalArgumentException("Runtime not found; select jmods, rt.jar or lib/modules with --runtime: " + session.getRuntime());
             try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
                     1,
                     "Imported the JVM JDk (<= 1.8)"
@@ -557,6 +635,7 @@ public class Skidfuscator {
                 LOGGER.warn("FATAL! Library files for JDK are null");
                 throw new IllegalStateException("Null JDK files! Exiting...");
             }
+            Arrays.sort(libFiles, Comparator.comparing(File::getName));
 
             try (final ProgressWrapper wrapper = ProgressUtil.progressCheck(
                     libFiles.length,
@@ -578,6 +657,7 @@ public class Skidfuscator {
             }
             LOGGER.post("✓ Success");
         }
+        if (sources.isEmpty()) throw new IllegalArgumentException("No runtime modules found: " + session.getRuntime());
         LOGGER.log("Finished importing the JVM");
         LOGGER.log(String.format("Imported %d jvm classes!", jvmClassSource.size()));
 
@@ -821,25 +901,9 @@ public class Skidfuscator {
                 throw new IllegalStateException("Failed to compute some libraries!");
             }
 
-            // [failsafe]   some people cancel mid download, corrupting the library
-            //              and sometimes i fuck up, rendering it wrong
-            //              so we should nuke and redownload common deps to
-            //              prevent bad things. if it fails again, i want to know
-            //              about it
-
-            Failsafe.run(() -> downloadCommonDependencies(commonDependencies))
-                    .onException()
-                    .retry(1)
-                    .execute(() -> {
-                        LOGGER.warn("Failed to download common dependencies... retrying...\n");
-                        final Path mappingsDir = Paths.get("mappings-cloud");
-                        try {
-                            Files.delete(mappingsDir);
-                        } catch (IOException e) {
-                            LOGGER.error("Failed to download common dependencies again... Please contact the developer\n", e);
-                        }
-                    })
-                    .finish();
+            if (session.getReliability().isOffline())
+                throw new IllegalStateException("Missing dependencies in offline mode; provide their JARs with --libs");
+            downloadCommonDependencies(commonDependencies);
 
             LOGGER.warn(String.format(
                     "Resolved %d common dependencies... retrying verification...\n",
@@ -855,11 +919,11 @@ public class Skidfuscator {
     private void downloadCommonDependencies(Collection<CommonDependency> dependencies) {
         dependencies.forEach(e -> {
             LOGGER.warn("Found common dependency: " + e.name() + "...\n");
-            dependencyDownloader.download(e);
+            Path verified=dependencyDownloader.download(e);
+            this.importMappingFolder(verified.toFile());
         });
 
-        final Path mappingsDir = Paths.get("mappings-cloud");
-        this.importMappingFolder(mappingsDir.toFile());
+
     }
 
     private void importMappingFolder(final File folder) {
@@ -889,7 +953,7 @@ public class Skidfuscator {
 
     protected void _cleanup() {
         this.hierarchy = null;
-        this.irFactory.clear();
+        if (this.irFactory != null) this.irFactory.clear();
         this.irFactory = null;
         System.gc();
     }
@@ -903,7 +967,7 @@ public class Skidfuscator {
                     session.getOutput().getPath()
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Failed to write output JAR: " + session.getOutput(), e);
         }
         LOGGER.log("Finished dumping jar...");
     }
@@ -945,6 +1009,8 @@ public class Skidfuscator {
     }
 
     private void run(final String phaseName, final Caller caller) {
+        runReport.context(phaseName, "");
+        final long phaseStarted = System.nanoTime();
         final List<String> issues = new ArrayList<>();
         final SkidTransformEvent event = caller.callBase();
         EventBus.call(event);
@@ -955,7 +1021,7 @@ public class Skidfuscator {
                 pad("Running phase [" + phaseName + "] on " + hierarchy.getClasses().size() + " classes", 62) + "│",
                 "│  "
         )){
-            for (ClassNode ccls : hierarchy.getClasses()) {
+            for (ClassNode ccls : hierarchy.getClasses().stream().sorted(Comparator.comparing(ClassNode::getName)).collect(Collectors.toList())) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
                 if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
@@ -1024,7 +1090,7 @@ public class Skidfuscator {
                 pad("Running phase [" + phaseName + "] on " + size + " methods", 62) + "│",
                 "│  "
         )){
-            for (ClassNode ccls : hierarchy.getClasses()) {
+            for (ClassNode ccls : hierarchy.getClasses().stream().sorted(Comparator.comparing(ClassNode::getName)).collect(Collectors.toList())) {
                 final SkidClassNode classNode = (SkidClassNode) ccls;
 
                 if (exemptAnalysis.isExempt(classNode) || classNode.isAnnoyingVersion()) {
@@ -1035,10 +1101,11 @@ public class Skidfuscator {
                 final List<MethodNode> methodNodes = classNode
                         .getMethods()
                         .stream()
-                        .sorted(MethodPriority.COMPARATOR)
+                        .sorted(MethodPriority.COMPARATOR.thenComparing(MethodNode::getName).thenComparing(MethodNode::getDesc))
                         .collect(Collectors.toList());
 
                 for (MethodNode cmth : methodNodes) {
+                    runReport.checkpoint();
                     final SkidMethodNode methodNode = (SkidMethodNode) cmth;
 
                     if (methodNode.isAbstract() || methodNode.isNative()) {
@@ -1051,6 +1118,7 @@ public class Skidfuscator {
                         continue;
                     }
 
+                    runReport.context(phaseName,methodNode.getOwnerClass().getName()+"#"+methodNode.getName()+methodNode.getDesc());
                     final TransformEvent methodEvent = caller.callMethod(methodNode);
                     EventBus.call(
                             methodEvent,
@@ -1079,6 +1147,8 @@ public class Skidfuscator {
                 .append("│"));
         issues.forEach(e -> System.out.println("│  --> " + pad(e, 61) + "│"));
 
+        runReport.phase(phaseName, phaseStarted);
+        if (!issues.isEmpty()) throw new IllegalStateException("Transformation issues in phase " + phaseName + ": " + issues);
         if (!phaseName.equals("Finalize")) {
             System.out.println("│───────────────────────────────────────────────────────────────────│\n");
         } else {

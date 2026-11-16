@@ -21,7 +21,9 @@ class ExclusionParserTest {
 
         List<String> results = ExclusionParser.parsePattern(input);
         assertEquals(4, results.size(), "Should generate patterns for class and all members");
-        assertTrue(results.stream().anyMatch(p -> p.contains("public") && p.contains("com\\/example\\/MyClass")));
+        String regex=results.get(0).substring("@class public ".length());
+        assertTrue(java.util.regex.Pattern.compile(regex).matcher("com/example/MyClass").matches());
+        assertFalse(java.util.regex.Pattern.compile(regex).matcher("com/example/MyClassOther").matches());
     }
 
     @Test
@@ -84,7 +86,9 @@ class ExclusionParserTest {
 
         List<String> results = ExclusionParser.parsePattern(input);
         results.forEach(System.out::println);
-        assertTrue(results.stream().anyMatch(p -> p.contains("com\\/example\\/.*\\/service\\/.*.*")));
+        String regex=results.get(0).substring("@class ".length());
+        assertTrue(java.util.regex.Pattern.compile(regex).matcher("com/example/orders/service/Worker").matches());
+        assertFalse(java.util.regex.Pattern.compile(regex).matcher("other/example/orders/service/Worker").matches());
         assertTrue(results.stream().anyMatch(p -> p.contains("get*")));
         assertTrue(results.stream().anyMatch(p -> p.contains("set*")));
         assertTrue(results.stream().anyMatch(p -> p.contains("*Data")));

@@ -49,9 +49,9 @@ public abstract class SkidTest implements TestCase {
         try(SkidClassLoader classLoader = new SkidClassLoader(urls)) {
             final Class<?> clazz = classLoader.loadClass(this.getMainClass().getName());
             final TestRun run = (TestRun) clazz.newInstance();
-            run.run();
+            execute(run);
         } catch (Exception e) {
-            //throw new IllegalStateException("Failed execution", e);
+            throw new IllegalStateException("Original test application failed", e);
         }
 
         this.skidfuscator = new TestSkidfuscator(
@@ -65,6 +65,11 @@ public abstract class SkidTest implements TestCase {
     @Override
     public String getConfigPath() {
         return "/config/runtime_new.hocon";
+    }
+
+    /** Apply the same behavioral contract before and after transformation. */
+    protected void execute(TestRun run) {
+        run.run();
     }
 
     @Override
@@ -81,7 +86,7 @@ public abstract class SkidTest implements TestCase {
 
             final Class<?> clazz = classLoader.loadClass(this.getMainClass().getName());
             final TestRun run = (TestRun) clazz.newInstance();
-            run.run();
+            execute(run);
 
             if (TestSkidfuscator.SKIP) {
                 Assertions.fail("Transformers are causing the issue!");

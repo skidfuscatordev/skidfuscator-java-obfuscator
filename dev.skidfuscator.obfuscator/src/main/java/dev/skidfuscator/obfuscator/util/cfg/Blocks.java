@@ -62,7 +62,7 @@ public class Blocks {
     }
 
     private Stmt stmtException0(final Object notice) {
-        final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length - 1)]);
+        final Type exception = Type.getType(exceptionClasses[RandomUtil.nextInt(exceptionClasses.length)]);
 
         final Expr alloc_exception = new InitialisedObjectExpr(
                 exception.getClassName().replace(".", "/"),

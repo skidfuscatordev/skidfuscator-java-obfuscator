@@ -1,83 +1,68 @@
 package dev.skidfuscator.test;
 
-import com.esotericsoftware.asm.Type;
 import dev.skidfuscator.core.TestSkidfuscator;
 import dev.skidfuscator.obfuscator.Skidfuscator;
 import dev.skidfuscator.obfuscator.SkidfuscatorSession;
-import dev.skidfuscator.obfuscator.util.MiscUtil;
-import dev.skidfuscator.core.classloader.SkidClassLoader;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.RepeatedTest;
+import dev.skidfuscator.testclasses.jar.SampleApp;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
-import java.net.URL;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.jar.*;
 
-/**
- * @author Ghast
- * @since 06/03/2021
- * SkidfuscatorV2 © 2021
- */
+import static org.junit.jupiter.api.Assertions.*;
 
-public class SampleJarTest {
+class SampleJarTest {
+    @TempDir Path directory;
 
-    @RepeatedTest(1)
-    public void test2() throws Exception {
-        final File input = new File("src/test/resources/test.jar");
-        final File output = new File("src/test/resources/test-out.jar");
-
-        final File runtime = new File(
-                new File(System.getProperty("java.home")),
-                MiscUtil.getJavaVersion() > 8
-                        ? "jmods"
-                        : "lib/rt.jar"
-        );
-
-        final SkidfuscatorSession session = SkidfuscatorSession
-                .builder()
-                .input(input)
-                .output(output)
-                .runtime(runtime)
-                .config(new File(TestSkidfuscator.class.getResource("/config/runtime_new.hocon").getFile()))
-                .jmod(MiscUtil.getJavaVersion() > 8)
-                .phantom(true)
-                .analytics(true)
-                .debug(true)
-                .build();
-
-        final Skidfuscator skidfuscator = new Skidfuscator(session);
-        skidfuscator.run();
-
-        //assert skidfuscator.getConfig().isDriver() : "Compiled with driver when config says no";
-
-        final URL[] urls = new URL[]{
-                output.toURL()
-        };
-
-        System.out.println("-----------");
-
-        for (URL url : urls) {
-            try (JarInputStream jarInputStream = new JarInputStream(url.openStream())) {
-                JarEntry entry;
-                while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                    System.out.println(entry.getName());
-                }
+    @Test
+    void preservesExecutableJarBehaviorAndResources() throws Exception {
+        Path input = directory.resolve("input.jar");
+        Path output = directory.resolve("output.jar");
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().put(Attributes.Name.MAIN_CLASS, SampleApp.class.getName());
+        String className = SampleApp.class.getName().replace('.', '/') + ".class";
+        try (JarOutputStream jar = new JarOutputStream(java.nio.file.Files.newOutputStream(input), manifest);
+             InputStream bytes = SampleApp.class.getClassLoader().getResourceAsStream(className)) {
+            assertNotNull(bytes);
+            jar.putNextEntry(new JarEntry(className));
+            bytes.transferTo(jar);
+            jar.closeEntry();
+            jar.putNextEntry(new JarEntry("app.properties"));
+            jar.write("mode=protected\n".getBytes(StandardCharsets.UTF_8));
+            jar.closeEntry();
+        }
+        String original = execute(input);
+        assertEquals("protected:55", original);
+        new Skidfuscator(SkidfuscatorSession.builder()
+                .input(input.toFile()).output(output.toFile())
+                .runtime(Path.of(System.getProperty("java.home"), "jmods").toFile())
+                .config(new java.io.File(TestSkidfuscator.class.getResource("/config/runtime_new.hocon").toURI()))
+                .jmod(true).analytics(false).build()).run();
+        try (JarFile jar = new JarFile(output.toFile())) {
+            assertNotNull(jar.getJarEntry(className));
+            assertEquals(SampleApp.class.getName(), jar.getManifest().getMainAttributes().getValue(Attributes.Name.MAIN_CLASS));
+            try (InputStream resource = jar.getInputStream(jar.getJarEntry("app.properties"))) {
+                assertEquals("mode=protected\n", new String(resource.readAllBytes(), StandardCharsets.UTF_8));
             }
         }
+        assertEquals(original, execute(output));
+    }
 
-        System.out.println("-----------");
-
-        try(SkidClassLoader classLoader = new SkidClassLoader(urls)) {
-            System.out.println(skidfuscator.getClassRemapper());
-            final String name = skidfuscator
-                    .getClassRemapper()
-                    .map(Type.getObjectType("dev/sim0n/app/Main").getInternalName());
-            System.out.println("Found named " + name);
-            final String replaced = name == null ? "dev.sim0n.app.Main" : name.replace("/", ".");
-            final Class<?> clazz = classLoader.loadClass(replaced);
-            clazz.getDeclaredMethod("main", String[].class).invoke(null, (Object) new String[0]);
+    private String execute(Path jar) throws Exception {
+        Process process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                "-Xverify:all", "-jar", jar.toString()).redirectErrorStream(true).start();
+        try {
+            assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Application did not terminate");
+            String result = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
+            assertEquals(0, process.exitValue(), result);
+            return result;
+        } finally {
+            process.destroyForcibly();
         }
     }
 }

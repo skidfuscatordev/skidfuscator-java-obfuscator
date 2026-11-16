@@ -63,19 +63,20 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 	public void download() throws IOException {
 		URL url = null;
 		JarURLConnection connection = (JarURLConnection) (url = new URL(jarInfo.formattedURL())).openConnection();
-		JarFile jarFile = connection.getJarFile();
-		Enumeration<JarEntry> entries = jarFile.entries();
+		connection.setUseCaches(false);
 		contents = new LocateableJarContents(url);
 
 		/*
 		 * Map holding all the regular data
 		 */
-		Map<String, byte[]> data = new HashMap<>();
+		Map<String, byte[]> data = new java.util.LinkedHashMap<>();
 
 		/*
 		 * Add all the regular data to the map, add the resources to the jar contents, we won't
 		 * be needing them for now. Once that's done, cleate a new type map.
 		 */
+		try (JarFile jarFile = connection.getJarFile()) {
+		Enumeration<JarEntry> entries = jarFile.entries();
 		while (entries.hasMoreElements()) {
 			JarEntry entry = entries.nextElement();
 			byte[] bytes = read(jarFile.getInputStream(entry));
@@ -86,6 +87,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 				JarResource resource = new JarResource(entry.getName(), bytes);
 				contents.getResourceContents().add(resource);
 			}
+		}
 		}
 
 		Map<Type, org.objectweb.asm.tree.ClassNode> typeMap = new HashMap<>();
@@ -124,7 +126,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 						}
 					}
 				} catch (IOException | UnsupportedOperationException e) {
-					contents.getResourceContents().add(new JarResource(name, db));
+					throw new IllegalStateException("Failed to import application class " + name, e);
 				}
 
 				progressBar.tick();
@@ -186,7 +188,7 @@ public class PhantomJarDownloader<C extends ClassNode> extends AbstractJarDownlo
 		}
 
 		// Remove duplicate constraints for faster analysis
-		Set<String> existingConstraints = new HashSet<>();
+		Set<String> existingConstraints = new LinkedHashSet<>();
 		ClassAccessStateMachine.v().getConstraints().removeIf(c -> {
 			boolean isDuplicate = existingConstraints.contains(c.toString());
 			existingConstraints.add(c.toString());

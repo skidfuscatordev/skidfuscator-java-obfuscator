@@ -10,6 +10,7 @@ import java.io.File;
  * with the obfuscator.
  */
 @Builder
+@lombok.AllArgsConstructor
 public class SkidfuscatorSession {
     private File input;
     private File output;
@@ -28,6 +29,19 @@ public class SkidfuscatorSession {
     private boolean lowCon;
     private boolean dex;
     private boolean debug = false;
+    private ReliabilityOptions reliability;
+
+    public ReliabilityOptions getReliability() {
+        return reliability == null ? ReliabilityOptions.builder().build() : reliability;
+    }
+
+    /** Preserve the existing embedding API. */
+    public SkidfuscatorSession(File input, File output, File[] libs, File mappings, File exempt,
+            File config, File runtime, boolean phantom, boolean jmod, boolean fuckit,
+            boolean analytics, boolean renamer, boolean c2j, boolean lowCon, boolean dex, boolean debug) {
+        this(input, output, libs, mappings, exempt, config, runtime, phantom, jmod, fuckit,
+                analytics, renamer, c2j, lowCon, dex, debug, null);
+    }
 
     /**
      *
@@ -82,12 +96,13 @@ public class SkidfuscatorSession {
     public File getRuntime() {
         if (runtime == null) {
             final String home = System.getProperty("java.home");
-            return new File(
+            File selected = new File(
                     home,
                     Jvm.getJavaVersion() > 8
                             ? "jmods"
                             : "lib/rt.jar"
             );
+            return selected.exists() || Jvm.getJavaVersion() <= 8 ? selected : new File(home,"lib/modules");
         }
         return runtime;
     }

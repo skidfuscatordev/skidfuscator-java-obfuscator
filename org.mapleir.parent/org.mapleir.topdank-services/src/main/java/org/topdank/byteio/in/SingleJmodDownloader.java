@@ -55,6 +55,7 @@ public class SingleJmodDownloader<C extends ClassNode> extends AbstractJarDownlo
 								bytes,
 								cn
 						));
+						map.put(cn.getName(), cn);
 					} else {
 						throw new IllegalStateException("duplicate: " + cn.getName());
 					}
@@ -71,6 +72,6 @@ public class SingleJmodDownloader<C extends ClassNode> extends AbstractJarDownlo
 	}
 
 	private byte[] read(InputStream inputStream) throws IOException {
-		return ByteStreams.toByteArray(inputStream);
+		try (InputStream input = inputStream) { return ByteStreams.toByteArray(input); }
 	}
 }

@@ -6,7 +6,6 @@
 
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
         mavenCentral()
     }
@@ -52,7 +51,6 @@ void initBase() {
     include ':depend-analysis'
     include ':obfuscator'
     include ':client-standalone'
-    include ':gradle-plugin'
 
     project(":annotations").projectDir = file('dev.skidfuscator.annotations')
     project(":commons").projectDir = file('dev.skidfuscator.commons')
@@ -61,9 +59,11 @@ void initBase() {
     project(":depend-analysis").projectDir = file('dev.skidfuscator.obfuscator.dependanalysis')
     project(":obfuscator").projectDir = file('dev.skidfuscator.obfuscator')
     project(":client-standalone").projectDir = file('dev.skidfuscator.client.standalone')
-    project(":gradle-plugin").projectDir = file('dev.skidfuscator.gradle-plugin')
 }
 
 initMaple()
 initBase()
 
+
+include ':integration'
+project(':integration').projectDir = file('dev.skidfuscator.integration')

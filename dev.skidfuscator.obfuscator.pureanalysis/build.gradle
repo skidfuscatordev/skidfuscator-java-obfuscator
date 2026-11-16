@@ -3,17 +3,16 @@ plugins {
 }
 
 group = 'dev.skidfuscator.community'
-version = '2.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
-    mavenLocal()
 }
 
 dependencies {
     api project(':modasm')
-    api 'io.github.terminalsin:SSVM:1.0.0-SNAPSHOT'
+    // Immutable revision behind the previously used 1.0.0-SNAPSHOT tag.
+    api 'io.github.terminalsin:SSVM:0d4fc5417a8a21b58dcd29849dac013aa00b4817'
     //api 'dev.xdark:ssvm-core:2.0.2'
     //api 'dev.xdark:ssvm-invoke:2.0.2'
     //api 'dev.xdark:ssvm-io:2.0.2'

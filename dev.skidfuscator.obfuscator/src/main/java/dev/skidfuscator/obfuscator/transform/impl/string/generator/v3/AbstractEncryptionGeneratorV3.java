@@ -78,7 +78,7 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
              * If the field is tagged with InjectTags.RANDOM_NAME,
              * then we will generate a random name for the field.
              */
-            final Set<InjectFieldTag> tags = new HashSet<>(Arrays.asList(injectField.tags())
+            final Set<InjectFieldTag> tags = new LinkedHashSet<>(Arrays.asList(injectField.tags())
             );
             if (tags.contains(InjectFieldTag.RANDOM_NAME)) {
                 final String fieldDesc = declaredField.getName() + Type.getType(declaredField.getType()).getDescriptor();
@@ -172,7 +172,7 @@ public abstract class AbstractEncryptionGeneratorV3 implements EncryptionGenerat
              * If the method is tagged with InjectTags.RANDOM_NAME,
              * then we will generate a random name for the method.
              */
-            final Set<InjectMethodTag> tags = new HashSet<>(Arrays.asList(injectMethod.tags())
+            final Set<InjectMethodTag> tags = new LinkedHashSet<>(Arrays.asList(injectMethod.tags())
             );
             if (tags.contains(InjectMethodTag.RANDOM_NAME)) {
                 final String randomName = RandomUtil.randomAlphabeticalString(10);
