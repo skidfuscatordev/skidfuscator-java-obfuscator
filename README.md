@@ -59,7 +59,12 @@ output, verified dependencies and a Java 8/11/17/21/25 test matrix. Read the
 >}
 > ```
 
-You can download Skidfuscator [here](https://github.com/skidfuscatordev/skidfuscator-java-obfuscator/releases) and run it directly.
+Download this fork's [last approved JAR](https://github.com/walbergaia/skidfuscator-java-obfuscator/releases/download/main-build/skidfuscator.jar)
+or open the [main-build pre-release](https://github.com/walbergaia/skidfuscator-java-obfuscator/releases/tag/main-build)
+for its SHA-256 checksums, SBOM and source commit. The fixed download is updated
+after the default branch passes the full CI; it is created after the first
+successful run with publication enabled. The obfuscator requires Java 17+.
+See [download and publication details](docs/DOWNLOADS.md).
 
 <details>
 <summary><h3>👉 CLI Usage/Install</h3></summary>
@@ -74,6 +79,10 @@ java -jar skidfuscator.jar obfuscate <path to your jar> -li=<path to folder with
 ```
 
 ### 🔥 Homebrew (macOS)
+
+The Homebrew tap and installer commands below target the upstream project;
+they do not install this fork's `main-build` preview. Use the download above for this fork.
+
 ```
 brew tap skidfuscatordev/skidfuscator
 brew install skidfuscator

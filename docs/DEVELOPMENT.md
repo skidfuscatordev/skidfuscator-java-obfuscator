@@ -18,6 +18,7 @@ bash scripts/prepare-test-jdk.sh
 python3 scripts/test-reliability.py
 python3 scripts/test-signing.py
 python3 scripts/test-audit.py
+python3 scripts/test-main-download.py
 python3 scripts/audit-dependencies.py build/reports/sbom.cdx.json build/reports/dependency-audit.json
 EVALUATE_PROTECTION=1 bash scripts/framework-tests.sh
 bash scripts/smoke-test.sh
@@ -68,3 +69,8 @@ boundaries are documented in [RELIABILITY.md](RELIABILITY.md). The complete buil
 also runs `:ir:test :pure-analysis:test`, generates the SBOM and exercises the
 reference `:integration` project. Runtime compatibility jobs compile payloads
 with the selected Java 8/11/17/21/25 JDK while the build tool remains on JDK 17.
+
+The approved artifact is packaged into a flat download bundle, downloaded again
+and verified before publication. Pull requests validate the same bundle and run
+a publication preview without release writes. Default-branch pushes may update
+the `main-build` pre-release after those checks. See [DOWNLOADS.md](DOWNLOADS.md).
