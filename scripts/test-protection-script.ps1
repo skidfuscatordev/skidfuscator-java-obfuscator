@@ -36,6 +36,10 @@ $hash = (Get-FileHash -LiteralPath $inputJar -Algorithm SHA256).Hash
 $output = Join-Path $work 'protected application.jar'
 & $script @parameters -OutputJar $output
 if ($LASTEXITCODE -ne 0) { throw 'Successful validation returned failure' }
+$success = Get-ChildItem -LiteralPath $work -Directory | Where-Object { $_.Name -like 'protected application.jar.validation-*' }
+if ((Get-Content -LiteralPath (Join-Path $success.FullName 'execution.log') -Raw) -notmatch '(?m)^VALIDATED:') {
+    throw 'Successful validation did not log its success'
+}
 $actual = & $java8 '-Xverify:all' '-jar' $output
 if ($LASTEXITCODE -ne 0 -or "$actual" -ne "$expected") { throw 'Protected fixture behavior changed' }
 
@@ -47,6 +51,7 @@ if (Test-Path -LiteralPath $failedOutput) { throw 'Failed protection committed a
 $failure = Get-ChildItem -LiteralPath $work -Directory | Where-Object { $_.Name -like 'failed protection.jar.validation-*' }
 $failureLog = Get-Content -LiteralPath (Join-Path $failure.FullName 'execution.log') -Raw
 if ($failureLog -match '(?m)^VALIDATED:') { throw 'Failure printed a success message' }
+if ($failureLog -notmatch '(?m)^FAILED\.') { throw 'Failure status was not logged' }
 if (-not (Test-Path -LiteralPath (Join-Path $failure.FullName 'plan.json'))) { throw 'Dry-run diagnostics missing' }
 if ((Get-Content -LiteralPath (Join-Path $failure.FullName 'protection.json') -Raw | ConvertFrom-Json).status -ne 'failed') {
     throw 'Protection failure report missing'
@@ -61,6 +66,9 @@ $failedPlan = Join-Path $work 'failed plan.jar'
 if ($LASTEXITCODE -eq 0) { throw 'Invalid dry run was reported as success' }
 $planning = Get-ChildItem -LiteralPath $work -Directory | Where-Object { $_.Name -like 'failed plan.jar.validation-*' }
 if (Test-Path -LiteralPath (Join-Path $planning.FullName 'protection.json')) { throw 'Protection ran after planning failed' }
+if ((Get-Content -LiteralPath (Join-Path $planning.FullName 'execution.log') -Raw) -match '(?m)^VALIDATED:') {
+    throw 'Failed planning printed a success message'
+}
 if ((Get-FileHash -LiteralPath $inputJar -Algorithm SHA256).Hash -ne $hash) { throw 'Original fixture was modified' }
 Write-Host 'PowerShell validation: success, failed plan, failed protection and Java 8 behavior verified'
 exit 0

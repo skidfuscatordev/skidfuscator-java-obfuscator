@@ -100,13 +100,12 @@ finally {
         }
     }
     if ($locationPushed) { Pop-Location }
+    if ($exitCode -eq 0) {
+        $protectionReport | Select-Object status, toolVersion, profile, seed, durationMillis, outputBytes | Format-List | Out-Host
+        Write-Host "VALIDATED: $OutputJar"
+    } elseif ($diagnosticDirectory) {
+        Write-Host "FAILED. Review diagnostics in: $diagnosticDirectory"
+    }
     if ($transcriptStarted) { Stop-Transcript | Out-Null }
-}
-
-if ($exitCode -eq 0) {
-    $protectionReport | Select-Object status, toolVersion, profile, seed, durationMillis, outputBytes
-    Write-Host "VALIDATED: $OutputJar"
-} elseif ($diagnosticDirectory) {
-    Write-Host "FAILED. Review diagnostics in: $diagnosticDirectory"
 }
 exit $exitCode
