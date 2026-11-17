@@ -113,7 +113,9 @@ public class Skidfuscator {
     public static final boolean FLATTENING = false;
     public static boolean CLOUD = false;
 
-    public static final String VERSION = "2.2.1";
+    public static final String VERSION = "2.3.0";
+    public static final String SDK_PREFIX = "sdk/v" + VERSION.replace('.', '_') + "/";
+    public static final String SDK_OWNER = SDK_PREFIX + "SDK";
     public static final Double VERSION_DOUBLE = 2.2;
 
     private final SkidfuscatorSession session;
@@ -220,7 +222,10 @@ public class Skidfuscator {
             RandomUtil.begin(seed);
             dev.skidfuscator.obfuscator.util.VerifiedDownloads.offline(session.getReliability().isOffline());
             runReport = new RunReport(session, seed);
-            ArchiveChecks.validate(session.getInput(),session.getReliability().getMaxInputBytes());
+            EventBus.observe(runReport);
+            try (RunReport.Stage ignored = runReport.stage("Input validation")) {
+                ArchiveChecks.validate(session.getInput(),session.getReliability().getMaxInputBytes());
+            }
             runSession();
         } catch (RuntimeException | Error e) { failure = e; throw e;
         } catch (IOException e) { failure = e; throw new java.io.UncheckedIOException(e);
@@ -277,19 +282,27 @@ public class Skidfuscator {
         if (session.isDebug())
             LOGGER.log("Finished resolving predicate analysis!");
 
-        _importConfig();
-        _importExempt();
-        _importClasspath();
-        final Set<LibraryClassSource> sources = _importJvm();
-        this.getClassSource().addLibraries(sources.toArray(new LibraryClassSource[0]));
+        try (RunReport.Stage ignored = runReport.stage("Configuration")) { _importConfig(); _importExempt(); }
+        try (RunReport.Stage ignored = runReport.stage("Application and dependencies")) { _importClasspath(); }
+        try (RunReport.Stage ignored = runReport.stage("Target runtime")) {
+            final Set<LibraryClassSource> sources = _importJvm();
+            this.getClassSource().addLibraries(sources.toArray(new LibraryClassSource[0]));
+        }
+        var duplicates = classSource.getDuplicateClasses();
+        runReport.classpath(duplicates);
+        if (!duplicates.isEmpty()) {
+            if (session.getReliability().isFailOnDuplicateClasses())
+                throw new IllegalStateException("Duplicate class names in classpath; see duplicateClasses in the report");
+            LOGGER.warn("Classpath has " + duplicates.size() + " duplicate class names; see report for resolution order");
+        }
 
         if (!session.isFuckIt()) {
-            _verify();
+            try (RunReport.Stage ignored = runReport.stage("Classpath verification")) { _verify(); }
         } else {
             throw new IllegalArgumentException("Unsafe verification bypass is not supported");
         }
 
-        plan();
+        try (RunReport.Stage ignored = runReport.stage("Planning")) { plan(); }
         if (session.getReliability().isDryRun()) return;
 
         /* Resolve context */
@@ -321,8 +334,10 @@ public class Skidfuscator {
 
         /* Resolve hierarchy */
         LOGGER.post("Resolving hierarchy (this could take a while)...");
-        this.hierarchy = new SkidHierarchy(this);
-        this.hierarchy.cache();
+        try (RunReport.Stage ignored = runReport.stage("Hierarchy and method graphs")) {
+            this.hierarchy = new SkidHierarchy(this);
+            this.hierarchy.cache();
+        }
         LOGGER.log("Finished resolving hierarchy!");
 
         /* Register opaque predicate renderer and transformers */
@@ -387,7 +402,8 @@ public class Skidfuscator {
                     && ((dev.skidfuscator.obfuscator.transform.AbstractTransformer)transformer).getFailed()>0)
                 throw new IllegalStateException("Protection transformer reported failures: "+transformer.getName());
         LOGGER.post("Dumping classes...");
-        try(ProgressWrapper progressBar = ProgressUtil.progressCheck(
+        try(RunReport.Stage ignored = runReport.stage("Method emission");
+            ProgressWrapper progressBar = ProgressUtil.progressCheck(
                 this.getIrFactory().size(),
                 "Dumped " + this.getIrFactory().size() + " classes"
         )) {
@@ -410,7 +426,7 @@ public class Skidfuscator {
             }
         }
         LOGGER.log("Finished dumping classes...");
-        _dump();
+        try (RunReport.Stage ignored = runReport.stage("Archive validation and commit")) { _dump(); }
 
         LOGGER.post("Goodbye!");
     }
@@ -955,7 +971,8 @@ public class Skidfuscator {
         this.hierarchy = null;
         if (this.irFactory != null) this.irFactory.clear();
         this.irFactory = null;
-        System.gc();
+        // Let the JVM choose collection timing; forced full GC stalls repeated runs.
+        this.cxt = null;
     }
 
     protected void _dump() {
@@ -1009,8 +1026,7 @@ public class Skidfuscator {
     }
 
     private void run(final String phaseName, final Caller caller) {
-        runReport.context(phaseName, "");
-        final long phaseStarted = System.nanoTime();
+        try (RunReport.Stage phase = runReport.stage(phaseName)) {
         final List<String> issues = new ArrayList<>();
         final SkidTransformEvent event = caller.callBase();
         EventBus.call(event);
@@ -1147,12 +1163,13 @@ public class Skidfuscator {
                 .append("│"));
         issues.forEach(e -> System.out.println("│  --> " + pad(e, 61) + "│"));
 
-        runReport.phase(phaseName, phaseStarted);
+        runReport.checkpoint();
         if (!issues.isEmpty()) throw new IllegalStateException("Transformation issues in phase " + phaseName + ": " + issues);
         if (!phaseName.equals("Finalize")) {
             System.out.println("│───────────────────────────────────────────────────────────────────│\n");
         } else {
             System.out.println("");
+        }
         }
     }
 

@@ -11,7 +11,10 @@ application behavior.
 `--libs=.` indexes every immediate `.jar` in the current directory, including
 unrelated libraries. It neither selects dependencies automatically nor searches
 subdirectories. Library JARs are analysis references and are not bundled into the
-protected output. Prefer a dedicated `--libs=./libs` directory containing the
+protected output. Class names are indexed without eagerly creating every analysis
+node. Application definitions take precedence; libraries use descending priority
+and stable insertion order for ties. Duplicate origins are listed in the report.
+Use `--fail-on-duplicate-classes` to reject ambiguities before transformation. Prefer a dedicated `--libs=./libs` directory containing the
 application's runtime dependencies, separate from input and output artifacts.
 
 ```bash
@@ -39,6 +42,14 @@ A seed controls obfuscation randomness. Reproduction also requires the same tool
 input, configuration, dependencies and target runtime. The JSON report records
 version, artifact and target-runtime hashes, seed, profile, decisions, transformer counts, phase
 context/timings and observed heap usage. Configuration contents are not copied.
+Schema 2 adds per-stage wall time, thread CPU time, allocated bytes, GC counts and
+GC time, plus listener timings and the last transformer. Unsupported CPU/allocation
+measurements use -1. GC metrics are process-wide; they are not per-stage allocation
+estimates. Decisions are spooled to a temporary JSONL file and streamed into the
+final JSON, then the spool is removed. `--report-summary` keeps counts and diagnostics
+with an empty `elements` array. Atomic progress snapshots have `status: running`;
+only `planned` or `succeeded` with exit code 0 confirms completion. A forcibly killed
+process can leave a private decision spool beside its last progress report.
 Treat reports as confidential build data: they contain original symbol names and
 the seed. Publish the distribution SBOM independently.
 
@@ -64,8 +75,10 @@ budget are preserved and identified in the plan. Supported instruction budgets
 are at most 10,000. A transformation failure aborts output instead of claiming
 full protection.
 
-Time checks are cooperative at phase/method and output boundaries. Use a process
-supervisor for a hard wall-clock timeout and `-Xmx` for a JVM heap bound. Reports
+Time checks are cooperative at phase/method and output boundaries. The Windows validation script supplies a process
+supervisor with `-HardTimeoutSeconds` (1,200 seconds per invocation by default).
+Other callers must supply their own process supervisor for a hard wall-clock limit.
+Use `-Xmx` for a JVM heap bound. Reports
 contain current heap usage, JVM heap limit and the sum of memory-pool peaks;
 these measurements are not an operating-system RSS peak. Output is validated and
 budget-checked before atomic replacement. Unsupported atomic replacement causes
@@ -80,6 +93,17 @@ delegate the comparison to String itself, without locale-dependent lowercasing
 or treating hash equality as proof of String equality. Literal masking is
 obfuscation; the key travels with the code. `stringEqualsIgnoreCaseHash` is the
 preferred config section; `stringEqigcaseHash` remains a supported legacy spelling.
+A fixed 256-slot cache reuses decoded comparison literals up to 1,024 UTF-16 units.
+Keys include the encoded value and mask key; collisions replace an entry and never
+establish equality. Larger strings bypass the cache. This retains a bounded amount
+of decoded text to reduce allocations; it does not make embedded text secret.
+
+Type transformations pass the actual target Class to `Class.isInstance`. Name hashes
+cannot distinguish identically named classes with different defining loaders. No
+Class/ClassLoader objects are held in SDK caches. `instanceOfHash` and the legacy
+`typeCheck` section both configure this pass. Generated SDK packages include the
+tool version, so modules protected by different versions do not resolve incompatible
+helpers from each other's JARs. The native tests retain null and array behavior.
 
 Records and serializable/externalizable classes are preserved to retain canonical
 constructors, serialized form and compatibility with already persisted data.
@@ -138,8 +162,11 @@ Local library/JDK metadata caches include the input SHA-256 and schema version
 in their keys, retain interfaces/generic signatures and preserve all UTF-16
 string code units through JSON escapes. Replacing a same-named library cannot
 reuse stale metadata. Cache writes are atomic and corrupt metadata fails
-explicitly. Source archive handles are closed and do not use URLConnection's
-process-wide JAR cache.
+explicitly. Cold imports read declarations one class at a time and skip code, frames, debug
+information and resources. SHA-256 remains content-based; changed inputs still
+invalidate the cache. Analysis nodes are materialized on first lookup and reuse
+identity within the session. Source archive handles are closed and do not use
+URLConnection's process-wide JAR cache.
 Multi-release dependencies select the highest declared variant supported by the
 deployment JDK. The selected release is recorded in the report and is part of
 the metadata cache key; transforming multi-release application inputs still
@@ -183,8 +210,11 @@ customer-specific integration tests as a release condition as well.
 CFR 0.152 is pinned in the integration tool configuration. Evaluation reports
 record input/output hashes, archive sizes, five startup samples and decompiler
 outcomes/source counts. Decompiler completion, failure and source size are
-observations; none is a security score. Performance thresholds should be calibrated
-on representative applications and deployment hardware.
+observations; none is a security score. The `performance` job compares the candidate and the published tool on the same
+runner, interleaving three measured trials after warm-up. It records protection
+wall time, process peak RSS, complete JVM run time and a warmed comparison loop.
+See [PERFORMANCE.md](PERFORMANCE.md) for regression margins and reproduction.
+Customer throughput/latency limits still require representative application workloads.
 
 ## Signing and threat model
 

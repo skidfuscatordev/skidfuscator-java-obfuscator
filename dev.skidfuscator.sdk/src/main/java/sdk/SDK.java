@@ -1,7 +1,7 @@
 package sdk;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class SDK {
     public static String hash(String s) {
@@ -19,70 +19,46 @@ public class SDK {
     }
 
     public static boolean equalsConstantReceiver(String encoded, Object argument, long key) {
-        return maskComparisonLiteral(encoded, key).equals(argument);
+        return comparisonLiteral(encoded, key).equals(argument);
     }
 
     public static boolean equalsConstantArgument(String receiver, String encoded, long key) {
-        return receiver.equals(maskComparisonLiteral(encoded, key));
+        return receiver.equals(comparisonLiteral(encoded, key));
     }
 
     public static boolean equalsIgnoreCaseConstantReceiver(String encoded, String argument, long key) {
-        return maskComparisonLiteral(encoded, key).equalsIgnoreCase(argument);
+        return comparisonLiteral(encoded, key).equalsIgnoreCase(argument);
     }
 
     public static boolean equalsIgnoreCaseConstantArgument(String receiver, String encoded, long key) {
-        return receiver.equalsIgnoreCase(maskComparisonLiteral(encoded, key));
+        return receiver.equalsIgnoreCase(comparisonLiteral(encoded, key));
     }
 
-    private static final Map<Class<?>, String> TYPE_HASHES = new ConcurrentHashMap<>();
-    private static final Map<Class<?>, Set<String>> HIERARCHY_HASHES = new ConcurrentHashMap<>();
-
-    public static boolean checkType(Object obj, String typeHash, int seed) {
-        if (obj == null) {
-            return false;
-        }
-
-        Class<?> objClass = obj.getClass();
-
-        // Get or compute the full hierarchy hash set for this class
-        Set<String> hierarchyHashes = HIERARCHY_HASHES.computeIfAbsent(
-                objClass,
-                e -> computeHierarchyHashes(objClass, seed)
-        );
-
-        return hierarchyHashes.contains(typeHash);
+    /** Class identity includes its defining loader. No Class objects are retained. */
+    public static boolean checkType(Object value, Class<?> target) {
+        return target.isInstance(value);
     }
 
-    private static Set<String> computeHierarchyHashes(Class<?> cls, int seed) {
-        Set<String> hashes = new HashSet<>();
-        Queue<Class<?>> toProcess = new LinkedList<>();
-        Set<Class<?>> processed = new HashSet<>();
+    // Fixed-size, lock-free cache. Collisions replace entries, never change results.
+    // At most 256 literals of 1024 UTF-16 units each; no Class/ClassLoader keys.
+    private static final AtomicReferenceArray<Literal> LITERALS = new AtomicReferenceArray<>(256);
+    public static String comparisonLiteral(String encoded, long key) {
+        if (encoded.length() > 1024) return maskComparisonLiteral(encoded, key);
+        int slot = (encoded.hashCode() ^ (int) key ^ (int) (key >>> 32)) & 255;
+        Literal found = LITERALS.get(slot);
+        if (found != null && found.key == key && found.encoded.equals(encoded)) return found.decoded;
+        String decoded = maskComparisonLiteral(encoded, key);
+        LITERALS.set(slot, new Literal(encoded, key, decoded));
+        return decoded;
+    }
 
-        toProcess.add(cls);
-
-        while (!toProcess.isEmpty()) {
-            Class<?> current = toProcess.poll();
-
-            if (current == null || !processed.add(current)) {
-                continue;
-            }
-
-            // Add hash for current class
-            hashes.add(TYPE_HASHES.computeIfAbsent(current,
-                    c -> "" + LongHashFunction.xx3(seed)
-                            .hashChars(c.getName().replace('.', '/'))));
-
-            // Add superclass to process
-            Class<?> superClass = current.getSuperclass();
-            if (superClass != null) {
-                toProcess.add(superClass);
-            }
-
-            // Add all interfaces to process (including inherited interfaces)
-            toProcess.addAll(Arrays.asList(current.getInterfaces()));
+    private static final class Literal {
+        final String encoded;
+        final long key;
+        final String decoded;
+        Literal(String encoded, long key, String decoded) {
+            this.encoded = encoded; this.key = key; this.decoded = decoded;
         }
-
-        return Collections.unmodifiableSet(hashes);
     }
 
     public static boolean checkEnumName(Enum<?> enumValue, String hashedName, int seed) {

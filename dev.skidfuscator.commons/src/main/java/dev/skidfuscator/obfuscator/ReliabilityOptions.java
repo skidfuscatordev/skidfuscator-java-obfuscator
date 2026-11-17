@@ -12,6 +12,8 @@ public class ReliabilityOptions {
     private Long seed;
     private File report;
     private boolean dryRun;
+    private boolean summaryReport;
+    private boolean failOnDuplicateClasses;
     private boolean offline;
     @Builder.Default private long maxDurationMillis = 300_000;
     @Builder.Default private long maxInputBytes = 512L * 1024 * 1024;

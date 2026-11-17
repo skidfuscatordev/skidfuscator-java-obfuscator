@@ -32,7 +32,7 @@ public class FrameworkApp {
     public enum State { READY, DONE }
     public static void main(String[] args) throws Exception {
         Map<String,Object> result = new LinkedHashMap<>();
-        result.put("stringComparisons",StringComparisonCases.run());
+        result.put("stringComparisons",StringComparisonCases.run() + ":" + TypeComparisonCases.run());
         try (var context=new SpringApplicationBuilder(FrameworkApp.class).web(WebApplicationType.NONE)
                 .bannerMode(Banner.Mode.OFF).logStartupInfo(false).run()) {
             result.put("spring",context.getBean("greeting"));

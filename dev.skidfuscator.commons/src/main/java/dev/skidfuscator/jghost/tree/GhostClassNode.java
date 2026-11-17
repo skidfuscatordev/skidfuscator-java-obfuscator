@@ -70,6 +70,8 @@ public class GhostClassNode implements GhostReader<ClassNode> {
     }
 
 
+    public String getName() { return name; }
+
     @Override
     public ClassNode read() {
         final ClassNode node = new ClassNodeBuilder()

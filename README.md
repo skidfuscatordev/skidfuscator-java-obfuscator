@@ -18,7 +18,7 @@
 > for commercial use, we recommend you contact us at mastermind [at] zenrho.net or visit https://zenrho.com 
 
 
-Version **2.2.1** fixes String comparison semantics and includes protection profiles, reproducible seeds, atomic validated
+Version **2.3.0** improves type identity, memory use and performance diagnostics, and includes protection profiles, reproducible seeds, atomic validated
 output, verified dependencies and a Java 8/11/17/21/25 test matrix. Read the
 [release notes](CHANGELOG.md), [reliability contracts](docs/RELIABILITY.md) and
 [build checks](docs/DEVELOPMENT.md) before upgrading.

@@ -215,6 +215,11 @@ public class TestSkidfuscator extends Skidfuscator {
                     });
                 });
 
+        // Execute the generated SDK, not the untransformed SDK on the test runner classpath.
+        for (JarClassData entry : jarContents.getClassContents()) {
+            if (entry.getClassNode().getName().startsWith(Skidfuscator.SDK_PREFIX))
+                dataMap.add(new java.util.AbstractMap.SimpleImmutableEntry<>(entry.getClassNode().getName(),entry.getData()));
+        }
         callback.accept(dataMap);
     }
 

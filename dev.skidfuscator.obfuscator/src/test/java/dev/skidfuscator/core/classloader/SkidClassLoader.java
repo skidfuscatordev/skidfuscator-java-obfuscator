@@ -4,6 +4,20 @@ import java.net.URL;
 import java.net.URLStreamHandlerFactory;
 
 public class SkidClassLoader extends AccessClassLoader {
+    private final java.util.Map<String,byte[]> definitions = new java.util.HashMap<>();
+    public void register(String name, byte[] bytes) { definitions.put(name.replace('/', '.'),bytes); }
+    @Override protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        synchronized (getClassLoadingLock(name)) {
+            Class<?> value = findLoadedClass(name);
+            if (value == null) {
+                byte[] bytes = definitions.remove(name);
+                value = bytes == null ? super.loadClass(name, false) : defineClass(name,bytes,0,bytes.length);
+            }
+            if (resolve) resolveClass(value);
+            return value;
+        }
+    }
+
     public SkidClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
     }

@@ -25,6 +25,7 @@ public class SdkInjectorTransformer extends AbstractTransformer {
 
     @Listen
     void handle(final InitSkidTransformEvent event) {
+        java.nio.file.Path temporary = null;
         try {
             // Create cache directory if it doesn't exist
             if (!Files.exists(CACHE_DIR)) {
@@ -32,7 +33,8 @@ public class SdkInjectorTransformer extends AbstractTransformer {
             }
 
             // Extract SDK jar from resources to cache
-            File sdkFile = CACHE_DIR.resolve("sdk.jar").toFile();
+            temporary = Files.createTempFile(CACHE_DIR, "sdk-", ".jar");
+            File sdkFile = temporary.toFile();
             try (InputStream is = getClass().getClassLoader().getResourceAsStream("resources/sdk.jar");
                  OutputStream os = new FileOutputStream(sdkFile)) {
                 if (is == null) {
@@ -51,10 +53,26 @@ public class SdkInjectorTransformer extends AbstractTransformer {
                 skidfuscator
             );
 
-            // Add SDK classes to the input jar
+            // Version the generated runtime namespace so older protected modules can coexist.
+            var relocated = new java.util.ArrayList<JarClassData>();
+            var factory = new dev.skidfuscator.obfuscator.creator.SkidASMFactory(skidfuscator);
+            var remapper = new org.objectweb.asm.commons.Remapper() {
+                @Override public String map(String name) {
+                    return name.startsWith("sdk/") ? Skidfuscator.SDK_PREFIX + name.substring(4) : name;
+                }
+            };
             for (JarClassData classData : downloader.getJarContents().getClassContents()) {
-                skidfuscator.getJarContents().getClassContents().add(classData);
+                var writer = new org.objectweb.asm.ClassWriter(0);
+                new org.objectweb.asm.ClassReader(classData.getData()).accept(new org.objectweb.asm.commons.ClassRemapper(writer,remapper),0);
+                byte[] bytes = writer.toByteArray();
+                String name = remapper.map(classData.getClassNode().getName());
+                if (skidfuscator.getClassSource().isApplicationClass(name))
+                    throw new IOException("Input already contains the generated runtime: " + name);
+                relocated.add(new JarClassData(name + ".class",bytes,factory.create(bytes,name)));
             }
+            downloader.getJarContents().getClassContents().clear();
+            downloader.getJarContents().getClassContents().addAll(relocated);
+            skidfuscator.getJarContents().getClassContents().addAll(relocated);
             ApplicationClassSource library = new SkidApplicationClassSource("Library",
                     false,
                     downloader.getJarContents(),
@@ -65,6 +83,9 @@ public class SdkInjectorTransformer extends AbstractTransformer {
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to inject SDK", e);
+        } finally {
+            if (temporary != null) try { Files.deleteIfExists(temporary); }
+            catch (IOException failure) { throw new java.io.UncheckedIOException("Cannot remove SDK temporary file", failure); }
         }
     }
 }

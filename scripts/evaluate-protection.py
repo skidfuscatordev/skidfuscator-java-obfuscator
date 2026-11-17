@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Measure decompiler output and runtime costs. No metric proves reverse-engineering resistance."""
-import argparse,hashlib,json,pathlib,statistics,subprocess,tempfile,time,zipfile
+import argparse,hashlib,json,os,pathlib,statistics,subprocess,tempfile,time,zipfile
 
 def command(args,timeout=120):
     started=time.monotonic()
@@ -10,7 +10,7 @@ def command(args,timeout=120):
 def measure(jar,main,cp,cfr):
     timings=[]
     for _ in range(5):
-        result,millis=command(['java','-Xverify:all','-cp',str(jar)+':'+cp,main])
+        result,millis=command(['java','-Xverify:all','-cp',str(jar)+os.pathsep+cp,main])
         if result.returncode: raise RuntimeError('Application benchmark failed: '+result.stderr.decode(errors='replace')[-2000:])
         timings.append(millis)
     with tempfile.TemporaryDirectory() as directory:

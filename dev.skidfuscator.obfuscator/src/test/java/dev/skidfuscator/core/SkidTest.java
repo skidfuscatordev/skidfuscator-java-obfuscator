@@ -81,7 +81,7 @@ public abstract class SkidTest implements TestCase {
                 final String name = entry.getKey();
                 final byte[] clazzData = entry.getValue();
 
-                classLoader.defineClass(name, clazzData);
+                classLoader.register(name, clazzData);
             }
 
             final Class<?> clazz = classLoader.loadClass(this.getMainClass().getName());

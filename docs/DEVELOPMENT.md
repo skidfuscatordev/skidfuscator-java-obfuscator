@@ -80,3 +80,9 @@ The approved artifact is packaged into a flat download bundle, downloaded again
 and verified before publication. Pull requests validate the same bundle and run
 a publication preview without release writes. Default-branch pushes may update
 the `main-build` pre-release after those checks. See [DOWNLOADS.md](DOWNLOADS.md).
+
+Performance regression checks and profiling are described in
+[PERFORMANCE.md](PERFORMANCE.md). The Windows job additionally forces a hung child
+to exceed its deadline and checks that an existing output remains unchanged.
+Unit and compatibility fixtures cover class-loader identity, arrays/nulls, cache
+collisions under concurrency, summary/full reports and preserved call sites.

@@ -70,5 +70,25 @@ if ((Get-Content -LiteralPath (Join-Path $planning.FullName 'execution.log') -Ra
     throw 'Failed planning printed a success message'
 }
 if ((Get-FileHash -LiteralPath $inputJar -Algorithm SHA256).Hash -ne $hash) { throw 'Original fixture was modified' }
+# A deliberately stalled child proves the hard deadline kills it and preserves an existing destination.
+$stalledSource = Join-Path $work 'Stalled.java'
+'public class Stalled { public static void main(String[] args) throws Exception { Thread.sleep(30000); } }' |
+    Set-Content -LiteralPath $stalledSource -Encoding ASCII
+& (Join-Path $Java8Home 'bin/javac.exe') '-d' $classes $stalledSource
+if ($LASTEXITCODE -ne 0) { throw 'Stalled fixture compilation failed' }
+$stalledJar = Join-Path $work 'stalled.jar'
+& (Join-Path $Java17Home 'bin/jar.exe') '--create' '--file' $stalledJar '--main-class' 'Stalled' '-C' $classes 'Stalled.class'
+if ($LASTEXITCODE -ne 0) { throw 'Stalled fixture archive failed' }
+$parameters.ObfuscatorJar = $stalledJar
+$parameters.ConfigPath = $config
+$previousOutputHash = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash
+$timer = [Diagnostics.Stopwatch]::StartNew()
+& $script @parameters -OutputJar $output -HardTimeoutSeconds 1
+if ($LASTEXITCODE -eq 0 -or $timer.Elapsed.TotalSeconds -gt 20) { throw 'Hard deadline was not enforced' }
+if ((Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash -ne $previousOutputHash) { throw 'Timeout replaced the previous output' }
+if ((Get-FileHash -LiteralPath $inputJar -Algorithm SHA256).Hash -ne $hash) { throw 'Timeout modified input' }
+$latest = Get-ChildItem -LiteralPath $work -Directory | Where-Object { $_.Name -like 'protected application.jar.validation-*' } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$validation = Get-Content -LiteralPath (Join-Path $latest.FullName 'validation.json') -Raw | ConvertFrom-Json
+if ($validation.status -ne 'failed' -or $validation.error -notmatch 'hard timeout') { throw 'Timeout diagnosis missing' }
 Write-Host 'PowerShell validation: success, failed plan, failed protection and Java 8 behavior verified'
 exit 0

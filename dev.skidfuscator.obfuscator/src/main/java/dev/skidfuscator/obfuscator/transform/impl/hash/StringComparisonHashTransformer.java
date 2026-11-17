@@ -54,7 +54,7 @@ abstract class StringComparisonHashTransformer extends AbstractExpressionTransfo
         String descriptor = !ignoreCase && receiverIsConstant
                 ? "(Ljava/lang/String;Ljava/lang/Object;J)Z" : "(Ljava/lang/String;Ljava/lang/String;J)Z";
         expr.getParent().overwrite(expr, new StaticInvocationExpr(
-                new Expr[]{receiver, argument, new ConstantExpr(key)}, "sdk/SDK", helper, descriptor));
+                new Expr[]{receiver, argument, new ConstantExpr(key)}, Skidfuscator.SDK_OWNER, helper, descriptor));
         return true;
     }
 

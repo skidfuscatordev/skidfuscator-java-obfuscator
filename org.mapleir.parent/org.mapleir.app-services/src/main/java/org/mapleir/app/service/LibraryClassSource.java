@@ -69,6 +69,8 @@ public class LibraryClassSource extends ClassSource {
 		return true;
 	}
 
+	@Override public Set<String> classNames() { return parent.classNames(); }
+
 	public int getPriority() {
 		return priority;
 	}

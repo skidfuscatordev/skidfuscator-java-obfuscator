@@ -18,6 +18,8 @@ public class EventBus {
     // between concurrent sessions or retain them after a failed session.
     private static final ThreadLocal<Map<Class<?>, List<EventListener>>> listeners =
             ThreadLocal.withInitial(LinkedHashMap::new);
+    private static final ThreadLocal<dev.skidfuscator.obfuscator.reliability.RunReport> report = new ThreadLocal<>();
+    public static void observe(dev.skidfuscator.obfuscator.reliability.RunReport value) { report.set(value); }
     private static final AtomicLong registrationOrder = new AtomicLong();
     private static final Comparator<EventListener> ORDER = Comparator
             .comparingInt(EventListener::getPriority).thenComparingLong(listener -> listener.order);
@@ -145,7 +147,7 @@ public class EventBus {
      * Kills the EventBus and clears all of its listeners.
      */
     public static void end() {
-        listeners.remove();
+        listeners.remove(); report.remove();
     }
 
     /**
@@ -221,6 +223,11 @@ public class EventBus {
          */
         @Deprecated
         void callUnsafe(final Object event) {
+            var current = report.get();
+            String name = listener instanceof dev.skidfuscator.obfuscator.transform.Transformer
+                    ? ((dev.skidfuscator.obfuscator.transform.Transformer)listener).getName() : listener.getClass().getSimpleName();
+            long start = current == null ? 0 : System.nanoTime();
+            if (current != null) current.beforeListener(name);
             try {
                 method.invoke(listener, event);
             } catch (InvocationTargetException e) {
@@ -230,7 +237,7 @@ public class EventBus {
                 throw new IllegalStateException("Event listener failed: " + method, cause);
             } catch (IllegalAccessException e) {
                 throw new IllegalStateException("Cannot invoke event listener: " + method, e);
-            }
+            } finally { if (current != null) current.afterListener(name,System.nanoTime()-start); }
         }
     }
 }

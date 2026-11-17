@@ -21,6 +21,9 @@ public abstract class ClassSource {
 		this.nodeMap = nodeMap;
 	}
 	
+	/** Names can be indexed without materializing lazy class metadata. */
+	public Set<String> classNames() { return java.util.Collections.unmodifiableSet(nodeMap.keySet()); }
+
 	public boolean contains(String name) {
 		if(name == null) {
 			return false;

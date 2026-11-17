@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.3.0 — 2026-11-17
+
+- Use JVM Class identity for generated type checks, including distinct defining
+  loaders, interfaces, arrays and nulls. Accept both `instanceOfHash` and `typeCheck`.
+- Isolate injected SDK classes by tool version and use per-run extraction files;
+  separately protected modules can share a process without mixing runtime versions.
+- Reuse comparison literals through a bounded, thread-safe cache with exact key
+  checks; avoid repeated decoding on hot comparisons.
+- Index dependency class names with stable precedence and duplicate diagnostics.
+  Add `--fail-on-duplicate-classes` for strict classpath validation.
+- Read library declarations without method code/resources, create analysis nodes
+  lazily and compute metadata digests in one pass. Inspect each preserved method's
+  call sites once instead of rescanning unrelated methods.
+- Stream report decisions to disk, add `--report-summary`, progress snapshots,
+  per-stage CPU/allocation/GC metrics and listener timings/failure context (schema 2).
+- Enforce a hard child-process deadline in the Windows validation script and
+  promote output only after all checks pass. Test termination and prior-output retention.
+- Gate publication on same-host performance comparisons with the published build,
+  covering protection time, peak RSS, warmed runtime and mixed-version modules.
+
 ## 2.2.1 — 2026-11-16
 
 - Preserve null argument/receiver semantics in String comparison transformations.

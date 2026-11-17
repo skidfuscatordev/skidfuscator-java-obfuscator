@@ -91,6 +91,8 @@ public class ObfuscateCommand implements Callable<Integer> {
 
     @CommandLine.Option(names="--seed", description="Seed recorded in the run report") public Long seed;
     @CommandLine.Option(names="--report", description="JSON run report (default: output.report.json)") public File report;
+    @CommandLine.Option(names="--report-summary", description="Keep counts and diagnostics, omit individual symbol decisions") public boolean summaryReport;
+    @CommandLine.Option(names="--fail-on-duplicate-classes", description="Reject ambiguous application/library class names") public boolean failOnDuplicateClasses;
     @CommandLine.Option(names="--dry-run", description="Plan exclusions without transforming or writing a JAR") public boolean dryRun;
     @CommandLine.Option(names="--offline", description="Never download missing dependencies") public boolean offline;
     @CommandLine.Option(names="--non-interactive", description="Explicit automation mode; never prompt") public boolean nonInteractive;
@@ -146,7 +148,7 @@ public class ObfuscateCommand implements Callable<Integer> {
         }
 
         ReliabilityOptions options = ReliabilityOptions.builder().profile(profile).seed(seed).report(report)
-                .dryRun(dryRun).offline(offline).maxDurationMillis(maxDuration).maxOutputBytes(maxOutput)
+                .dryRun(dryRun).summaryReport(summaryReport).failOnDuplicateClasses(failOnDuplicateClasses).offline(offline).maxDurationMillis(maxDuration).maxOutputBytes(maxOutput)
                 .maxInputBytes(maxInput).maxGrowthRatio(maxGrowth).maxMethodInstructions(maxInstructions).build();
         options.validate();
         final File[] libs;

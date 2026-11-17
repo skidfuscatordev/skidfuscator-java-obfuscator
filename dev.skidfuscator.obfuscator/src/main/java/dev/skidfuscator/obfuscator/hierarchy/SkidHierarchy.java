@@ -266,74 +266,71 @@ public class SkidHierarchy implements Hierarchy {
                 for (MethodNode method : c.getMethods()) {
                     final SkidControlFlowGraph cfg = (SkidControlFlowGraph) skidfuscator.getIrFactory().getUnsafe(method);
                     if (cfg == null) {
-                        for (SkidMethodNode skidMethod : methods) {
-                            for (AbstractInsnNode instruction : skidMethod.node.instructions) {
+                        // A preserved method has no IR: inspect only its own bytecode once.
+                        for (AbstractInsnNode instruction : method.node.instructions) {
 
-                                final ClassMethodHash target;
-                                final SkidInvocation skidInvocation;
+                            final ClassMethodHash target;
+                            final SkidInvocation skidInvocation;
 
-                                if (instruction instanceof InvokeDynamicInsnNode) {
-                                    final InvokeDynamicInsnNode e = (InvokeDynamicInsnNode) instruction;
+                            if (instruction instanceof InvokeDynamicInsnNode) {
+                                final InvokeDynamicInsnNode e = (InvokeDynamicInsnNode) instruction;
 
-                                    if (!e.bsm.getOwner().equals("java/lang/invoke/LambdaMetafactory")
-                                            || !e.bsm.getName().equals("metafactory")) {
-                                        return;
-                                        //throw new IllegalStateException("Invalid invoke dynamic!");
-                                    }
+                                if (!e.bsm.getOwner().equals("java/lang/invoke/LambdaMetafactory")
+                                        || !e.bsm.getName().equals("metafactory")) {
+                                    continue;
+                                    //throw new IllegalStateException("Invalid invoke dynamic!");
+                                }
 
-                                    assert (e.bsmArgs.length == 3 && e.bsmArgs[1] instanceof Handle);
-                                    final Handle boundFunc = (Handle) e.bsmArgs[1];
+                                assert (e.bsmArgs.length == 3 && e.bsmArgs[1] instanceof Handle);
+                                final Handle boundFunc = (Handle) e.bsmArgs[1];
 
-                                    // Patch for implicit funtions
-                                    // TODO: Fix this
-                                    if (boundFunc.getName().startsWith("lambda$new$")) {
-                                        final String returnType = Type.getReturnType(e.desc).getClassName().replace(".", "/");
-                                        //System.out.println("Attempting to locate " + returnType);
-                                        final ClassNode targetClass = skidfuscator.getClassSource().findClassNode(returnType);
+                                // Patch for implicit funtions
+                                // TODO: Fix this
+                                if (boundFunc.getName().startsWith("lambda$new$")) {
+                                    final String returnType = Type.getReturnType(e.desc).getClassName().replace(".", "/");
+                                    //System.out.println("Attempting to locate " + returnType);
+                                    final ClassNode targetClass = skidfuscator.getClassSource().findClassNode(returnType);
 
-                                        if (!(targetClass instanceof SkidClassNode))
-                                            return;
+                                    if (!(targetClass instanceof SkidClassNode))
+                                        continue;
 
-                                        assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
-                                        final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
+                                    assert targetClass.getMethods().size() == 1 : "Implicit Function must be single method!";
+                                    final SkidMethodNode methodNode = (SkidMethodNode) targetClass.getMethods().get(0);
 
-                                        methodNode.getGroup().setImplicitFunction(true);
-                                        //System.out.println("Found implicit function: " + methodNode.toString());
-                                        return;
-                                    }
-
-                                    target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
-                                    skidInvocation = new SkidInvocation(
-                                            method,
-                                            e
-                                    );
-                                } else if (instruction instanceof MethodInsnNode) {
-                                    final MethodInsnNode e = (MethodInsnNode) instruction;
-                                    target = new ClassMethodHash(e.name, e.desc, e.owner);
-                                    skidInvocation = new SkidInvocation(
-                                            method,
-                                            e
-                                    );
-                                } else {
+                                    methodNode.getGroup().setImplicitFunction(true);
+                                    //System.out.println("Found implicit function: " + methodNode.toString());
                                     continue;
                                 }
 
-                                final SkidGroup targetGroup = hashToGroupMap.get(target);
+                                target = new ClassMethodHash(boundFunc.getName(), boundFunc.getDesc(), boundFunc.getOwner());
+                                skidInvocation = new SkidInvocation(
+                                        method,
+                                        e
+                                );
+                            } else if (instruction instanceof MethodInsnNode) {
+                                final MethodInsnNode e = (MethodInsnNode) instruction;
+                                target = new ClassMethodHash(e.name, e.desc, e.owner);
+                                skidInvocation = new SkidInvocation(
+                                        method,
+                                        e
+                                );
+                            } else {
+                                continue;
+                            }
 
-                                if (targetGroup != null) {
-                                    targetGroup.getInvokers().add(skidInvocation);
+                            final SkidGroup targetGroup = hashToGroupMap.get(target);
+
+                            if (targetGroup != null) {
+                                targetGroup.getInvokers().add(skidInvocation);
+                            }
+
+                            final MethodNode targetMethod = hashToMethodMap.get(target);
+                            if (targetMethod != null) {
+                                if (targetMethod instanceof SkidMethodNode) {
+                                    ((SkidMethodNode) targetMethod).addInvocation(skidInvocation);
                                 }
 
-                                final MethodNode targetMethod = hashToMethodMap.get(target);
-                                if (targetMethod != null) {
-                                    if (targetMethod instanceof SkidMethodNode) {
-                                        ((SkidMethodNode) targetMethod).addInvocation(skidInvocation);
-                                    }
-
-                                    methodToInvocationsMap.computeIfAbsent(targetMethod, e -> {
-                                        return new ArrayList<>(Collections.singleton(skidInvocation));
-                                    });
-                                }
+                                methodToInvocationsMap.computeIfAbsent(targetMethod, e -> new ArrayList<>()).add(skidInvocation);
                             }
                         }
                         continue;
@@ -446,9 +443,7 @@ public class SkidHierarchy implements Hierarchy {
                                         ((SkidMethodNode) targetMethod).addInvocation(skidInvocation);
                                     }
 
-                                    methodToInvocationsMap.computeIfAbsent(targetMethod, e -> {
-                                        return new ArrayList<>(Collections.singleton(skidInvocation));
-                                    });
+                                    methodToInvocationsMap.computeIfAbsent(targetMethod, e -> new ArrayList<>()).add(skidInvocation);
                                 } else {
                                     if (method.getName().equals("onEnable")) {
                                         //System.out.println("Failed to find target method for " + target.getDisplayName());
@@ -691,7 +686,7 @@ public class SkidHierarchy implements Hierarchy {
                             ((SkidMethodNode) targetMethod).addInvocation(skidInvocation);
                         }
 
-                        methodToInvocationsMap.computeIfAbsent(targetMethod, e -> new ArrayList<>(Collections.singleton(skidInvocation)));
+                        methodToInvocationsMap.computeIfAbsent(targetMethod, e -> new ArrayList<>()).add(skidInvocation);
                     }
 
                 });

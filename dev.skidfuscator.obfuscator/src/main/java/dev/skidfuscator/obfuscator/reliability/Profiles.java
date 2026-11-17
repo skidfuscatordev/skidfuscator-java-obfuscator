@@ -16,7 +16,7 @@ public final class Profiles {
                 "exceptionReturn","flowCondition","flowException","flowRange","flowFactoryMaker","flowSwitch",
                 "outliner","ahegao","native","driver","reference","fileCrasher","classRenamer","methodRenamer",
                 "fieldRenamer","interprocedural","randomInit","pureEncryption","pureHash","stringEqualsHash",
-                "stringEqualsIgnoreCaseHash","stringEqigcaseHash","instanceOfHash","interproceduralHarden"));
+                "stringEqualsIgnoreCaseHash","stringEqigcaseHash","instanceOfHash","typeCheck","interproceduralHarden"));
         for (String root : explicit.root().keySet()) if (!roots.contains(root))
             throw new IllegalArgumentException("Unknown configuration section: " + root);
         for (Map.Entry<String,ConfigValue> entry : result.entrySet())

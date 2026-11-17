@@ -15,7 +15,7 @@ public class VersionProbe {
         IntUnaryOperator function=x->x*7+3;
         int value=0;try { value=21/0; } catch(ArithmeticException e) { value=7; } finally { value++; }
         synchronized(VersionProbe.class) { value+=function.applyAsInt(5); }
-        System.out.println("RESULT:"+value+%s+":"+fixtures.StringComparisonCases.run());
+        System.out.println("RESULT:"+value+%s+":"+fixtures.StringComparisonCases.run()+":"+fixtures.TypeComparisonCases.run());
     }
     %s
 }''' % ('new Pair(3,4).sum()' if record else '7',
@@ -25,7 +25,7 @@ public class VersionProbe {
     compiler=args.target_home/'bin/javac'
     flags=['-source','8','-target','8'] if args.release==8 else ['--release',str(args.release)]
     comparisons=root/'dev.skidfuscator.integration/src/main/java/fixtures/StringComparisonCases.java'
-    compiled=subprocess.run([str(compiler),*flags,'-encoding','UTF-8','-d',str(work/'classes'),str(path),str(comparisons)],capture_output=True)
+    compiled=subprocess.run([str(compiler),*flags,'-encoding','UTF-8','-d',str(work/'classes'),str(path),str(comparisons),str(comparisons.with_name('TypeIdentity.java')),str(comparisons.with_name('TypeComparisonCases.java'))],capture_output=True)
     assert compiled.returncode==0,compiled.stderr.decode(errors='replace')
     original=work/'input.jar'
     subprocess.run(['jar','--create','--file',str(original),'--main-class','VersionProbe','-C',str(work/'classes'),'.'],check=True)
@@ -51,7 +51,7 @@ public class VersionProbe {
         assert result.returncode==0,log.read_text()[-6000:]
         report=json.loads(pathlib.Path(str(output)+'.report.json').read_text())
         assert any(t['success']>0 for t in report['transformers']), 'No transformations executed'
-        for name in ('String Equals Hash','String EqIgCase Hash'):
+        for name in ('String Equals Hash','String EqIgCase Hash','Type Check'):
             assert any(t['name']==name and t['success']>0 for t in report['transformers']),name+' did not execute'
         actual=subprocess.check_output([str(java),'-Xmx256m','-Xverify:all','-jar',str(output)],text=True)
         assert actual==expected

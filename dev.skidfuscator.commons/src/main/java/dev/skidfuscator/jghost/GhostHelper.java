@@ -120,11 +120,7 @@ public class GhostHelper {
         final ApplicationClassSource libraryClassSource = new ApplicationClassSource(
                 library.getName(),
                 fuckit,
-                library.getContents()
-                        .getClasses()
-                        .values()
-                        .stream()
-                        .map(e -> ClassHelper.create(e.read())).collect(Collectors.toList())
+                new LazyClassMap(library.getContents().getClasses().values())
         );
         logger.post("[✓] Imported " + library.getContents().getClasses().size() + " library classes...");
 
@@ -149,35 +145,18 @@ public class GhostHelper {
     }
 
     public GhostLibrary createFromLibraryFile(final Logger logger, final File file, int targetRelease) {
-        final JarInfo jarInfo = new JarInfo(file);
-        final AbstractJarDownloader<ClassNode> downloader = file.getName().endsWith(".jmod")
-                        ? new SingleJmodDownloader<>(jarInfo)
-                        : new SingleJarDownloader<>(jarInfo,targetRelease);
-
-        try {
-            downloader.download();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to import library: " + file, e);
-        }
-
-        final GhostContents ghostContents = new GhostContents();
-        final GhostLibrary ghostLibrary = new GhostLibrary();
-        ghostLibrary.setName(file.getName());
-        ghostLibrary.setContents(ghostContents);
-
-        try {
-            final ByteSource byteSource = Files.asByteSource(file);
-            ghostLibrary.setMd5(byteSource.hash(Hashing.md5()).toString());
-            ghostLibrary.setSha1(byteSource.hash(Hashing.sha1()).toString());
-            ghostLibrary.setSha256(byteSource.hash(Hashing.sha256()).toString());
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to hash library: " + file, e);
-        }
-
-        for (JarClassData classContent : downloader.getJarContents().getClassContents()) {
-            final GhostClassNode ghostClassNode = GhostClassNode.of(classContent.getClassNode().node);
-            ghostContents.getClasses().put(classContent.getName(), ghostClassNode);
-        }
+        final GhostLibrary ghostLibrary = LibraryMetadataReader.read(file, targetRelease);
+        try (InputStream stream = new FileInputStream(file)) {
+            java.security.MessageDigest md5 = java.security.MessageDigest.getInstance("MD5");
+            java.security.MessageDigest sha1 = java.security.MessageDigest.getInstance("SHA-1");
+            java.security.MessageDigest sha256 = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[65536]; int count;
+            while ((count = stream.read(buffer)) != -1) { md5.update(buffer,0,count); sha1.update(buffer,0,count); sha256.update(buffer,0,count); }
+            ghostLibrary.setMd5(java.util.HexFormat.of().formatHex(md5.digest()));
+            ghostLibrary.setSha1(java.util.HexFormat.of().formatHex(sha1.digest()));
+            ghostLibrary.setSha256(java.util.HexFormat.of().formatHex(sha256.digest()));
+        } catch (IOException e) { throw new UncheckedIOException("Failed to hash library: " + file,e);
+        } catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
 
         return ghostLibrary;
     }

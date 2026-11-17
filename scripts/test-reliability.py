@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory() as directory:
         log=work/'last.log'
         with log.open('w') as handle:
             process=subprocess.run([java,'-Xmx2g','-Duser.home='+home,'-jar',str(jar),'obfuscate',str(original),
-                '--output',str(output),'--offline','--non-interactive','--seed','123456',*extra],cwd=work,stdout=handle,stderr=subprocess.STDOUT,timeout=180)
+                '--output',str(output),'--offline','--non-interactive',*(['--seed','123456'] if '--seed' not in extra else []),*extra],cwd=work,stdout=handle,stderr=subprocess.STDOUT,timeout=180)
         assert process.returncode==expected,log.read_text()[-6000:]
         return json.loads(pathlib.Path(str(output)+'.report.json').read_text())
     planned=work/'planned.jar'
@@ -30,6 +30,14 @@ with tempfile.TemporaryDirectory() as directory:
             debug=root/'build/reports/reproduction';debug.mkdir(parents=True,exist_ok=True)
             for artifact in (original,protected,second): shutil.copyfile(artifact,debug/artifact.name)
         assert protected.read_bytes()==second.read_bytes(),'Same seed and inputs did not produce identical output: '+profile
+    for seed in ('0','9223372036854775807'):
+        varied=work/('seed-'+seed+'.jar')
+        protect(varied,'--profile','CONSERVATIVE','--seed',seed)
+        assert subprocess.check_output([java,'-Xverify:all','-jar',str(varied)],text=True).strip()=='probe:21'
+    directory_output=work/'directory-output.jar';directory_output.mkdir()
+    (directory_output/'previous').write_text('keep')
+    report=protect(directory_output,expected=1)
+    assert report['status']=='failed' and (directory_output/'previous').read_text()=='keep'
     previous=protected.read_bytes()
     report=protect(protected,'--max-output-bytes','1',expected=1)
     assert report['status']=='failed' and protected.read_bytes()==previous
