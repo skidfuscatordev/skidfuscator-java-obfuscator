@@ -8,6 +8,32 @@ public class SDK {
         return LongHashFunction.xx3().hashChars(s) + "";
     }
 
+    /** Reversible UTF-16 masking for comparison literals; this is obfuscation, not a secret key. */
+    public static String maskComparisonLiteral(String value, long key) {
+        char[] characters = value.toCharArray();
+        for (int i = 0; i < characters.length; i++) {
+            long mask = Long.rotateRight(key, (i & 3) * 16) ^ (i * 0x9e37) ^ 0x5a5a;
+            characters[i] = (char) (characters[i] ^ mask);
+        }
+        return new String(characters);
+    }
+
+    public static boolean equalsConstantReceiver(String encoded, Object argument, long key) {
+        return maskComparisonLiteral(encoded, key).equals(argument);
+    }
+
+    public static boolean equalsConstantArgument(String receiver, String encoded, long key) {
+        return receiver.equals(maskComparisonLiteral(encoded, key));
+    }
+
+    public static boolean equalsIgnoreCaseConstantReceiver(String encoded, String argument, long key) {
+        return maskComparisonLiteral(encoded, key).equalsIgnoreCase(argument);
+    }
+
+    public static boolean equalsIgnoreCaseConstantArgument(String receiver, String encoded, long key) {
+        return receiver.equalsIgnoreCase(maskComparisonLiteral(encoded, key));
+    }
+
     private static final Map<Class<?>, String> TYPE_HASHES = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Set<String>> HIERARCHY_HASHES = new ConcurrentHashMap<>();
 

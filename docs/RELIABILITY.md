@@ -73,6 +73,14 @@ a failure while retaining the previous output.
 
 ## Metadata and exclusions
 
+String comparison transformations preserve null arguments, null-receiver
+exceptions, Object arguments and the target JVM's native `equalsIgnoreCase`
+semantics. They mask the literal with a hash-derived reversible UTF-16 key and
+delegate the comparison to String itself, without locale-dependent lowercasing
+or treating hash equality as proof of String equality. Literal masking is
+obfuscation; the key travels with the code. `stringEqualsIgnoreCaseHash` is the
+preferred config section; `stringEqigcaseHash` remains a supported legacy spelling.
+
 Records and serializable/externalizable classes are preserved to retain canonical
 constructors, serialized form and compatibility with already persisted data.
 Their preservation reason appears in the plan. Application callers can still be
