@@ -15,7 +15,6 @@ import dev.skidfuscator.obfuscator.transform.AbstractTransformer;
 import dev.skidfuscator.obfuscator.transform.Transformer;
 import org.mapleir.ir.cfg.BasicBlock;
 import org.mapleir.ir.cfg.ControlFlowGraph;
-import org.mapleir.ir.code.CodeUnit;
 import org.mapleir.ir.code.Expr;
 import org.mapleir.ir.code.expr.ArithmeticExpr;
 import org.mapleir.ir.code.expr.VarExpr;
@@ -75,6 +74,15 @@ public class SwitchTransformer extends AbstractTransformer {
                         final int hash = hasher.hash(var ^ opaquePredicate);
                         targetsUpdated.put(hash, bb);
                     });
+
+                    // Safety net:
+                    // the hasher is a bijection, so two distinct case keys can never collide,
+                    // but should that ever change, LinkedHashMap.put would silently drop a case
+                    // and the obfuscated switch would mis-route a branch.
+                    // Leave the switch untransformed rather than emit a broken one.
+                    if (targetsUpdated.size() != targets.size()) {
+                        return;
+                    }
 
                     unit.setTargets(targetsUpdated);
 
